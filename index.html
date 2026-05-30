@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indómita Love Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════════ -->
+  <header id="header">
+    <div class="header-inner">
+      <div class="logo">
+        <img src="assets/logo.png" alt="Indómita Love Club" id="logo-img" />
+        <span class="logo-texto">Indómita Love Club</span>
+      </div>
+      <nav id="nav-principal">
+        <a href="#" class="nav-link" onclick="mostrarSeccion('feed')">Campañas</a>
+        <a href="#" class="nav-link" id="nav-panel" style="display:none;" onclick="mostrarPanelRol()">Mi panel</a>
+        <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Mi perfil</a>
+        <a href="#" class="nav-link" id="nav-admin" style="display:none;" onclick="mostrarSeccion('admin')">Admin</a>
+      </nav>
+      <div id="header-auth">
+        <button class="btn-primario" id="btn-login-header" onclick="mostrarSeccion('login')">Ingresar</button>
+        <div id="usuario-menu" style="display:none;">
+          <span id="usuario-alias" class="usuario-alias"></span>
+          <button class="btn-secundario btn-sm" onclick="cerrarSesion()">Salir</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN: LOGIN
+  ═══════════════════════════════════════════════════════ -->
+  <section id="seccion-login" class="seccion">
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-logo">
+          <img src="assets/logo.png" alt="Indómita Love Club" />
+        </div>
+        <h1 class="login-titulo">Indómita Love Club</h1>
+        <p class="login-subtitulo">La comunidad de romance donde aut@res y reseñad@res se encuentran</p>
+
+        <div id="login-paso1">
+          <button class="btn-google" id="btn-google-login">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Ingresar con Google
+          </button>
+          <p class="login-info">Al ingresar aceptás los términos de uso de la plataforma.</p>
+        </div>
+
+        <div id="login-paso2" style="display:none;">
+          <p class="login-pregunta">¿Cómo querés usar Indómita Love Club?</p>
+          <div class="rol-opciones">
+            <button class="rol-opcion" onclick="seleccionarRol('autor')">
+              <span class="rol-icono">✍️</span>
+              <span class="rol-nombre">Soy aut@r</span>
+              <span class="rol-desc">Publico campañas y distribuyo mis libros</span>
+            </button>
+            <button class="rol-opcion" onclick="seleccionarRol('reseñador')">
+              <span class="rol-icono">📚</span>
+              <span class="rol-nombre">Soy reseñad@r</span>
+              <span class="rol-desc">Leo ARCs y publico reseñas</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="login-cargando" style="display:none;">
+          <div class="spinner"></div>
+          <p class="login-info">Ingresando...</p>
+        </div>
+
+        <div id="login-error" class="mensaje-error" style="display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN: FEED DE CAMPAÑAS
+  ═══════════════════════════════════════════════════════ -->
+  <section id="seccion-feed" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+
+      <div class="feed-hero">
+        <h2 class="feed-titulo">Campañas activas</h2>
+        <p class="feed-subtitulo">Descubrí los libros que buscan reseñad@res este mes</p>
+      </div>
+
+      <div id="feed-filtros" class="filtros">
+        <input type="text" id="filtro-buscar" placeholder="Buscar por título o autor..." class="input-buscar" oninput="filtrarFeed()" />
+        <select id="filtro-genero" class="select-filtro" onchange="filtrarFeed()">
+          <option value="">Todos los géneros</option>
+          <option value="romance">Romance</option>
+          <option value="dark romance">Dark Romance</option>
+          <option value="contemporáneo">Contemporáneo</option>
+          <option value="fantasía romántica">Fantasía romántica</option>
+          <option value="new adult">New Adult</option>
+        </select>
+      </div>
+
+      <div id="feed-cargando" class="cargando-container">
+        <div class="spinner"></div>
+        <p>Cargando campañas...</p>
+      </div>
+
+      <div id="feed-vacio" class="estado-vacio" style="display:none;">
+        <p class="estado-vacio-icono">📖</p>
+        <p class="estado-vacio-texto">No hay campañas activas en este momento.</p>
+        <p class="estado-vacio-sub">Volvé pronto o activá las notificaciones.</p>
+      </div>
+
+      <div id="feed-grid" class="campanas-grid" style="display:none;"></div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN: PANEL AUTOR
+  ═══════════════════════════════════════════════════════ -->
+  <section id="seccion-panel-autor" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+
+      <div class="panel-header">
+        <h2 class="panel-titulo">Mi panel</h2>
+        <button class="btn-primario" onclick="mostrarModal('modal-nueva-campana')">+ Nueva campaña</button>
+      </div>
+
+      <div class="stats-grid" id="autor-stats"></div>
+
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-campanas-activas')">Campañas activas</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-postulaciones')">Postulaciones</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-historial-autor')">Historial</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-plan')">Mi plan</button>
+      </div>
+
+      <div id="tab-campanas-activas" class="tab-contenido activo">
+        <div id="autor-campanas-lista" class="campanas-lista"></div>
+      </div>
+      <div id="tab-postulaciones" class="tab-contenido">
+        <div id="autor-postulaciones-lista" class="postulaciones-lista"></div>
+      </div>
+      <div id="tab-historial-autor" class="tab-contenido">
+        <div id="autor-historial-lista" class="campanas-lista"></div>
+      </div>
+      <div id="tab-plan" class="tab-contenido">
+        <div id="autor-plan-info" class="plan-info"></div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN: PANEL RESEÑADOR
+  ═══════════════════════════════════════════════════════ -->
+  <section id="seccion-panel-resenador" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+
+      <div class="panel-header">
+        <h2 class="panel-titulo">Mi panel</h2>
+      </div>
+
+      <div class="stats-grid" id="resenador-stats"></div>
+
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
+      </div>
+
+      <div id="tab-mis-postulaciones" class="tab-contenido activo">
+        <div id="resenador-postulaciones-lista" class="postulaciones-lista"></div>
+      </div>
+      <div id="tab-arcs-activos" class="tab-contenido">
+        <div id="resenador-arcs-lista" class="arcs-lista"></div>
+      </div>
+      <div id="tab-historial-resenador" class="tab-contenido">
+        <div id="resenador-historial-lista" class="campanas-lista"></div>
+      </div>
+      <div id="tab-ranking" class="tab-contenido">
+        <div id="resenador-ranking-info" class="ranking-info"></div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN: PERFIL
+  ═══════════════════════════════════════════════════════ -->
+  <section id="seccion-perfil" class="seccion" style="display:none;">
+    <div class="seccion-inner seccion-angosta">
+
+      <h2 class="panel-titulo">Mi perfil</h2>
+
+      <div class="perfil-foto-container">
+        <img id="perfil-foto" src="assets/avatar-default.png" alt="Foto de perfil" class="perfil-foto" />
+        <button class="btn-secundario btn-sm" onclick="document.getElementById('input-foto').click()">Cambiar foto</button>
+        <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFoto(this)" />
+      </div>
+
+      <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">
+
+        <div class="form-grupo">
+          <label class="form-label">Alias público</label>
+          <input type="text" id="perfil-alias" class="form-input" placeholder="Tu nombre en la comunidad" />
+        </div>
+
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label class="form-label">País</label>
+            <input type="text" id="perfil-pais" class="form-input" placeholder="Argentina" />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Ciudad</label>
+            <input type="text" id="perfil-ciudad" class="form-input" placeholder="Buenos Aires" />
+          </div>
+        </div>
+
+        <div class="form-grupo">
+          <label class="form-label">Géneros favoritos</label>
+          <input type="text" id="perfil-generos" class="form-input" placeholder="Romance, Dark Romance, Fantasía..." />
+        </div>
+
+        <div class="form-grupo">
+          <label class="form-label">Descripción lectora</label>
+          <textarea id="perfil-descripcion" class="form-textarea" placeholder="Contanos quién sos como lect@r..." rows="3"></textarea>
+        </div>
+
+        <div class="form-separador">Redes sociales</div>
+
+        <div class="form-grupo">
+          <label class="form-label">Instagram</label>
+          <input type="url" id="perfil-instagram" class="form-input" placeholder="https://instagram.com/tu_usuario" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">TikTok</label>
+          <input type="url" id="perfil-tiktok" class="form-input" placeholder="https://tiktok.com/@tu_usuario" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Amazon</label>
+          <input type="url" id="perfil-amazon" class="form-input" placeholder="https://amazon.com/profile/..." />
+        </div>
+
+        <div id="perfil-error" class="mensaje-error" style="display:none;"></div>
+        <div id="perfil-ok" class="mensaje-ok" style="display:none;"></div>
+
+        <button type="submit" class="btn-primario btn-full">Guardar cambios</button>
+      </form>
+
+      <!-- Biblioteca (solo autores) -->
+      <div id="seccion-biblioteca" style="display:none;">
+        <div class="form-separador">Mi biblioteca</div>
+        <button class="btn-secundario" onclick="mostrarModal('modal-nuevo-libro')">+ Agregar libro</button>
+        <div id="biblioteca-lista" class="biblioteca-lista"></div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN: ADMIN
+  ═══════════════════════════════════════════════════════ -->
+  <section id="seccion-admin" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+
+      <h2 class="panel-titulo">Panel admin</h2>
+
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-usuarios')">Usuarios</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
+      </div>
+
+      <div id="tab-admin-usuarios" class="tab-contenido activo">
+        <div id="admin-usuarios-lista"></div>
+      </div>
+      <div id="tab-admin-campanas" class="tab-contenido">
+        <div id="admin-campanas-lista"></div>
+      </div>
+      <div id="tab-admin-pagos" class="tab-contenido">
+        <div id="admin-pagos-lista"></div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODALES
+  ═══════════════════════════════════════════════════════ -->
+
+  <div id="modal-overlay" class="modal-overlay" onclick="cerrarModales()"></div>
+
+  <!-- Modal: detalle de campaña -->
+  <div id="modal-detalle-campana" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo" id="modal-detalle-titulo"></h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-detalle-body"></div>
+    <div class="modal-footer" id="modal-detalle-footer"></div>
+  </div>
+
+  <!-- Modal: nueva campaña -->
+  <div id="modal-nueva-campana" class="modal modal-grande">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Nueva campaña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-nueva-campana" onsubmit="crearNuevaCampana(event)">
+
+        <div class="form-grupo">
+          <label class="form-label">Nombre del libro *</label>
+          <input type="text" id="nc-nombre-libro" class="form-input" required />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Nombre del autor *</label>
+          <input type="text" id="nc-nombre-autor" class="form-input" required />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Sinopsis *</label>
+          <textarea id="nc-sinopsis" class="form-textarea" rows="4" required></textarea>
+        </div>
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label class="form-label">Género</label>
+            <input type="text" id="nc-genero" class="form-input" placeholder="Romance, Dark Romance..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Tropes</label>
+            <input type="text" id="nc-tropes" class="form-input" placeholder="Enemies to lovers..." />
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Link de portada *</label>
+          <input type="url" id="nc-link-portada" class="form-input" required placeholder="https://drive.google.com/..." />
+        </div>
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label class="form-label">Link EPUB *</label>
+            <input type="url" id="nc-link-epub" class="form-input" required placeholder="https://drive.google.com/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Link PDF *</label>
+            <input type="url" id="nc-link-pdf" class="form-input" required placeholder="https://drive.google.com/..." />
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Link Amazon (opcional)</label>
+          <input type="url" id="nc-link-amazon" class="form-input" placeholder="https://amazon.com/..." />
+        </div>
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label class="form-label">Cupos de reseñad@res *</label>
+            <input type="number" id="nc-cupos" class="form-input" min="1" max="100" required />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Fecha límite *</label>
+            <input type="text" id="nc-fecha-limite" class="form-input" placeholder="DD/MM/YYYY" required />
+          </div>
+        </div>
+
+        <div id="nc-error" class="mensaje-error" style="display:none;"></div>
+        <div id="nc-ok" class="mensaje-ok" style="display:none;"></div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+          <button type="submit" class="btn-primario">Crear campaña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: cargar reseña -->
+  <div id="modal-cargar-resena" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Cargar reseña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-cargar-resena" onsubmit="enviarResena(event)">
+        <input type="hidden" id="resena-id-campana" />
+        <p class="form-info">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
+
+        <div class="form-grupo">
+          <label class="form-label">Instagram</label>
+          <input type="url" id="resena-instagram" class="form-input" placeholder="https://instagram.com/p/..." />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">TikTok</label>
+          <input type="url" id="resena-tiktok" class="form-input" placeholder="https://tiktok.com/@..." />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Amazon</label>
+          <input type="url" id="resena-amazon" class="form-input" placeholder="https://amazon.com/review/..." />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Goodreads</label>
+          <input type="url" id="resena-goodreads" class="form-input" placeholder="https://goodreads.com/review/..." />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Comentarios (opcional)</label>
+          <textarea id="resena-comentarios" class="form-textarea" rows="3" placeholder="Algo que quieras comentarle al autor..."></textarea>
+        </div>
+
+        <div id="resena-error" class="mensaje-error" style="display:none;"></div>
+        <div id="resena-ok" class="mensaje-ok" style="display:none;"></div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+          <button type="submit" class="btn-primario">Enviar reseña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: calificar reseña (autor puntúa del 1 al 5) -->
+  <div id="modal-calificar-resena" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Calificar reseña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="calificar-id-resena" />
+      <p class="form-info" id="calificar-nombre-resenador"></p>
+      <p class="form-info">¿Cómo calificás la reseña? Considerá la calidad, puntualidad y dedicación.</p>
+
+      <div class="estrellas-container">
+        <button class="estrella" data-valor="1" onclick="seleccionarEstrella(1)">★</button>
+        <button class="estrella" data-valor="2" onclick="seleccionarEstrella(2)">★</button>
+        <button class="estrella" data-valor="3" onclick="seleccionarEstrella(3)">★</button>
+        <button class="estrella" data-valor="4" onclick="seleccionarEstrella(4)">★</button>
+        <button class="estrella" data-valor="5" onclick="seleccionarEstrella(5)">★</button>
+      </div>
+      <p class="estrellas-label" id="estrellas-label">Seleccioná una puntuación</p>
+      <input type="hidden" id="calificar-puntuacion" value="" />
+
+      <div id="calificar-error" class="mensaje-error" style="display:none;"></div>
+      <div id="calificar-ok" class="mensaje-ok" style="display:none;"></div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-primario" onclick="enviarCalificacion()">Confirmar calificación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: nuevo libro (biblioteca) -->
+  <div id="modal-nuevo-libro" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Agregar libro a mi biblioteca</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-nuevo-libro" onsubmit="agregarLibro(event)">
+        <div class="form-grupo">
+          <label class="form-label">Título *</label>
+          <input type="text" id="libro-titulo" class="form-input" required />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Sinopsis breve</label>
+          <textarea id="libro-sinopsis" class="form-textarea" rows="3"></textarea>
+        </div>
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label class="form-label">Género</label>
+            <input type="text" id="libro-genero" class="form-input" />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Tropes</label>
+            <input type="text" id="libro-tropes" class="form-input" />
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Link de portada</label>
+          <input type="url" id="libro-portada" class="form-input" placeholder="https://drive.google.com/..." />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Link Amazon</label>
+          <input type="url" id="libro-amazon" class="form-input" placeholder="https://amazon.com/..." />
+        </div>
+
+        <div id="libro-error" class="mensaje-error" style="display:none;"></div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+          <button type="submit" class="btn-primario">Agregar libro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: completar perfil al postularse por primera vez -->
+  <div id="modal-completar-perfil" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Completá tu perfil</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="form-info">Es tu primera postulación. Completá estos datos para que el autor pueda conocerte.</p>
+      <form id="form-completar-perfil" onsubmit="guardarPerfilYPostularse(event)">
+        <input type="hidden" id="completar-id-campana" />
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label class="form-label">País *</label>
+            <input type="text" id="completar-pais" class="form-input" required />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Ciudad *</label>
+            <input type="text" id="completar-ciudad" class="form-input" required />
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Instagram</label>
+          <input type="url" id="completar-instagram" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">TikTok</label>
+          <input type="url" id="completar-tiktok" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Amazon</label>
+          <input type="url" id="completar-amazon" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Descripción lector@</label>
+          <textarea id="completar-descripcion" class="form-textarea" rows="3" placeholder="Contanos quién sos como lect@r..."></textarea>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Géneros favoritos</label>
+          <input type="text" id="completar-generos" class="form-input" placeholder="Romance, Dark Romance..." />
+        </div>
+
+        <div id="completar-error" class="mensaje-error" style="display:none;"></div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+          <button type="submit" class="btn-primario">Guardar y postularme</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════════════════ -->
+  <footer id="footer">
+    <div class="footer-inner">
+      <p class="footer-texto">Indómita Love Club &copy; 2026 — Todos los derechos reservados</p>
+    </div>
+  </footer>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCRIPTS
+  ═══════════════════════════════════════════════════════ -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/feed.js"></script>
+  <script src="js/autor.js"></script>
+  <script src="js/resenador.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/perfil.js"></script>
+  <script src="js/visor.js"></script>
+  <script src="js/ui.js"></script>
+
+</body>
+</html>
