@@ -228,14 +228,14 @@ img { max-width: 100%; display: block; }
 
 .login-titulo {
   font-family: var(--fuente-titulo);
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 700;
   color: var(--bordo);
   margin-bottom: 8px;
 }
 
 .login-subtitulo {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--gris-suave);
   margin-bottom: 32px;
   line-height: 1.5;
