@@ -82,6 +82,7 @@ img { max-width: 100%; display: block; }
   width: 36px;
   object-fit: contain;
   border-radius: 50%;
+mix-blend-mode: multiply;
 }
 
 .logo-texto {
@@ -224,6 +225,7 @@ img { max-width: 100%; display: block; }
   object-fit: contain;
   margin: 0 auto 20px;
   border-radius: 50%;
+mix-blend-mode: multiply;
 }
 
 .login-titulo {
