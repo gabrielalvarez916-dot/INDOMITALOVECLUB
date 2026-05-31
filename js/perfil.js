@@ -224,6 +224,11 @@ async function subirFoto(input) {
 
   mostrarToast('Foto actualizada.', 'ok');
 }
+// Guarda la URL de la foto en la sesión
+if (resultado.datos?.fotoUrl) {
+  const sesionActual = Sesion.obtener();
+  Sesion.guardar({ ...sesionActual, fotoPerfil: resultado.datos.fotoUrl });
+}
 
 
 // ────────────────────────────────────────────────────────────
@@ -263,12 +268,13 @@ async function guardarPerfilYPostularse(event) {
   const resultadoPerfil = await llamarBackend('editarPerfil', { email, datos });
 
   if (!resultadoPerfil.ok) {
-    // Actualiza la sesión local con los nuevos datos
+  mostrarMensajeError('completar-error', resultadoPerfil.mensaje || 'Error al guardar el perfil.');
+  return;
+}
+
+// Actualiza sesión AQUÍ, después del error
 const usuarioActual = Sesion.obtener();
-Sesion.guardar({ ...usuarioActual, ...datos, fotoPerfil: datos.fotoPerfil || usuarioActual.fotoPerfil });
-    mostrarMensajeError('completar-error', resultadoPerfil.mensaje || 'Error al guardar el perfil.');
-    return;
-  }
+Sesion.guardar({ ...usuarioActual, ...datos });
 
   // Luego se postula
   const resultadoPostulacion = await llamarBackend('postularseACampana', {
