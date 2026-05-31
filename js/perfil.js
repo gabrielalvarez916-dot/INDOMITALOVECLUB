@@ -223,7 +223,6 @@ async function subirFoto(input) {
   }
 
   mostrarToast('Foto actualizada.', 'ok');
-}
 // Guarda la URL de la foto en la sesión
 if (resultado.datos?.fotoUrl) {
   const sesionActual = Sesion.obtener();
