@@ -198,7 +198,7 @@ async function verDetalleCampaña(idCampaña) {
   const email = Sesion.email();
   const resultado = await llamarBackend('obtenerDetalleCampana', {
     email: email || '',
-    idCampaña
+    idCampana: idCampaña
   });
 
   if (!resultado.ok) {
@@ -344,7 +344,7 @@ async function confirmarPostulacion(idCampaña) {
 
   const resultado = await llamarBackend('postularse', {
     email,
-    idCampaña,
+    idCampana: idCampaña,
     aceptaConfidencialidad: true
   });
 
