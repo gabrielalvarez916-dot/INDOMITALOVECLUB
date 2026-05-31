@@ -68,25 +68,6 @@ function ajustarFormularioPorRol(rol) {
   toggleElemento('grupo-generos', esReseñador);
   toggleElemento('grupo-descripcion', esReseñador);
 }
-  // Campos exclusivos de reseñadores
-  const camposReseñador = [
-    'grupo-descripcion-lectora',
-    'grupo-generos-favoritos'
-  ];
-
-  camposReseñador.forEach(id => {
-    toggleElemento(id, esReseñador);
-  });
-
-  // Biblioteca solo para autores
-  toggleElemento('seccion-biblioteca', esAutor);
-
-  // Cambia el label según el rol
-  const labelDescripcion = document.getElementById('label-descripcion-lectora');
-  if (labelDescripcion) {
-    labelDescripcion.textContent = 'Descripción lector@';
-  }
-}
 
 
 // ────────────────────────────────────────────────────────────
