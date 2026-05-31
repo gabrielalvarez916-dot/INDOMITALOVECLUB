@@ -62,9 +62,12 @@ async function cargarPerfil() {
  * @param {string} rol — 'autor' | 'reseñador' | 'admin'
  */
 function ajustarFormularioPorRol(rol) {
-  const esAutor     = rol === 'autor';
+  const esAutor = rol === 'autor';
   const esReseñador = rol === 'reseñador';
-
+  toggleElemento('seccion-biblioteca', esAutor);
+  toggleElemento('grupo-generos', esReseñador);
+  toggleElemento('grupo-descripcion', esReseñador);
+}
   // Campos exclusivos de reseñadores
   const camposReseñador = [
     'grupo-descripcion-lectora',
