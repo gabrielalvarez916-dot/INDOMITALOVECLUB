@@ -155,7 +155,17 @@ async function guardarPerfil(event) {
     return;
   }
 
-  const resultado = await llamarBackend('editarPerfil', { email, datos });
+  const resultado = await llamarBackend('editarPerfil', {
+  email,
+  alias:             datos.alias,
+  pais:              datos.pais,
+  ciudad:            datos.ciudad,
+  instagram:         datos.instagram,
+  tiktok:            datos.tiktok,
+  amazon:            datos.amazon,
+  generos:           datos.generos,
+  descripcionLector: datos.descripcionLector
+});
 if (!resultado.ok) {
   
     mostrarMensajeError('perfil-error', resultado.mensaje || 'Error al guardar el perfil.');
