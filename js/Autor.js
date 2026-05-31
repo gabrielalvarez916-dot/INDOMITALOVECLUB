@@ -534,7 +534,7 @@ async function cargarPlanAutor(email) {
   const resultado = await llamarBackend('obtenerPerfil', { email });
   if (!resultado.ok) return;
 
-  const u = resultado.datos.usuario;
+  const u = resultado.datos.perfil;
   const plan = u.plan || 'free';
   const estadoPlan = u.estadoPlan || '';
   const fechaVenc  = u.fechaVencimientoPlan || '';
