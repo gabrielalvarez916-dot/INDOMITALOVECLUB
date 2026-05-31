@@ -27,19 +27,13 @@ const CONFIG = {
 
 async function llamarBackend(accion, datos = {}) {
   try {
-    const respuesta = await fetch(CONFIG.BACKEND_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: accion, ...datos })
+    const params = new URLSearchParams({ action: accion, ...datos });
+    const respuesta = await fetch(`${CONFIG.BACKEND_URL}?${params.toString()}`, {
+      method: 'GET',
+      redirect: 'follow'
     });
-
-    if (!respuesta.ok) {
-      throw new Error('Error de red: ' + respuesta.status);
-    }
-
-    const json = await respuesta.json();
-    return json;
-
+    if (!respuesta.ok) throw new Error('Error de red: ' + respuesta.status);
+    return await respuesta.json();
   } catch (e) {
     console.error('Error llamando al backend:', e);
     return { ok: false, mensaje: 'Error de conexión. Intentá nuevamente.' };
