@@ -10,7 +10,7 @@
 
 // ID de cliente de Google OAuth
 // Lo obtenés de Google Cloud Console → Credenciales → ID de cliente OAuth
-const GOOGLE_CLIENT_ID = 'REEMPLAZAR_CON_TU_GOOGLE_CLIENT_ID';
+const GOOGLE_CLIENT_ID = '431980349307-jej7h0sfqdu88k5arl3atp8891jduk55.apps.googleusercontent.com';
 
 // Variable global para guardar el token de Google temporalmente
 // durante el proceso de registro (entre paso 1 y paso 2)
