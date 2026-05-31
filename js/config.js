@@ -30,7 +30,7 @@ async function llamarBackend(accion, datos = {}) {
     const respuesta = await fetch(CONFIG.BACKEND_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ accion, ...datos })
+      body: JSON.stringify({ action: accion, ...datos })
     });
 
     if (!respuesta.ok) {
