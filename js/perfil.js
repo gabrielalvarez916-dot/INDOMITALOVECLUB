@@ -156,17 +156,26 @@ if (!resultado.ok) {
     return;
   }
 
-  // Actualiza el alias en la sesión y en el header
-  const sesionActual = Sesion.obtener();
-  if (sesionActual) {
-    sesionActual.alias = datos.alias;
-    Sesion.guardar(sesionActual);
-    const aliasEl = document.getElementById('usuario-alias');
-    if (aliasEl) aliasEl.textContent = datos.alias;
-  }
+  // Actualiza TODOS los datos en la sesión
+const sesionActual = Sesion.obtener();
+if (sesionActual) {
+  Sesion.guardar({ 
+    ...sesionActual, 
+    alias:            datos.alias,
+    pais:             datos.pais,
+    ciudad:           datos.ciudad,
+    instagram:        datos.instagram,
+    tiktok:           datos.tiktok,
+    amazon:           datos.amazon,
+    generos:          datos.generos,
+    descripcionLector: datos.descripcionLector
+  });
+  const aliasEl = document.getElementById('usuario-alias');
+  if (aliasEl) aliasEl.textContent = datos.alias;
+}
 
-  mostrarMensajeOk('perfil-ok', '¡Perfil guardado correctamente!');
-  setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
+mostrarMensajeOk('perfil-ok', '¡Perfil guardado correctamente!');
+setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
 }
 
 
