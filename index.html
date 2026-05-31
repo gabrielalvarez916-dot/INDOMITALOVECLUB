@@ -11,9 +11,7 @@
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════════════════════
-       HEADER
-  ═══════════════════════════════════════════════════════ -->
+  <!-- HEADER -->
   <header id="header">
     <div class="header-inner">
       <div class="logo">
@@ -37,9 +35,7 @@
   </header>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       SECCIÓN: LOGIN
-  ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: LOGIN -->
   <section id="seccion-login" class="seccion">
     <div class="login-container">
       <div class="login-card">
@@ -50,14 +46,14 @@
         <p class="login-subtitulo">La comunidad de romance donde aut@res y reseñad@res se encuentran</p>
 
         <div id="login-paso1">
-  <button class="btn-google" id="btn-google-login">
-    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-    Ingresar con Google
-  </button>
-  <div id="google-btn-container" style="display:none;"></div>
-  <p class="login-info">Al ingresar aceptás los términos de uso de la plataforma.</p>
-</div>
-        
+          <button class="btn-google" id="btn-google-login">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Ingresar con Google
+          </button>
+          <div id="google-btn-container" style="display:none;"></div>
+          <p class="login-info">Al ingresar aceptás los términos de uso de la plataforma.</p>
+        </div>
+
         <div id="login-paso2" style="display:none;">
           <p class="login-pregunta">¿Cómo querés usar Indómita Love Club?</p>
           <div class="rol-opciones">
@@ -85,17 +81,13 @@
   </section>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       SECCIÓN: FEED DE CAMPAÑAS
-  ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: FEED -->
   <section id="seccion-feed" class="seccion" style="display:none;">
     <div class="seccion-inner">
-
       <div class="feed-hero">
         <h2 class="feed-titulo">Campañas activas</h2>
         <p class="feed-subtitulo">Descubrí los libros que buscan reseñad@res este mes</p>
       </div>
-
       <div id="feed-filtros" class="filtros">
         <input type="text" id="filtro-buscar" placeholder="Buscar por título o autor..." class="input-buscar" oninput="filtrarFeed()" />
         <select id="filtro-genero" class="select-filtro" onchange="filtrarFeed()">
@@ -107,44 +99,34 @@
           <option value="new adult">New Adult</option>
         </select>
       </div>
-
       <div id="feed-cargando" class="cargando-container">
         <div class="spinner"></div>
         <p>Cargando campañas...</p>
       </div>
-
       <div id="feed-vacio" class="estado-vacio" style="display:none;">
         <p class="estado-vacio-icono">📖</p>
         <p class="estado-vacio-texto">No hay campañas activas en este momento.</p>
         <p class="estado-vacio-sub">Volvé pronto o activá las notificaciones.</p>
       </div>
-
       <div id="feed-grid" class="campanas-grid" style="display:none;"></div>
-
     </div>
   </section>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       SECCIÓN: PANEL AUTOR
-  ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: PANEL AUTOR -->
   <section id="seccion-panel-autor" class="seccion" style="display:none;">
     <div class="seccion-inner">
-
       <div class="panel-header">
         <h2 class="panel-titulo">Mi panel</h2>
         <button class="btn-primario" onclick="mostrarModal('modal-nueva-campana')">+ Nueva campaña</button>
       </div>
-
       <div class="stats-grid" id="autor-stats"></div>
-
       <div class="tabs">
         <button class="tab activo" onclick="cambiarTab(this, 'tab-campanas-activas')">Campañas activas</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-postulaciones')">Postulaciones</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-autor')">Historial</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-plan')">Mi plan</button>
       </div>
-
       <div id="tab-campanas-activas" class="tab-contenido activo">
         <div id="autor-campanas-lista" class="campanas-lista"></div>
       </div>
@@ -157,30 +139,23 @@
       <div id="tab-plan" class="tab-contenido">
         <div id="autor-plan-info" class="plan-info"></div>
       </div>
-
     </div>
   </section>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       SECCIÓN: PANEL RESEÑADOR
-  ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: PANEL RESEÑADOR -->
   <section id="seccion-panel-resenador" class="seccion" style="display:none;">
     <div class="seccion-inner">
-
       <div class="panel-header">
         <h2 class="panel-titulo">Mi panel</h2>
       </div>
-
       <div class="stats-grid" id="resenador-stats"></div>
-
       <div class="tabs">
         <button class="tab activo" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
       </div>
-
       <div id="tab-mis-postulaciones" class="tab-contenido activo">
         <div id="resenador-postulaciones-lista" class="postulaciones-lista"></div>
       </div>
@@ -193,14 +168,11 @@
       <div id="tab-ranking" class="tab-contenido">
         <div id="resenador-ranking-info" class="ranking-info"></div>
       </div>
-
     </div>
   </section>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       SECCIÓN: PERFIL
-  ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: PERFIL -->
   <section id="seccion-perfil" class="seccion" style="display:none;">
     <div class="seccion-inner seccion-angosta">
 
@@ -214,14 +186,14 @@
 
       <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">
 
-        <div class="form-grupo" id="grupo-generos-favoritos">
-  <label class="form-label">Géneros favoritos</label>
+        <div class="form-grupo">
+          <label class="form-label">Alias público</label>
           <input type="text" id="perfil-alias" class="form-input" placeholder="Tu nombre en la comunidad" />
         </div>
 
         <div class="form-fila">
-          <div class="form-grupo" id="grupo-descripcion-lectora">
-  <label class="form-label" id="label-descripcion-lectora">Descripción lector@</label>
+          <div class="form-grupo">
+            <label class="form-label">País</label>
             <input type="text" id="perfil-pais" class="form-input" placeholder="Argentina" />
           </div>
           <div class="form-grupo">
@@ -230,15 +202,15 @@
           </div>
         </div>
 
-       <div class="form-grupo" id="grupo-generos-favoritos">
-  <label class="form-label">Géneros favoritos</label>
-  <input type="text" id="perfil-generos" class="form-input" placeholder="Romance, Dark Romance, Fantasía..." />
-</div>
+        <div class="form-grupo" id="grupo-generos-favoritos">
+          <label class="form-label">Géneros favoritos</label>
+          <input type="text" id="perfil-generos" class="form-input" placeholder="Romance, Dark Romance, Fantasía..." />
+        </div>
 
-       <div class="form-grupo" id="grupo-descripcion-lectora">
-  <label class="form-label" id="label-descripcion-lectora">Descripción lector@</label>
-  <textarea id="perfil-descripcion" class="form-textarea" placeholder="Contanos quién sos como lect@r..." rows="3"></textarea>
-</div>
+        <div class="form-grupo" id="grupo-descripcion-lectora">
+          <label class="form-label" id="label-descripcion-lectora">Descripción lector@</label>
+          <textarea id="perfil-descripcion" class="form-textarea" placeholder="Contanos quién sos como lect@r..." rows="3"></textarea>
+        </div>
 
         <div class="form-separador">Redes sociales</div>
 
@@ -272,20 +244,15 @@
   </section>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       SECCIÓN: ADMIN
-  ═══════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN: ADMIN -->
   <section id="seccion-admin" class="seccion" style="display:none;">
     <div class="seccion-inner">
-
       <h2 class="panel-titulo">Panel admin</h2>
-
       <div class="tabs">
         <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-usuarios')">Usuarios</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
       </div>
-
       <div id="tab-admin-usuarios" class="tab-contenido activo">
         <div id="admin-usuarios-lista"></div>
       </div>
@@ -295,15 +262,11 @@
       <div id="tab-admin-pagos" class="tab-contenido">
         <div id="admin-pagos-lista"></div>
       </div>
-
     </div>
   </section>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       MODALES
-  ═══════════════════════════════════════════════════════ -->
-
+  <!-- MODALES -->
   <div id="modal-overlay" class="modal-overlay" onclick="cerrarModales()"></div>
 
   <!-- Modal: detalle de campaña -->
@@ -324,7 +287,6 @@
     </div>
     <div class="modal-body">
       <form id="form-nueva-campana" onsubmit="crearNuevaCampana(event)">
-
         <div class="form-grupo">
           <label class="form-label">Nombre del libro *</label>
           <input type="text" id="nc-nombre-libro" class="form-input" required />
@@ -375,10 +337,8 @@
             <input type="text" id="nc-fecha-limite" class="form-input" placeholder="DD/MM/YYYY" required />
           </div>
         </div>
-
         <div id="nc-error" class="mensaje-error" style="display:none;"></div>
         <div id="nc-ok" class="mensaje-ok" style="display:none;"></div>
-
         <div class="modal-footer">
           <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
           <button type="submit" class="btn-primario">Crear campaña</button>
@@ -397,7 +357,6 @@
       <form id="form-cargar-resena" onsubmit="enviarResena(event)">
         <input type="hidden" id="resena-id-campana" />
         <p class="form-info">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
-
         <div class="form-grupo">
           <label class="form-label">Instagram</label>
           <input type="url" id="resena-instagram" class="form-input" placeholder="https://instagram.com/p/..." />
@@ -418,10 +377,8 @@
           <label class="form-label">Comentarios (opcional)</label>
           <textarea id="resena-comentarios" class="form-textarea" rows="3" placeholder="Algo que quieras comentarle al autor..."></textarea>
         </div>
-
         <div id="resena-error" class="mensaje-error" style="display:none;"></div>
         <div id="resena-ok" class="mensaje-ok" style="display:none;"></div>
-
         <div class="modal-footer">
           <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
           <button type="submit" class="btn-primario">Enviar reseña</button>
@@ -430,7 +387,7 @@
     </div>
   </div>
 
-  <!-- Modal: calificar reseña (autor puntúa del 1 al 5) -->
+  <!-- Modal: calificar reseña -->
   <div id="modal-calificar-resena" class="modal">
     <div class="modal-header">
       <h3 class="modal-titulo">Calificar reseña</h3>
@@ -440,7 +397,6 @@
       <input type="hidden" id="calificar-id-resena" />
       <p class="form-info" id="calificar-nombre-resenador"></p>
       <p class="form-info">¿Cómo calificás la reseña? Considerá la calidad, puntualidad y dedicación.</p>
-
       <div class="estrellas-container">
         <button class="estrella" data-valor="1" onclick="seleccionarEstrella(1)">★</button>
         <button class="estrella" data-valor="2" onclick="seleccionarEstrella(2)">★</button>
@@ -450,10 +406,8 @@
       </div>
       <p class="estrellas-label" id="estrellas-label">Seleccioná una puntuación</p>
       <input type="hidden" id="calificar-puntuacion" value="" />
-
       <div id="calificar-error" class="mensaje-error" style="display:none;"></div>
       <div id="calificar-ok" class="mensaje-ok" style="display:none;"></div>
-
       <div class="modal-footer">
         <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
         <button type="button" class="btn-primario" onclick="enviarCalificacion()">Confirmar calificación</button>
@@ -461,7 +415,7 @@
     </div>
   </div>
 
-  <!-- Modal: nuevo libro (biblioteca) -->
+  <!-- Modal: nuevo libro -->
   <div id="modal-nuevo-libro" class="modal">
     <div class="modal-header">
       <h3 class="modal-titulo">Agregar libro a mi biblioteca</h3>
@@ -495,9 +449,7 @@
           <label class="form-label">Link Amazon</label>
           <input type="url" id="libro-amazon" class="form-input" placeholder="https://amazon.com/..." />
         </div>
-
         <div id="libro-error" class="mensaje-error" style="display:none;"></div>
-
         <div class="modal-footer">
           <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
           <button type="submit" class="btn-primario">Agregar libro</button>
@@ -506,7 +458,7 @@
     </div>
   </div>
 
-  <!-- Modal: completar perfil al postularse por primera vez -->
+  <!-- Modal: completar perfil -->
   <div id="modal-completar-perfil" class="modal">
     <div class="modal-header">
       <h3 class="modal-titulo">Completá tu perfil</h3>
@@ -546,9 +498,7 @@
           <label class="form-label">Géneros favoritos</label>
           <input type="text" id="completar-generos" class="form-input" placeholder="Romance, Dark Romance..." />
         </div>
-
         <div id="completar-error" class="mensaje-error" style="display:none;"></div>
-
         <div class="modal-footer">
           <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
           <button type="submit" class="btn-primario">Guardar y postularme</button>
@@ -558,9 +508,7 @@
   </div>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       FOOTER
-  ═══════════════════════════════════════════════════════ -->
+  <!-- FOOTER -->
   <footer id="footer">
     <div class="footer-inner">
       <p class="footer-texto">Indómita Love Club &copy; 2026 — Todos los derechos reservados</p>
@@ -568,9 +516,7 @@
   </footer>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       SCRIPTS
-  ═══════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
