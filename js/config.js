@@ -27,11 +27,8 @@ const CONFIG = {
 
 async function llamarBackend(accion, datos = {}) {
   try {
-    const respuesta = await fetch(CONFIG.BACKEND_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: accion, ...datos })
-    });
+    const params = new URLSearchParams({ action: accion, ...datos });
+    const respuesta = await fetch(`${CONFIG.BACKEND_URL}?${params.toString()}`);
     if (!respuesta.ok) throw new Error('Error de red: ' + respuesta.status);
     return await respuesta.json();
   } catch (e) {
