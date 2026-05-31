@@ -63,9 +63,3 @@ function mostrarCarga(elementoId, mostrar) {
 function irA(seccion) {
   window.location.hash = seccion;
 }
-}
-
-// Redirige a una sección de la página
-function irA(seccion) {
-  window.location.hash = seccion;
-}
