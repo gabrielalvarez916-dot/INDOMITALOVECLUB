@@ -30,7 +30,7 @@ async function cargarFeed() {
   toggleElemento('feed-grid', false);
   toggleElemento('feed-vacio', false);
 
-  const resultado = await llamarBackend('listarCampañasFeed', {});
+  const resultado = await llamarBackend('listarCampanasFeed', {});
 
   toggleElemento('feed-cargando', false);
 
@@ -196,7 +196,7 @@ async function verDetalleCampaña(idCampaña) {
   if (footer) footer.innerHTML = '';
 
   const email = Sesion.email();
-  const resultado = await llamarBackend('obtenerDetalleCampaña', {
+  const resultado = await llamarBackend('obtenerDetalleCampana', {
     email: email || '',
     idCampaña
   });
