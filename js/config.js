@@ -31,7 +31,7 @@ async function llamarBackend(accion, datos = {}) {
     const respuesta = await fetch(`${CONFIG.BACKEND_URL}?${params.toString()}`);
     if (!respuesta.ok) throw new Error('Error de red: ' + respuesta.status);
     return await respuesta.json();
-  } catch (e) {
+  }  catch (e) {
     console.error('Error llamando al backend:', e);
     return { ok: false, mensaje: 'Error de conexión. Intentá nuevamente.' };
   }
