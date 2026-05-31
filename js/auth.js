@@ -54,24 +54,23 @@ function iniciarLoginGoogle() {
     return;
   }
 
-  // Muestra el spinner
-  toggleElemento('login-paso1', false);
-  toggleElemento('login-cargando', true);
   ocultarMensajes('login-error');
 
-  // Abre el popup de Google
-  google.accounts.id.prompt((notificacion) => {
-    if (notificacion.isNotDisplayed() || notificacion.isSkippedMoment()) {
-      // Si el popup no se mostró, usa el flujo de redirect
-      google.accounts.id.renderButton(
-        document.createElement('div'),
-        { theme: 'outline', size: 'large' }
-      );
-      // Vuelve a mostrar el paso 1 si falla
-      toggleElemento('login-cargando', false);
-      toggleElemento('login-paso1', true);
-    }
+  const div = document.getElementById('google-btn-container');
+  if (!div) return;
+
+  div.innerHTML = '';
+  google.accounts.id.renderButton(div, {
+    theme: 'outline',
+    size: 'large',
+    text: 'signin_with',
+    width: 280
   });
+
+  setTimeout(() => {
+    const btn = div.querySelector('div[role=button]');
+    if (btn) btn.click();
+  }, 100);
 }
 
 /**
