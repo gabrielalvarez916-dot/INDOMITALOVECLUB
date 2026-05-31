@@ -1109,3 +1109,8 @@ img { max-width: 100%; display: block; }
   .feed-titulo { font-size: 22px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
 }
+#usuario-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
