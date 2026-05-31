@@ -254,6 +254,9 @@ async function guardarPerfilYPostularse(event) {
   const resultadoPerfil = await llamarBackend('editarPerfil', { email, datos });
 
   if (!resultadoPerfil.ok) {
+    // Actualiza la sesión local con los nuevos datos
+const usuarioActual = Sesion.obtener();
+Sesion.guardar({ ...usuarioActual, ...datos, fotoPerfil: datos.fotoPerfil || usuarioActual.fotoPerfil });
     mostrarMensajeError('completar-error', resultadoPerfil.mensaje || 'Error al guardar el perfil.');
     return;
   }
