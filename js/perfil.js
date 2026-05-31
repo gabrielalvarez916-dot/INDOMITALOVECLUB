@@ -193,25 +193,12 @@ async function subirFoto(input) {
   const archivo = input.files[0];
   if (!archivo) return;
 
-  // Valida tamaño máximo (2MB)
-  if (archivo.size > 2 * 1024 * 1024) {
-    mostrarToast('La imagen no puede superar 2MB.', 'error');
-    return;
-  }
+  // Redimensiona la imagen a máximo 200x200px antes de mandarla
+  const base64 = await redimensionarImagen(archivo, 200);
 
-  // Convierte a base64
-  const base64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Error al leer el archivo.'));
-    reader.readAsDataURL(archivo);
-  });
-
-  // Preview inmediato
   const fotoEl = document.getElementById('perfil-foto');
   if (fotoEl) fotoEl.src = base64;
 
-  // Envía al backend
   const resultado = await llamarBackend('subirFotoPerfil', {
     email: Sesion.email(),
     fotoBase64: base64
@@ -224,12 +211,30 @@ async function subirFoto(input) {
 
   mostrarToast('Foto actualizada.', 'ok');
 
-  // Guarda la URL de la foto en la sesión
   if (resultado.datos?.fotoUrl) {
     const sesionActual = Sesion.obtener();
     Sesion.guardar({ ...sesionActual, fotoPerfil: resultado.datos.fotoUrl });
   }
-} 
+}
+
+function redimensionarImagen(archivo, maxSize) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, maxSize, maxSize);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(archivo);
+  });
+}
 
 
 // ────────────────────────────────────────────────────────────
