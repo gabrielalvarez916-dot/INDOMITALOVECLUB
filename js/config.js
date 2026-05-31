@@ -6,7 +6,7 @@
 const CONFIG = {
 
   // URL del backend (Google Apps Script Web App)
-  BACKEND_URL: 'https://script.google.com/macros/s/AKfycbz02LxMeAYZ8hcXXVyLFe2E9pLjBRJMicqlBn0MEa0pE_XWKwXyPH01bqLgTSkUb87q5A/exec',
+ BACKEND_URL: '/api/proxy',
 
   // URL del frontend
   FRONTEND_URL: 'https://indomitaloveclub.vercel.app',
