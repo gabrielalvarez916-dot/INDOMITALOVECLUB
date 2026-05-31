@@ -24,7 +24,7 @@ async function cargarPerfil() {
   // Ajusta el formulario según el rol ANTES de cargar datos
   ajustarFormularioPorRol(rol);
 
-  const resultado = await llamarBackend('obtenerPerfil', { email });
+  const resultado = await llamarBackend('editarPerfil', { email, datos });
 
   if (!resultado.ok) {
     mostrarMensajeError('perfil-error', resultado.mensaje || 'Error al cargar el perfil.');
@@ -155,7 +155,7 @@ async function guardarPerfil(event) {
     return;
   }
 
-  const resultado = await llamarBackend('actualizarPerfil', { email, datos });
+  const resultadoPerfil = await llamarBackend('editarPerfil', { email, datos });
 
   if (!resultado.ok) {
     mostrarMensajeError('perfil-error', resultado.mensaje || 'Error al guardar el perfil.');
