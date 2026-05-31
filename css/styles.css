@@ -77,10 +77,12 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
 }
 
+/* ── FIX PRINCIPAL: llave de cierre que faltaba ── */
 .logo img {
   height: 44px;
   width: 44px;
   object-fit: contain;
+}
 
 .logo-texto {
   font-family: var(--fuente-titulo);
@@ -183,6 +185,15 @@ img { max-width: 100%; display: block; }
 /* ── Secciones ────────────────────────────────────────────── */
 .seccion { flex: 1; }
 
+/* FIX: todas las secciones ocultas por defecto excepto login */
+.seccion:not(#seccion-login) {
+  display: none;
+}
+
+#seccion-login {
+  display: flex;
+}
+
 .seccion-inner {
   max-width: 1200px;
   margin: 0 auto;
@@ -196,7 +207,6 @@ img { max-width: 100%; display: block; }
 /* ── Login ────────────────────────────────────────────────── */
 #seccion-login {
   background: linear-gradient(145deg, var(--crema-suave) 0%, var(--crema) 100%);
-  display: flex;
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 64px);
@@ -216,11 +226,17 @@ img { max-width: 100%; display: block; }
   text-align: center;
 }
 
+/* FIX: logo del login con tamaño controlado */
+.login-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
 .login-logo img {
   height: 120px;
   width: 120px;
   object-fit: contain;
-  margin: 0 auto 20px;
 }
 
 .login-titulo {
@@ -293,6 +309,7 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
   transition: var(--transicion);
   text-align: left;
+  width: 100%;
 }
 
 .rol-opcion:hover {
@@ -302,7 +319,7 @@ img { max-width: 100%; display: block; }
   box-shadow: var(--sombra);
 }
 
-.rol-icono { font-size: 28px; }
+.rol-icono { font-size: 28px; flex-shrink: 0; }
 
 .rol-nombre {
   display: block;
@@ -379,14 +396,12 @@ img { max-width: 100%; display: block; }
   border-color: var(--bordo);
 }
 
-/* Grid de campañas */
 .campanas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
 }
 
-/* Card de campaña */
 .campana-card {
   background: var(--blanco);
   border-radius: var(--radio-grande);
@@ -495,7 +510,6 @@ img { max-width: 100%; display: block; }
 .estado-vacio-texto { font-family: var(--fuente-titulo); font-size: 20px; color: var(--bordo); margin-bottom: 8px; }
 .estado-vacio-sub { font-size: 14px; color: var(--gris-suave); }
 
-/* Spinner */
 .spinner {
   width: 36px;
   height: 36px;
@@ -508,7 +522,7 @@ img { max-width: 100%; display: block; }
 
 @keyframes girar { to { transform: rotate(360deg); } }
 
-/* ── Panel (autor y reseñador) ────────────────────────────── */
+/* ── Panel ────────────────────────────────────────────────── */
 .panel-header {
   display: flex;
   align-items: center;
@@ -525,7 +539,6 @@ img { max-width: 100%; display: block; }
   color: var(--bordo);
 }
 
-/* Stats */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -590,7 +603,7 @@ img { max-width: 100%; display: block; }
 .tab-contenido { display: none; }
 .tab-contenido.activo { display: block; }
 
-/* ── Listas de campañas y postulaciones ───────────────────── */
+/* ── Listas ───────────────────────────────────────────────── */
 .campanas-lista,
 .postulaciones-lista,
 .arcs-lista {
@@ -599,7 +612,6 @@ img { max-width: 100%; display: block; }
   gap: 16px;
 }
 
-/* Item de lista */
 .lista-item {
   background: var(--blanco);
   border: 1px solid var(--crema-oscura);
@@ -645,7 +657,7 @@ img { max-width: 100%; display: block; }
   margin-top: 12px;
 }
 
-/* Badges de estado */
+/* Badges */
 .badge {
   display: inline-block;
   padding: 3px 10px;
@@ -655,23 +667,14 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.3px;
 }
 
-.badge-activa    { background: #E8F5E9; color: #2E7D32; }
-.badge-pendiente { background: #FFF8E1; color: #F57F17; }
-.badge-aprobada  { background: #E8F5E9; color: #2E7D32; }
-.badge-rechazada { background: #FFEBEE; color: #C62828; }
-.badge-finalizada{ background: var(--crema); color: var(--bordo); }
-.badge-cancelada { background: #F5F5F5; color: #757575; }
+.badge-activa     { background: #E8F5E9; color: #2E7D32; }
+.badge-pendiente  { background: #FFF8E1; color: #F57F17; }
+.badge-aprobada   { background: #E8F5E9; color: #2E7D32; }
+.badge-rechazada  { background: #FFEBEE; color: #C62828; }
+.badge-finalizada { background: var(--crema); color: var(--bordo); }
+.badge-cancelada  { background: #F5F5F5; color: #757575; }
 
-/* Badges de nivel/ranking */
-.badge-nivel {
-  background: var(--bordo);
-  color: var(--crema);
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
+.badge-nivel     { background: var(--bordo); color: var(--crema); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
 .badge-top5      { background: #FFD700; color: #5D4037; }
 .badge-top20     { background: #C0C0C0; color: #424242; }
 .badge-destacado { background: var(--crema-oscura); color: var(--bordo); }
@@ -715,7 +718,8 @@ img { max-width: 100%; display: block; }
   transition: var(--transicion);
 }
 
-.plan-opcion:hover, .plan-opcion.seleccionado {
+.plan-opcion:hover,
+.plan-opcion.seleccionado {
   border-color: var(--bordo);
   box-shadow: var(--sombra);
 }
@@ -996,7 +1000,7 @@ img { max-width: 100%; display: block; }
   border-top: 1px solid var(--crema-oscura);
 }
 
-/* ── Estrellas (calificar reseña) ─────────────────────────── */
+/* ── Estrellas ────────────────────────────────────────────── */
 .estrellas-container {
   display: flex;
   justify-content: center;
