@@ -66,12 +66,12 @@ async function cargarEstadisticasAutor(email) {
       <span class="stat-label">Campañas activas</span>
     </div>
     <div class="stat-card">
-      <span class="stat-numero">${s.totalReseñas ?? 0}</span>
-      <span class="stat-label">Reseñas recibidas</span>
+     <span class="stat-numero">${s.reseñasRecibidas ?? 0}</span>
+<span class="stat-label">Reseñas recibidas</span>
     </div>
     <div class="stat-card">
-      <span class="stat-numero">${s.postulacionesPendientes ?? 0}</span>
-      <span class="stat-label">Postulaciones pendientes</span>
+     <span class="stat-numero">${s.reseñadoresAprobados ?? 0}</span>
+<span class="stat-label">Reseñadores aprobados</span>
     </div>
     <div class="stat-card">
       <span class="stat-numero">${s.promedioCalificaciones ? s.promedioCalificaciones.toFixed(1) : '—'}</span>
