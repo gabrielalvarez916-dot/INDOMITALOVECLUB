@@ -486,7 +486,7 @@ async function crearNuevaCampana(event) {
     nombreAutor:  document.getElementById('nc-nombre-autor')?.value?.trim(),
     sinopsis:     document.getElementById('nc-sinopsis')?.value?.trim(),
     genero:       document.getElementById('nc-genero')?.value?.trim(),
-    tropes:       document.getElementById('nc-tropes')?.value?.trim(),
+   tropes: obtenerTropesComoTexto('nc'),
     linkPortada:  document.getElementById('nc-link-portada')?.value?.trim(),
     linkEpub:     document.getElementById('nc-link-epub')?.value?.trim(),
     linkPdf:      document.getElementById('nc-link-pdf')?.value?.trim(),
@@ -758,7 +758,7 @@ async function agregarLibro(event) {
     titulo:         document.getElementById('libro-titulo')?.value?.trim(),
     sinopsisBreve:  document.getElementById('libro-sinopsis')?.value?.trim(),
     genero:         document.getElementById('libro-genero')?.value?.trim(),
-    tropes:         document.getElementById('libro-tropes')?.value?.trim(),
+    tropes: obtenerTropesComoTexto('libro'),
     linkPortada:    document.getElementById('libro-portada')?.value?.trim(),
     linkAmazon:     document.getElementById('libro-amazon')?.value?.trim()
   };
@@ -805,4 +805,50 @@ async function eliminarLibroAutor(idLibro, titulo) {
 
   mostrarToast('Libro eliminado.', 'ok');
   await cargarBibliotecaPanel(Sesion.email());
+}
+/ ────────────────────────────────────────────────────────────
+// SELECTOR DE LIBRO EN NUEVA CAMPAÑA
+// ────────────────────────────────────────────────────────────
+
+async function inicializarModalNuevaCampana() {
+  renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
+
+  const selector = document.getElementById('nc-libro-selector');
+  if (!selector) return;
+
+  const resultado = await llamarBackend('listarLibrosAutor', { email: Sesion.email() });
+  if (!resultado.ok) return;
+
+  const libros = resultado.datos.libros || [];
+  libros.forEach(l => {
+    const option = document.createElement('option');
+    option.value = l.id;
+    option.textContent = l.titulo;
+    selector.appendChild(option);
+  });
+}
+
+function precargarLibroEnCampana() {
+  const selector = document.getElementById('nc-libro-selector');
+  const idLibro  = selector?.value;
+
+  if (!idLibro) {
+    document.getElementById('nc-nombre-libro').value = '';
+    document.getElementById('nc-nombre-autor').value = '';
+    document.getElementById('nc-sinopsis').value     = '';
+    document.getElementById('nc-genero').value       = '';
+    renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
+    return;
+  }
+
+  const libro = _librosAutor.find(l => l.id === idLibro);
+  if (!libro) return;
+
+  document.getElementById('nc-nombre-libro').value = libro.titulo    || '';
+  document.getElementById('nc-nombre-autor').value = Sesion.obtener()?.alias || '';
+  document.getElementById('nc-sinopsis').value     = libro.sinopsisBreve || '';
+  document.getElementById('nc-genero').value       = libro.genero    || '';
+
+  const tropesArray = tropesTextoAArray(libro.tropes || '');
+  renderizarSelectorTropes('nc-tropes-contenedor', 'nc', tropesArray);
 }
