@@ -110,9 +110,19 @@ function filtrarFeed() {
 function construirCardCampaña(c) {
   const rol = Sesion.rol();
 
-  const portadaHtml = c.linkPortada
-    ? `<img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>`
-    : `<div class="campana-portada-lista-placeholder">📖</div>`;
+ const portadaHtml = c.linkPortada
+      ? `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
+           <img class="slide-libro-tapa" src="${c.linkPortada}" alt="${c.nombreLibro}" />
+           <div class="slide-libro-lomo"></div>
+           <div class="slide-libro-paginas"></div>
+           <div class="slide-libro-sombra"></div>
+         </div>`
+      : `<div class="slide-libro-3d">
+           <div class="slide-libro-tapa" style="background:var(--crema-oscura); display:flex; align-items:center; justify-content:center; font-size:64px;">📖</div>
+           <div class="slide-libro-lomo"></div>
+           <div class="slide-libro-paginas"></div>
+           <div class="slide-libro-sombra"></div>
+         </div>`;
 
   const tropesHtml = c.tropes
     ? c.tropes.split(',').slice(0, 3).map(t =>
@@ -141,8 +151,17 @@ function construirCardCampaña(c) {
         <div class="campana-tropes">${tropesHtml}</div>
         <div class="campana-datos">
           <div class="campana-dato">
-            <span class="campana-dato-label">Cupos</span>
+            <span class="campana-dato-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>Cupos
+            </span>
             <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>
+          </div>
+          <div class="campana-dato-sep"></div>
+          <div class="campana-dato">
+            <span class="campana-dato-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Fecha límite
+            </span>
+            <span class="campana-dato-valor">${formatearFechaAmigable(c.fechaLimite)}</span>
           </div>
           <div class="campana-dato-sep"></div>
           <div class="campana-dato">
@@ -388,14 +407,18 @@ const Slider = (() => {
           ${tropesHtml ? `<div class="slide-tropes">${tropesHtml}</div>` : ''}
           <div class="slide-meta">
             <div class="slide-meta-item">
-              <div class="slide-meta-icono">📅</div>
+            <div class="slide-meta-icono">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
               <div>
                 <strong>${formatearFechaAmigable(c.fechaLimite)}</strong>
                 fecha límite
               </div>
             </div>
             <div class="slide-meta-item">
-              <div class="slide-meta-icono">📚</div>
+                <div class="slide-meta-icono">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>
+            </div>
               <div>
                 <strong>${c.cuposDisponibles > 0 ? c.cuposDisponibles : 'Sin'} cupos</strong>
                 disponibles
