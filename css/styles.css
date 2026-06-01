@@ -1250,3 +1250,10 @@ img { max-width: 100%; display: block; }
   border-radius: 8px 8px 0 0;
  background: transparent;
 }
+.campana-thumb {
+  width: 60px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
