@@ -1463,18 +1463,15 @@ img { max-width: 100%; display: block; }
 /* Lomo del libro */
 .slide-libro-lomo {
   position: absolute;
-  left: -22px;
-  top: 2px;
-  width: 22px;
-  height: 306px;
+  left: -12px;
+  top: 0;
+  width: 12px;
+  height: 100%;
   background: linear-gradient(
     to right,
-    rgba(0,0,0,0.35) 0%,
-    rgba(0,0,0,0.15) 40%,
-    rgba(255,255,255,0.08) 100%
+    #1a0505,
+    #4A1020
   );
-  transform: rotateY(90deg) translateZ(-11px) translateX(-11px);
-  transform-origin: right center;
   border-radius: 2px 0 0 2px;
 }
 
