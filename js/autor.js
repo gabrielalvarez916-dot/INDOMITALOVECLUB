@@ -806,7 +806,7 @@ async function eliminarLibroAutor(idLibro, titulo) {
   mostrarToast('Libro eliminado.', 'ok');
   await cargarBibliotecaPanel(Sesion.email());
 }
-/ ────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────
 // SELECTOR DE LIBRO EN NUEVA CAMPAÑA
 // ────────────────────────────────────────────────────────────
 
