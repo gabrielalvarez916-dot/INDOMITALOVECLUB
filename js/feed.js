@@ -54,7 +54,6 @@ async function cargarFeed() {
   Slider.init();
 }
 
-// ── CAMBIO 1: renderizarFeed muestra ticker y título ────────
 function renderizarFeed(campañas) {
   const grid = document.getElementById('feed-grid');
   if (!grid) return;
@@ -76,7 +75,7 @@ function renderizarFeed(campañas) {
 
 
 // ────────────────────────────────────────────────────────────
-// FILTROS — SIN CAMBIOS
+// FILTROS
 // ────────────────────────────────────────────────────────────
 
 function filtrarFeed() {
@@ -103,26 +102,15 @@ function filtrarFeed() {
 
 
 // ────────────────────────────────────────────────────────────
-// CARD DE CAMPAÑA
-// ── CAMBIO 2: HTML nuevo formato horizontal ─────────────────
+// CARD DE CAMPAÑA — imagen simple, sin efecto libro
 // ────────────────────────────────────────────────────────────
 
 function construirCardCampaña(c) {
   const rol = Sesion.rol();
 
- const portadaHtml = c.linkPortada
-      ? `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
-           <img class="slide-libro-tapa" src="${c.linkPortada}" alt="${c.nombreLibro}" />
-           <div class="slide-libro-lomo"></div>
-           <div class="slide-libro-paginas"></div>
-           <div class="slide-libro-sombra"></div>
-         </div>`
-      : `<div class="slide-libro-3d">
-           <div class="slide-libro-tapa" style="background:var(--crema-oscura); display:flex; align-items:center; justify-content:center; font-size:64px;">📖</div>
-           <div class="slide-libro-lomo"></div>
-           <div class="slide-libro-paginas"></div>
-           <div class="slide-libro-sombra"></div>
-         </div>`;
+  const portadaHtml = c.linkPortada
+    ? `<img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>`
+    : `<div class="campana-portada-lista-placeholder">📖</div>`;
 
   const tropesHtml = c.tropes
     ? c.tropes.split(',').slice(0, 3).map(t =>
@@ -141,6 +129,9 @@ function construirCardCampaña(c) {
     botonHtml = `<button class="btn-secundario btn-sm" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte</button>`;
   }
 
+  const icoSilla = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>`;
+  const icoReloj = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+
   return `
     <div class="campana-card-horizontal" onclick="verDetalleCampaña('${c.id}')">
       ${portadaHtml}
@@ -151,21 +142,12 @@ function construirCardCampaña(c) {
         <div class="campana-tropes">${tropesHtml}</div>
         <div class="campana-datos">
           <div class="campana-dato">
-            <span class="campana-dato-label">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>Cupos
-            </span>
+            <span class="campana-dato-label">${icoSilla}Cupos</span>
             <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>
           </div>
           <div class="campana-dato-sep"></div>
           <div class="campana-dato">
-            <span class="campana-dato-label">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Fecha límite
-            </span>
-            <span class="campana-dato-valor">${formatearFechaAmigable(c.fechaLimite)}</span>
-          </div>
-          <div class="campana-dato-sep"></div>
-          <div class="campana-dato">
-            <span class="campana-dato-label">Fecha límite</span>
+            <span class="campana-dato-label">${icoReloj}Fecha límite</span>
             <span class="campana-dato-valor">${formatearFechaAmigable(c.fechaLimite)}</span>
           </div>
           <div class="campana-dato-sep"></div>
@@ -180,7 +162,7 @@ function construirCardCampaña(c) {
 
 
 // ────────────────────────────────────────────────────────────
-// DETALLE DE CAMPAÑA — SIN CAMBIOS
+// DETALLE DE CAMPAÑA
 // ────────────────────────────────────────────────────────────
 
 async function verDetalleCampaña(idCampaña) {
@@ -243,7 +225,7 @@ async function verDetalleCampaña(idCampaña) {
 
 
 // ────────────────────────────────────────────────────────────
-// POSTULACIÓN — SIN CAMBIOS
+// POSTULACIÓN
 // ────────────────────────────────────────────────────────────
 
 async function iniciarPostulacion(idCampaña) {
@@ -329,8 +311,7 @@ async function confirmarPostulacion(idCampaña) {
 
 
 // ────────────────────────────────────────────────────────────
-// SLIDER
-// ── CAMBIO 3: construye slides con HTML correcto ────────────
+// SLIDER — portada con efecto libro 3D
 // ────────────────────────────────────────────────────────────
 
 const Slider = (() => {
@@ -345,19 +326,14 @@ const Slider = (() => {
     const navEl = document.getElementById('slide-nav');
     if (!sliderEl || !navEl) return;
 
-    // Toma las primeras 5 campañas para el slider
     const campañasSlider = _campañasTodas.slice(0, 5);
     if (campañasSlider.length === 0) return;
 
-    // Mezcla el orden
     mezclar(campañasSlider);
 
-    // Genera los slides en el HTML
     const slidesHtml = campañasSlider.map(c => construirSlide(c)).join('');
-    // Inserta después de las flechas
     sliderEl.insertAdjacentHTML('beforeend', slidesHtml);
 
-    // Genera los dots
     navEl.innerHTML = campañasSlider.map((_, i) =>
       `<button class="slide-dot${i === 0 ? ' activo' : ''}" aria-label="Slide ${i + 1}"></button>`
     ).join('');
@@ -382,8 +358,18 @@ const Slider = (() => {
     const rol = Sesion.rol();
 
     const portadaHtml = c.linkPortada
-      ? `<img class="slide-portada-3d" src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none'" />`
-      : `<div class="slide-portada-3d" style="background:var(--crema-oscura); display:flex; align-items:center; justify-content:center; font-size:64px;">📖</div>`;
+      ? `<div class="slide-libro-3d">
+           <img class="slide-libro-tapa" src="${c.linkPortada}" alt="${c.nombreLibro}" />
+           <div class="slide-libro-lomo"></div>
+           <div class="slide-libro-paginas"></div>
+           <div class="slide-libro-sombra"></div>
+         </div>`
+      : `<div class="slide-libro-3d">
+           <div class="slide-libro-tapa" style="background:var(--crema-oscura);display:flex;align-items:center;justify-content:center;font-size:64px;">📖</div>
+           <div class="slide-libro-lomo"></div>
+           <div class="slide-libro-paginas"></div>
+           <div class="slide-libro-sombra"></div>
+         </div>`;
 
     const tropesHtml = c.tropes
       ? c.tropes.split(',').slice(0, 4).map(t =>
@@ -398,6 +384,9 @@ const Slider = (() => {
       botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte →</button>`;
     }
 
+    const icoReloj = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    const icoSilla = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>`;
+
     return `
       <div class="slide" onclick="verDetalleCampaña('${c.id}')">
         <div class="slide-info">
@@ -407,18 +396,14 @@ const Slider = (() => {
           ${tropesHtml ? `<div class="slide-tropes">${tropesHtml}</div>` : ''}
           <div class="slide-meta">
             <div class="slide-meta-item">
-            <div class="slide-meta-icono">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
+              <div class="slide-meta-icono">${icoReloj}</div>
               <div>
                 <strong>${formatearFechaAmigable(c.fechaLimite)}</strong>
                 fecha límite
               </div>
             </div>
             <div class="slide-meta-item">
-                <div class="slide-meta-icono">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>
-            </div>
+              <div class="slide-meta-icono">${icoSilla}</div>
               <div>
                 <strong>${c.cuposDisponibles > 0 ? c.cuposDisponibles : 'Sin'} cupos</strong>
                 disponibles
