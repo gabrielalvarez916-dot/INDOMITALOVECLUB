@@ -361,3 +361,9 @@ function cargarLibreriaEpub() {
     document.head.appendChild(s);
   });
 }
+// Exponer funciones globalmente
+window.abrirVisorEpub = abrirVisorEpub;
+window.abrirVisorPdf  = abrirVisorPdf;
+window.pdfPaginaAnterior  = pdfPaginaAnterior;
+window.pdfPaginaSiguiente = pdfPaginaSiguiente;
+window.cerrarVisor    = cerrarVisor;
