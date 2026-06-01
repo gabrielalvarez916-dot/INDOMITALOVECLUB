@@ -132,7 +132,7 @@ function renderizarSelectorTropes(contenedorId, prefijo, seleccionados = []) {
                     data-categoria="${cat.id}"
                     value="${trope}"
                     ${seleccionados.includes(trope) ? 'checked' : ''}
-                    onchange="actualizarContadorCategoria('${prefijo}', '${cat.id}', ${JSON.stringify(cat.tropes)})"
+                    onchange="actualizarContadorCategoria('${prefijo}', '${cat.id}', ${JSON.stringify(cat.tropes).replace(/"/g, '&quot;')})"
                   />
                   <span>${trope}</span>
                 </label>
