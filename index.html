@@ -300,12 +300,18 @@
           <textarea id="nc-sinopsis" class="form-textarea" rows="4" required></textarea>
         </div>
        <div class="form-grupo">
+  <label class="form-label">¿Querés usar un libro de tu biblioteca?</label>
+  <select id="nc-libro-selector" class="form-input" onchange="precargarLibroEnCampana()">
+    <option value="">— Completar manualmente —</option>
+  </select>
+</div>
+<div class="form-grupo">
   <label class="form-label">Género</label>
-  <input type="text" id="libro-genero" class="form-input" />
+  <input type="text" id="nc-genero" class="form-input" placeholder="Romance, Dark Romance..." />
 </div>
 <div class="form-grupo">
   <label class="form-label">Tropes</label>
-  <div id="libro-tropes-contenedor"></div>
+  <div id="nc-tropes-contenedor"></div>
 </div>
         <div class="form-grupo">
           <label class="form-label">Link de portada *</label>
@@ -429,15 +435,13 @@
           <label class="form-label">Sinopsis breve</label>
           <textarea id="libro-sinopsis" class="form-textarea" rows="3"></textarea>
         </div>
-        <div class="form-fila">
-          <div class="form-grupo">
-            <label class="form-label">Género</label>
-            <input type="text" id="libro-genero" class="form-input" />
-          </div>
-          <div class="form-grupo">
-            <label class="form-label">Tropes</label>
-            <input type="text" id="libro-tropes" class="form-input" />
-          </div>
+         <div class="form-grupo">
+          <label class="form-label">Género</label>
+          <input type="text" id="libro-genero" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Tropes</label>
+          <div id="libro-tropes-contenedor"></div>
         </div>
         <div class="form-grupo">
           <label class="form-label">Link de portada</label>
