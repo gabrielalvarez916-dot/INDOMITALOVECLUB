@@ -309,12 +309,17 @@ async function guardarPerfilYPostularse(event) {
     return;
   }
 
-  // Guarda perfil en backend
   const resultadoPerfil = await llamarBackend('completarDatosPostulacion', {
     email: Sesion.email(),
-    datos
+    pais:              datos.pais,
+    ciudad:            datos.ciudad,
+    instagram:         datos.instagram,
+    tiktok:            datos.tiktok,
+    amazon:            datos.amazon,
+    descripcionLector: datos.descripcionLector,
+    generos:           datos.generos
   });
-
+  
   if (!resultadoPerfil.ok) {
     mostrarMensajeError('completar-error', resultadoPerfil.mensaje);
     return;
