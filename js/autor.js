@@ -16,7 +16,7 @@ let _librosAutor        = [];
 function convertirLinkDrive(url) {
   if (!url) return url;
   const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
   return url;
 }
 
