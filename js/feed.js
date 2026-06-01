@@ -366,7 +366,7 @@ const Slider = (() => {
          </div>`
       : `<div class="slide-libro-3d">
            <div class="slide-libro-tapa" style="background:var(--crema-oscura);display:flex;align-items:center;justify-content:center;font-size:64px;">📖</div>
-           <div class="slide-libro-lomo"></div>
+           <div class="slide-libro-lomo" style="--portada-url: url('${c.linkPortada}')"></div>
            <div class="slide-libro-paginas"></div>
            <div class="slide-libro-sombra"></div>
          </div>`;
