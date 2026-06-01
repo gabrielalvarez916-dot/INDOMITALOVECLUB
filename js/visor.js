@@ -12,7 +12,7 @@
 const VISOR_CONFIG = {
   pdfWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
   pdfLib:    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-  epubLib:   'https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js'
+  epubLib: 'https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js'
 };
 
 // Estado global del visor
