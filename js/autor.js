@@ -222,17 +222,17 @@ function construirCardPostulacion(p) {
     <div class="postulacion-card">
       <div class="postulacion-card-header">
         <div>
-          <p class="postulacion-alias"><strong>${p.alias || p.email}</strong></p>
-          <p class="postulacion-meta">${p.pais || ''}${p.ciudad ? `, ${p.ciudad}` : ''} · Nivel: ${p.labelNivel || '—'}</p>
+          <p class="postulacion-alias"><strong>${p.reseñador?.alias || p.email}</strong></p>
+          <p class="postulacion-meta">${p.reseñador?.pais || ''}${p.reseñador?.ciudad ? `, ${p.reseñador.ciudad}` : ''} · Nivel: ${p.reseñador?.labelNivel || '—'}</p>
         </div>
         ${badgeEstado(p.estado)}
       </div>
       ${p.descripcionLector ? `<p class="postulacion-descripcion">${truncarTexto(p.descripcionLector, 150)}</p>` : ''}
       <div class="postulacion-redes">
-        ${p.instagram ? `<a href="${p.instagram}" target="_blank" class="red-link">Instagram</a>` : ''}
-        ${p.tiktok    ? `<a href="${p.tiktok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
-        ${p.amazon    ? `<a href="${p.amazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
-      </div>
+  ${p.reseñador?.instagram ? `<a href="${p.reseñador.instagram}" target="_blank" class="red-link">Instagram</a>` : ''}
+  ${p.reseñador?.tiktok    ? `<a href="${p.reseñador.tiktok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
+  ${p.reseñador?.amazon    ? `<a href="${p.reseñador.amazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
+</div>
       ${botonesAccion ? `<div class="postulacion-acciones">${botonesAccion}</div>` : ''}
     </div>
   `;
