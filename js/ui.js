@@ -197,6 +197,7 @@ function mostrarModal(idModal) {
   if (idModal === 'modal-nueva-campana') {
     inicializarModalNuevaCampana();
   }
+}
 
 /**
  * Cierra todos los modales abiertos.
