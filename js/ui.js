@@ -474,12 +474,18 @@ function formatearFechaAmigable(fechaStr) {
     'julio','agosto','septiembre','octubre','noviembre','diciembre'
   ];
   try {
+    // Intenta formato DD/MM/YYYY
     const partes = fechaStr.toString().split('/');
     if (partes.length >= 2) {
       const dia = parseInt(partes[0]);
       const mes = parseInt(partes[1]) - 1;
       const año = partes[2] ? parseInt(partes[2]) : new Date().getFullYear();
       return `${dia} de ${meses[mes]} de ${año}`;
+    }
+    // Intenta formato ISO
+    const fecha = new Date(fechaStr);
+    if (!isNaN(fecha)) {
+      return `${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
     }
     return fechaStr;
   } catch {
