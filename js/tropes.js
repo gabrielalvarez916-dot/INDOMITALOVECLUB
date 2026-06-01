@@ -132,7 +132,7 @@ function renderizarSelectorTropes(contenedorId, prefijo, seleccionados = []) {
                     data-categoria="${cat.id}"
                     value="${trope}"
                     ${seleccionados.includes(trope) ? 'checked' : ''}
-                    onchange="actualizarContadorCategoria('${prefijo}', '${cat.id}', ${JSON.stringify(cat.tropes).replace(/"/g, '&quot;')})"
+                    onchange="actualizarContadorCategoria('${prefijo}', '${cat.id}')"
                   />
                   <span>${trope}</span>
                 </label>
@@ -216,7 +216,7 @@ function contarSeleccionadosEnCategoria(tropesCategoria, seleccionados) {
  * @param {string} catId
  * @param {string[]} tropesCategoria
  */
-function actualizarContadorCategoria(prefijo, catId, tropesCategoria) {
+function actualizarContadorCategoria(prefijo, catId) {
   const contador = document.getElementById(`${prefijo}-contador-${catId}`);
   if (!contador) return;
 
@@ -228,7 +228,6 @@ function actualizarContadorCategoria(prefijo, catId, tropesCategoria) {
 
   actualizarPreviewTropes(prefijo);
 }
-
 
 // ────────────────────────────────────────────────────────────
 // PREVIEW DE TROPES SELECCIONADOS
