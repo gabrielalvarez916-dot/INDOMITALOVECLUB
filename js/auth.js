@@ -192,21 +192,23 @@ function completarLogin(usuario) {
 async function verificarSesionActiva() {
   const usuario = Sesion.obtener();
   if (!usuario) return;
-
   const resultado = await llamarBackend('verificarSesion', {
     email: usuario.email
   });
-
   if (!resultado.ok) {
     Sesion.cerrar();
     mostrarHeaderDeslogueado();
     mostrarSeccion('login');
     return;
   }
-
   Sesion.guardar(resultado.datos.usuario);
   mostrarHeaderLogueado(resultado.datos.usuario);
+  const fotoEl = document.getElementById('perfil-foto');
+  if (fotoEl && resultado.datos.usuario.fotoPerfil) {
+    fotoEl.src = resultado.datos.usuario.fotoPerfil;
+  }
 }
+
 
 
 // ────────────────────────────────────────────────────────────
