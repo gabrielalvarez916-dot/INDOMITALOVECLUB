@@ -83,11 +83,33 @@
 
   <!-- SECCIÓN: FEED -->
   <section id="seccion-feed" class="seccion" style="display:none;">
-    <div class="seccion-inner">
-      <div class="feed-hero">
-        <h2 class="feed-titulo">Campañas activas</h2>
-        <p class="feed-subtitulo">Descubrí los libros que buscan reseñad@res este mes</p>
+
+    <!-- Slider hero -->
+    <div id="feed-slider-wrapper">
+      <div class="feed-slider" id="feed-slider">
+        <button class="slide-arrow slide-arrow-prev" aria-label="Anterior">&#8592;</button>
+        <button class="slide-arrow slide-arrow-next" aria-label="Siguiente">&#8594;</button>
       </div>
+      <div class="slide-nav" id="slide-nav"></div>
+    </div>
+
+    <!-- Ticker -->
+    <div class="feed-ticker" id="feed-ticker" style="display:none;">
+      <div class="feed-ticker-track">
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+        <span class="feed-ticker-item">Nueva campaña</span><span class="feed-ticker-sep">✦</span>
+      </div>
+    </div>
+
+    <div class="seccion-inner">
+
+      <!-- Filtros -->
       <div id="feed-filtros" class="filtros">
         <input type="text" id="filtro-buscar" placeholder="Buscar por título o autor..." class="input-buscar" oninput="filtrarFeed()" />
         <select id="filtro-genero" class="select-filtro" onchange="filtrarFeed()">
@@ -99,6 +121,8 @@
           <option value="new adult">New Adult</option>
         </select>
       </div>
+
+      <!-- Estados -->
       <div id="feed-cargando" class="cargando-container">
         <div class="spinner"></div>
         <p>Cargando campañas...</p>
@@ -108,7 +132,11 @@
         <p class="estado-vacio-texto">No hay campañas activas en este momento.</p>
         <p class="estado-vacio-sub">Volvé pronto o activá las notificaciones.</p>
       </div>
-      <div id="feed-grid" class="campanas-grid" style="display:none;"></div>
+
+      <!-- Lista vertical -->
+      <p class="feed-lista-titulo" id="feed-lista-titulo" style="display:none;">Todas las campañas</p>
+      <div id="feed-grid" class="campanas-lista-vertical" style="display:none;"></div>
+
     </div>
   </section>
 
