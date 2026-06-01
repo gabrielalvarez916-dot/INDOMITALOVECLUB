@@ -495,10 +495,20 @@ async function crearNuevaCampana(event) {
     fechaLimite:  document.getElementById('nc-fecha-limite')?.value?.trim()
   };
 
-  const resultado = await llamarBackend('crearCampana', {
-    email: Sesion.email(),
-    datos
-  });
+ const resultado = await llamarBackend('crearCampana', {
+    email:        Sesion.email(),
+    nombreLibro:  datos.nombreLibro,
+    nombreAutor:  datos.nombreAutor,
+    sinopsis:     datos.sinopsis,
+    genero:       datos.genero,
+    tropes:       datos.tropes,
+    linkPortada:  datos.linkPortada,
+    linkEpub:     datos.linkEpub,
+    linkPdf:      datos.linkPdf,
+    linkAmazon:   datos.linkAmazon,
+    cuposTotal:   datos.cuposTotal,
+    fechaLimite:  datos.fechaLimite
+});
 
   toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
 
