@@ -768,10 +768,15 @@ async function agregarLibro(event) {
     return;
   }
 
-  const resultado = await llamarBackend('agregarLibro', {
-    email: Sesion.email(),
-    datos
-  });
+ const resultado = await llamarBackend('agregarLibro', {
+    email:         Sesion.email(),
+    titulo:        datos.titulo,
+    sinopsisBreve: datos.sinopsisBreve,
+    genero:        datos.genero,
+    tropes:        datos.tropes,
+    linkPortada:   datos.linkPortada,
+    linkAmazon:    datos.linkAmazon
+});
 
   if (!resultado.ok) {
     mostrarMensajeError('libro-error', resultado.mensaje);
