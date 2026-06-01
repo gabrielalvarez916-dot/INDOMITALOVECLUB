@@ -842,6 +842,8 @@ function precargarLibroEnCampana() {
     document.getElementById('nc-nombre-autor').value = '';
     document.getElementById('nc-sinopsis').value     = '';
     document.getElementById('nc-genero').value       = '';
+    document.getElementById('nc-link-portada').value = '';
+    document.getElementById('nc-link-amazon').value  = '';
     renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
     return;
   }
@@ -849,10 +851,12 @@ function precargarLibroEnCampana() {
   const libro = _librosAutor.find(l => l.id === idLibro);
   if (!libro) return;
 
-  document.getElementById('nc-nombre-libro').value = libro.titulo    || '';
+  document.getElementById('nc-nombre-libro').value = libro.titulo      || '';
   document.getElementById('nc-nombre-autor').value = Sesion.obtener()?.alias || '';
-  document.getElementById('nc-sinopsis').value     = libro.sinopsisBreve || '';
-  document.getElementById('nc-genero').value       = libro.genero    || '';
+  document.getElementById('nc-sinopsis').value     = libro.sinopsis    || '';
+  document.getElementById('nc-genero').value       = libro.genero      || '';
+  document.getElementById('nc-link-portada').value = libro.linkPortada || '';
+  document.getElementById('nc-link-amazon').value  = libro.linkAmazon  || '';
 
   const tropesArray = tropesTextoAArray(libro.tropes || '');
   renderizarSelectorTropes('nc-tropes-contenedor', 'nc', tropesArray);
