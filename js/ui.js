@@ -184,12 +184,19 @@ function mostrarModal(idModal) {
     return;
   }
 
-  if (overlay) overlay.classList.add('activo');
+ if (overlay) overlay.classList.add('activo');
   modal.classList.add('activo');
 
   // Evita scroll del body mientras el modal está abierto
   document.body.style.overflow = 'hidden';
-}
+
+  // Inicializa los selectores de tropes según el modal
+  if (idModal === 'modal-nuevo-libro') {
+    renderizarSelectorTropes('libro-tropes-contenedor', 'libro');
+  }
+  if (idModal === 'modal-nueva-campana') {
+    inicializarModalNuevaCampana();
+  }
 
 /**
  * Cierra todos los modales abiertos.
