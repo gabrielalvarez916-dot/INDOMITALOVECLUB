@@ -1114,3 +1114,126 @@ img { max-width: 100%; display: block; }
   align-items: center;
   gap: 10px;
 }
+/* ── Tropes ───────────────────────────────────────────────── */
+.tropes-acordeon {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tropes-categoria {
+  border: 1.5px solid var(--gris-borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.tropes-categoria-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--crema-suave);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transicion);
+}
+
+.tropes-categoria-header:hover {
+  background: var(--crema);
+}
+
+.tropes-categoria.abierta .tropes-categoria-header {
+  background: var(--crema);
+  border-bottom: 1.5px solid var(--gris-borde);
+}
+
+.tropes-categoria-nombre {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gris-texto);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tropes-categoria-contador {
+  font-size: 12px;
+  color: var(--bordo);
+  font-weight: 700;
+}
+
+.tropes-categoria-chevron {
+  font-size: 12px;
+  color: var(--gris-suave);
+}
+
+.tropes-categoria-body {
+  padding: 12px 14px;
+  background: var(--blanco);
+}
+
+.tropes-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.tropes-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gris-texto);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radio);
+  transition: var(--transicion);
+}
+
+.tropes-checkbox-label:hover {
+  background: var(--crema-suave);
+}
+
+.tropes-checkbox-label input[type="checkbox"] {
+  accent-color: var(--bordo);
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.tropes-seleccionados-preview {
+  margin-top: 10px;
+  min-height: 24px;
+}
+
+.tropes-preview-vacio {
+  font-size: 12px;
+  color: var(--gris-suave);
+  font-style: italic;
+}
+
+.tropes-preview-label {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin-bottom: 6px;
+}
+
+.tropes-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tropes-tag {
+  background: var(--crema);
+  color: var(--bordo);
+  border: 1px solid var(--crema-oscura);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
