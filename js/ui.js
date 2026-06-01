@@ -191,13 +191,16 @@ function mostrarModal(idModal) {
   document.body.style.overflow = 'hidden';
 
   // Inicializa los selectores de tropes según el modal
-  if (idModal === 'modal-nuevo-libro') {
-    renderizarSelectorTropes('libro-tropes-contenedor', 'libro');
+ if (idModal === 'modal-nuevo-libro') {
+    if (typeof renderizarSelectorTropes === 'function') {
+      renderizarSelectorTropes('libro-tropes-contenedor', 'libro');
+    }
   }
   if (idModal === 'modal-nueva-campana') {
-    inicializarModalNuevaCampana();
+    if (typeof inicializarModalNuevaCampana === 'function') {
+      inicializarModalNuevaCampana();
+    }
   }
-}
 
 /**
  * Cierra todos los modales abiertos.
