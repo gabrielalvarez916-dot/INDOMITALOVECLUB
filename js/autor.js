@@ -214,8 +214,8 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
  */
 function construirCardPostulacion(p) {
   const botonesAccion = p.estado === 'pendiente' ? `
-    <button class="btn-primario btn-sm" onclick="accionPostulacion('${p.id}', 'aprobar')">Aprobar</button>
-    <button class="btn-secundario btn-sm btn-peligro" onclick="accionPostulacion('${p.id}', 'rechazar')">Rechazar</button>
+    <button class="btn-primario btn-sm" onclick="accionPostulacion('${p.idPostulacion}', 'aprobar')">Aprobar</button>
+    <button class="btn-secundario btn-sm btn-peligro" onclick="accionPostulacion('${p.idPostulacion}', 'rechazar')">Rechazar</button>
   ` : '';
 
   return `
