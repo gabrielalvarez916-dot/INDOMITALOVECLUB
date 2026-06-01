@@ -60,7 +60,7 @@ async function cargarEstadisticasReseñador(email) {
       <span class="stat-label">Reseñas totales</span>
     </div>
     <div class="stat-card">
-      <span class="stat-numero">${u.labelNivel || 'Nuevo miembro'}</span>
+      <span class="stat-badge">${u.labelNivel || 'Nuevo miembro'}</span>
       <span class="stat-label">Nivel</span>
     </div>
     <div class="stat-card">
