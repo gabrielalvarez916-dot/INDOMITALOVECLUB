@@ -9,17 +9,17 @@
 // CONFIGURACIÓN
 // ────────────────────────────────────────────────────────────
 
-const VISOR_CONFIG = {
+var VISOR_CONFIG = {
   pdfWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
   pdfLib:    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   epubLib: 'https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js'
 };
 
 // Estado global del visor
-let _visorPdf  = null;
-let _visorEpub = null;
-let _pdfPaginaActual = 1;
-let _pdfTotalPaginas = 0;
+var _visorPdf  = null;
+var _visorEpub = null;
+var _pdfPaginaActual = 1;
+var _pdfTotalPaginas = 0;
 
 
 // ────────────────────────────────────────────────────────────
