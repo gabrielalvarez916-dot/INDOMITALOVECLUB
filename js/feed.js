@@ -8,7 +8,6 @@
 // VARIABLES GLOBALES DEL FEED
 // ────────────────────────────────────────────────────────────
 
-// Guarda todas las campañas cargadas para filtrar sin volver a llamar al backend
 let _campañasTodas = [];
 
 
@@ -16,19 +15,16 @@ let _campañasTodas = [];
 // CARGAR FEED
 // ────────────────────────────────────────────────────────────
 
-/**
- * Carga las campañas activas desde el backend y las muestra en el feed.
- * Se llama automáticamente cuando se muestra la sección feed.
- */
 async function cargarFeed() {
   const grid = document.getElementById('feed-grid');
   const cargando = document.getElementById('feed-cargando');
   const vacio = document.getElementById('feed-vacio');
 
-  // Muestra spinner, oculta grid y estado vacío
   toggleElemento('feed-cargando', true);
   toggleElemento('feed-grid', false);
   toggleElemento('feed-vacio', false);
+  toggleElemento('feed-lista-titulo', false);
+  toggleElemento('feed-ticker', false);
 
   const resultado = await llamarBackend('listarCampanasFeed', {});
 
@@ -58,42 +54,37 @@ async function cargarFeed() {
   Slider.init();
 }
 
-/**
- * Renderiza las cards de campaña en el grid.
- *
- * @param {Array} campañas — array de objetos de campaña
- */
+// ── CAMBIO 1: renderizarFeed muestra ticker y título ────────
 function renderizarFeed(campañas) {
   const grid = document.getElementById('feed-grid');
   if (!grid) return;
 
   if (campañas.length === 0) {
     toggleElemento('feed-grid', false);
+    toggleElemento('feed-lista-titulo', false);
+    toggleElemento('feed-ticker', false);
     toggleElemento('feed-vacio', true);
     return;
   }
 
   grid.innerHTML = campañas.map(c => construirCardCampaña(c)).join('');
-  toggleElemento('feed-grid', true, 'grid');
+  toggleElemento('feed-grid', true);
+  toggleElemento('feed-lista-titulo', true);
+  toggleElemento('feed-ticker', true);
   toggleElemento('feed-vacio', false);
 }
 
 
 // ────────────────────────────────────────────────────────────
-// FILTROS
+// FILTROS — SIN CAMBIOS
 // ────────────────────────────────────────────────────────────
 
-/**
- * Filtra las campañas por texto y género.
- * Se llama en tiempo real mientras el usuario escribe o cambia el filtro.
- */
 function filtrarFeed() {
   const textoBuscar = (document.getElementById('filtro-buscar')?.value || '').toLowerCase().trim();
   const generoFiltro = (document.getElementById('filtro-genero')?.value || '').toLowerCase().trim();
 
   let campañasFiltradas = _campañasTodas;
 
-  // Filtra por texto (busca en título y autor)
   if (textoBuscar) {
     campañasFiltradas = campañasFiltradas.filter(c =>
       c.nombreLibro.toLowerCase().includes(textoBuscar) ||
@@ -101,7 +92,6 @@ function filtrarFeed() {
     );
   }
 
-  // Filtra por género
   if (generoFiltro) {
     campañasFiltradas = campañasFiltradas.filter(c =>
       c.genero && c.genero.toLowerCase().includes(generoFiltro)
@@ -114,35 +104,23 @@ function filtrarFeed() {
 
 // ────────────────────────────────────────────────────────────
 // CARD DE CAMPAÑA
+// ── CAMBIO 2: HTML nuevo formato horizontal ─────────────────
 // ────────────────────────────────────────────────────────────
 
-/**
- * Construye el HTML de una card de campaña para el feed.
- *
- * @param {Object} c — datos de la campaña
- * @returns {string} HTML de la card
- */
 function construirCardCampaña(c) {
-  const cuposTexto = c.cuposDisponibles > 0
-    ? `<span>${c.cuposDisponibles}</span> cupos disponibles`
-    : `<span style="color:#C0392B">Sin cupos</span>`;
+  const rol = Sesion.rol();
 
   const portadaHtml = c.linkPortada
-    ? `<img class="campana-portada" src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-placeholder" style="display:none">📖</div>`
-    : `<div class="campana-portada-placeholder">📖</div>`;
-
-  const generoHtml = c.genero
-    ? `<span class="campana-genero">${c.genero}</span>`
-    : '';
+    ? `<img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>`
+    : `<div class="campana-portada-lista-placeholder">📖</div>`;
 
   const tropesHtml = c.tropes
-    ? `<p class="campana-sinopsis" style="font-size:12px; color:var(--gris-suave); margin-bottom:8px;">${truncarTexto(c.tropes, 60)}</p>`
+    ? c.tropes.split(',').slice(0, 3).map(t =>
+        `<span class="campana-trope">${t.trim()}</span>`
+      ).join('')
     : '';
 
-  // Botón postularse solo para reseñadores logueados
-  const rol = Sesion.rol();
   let botonHtml = '';
-
   if (rol === 'reseñador') {
     if (c.cuposDisponibles > 0) {
       botonHtml = `<button class="btn-primario btn-sm" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`;
@@ -150,24 +128,32 @@ function construirCardCampaña(c) {
       botonHtml = `<button class="btn-secundario btn-sm" disabled style="opacity:0.5; cursor:not-allowed;">Sin cupos</button>`;
     }
   } else if (!rol) {
-    // No logueado: muestra botón que invita a ingresar
     botonHtml = `<button class="btn-secundario btn-sm" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte</button>`;
   }
 
   return `
-    <div class="campana-card" onclick="verDetalleCampaña('${c.id}')">
+    <div class="campana-card-horizontal" onclick="verDetalleCampaña('${c.id}')">
       ${portadaHtml}
-      <div class="campana-body">
-        ${generoHtml}
+      <div class="campana-info">
+        <p class="campana-autor">${c.nombreAutor}</p>
         <h3 class="campana-titulo">${c.nombreLibro}</h3>
-        <p class="campana-autor">por ${c.nombreAutor}</p>
-        <p class="campana-sinopsis">${truncarTexto(c.sinopsis, 120)}</p>
-        ${tropesHtml}
-        <div class="campana-footer">
-          <span class="campana-cupos">${cuposTexto}</span>
-          <span style="font-size:11px; color:var(--gris-suave)">Hasta ${formatearFechaAmigable(c.fechaLimite)}</span>
+        ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
+        <div class="campana-tropes">${tropesHtml}</div>
+        <div class="campana-datos">
+          <div class="campana-dato">
+            <span class="campana-dato-label">Cupos</span>
+            <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>
+          </div>
+          <div class="campana-dato-sep"></div>
+          <div class="campana-dato">
+            <span class="campana-dato-label">Fecha límite</span>
+            <span class="campana-dato-valor">${formatearFechaAmigable(c.fechaLimite)}</span>
+          </div>
+          <div class="campana-dato-sep"></div>
+          <div class="campana-dato" style="margin-left:auto;">
+            ${botonHtml}
+          </div>
         </div>
-        ${botonHtml ? `<div style="margin-top:12px;">${botonHtml}</div>` : ''}
       </div>
     </div>
   `;
@@ -175,16 +161,9 @@ function construirCardCampaña(c) {
 
 
 // ────────────────────────────────────────────────────────────
-// DETALLE DE CAMPAÑA
+// DETALLE DE CAMPAÑA — SIN CAMBIOS
 // ────────────────────────────────────────────────────────────
 
-/**
- * Abre el modal de detalle de una campaña.
- * Llama al backend para obtener el detalle completo.
- * Si el reseñador está aprobado, también muestra links de EPUB y PDF.
- *
- * @param {string} idCampaña
- */
 async function verDetalleCampaña(idCampaña) {
   mostrarModal('modal-detalle-campana');
 
@@ -210,12 +189,9 @@ async function verDetalleCampaña(idCampaña) {
   const c = resultado.datos.campaña;
   if (titulo) titulo.textContent = c.nombreLibro;
 
-  // Construye el cuerpo del modal
   const portadaHtml = c.linkPortada
     ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; margin-bottom:20px;" onerror="this.style.display='none'" />`
     : '';
-
-  const visoresHtml = '';
 
   const amazonHtml = c.linkAmazon
     ? `<a href="${c.linkAmazon}" target="_blank" class="btn-secundario btn-sm" style="display:inline-block; margin-top:8px;">🛒 Ver en Amazon</a>`
@@ -232,12 +208,10 @@ async function verDetalleCampaña(idCampaña) {
         <p style="font-size:13px;"><strong>Cupos disponibles:</strong> ${c.cuposDisponibles} de ${c.cuposTotal}</p>
         <p style="font-size:13px;"><strong>Fecha límite:</strong> ${formatearFechaAmigable(c.fechaLimite)}</p>
       </div>
-      ${visoresHtml}
       ${amazonHtml}
     `;
   }
 
-  // Footer con botón postularse
   const rol = Sesion.rol();
   if (footer) {
     if (rol === 'reseñador' && c.cuposDisponibles > 0) {
@@ -250,16 +224,9 @@ async function verDetalleCampaña(idCampaña) {
 
 
 // ────────────────────────────────────────────────────────────
-// POSTULACIÓN
+// POSTULACIÓN — SIN CAMBIOS
 // ────────────────────────────────────────────────────────────
 
-/**
- * Inicia el proceso de postulación a una campaña.
- * Si el reseñador ya tiene datos completos, abre el modal de confirmación.
- * Si es la primera vez, abre el modal para completar el perfil.
- *
- * @param {string} idCampaña
- */
 async function iniciarPostulacion(idCampaña) {
   const email = Sesion.email();
   if (!email) {
@@ -269,24 +236,15 @@ async function iniciarPostulacion(idCampaña) {
 
   const usuario = Sesion.obtener();
 
-  // Verifica si ya tiene datos de perfil completos
   if (!usuario.pais || !usuario.ciudad) {
-    // Primera postulación: pide completar perfil
     const inputCampaña = document.getElementById('completar-id-campana');
     if (inputCampaña) inputCampaña.value = idCampaña;
     mostrarModal('modal-completar-perfil');
   } else {
-    // Ya tiene perfil: va directo al modal de postulación
     await confirmarPostulacion(idCampaña);
   }
 }
 
-/**
- * Guarda el perfil del reseñador y luego se postula.
- * Se llama desde el formulario del modal completar-perfil.
- *
- * @param {Event} event
- */
 async function guardarPerfilYPostularse(event) {
   event.preventDefault();
 
@@ -320,13 +278,12 @@ async function guardarPerfilYPostularse(event) {
     descripcionLector: datos.descripcionLector,
     generos:           datos.generos
   });
-  
+
   if (!resultadoPerfil.ok) {
     mostrarMensajeError('completar-error', resultadoPerfil.mensaje);
     return;
   }
 
-  // Actualiza sesión local con los nuevos datos
   const usuarioActual = Sesion.obtener();
   Sesion.guardar({ ...usuarioActual, ...datos });
 
@@ -334,12 +291,6 @@ async function guardarPerfilYPostularse(event) {
   await confirmarPostulacion(idCampaña);
 }
 
-/**
- * Envía la postulación al backend.
- * Muestra confirmación o error.
- *
- * @param {string} idCampaña
- */
 async function confirmarPostulacion(idCampaña) {
   const email = Sesion.email();
 
@@ -357,6 +308,12 @@ async function confirmarPostulacion(idCampaña) {
   mostrarToast('¡Te postulaste exitosamente! El autor revisará tu perfil.', 'ok');
 }
 
+
+// ────────────────────────────────────────────────────────────
+// SLIDER
+// ── CAMBIO 3: construye slides con HTML correcto ────────────
+// ────────────────────────────────────────────────────────────
+
 const Slider = (() => {
   let slides = [];
   let dots = [];
@@ -365,23 +322,93 @@ const Slider = (() => {
   const INTERVALO = 5000;
 
   function init() {
-    slides = Array.from(document.querySelectorAll('.slide'));
-    dots   = Array.from(document.querySelectorAll('.slide-dot'));
-    if (slides.length === 0) return;
-    mezclar(slides);
-    slides.forEach((s, i) => s.parentElement.appendChild(s));
+    const sliderEl = document.getElementById('feed-slider');
+    const navEl = document.getElementById('slide-nav');
+    if (!sliderEl || !navEl) return;
+
+    // Toma las primeras 5 campañas para el slider
+    const campañasSlider = _campañasTodas.slice(0, 5);
+    if (campañasSlider.length === 0) return;
+
+    // Mezcla el orden
+    mezclar(campañasSlider);
+
+    // Genera los slides en el HTML
+    const slidesHtml = campañasSlider.map(c => construirSlide(c)).join('');
+    // Inserta después de las flechas
+    sliderEl.insertAdjacentHTML('beforeend', slidesHtml);
+
+    // Genera los dots
+    navEl.innerHTML = campañasSlider.map((_, i) =>
+      `<button class="slide-dot${i === 0 ? ' activo' : ''}" aria-label="Slide ${i + 1}"></button>`
+    ).join('');
+
+    slides = Array.from(sliderEl.querySelectorAll('.slide'));
+    dots   = Array.from(navEl.querySelectorAll('.slide-dot'));
+
     mostrar(0);
     iniciarAutoplay();
-    const prev = document.querySelector('.slide-arrow-prev');
-    const next = document.querySelector('.slide-arrow-next');
+
+    const prev = sliderEl.querySelector('.slide-arrow-prev');
+    const next = sliderEl.querySelector('.slide-arrow-next');
     if (prev) prev.addEventListener('click', () => { ir(actual - 1); reiniciarAutoplay(); });
     if (next) next.addEventListener('click', () => { ir(actual + 1); reiniciarAutoplay(); });
     dots.forEach((d, i) => d.addEventListener('click', () => { ir(i); reiniciarAutoplay(); }));
-    const slider = document.querySelector('.feed-slider');
-    if (slider) {
-      slider.addEventListener('mouseenter', () => clearInterval(timer));
-      slider.addEventListener('mouseleave', () => iniciarAutoplay());
+
+    sliderEl.addEventListener('mouseenter', () => clearInterval(timer));
+    sliderEl.addEventListener('mouseleave', () => iniciarAutoplay());
+  }
+
+  function construirSlide(c) {
+    const rol = Sesion.rol();
+
+    const portadaHtml = c.linkPortada
+      ? `<img class="slide-portada-3d" src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none'" />`
+      : `<div class="slide-portada-3d" style="background:var(--crema-oscura); display:flex; align-items:center; justify-content:center; font-size:64px;">📖</div>`;
+
+    const tropesHtml = c.tropes
+      ? c.tropes.split(',').slice(0, 4).map(t =>
+          `<span class="slide-trope">${t.trim()}</span>`
+        ).join('')
+      : '';
+
+    let botonHtml = '';
+    if (rol === 'reseñador' && c.cuposDisponibles > 0) {
+      botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme →</button>`;
+    } else if (!rol) {
+      botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte →</button>`;
     }
+
+    return `
+      <div class="slide" onclick="verDetalleCampaña('${c.id}')">
+        <div class="slide-info">
+          ${c.genero ? `<span class="slide-genero">${c.genero}</span>` : ''}
+          <h2 class="slide-titulo">${c.nombreLibro}</h2>
+          <p class="slide-autor">por ${c.nombreAutor}</p>
+          ${tropesHtml ? `<div class="slide-tropes">${tropesHtml}</div>` : ''}
+          <div class="slide-meta">
+            <div class="slide-meta-item">
+              <div class="slide-meta-icono">📅</div>
+              <div>
+                <strong>${formatearFechaAmigable(c.fechaLimite)}</strong>
+                fecha límite
+              </div>
+            </div>
+            <div class="slide-meta-item">
+              <div class="slide-meta-icono">📚</div>
+              <div>
+                <strong>${c.cuposDisponibles > 0 ? c.cuposDisponibles : 'Sin'} cupos</strong>
+                disponibles
+              </div>
+            </div>
+          </div>
+          <div class="slide-acciones">${botonHtml}</div>
+        </div>
+        <div class="slide-portada-wrap">
+          ${portadaHtml}
+        </div>
+      </div>
+    `;
   }
 
   function mezclar(arr) {
