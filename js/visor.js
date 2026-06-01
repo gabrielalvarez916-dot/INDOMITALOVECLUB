@@ -1,60 +1,46 @@
 // ============================================================
 // visor.js — Indómita Love Club
-// Visor de EPUB y PDF usando Google Docs Viewer
-// Detecta automáticamente el ID de Drive desde cualquier formato de URL
+// Visor de EPUB con Epub.js y PDF con PDF.js
+// Usa el proxy /api/drive para evitar CORS con Google Drive
 // ============================================================
+
+
+// ────────────────────────────────────────────────────────────
+// CONFIGURACIÓN
+// ────────────────────────────────────────────────────────────
+
+const VISOR_CONFIG = {
+  pdfWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  pdfLib:    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  epubLib:   'https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js'
+};
+
+// Estado global del visor
+let _visorPdf  = null;
+let _visorEpub = null;
+let _pdfPaginaActual = 1;
+let _pdfTotalPaginas = 0;
 
 
 // ────────────────────────────────────────────────────────────
 // EXTRAER ID DE DRIVE
 // ────────────────────────────────────────────────────────────
 
-/**
- * Extrae el ID de un archivo de Google Drive desde cualquier formato de URL.
- * Soporta todos los formatos que Google genera:
- * - https://drive.google.com/file/d/ID/view
- * - https://drive.google.com/file/d/ID/edit
- * - https://drive.google.com/open?id=ID
- * - https://drive.google.com/thumbnail?id=ID
- * - https://docs.google.com/document/d/ID/edit
- * - https://drive.google.com/uc?id=ID
- *
- * @param {string} url
- * @returns {string|null} ID del archivo o null si no encuentra
- */
-function extraerIdDriveVisor(url) {
+function extraerIdDrive(url) {
   if (!url) return null;
   try {
-    // Formato /d/ID/
     const matchFile = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (matchFile) return matchFile[1];
-    // Formato ?id=ID o &id=ID
     const matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (matchId) return matchId[1];
     return null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-/**
- * Convierte cualquier URL de Drive a una URL compatible con Google Docs Viewer.
- * Si no es una URL de Drive, la devuelve tal cual.
- *
- * @param {string} url
- * @returns {string} URL para Google Docs Viewer
- */
-function convertirAUrlVisor(url) {
-  if (!url) return '';
-
-  const id = extraerIdDriveVisor(url);
-  if (id) {
-    // URL directa de descarga de Drive — compatible con Google Docs Viewer
-    return `https://drive.google.com/file/d/${id}/preview`;
-  }
-
-  // Si no es Drive, devuelve la URL original
-  return url;
+function urlProxy(url) {
+  const id = extraerIdDrive(url);
+  if (!id) return null;
+  return `/api/drive?id=${id}`;
 }
 
 
@@ -62,22 +48,17 @@ function convertirAUrlVisor(url) {
 // ABRIR VISOR EPUB
 // ────────────────────────────────────────────────────────────
 
-/**
- * Abre el visor de EPUB en un modal.
- * Usa Google Docs Viewer con preview embebido.
- * El archivo se muestra pero no se puede descargar directamente.
- *
- * @param {string} urlEpub — URL del archivo EPUB en Drive (cualquier formato)
- * @param {string} tituloLibro — título del libro para mostrar en el modal
- */
-function abrirVisorEpub(urlEpub, tituloLibro) {
-  if (!urlEpub) {
-    mostrarToast('No hay archivo EPUB disponible.', 'error');
-    return;
-  }
+async function abrirVisorEpub(urlEpub, tituloLibro) {
+  if (!urlEpub) { mostrarToast('No hay archivo EPUB disponible.', 'error'); return; }
+  const proxyUrl = urlProxy(urlEpub);
+  if (!proxyUrl) { mostrarToast('Link de EPUB inválido.', 'error'); return; }
 
-  const urlVisor = convertirAUrlVisor(urlEpub);
-  abrirVisorModal(urlVisor, tituloLibro, 'EPUB');
+  crearModalVisor();
+  configurarModalVisor(tituloLibro, 'epub');
+  mostrarModal('modal-visor');
+
+  await cargarLibreriaEpub();
+  await inicializarEpub(proxyUrl);
 }
 
 
@@ -85,174 +66,263 @@ function abrirVisorEpub(urlEpub, tituloLibro) {
 // ABRIR VISOR PDF
 // ────────────────────────────────────────────────────────────
 
-/**
- * Abre el visor de PDF en un modal.
- * Usa Google Docs Viewer con preview embebido.
- *
- * @param {string} urlPdf — URL del archivo PDF en Drive (cualquier formato)
- * @param {string} tituloLibro — título del libro para mostrar en el modal
- */
-function abrirVisorPdf(urlPdf, tituloLibro) {
-  if (!urlPdf) {
-    mostrarToast('No hay archivo PDF disponible.', 'error');
-    return;
-  }
+async function abrirVisorPdf(urlPdf, tituloLibro) {
+  if (!urlPdf) { mostrarToast('No hay archivo PDF disponible.', 'error'); return; }
+  const proxyUrl = urlProxy(urlPdf);
+  if (!proxyUrl) { mostrarToast('Link de PDF inválido.', 'error'); return; }
 
-  const urlVisor = convertirAUrlVisor(urlPdf);
-  abrirVisorModal(urlVisor, tituloLibro, 'PDF');
-}
-
-
-// ────────────────────────────────────────────────────────────
-// MODAL DEL VISOR
-// ────────────────────────────────────────────────────────────
-
-/**
- * Abre el modal genérico del visor con el archivo indicado.
- * Crea el modal dinámicamente si no existe todavía.
- *
- * @param {string} urlVisor — URL del archivo para mostrar en el iframe
- * @param {string} tituloLibro — título del libro
- * @param {string} tipo — 'EPUB' o 'PDF'
- */
-function abrirVisorModal(urlVisor, tituloLibro, tipo) {
-  // Crea el modal del visor si no existe
-  if (!document.getElementById('modal-visor')) {
-    crearModalVisor();
-  }
-
-  const titulo = document.getElementById('visor-titulo');
-  const iframe = document.getElementById('visor-iframe');
-  const cargando = document.getElementById('visor-cargando');
-
-  if (titulo) titulo.textContent = `${tituloLibro} — ${tipo}`;
-
-  // Muestra spinner mientras carga
-  if (cargando) cargando.style.display = 'flex';
-  if (iframe) {
-    iframe.style.display = 'none';
-    iframe.src = '';
-  }
-
+  crearModalVisor();
+  configurarModalVisor(tituloLibro, 'pdf');
   mostrarModal('modal-visor');
 
-  // Carga el archivo en el iframe
-  if (iframe) {
-    iframe.onload = () => {
-      if (cargando) cargando.style.display = 'none';
-      iframe.style.display = 'block';
-    };
-    iframe.onerror = () => {
-      if (cargando) cargando.style.display = 'none';
-      mostrarErrorVisor();
-    };
-    iframe.src = urlVisor;
-  }
-
-  // Fallback: si tarda más de 10 segundos muestra mensaje
-  setTimeout(() => {
-    if (cargando && cargando.style.display !== 'none') {
-      if (cargando) cargando.style.display = 'none';
-      if (iframe) iframe.style.display = 'block';
-    }
-  }, 10000);
+  await cargarLibreriaPdf();
+  await inicializarPdf(proxyUrl);
 }
 
-/**
- * Crea el modal del visor dinámicamente y lo agrega al body.
- * Se crea una sola vez y se reutiliza.
- */
+
+// ────────────────────────────────────────────────────────────
+// EPUB
+// ────────────────────────────────────────────────────────────
+
+async function inicializarEpub(url) {
+  const epubDiv  = document.getElementById('visor-epub');
+  const cargando = document.getElementById('visor-cargando');
+
+  if (!epubDiv) return;
+
+  try {
+    if (_visorEpub) { try { _visorEpub.destroy(); } catch {} _visorEpub = null; }
+
+    epubDiv.innerHTML = '';
+    if (cargando) cargando.style.display = 'flex';
+    epubDiv.style.display = 'none';
+
+    _visorEpub = ePub(url);
+
+    const rendicion = _visorEpub.renderTo(epubDiv, {
+      width:  '100%',
+      height: '100%',
+      spread: 'none',
+      flow:   'paginated'
+    });
+
+    await rendicion.display();
+
+    if (cargando) cargando.style.display = 'none';
+    epubDiv.style.display = 'block';
+
+    // Controles de navegación
+    const btnAnterior  = document.getElementById('visor-anterior');
+    const btnSiguiente = document.getElementById('visor-siguiente');
+    const ctrlEpub     = document.getElementById('visor-controles-epub');
+
+    if (ctrlEpub)     ctrlEpub.style.display = 'flex';
+    if (btnAnterior)  btnAnterior.onclick = () => rendicion.prev();
+    if (btnSiguiente) btnSiguiente.onclick = () => rendicion.next();
+
+  } catch (e) {
+    console.error('Error EPUB:', e);
+    if (cargando) cargando.style.display = 'none';
+    mostrarErrorVisor('No se pudo cargar el EPUB. Verificá que el archivo esté compartido en Drive como "Cualquiera con el link puede ver".');
+  }
+}
+
+
+// ────────────────────────────────────────────────────────────
+// PDF
+// ────────────────────────────────────────────────────────────
+
+async function inicializarPdf(url) {
+  const canvas   = document.getElementById('visor-canvas');
+  const cargando = document.getElementById('visor-cargando');
+
+  if (!canvas) return;
+
+  try {
+    if (cargando) cargando.style.display = 'flex';
+    canvas.style.display = 'none';
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = VISOR_CONFIG.pdfWorker;
+
+    _visorPdf = await pdfjsLib.getDocument(url).promise;
+    _pdfTotalPaginas = _visorPdf.numPages;
+    _pdfPaginaActual = 1;
+
+    if (cargando) cargando.style.display = 'none';
+    canvas.style.display = 'block';
+
+    await renderizarPaginaPdf(1);
+    actualizarControlesPdf();
+
+    const ctrlPdf = document.getElementById('visor-controles-pdf');
+    if (ctrlPdf) ctrlPdf.style.display = 'flex';
+
+  } catch (e) {
+    console.error('Error PDF:', e);
+    if (cargando) cargando.style.display = 'none';
+    mostrarErrorVisor('No se pudo cargar el PDF. Verificá que el archivo esté compartido en Drive como "Cualquiera con el link puede ver".');
+  }
+}
+
+async function renderizarPaginaPdf(numero) {
+  if (!_visorPdf) return;
+  const canvas  = document.getElementById('visor-canvas');
+  const context = canvas?.getContext('2d');
+  if (!canvas || !context) return;
+
+  const pagina   = await _visorPdf.getPage(numero);
+  const contenedor = document.getElementById('visor-contenido');
+  const ancho    = contenedor ? contenedor.clientWidth - 48 : 600;
+  const viewport = pagina.getViewport({ scale: 1 });
+  const escala   = ancho / viewport.width;
+  const vp       = pagina.getViewport({ scale: escala });
+
+  canvas.width  = vp.width;
+  canvas.height = vp.height;
+
+  await pagina.render({ canvasContext: context, viewport: vp }).promise;
+}
+
+async function pdfPaginaAnterior() {
+  if (_pdfPaginaActual <= 1) return;
+  _pdfPaginaActual--;
+  await renderizarPaginaPdf(_pdfPaginaActual);
+  actualizarControlesPdf();
+  document.getElementById('visor-contenido')?.scrollTo(0, 0);
+}
+
+async function pdfPaginaSiguiente() {
+  if (_pdfPaginaActual >= _pdfTotalPaginas) return;
+  _pdfPaginaActual++;
+  await renderizarPaginaPdf(_pdfPaginaActual);
+  actualizarControlesPdf();
+  document.getElementById('visor-contenido')?.scrollTo(0, 0);
+}
+
+function actualizarControlesPdf() {
+  const contador    = document.getElementById('visor-pagina-contador');
+  const btnAnterior = document.getElementById('visor-pdf-anterior');
+  const btnSiguiente = document.getElementById('visor-pdf-siguiente');
+  if (contador)     contador.textContent = `${_pdfPaginaActual} / ${_pdfTotalPaginas}`;
+  if (btnAnterior)  btnAnterior.disabled = _pdfPaginaActual <= 1;
+  if (btnSiguiente) btnSiguiente.disabled = _pdfPaginaActual >= _pdfTotalPaginas;
+}
+
+
+// ────────────────────────────────────────────────────────────
+// MODAL
+// ────────────────────────────────────────────────────────────
+
 function crearModalVisor() {
-  // Agrega el HTML del modal al body
-  const modalHtml = `
-    <div id="modal-visor" class="modal modal-visor-grande">
+  if (document.getElementById('modal-visor')) return;
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="modal-visor" class="modal">
       <div class="modal-header">
         <h3 class="modal-titulo" id="visor-titulo">Leyendo...</h3>
         <button class="modal-cerrar" onclick="cerrarVisor()">✕</button>
       </div>
-      <div class="modal-body" style="padding:0; position:relative;">
-        <div id="visor-cargando" style="
-          display:flex;
-          flex-direction:column;
-          align-items:center;
-          justify-content:center;
-          height:70vh;
-          gap:16px;
-        ">
+      <div id="visor-contenido" style="padding:0 20px 20px; height:72vh; overflow-y:auto; position:relative;">
+        <div id="visor-cargando" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:16px;">
           <div class="spinner"></div>
-          <p style="color:var(--gris-suave); font-size:14px;">Cargando el archivo...</p>
+          <p style="color:var(--gris-suave); font-size:14px;">Cargando archivo...</p>
         </div>
-        <iframe
-          id="visor-iframe"
-          style="display:none; width:100%; height:70vh; border:none;"
-          allowfullscreen
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-        ></iframe>
-        <div id="visor-error" style="display:none; padding:40px; text-align:center;">
-          <p style="font-size:48px; margin-bottom:16px;">📄</p>
-          <p style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); margin-bottom:8px;">
-            No se pudo cargar el archivo
-          </p>
-          <p style="font-size:14px; color:var(--gris-suave); margin-bottom:20px;">
-            El archivo puede no tener permisos públicos o el link puede ser incorrecto.
-          </p>
-          <p style="font-size:13px; color:var(--gris-suave);">
-            Pedile al autor que verifique que el archivo esté compartido como "Cualquiera con el link puede ver".
-          </p>
+        <canvas id="visor-canvas" style="display:none; width:100%; border-radius:4px;"></canvas>
+        <div id="visor-epub" style="display:none; height:100%;"></div>
+        <div id="visor-error" style="display:none; text-align:center; padding:40px;">
+          <p style="font-size:48px; margin-bottom:16px;">⚠️</p>
+          <p id="visor-error-msg" style="font-family:var(--fuente-titulo); font-size:17px; color:var(--bordo); margin-bottom:12px;"></p>
+          <p style="font-size:13px; color:var(--gris-suave);">El archivo debe estar compartido como<br><strong>"Cualquiera con el link puede ver"</strong></p>
         </div>
       </div>
+      <div id="visor-controles-pdf" style="display:none; align-items:center; justify-content:center; gap:16px; padding:12px 20px; border-top:1px solid var(--crema-oscura); background:var(--crema-suave); border-radius:0 0 16px 16px;">
+        <button class="btn-secundario btn-sm" id="visor-pdf-anterior" onclick="pdfPaginaAnterior()">← Anterior</button>
+        <span id="visor-pagina-contador" style="font-size:14px; font-weight:600; min-width:80px; text-align:center;"></span>
+        <button class="btn-secundario btn-sm" id="visor-pdf-siguiente" onclick="pdfPaginaSiguiente()">Siguiente →</button>
+      </div>
+      <div id="visor-controles-epub" style="display:none; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--crema-oscura); background:var(--crema-suave); border-radius:0 0 16px 16px;">
+        <button class="btn-secundario btn-sm" id="visor-anterior">← Anterior</button>
+        <span style="font-size:12px; color:var(--gris-suave);">Navegá con las flechas</span>
+        <button class="btn-secundario btn-sm" id="visor-siguiente">Siguiente →</button>
+      </div>
     </div>
-  `;
+  `);
 
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-  // Agrega el CSS del modal grande del visor si no existe
   if (!document.getElementById('visor-styles')) {
     const style = document.createElement('style');
     style.id = 'visor-styles';
     style.textContent = `
-      .modal-visor-grande {
-        max-width: 900px;
-        width: 95%;
-        max-height: 95vh;
-      }
-      @media (max-width: 768px) {
-        .modal-visor-grande {
-          width: 100%;
-          max-width: 100%;
-          max-height: 100vh;
-          top: 0;
-          left: 0;
-          transform: none;
-          border-radius: 0;
-        }
-        #visor-iframe {
-          height: 80vh !important;
-        }
-        #visor-cargando {
-          height: 80vh !important;
-        }
+      #modal-visor { max-width:860px; width:95%; max-height:96vh; overflow:hidden; }
+      #visor-contenido::-webkit-scrollbar { width:6px; }
+      #visor-contenido::-webkit-scrollbar-track { background:var(--crema-suave); }
+      #visor-contenido::-webkit-scrollbar-thumb { background:var(--crema-oscura); border-radius:3px; }
+      @media (max-width:768px) {
+        #modal-visor { width:100%; max-width:100%; max-height:100vh; top:0; left:0; transform:none; border-radius:0; }
+        #visor-contenido { height:78vh; }
       }
     `;
     document.head.appendChild(style);
   }
 }
 
-/**
- * Muestra el mensaje de error dentro del visor.
- */
-function mostrarErrorVisor() {
-  const iframe = document.getElementById('visor-iframe');
-  const error = document.getElementById('visor-error');
-  if (iframe) iframe.style.display = 'none';
-  if (error) error.style.display = 'block';
+function configurarModalVisor(titulo, tipo) {
+  const ids = ['visor-cargando','visor-canvas','visor-epub','visor-error','visor-controles-pdf','visor-controles-epub'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+
+  const tituloEl = document.getElementById('visor-titulo');
+  if (tituloEl) tituloEl.textContent = titulo;
+
+  const cargando = document.getElementById('visor-cargando');
+  if (cargando) cargando.style.display = 'flex';
+
+  const contenido = document.getElementById('visor-contenido');
+  if (contenido) contenido.style.overflowY = tipo === 'epub' ? 'hidden' : 'auto';
 }
 
-/**
- * Cierra el visor y limpia el iframe para liberar memoria.
- */
+function mostrarErrorVisor(mensaje) {
+  ['visor-cargando','visor-canvas','visor-epub'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const errorDiv = document.getElementById('visor-error');
+  const errorMsg = document.getElementById('visor-error-msg');
+  if (errorMsg) errorMsg.textContent = mensaje || 'No se pudo cargar el archivo.';
+  if (errorDiv) errorDiv.style.display = 'block';
+}
+
 function cerrarVisor() {
-  const iframe = document.getElementById('visor-iframe');
-  if (iframe) iframe.src = '';
+  if (_visorEpub) { try { _visorEpub.destroy(); } catch {} _visorEpub = null; }
+  if (_visorPdf)  { try { _visorPdf.destroy();  } catch {} _visorPdf  = null; }
+  _pdfPaginaActual = 1;
+  _pdfTotalPaginas = 0;
+  const canvas  = document.getElementById('visor-canvas');
+  const epubDiv = document.getElementById('visor-epub');
+  if (canvas)  { const ctx = canvas.getContext('2d'); if (ctx) ctx.clearRect(0,0,canvas.width,canvas.height); }
+  if (epubDiv) epubDiv.innerHTML = '';
   cerrarModales();
+}
+
+
+// ────────────────────────────────────────────────────────────
+// CARGA DINÁMICA DE LIBRERÍAS
+// ────────────────────────────────────────────────────────────
+
+function cargarLibreriaPdf() {
+  return new Promise((resolve, reject) => {
+    if (typeof pdfjsLib !== 'undefined') { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = VISOR_CONFIG.pdfLib;
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function cargarLibreriaEpub() {
+  return new Promise((resolve, reject) => {
+    if (typeof ePub !== 'undefined') { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = VISOR_CONFIG.epubLib;
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
