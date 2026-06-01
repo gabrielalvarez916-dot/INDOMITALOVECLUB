@@ -193,27 +193,33 @@ async function subirFoto(input) {
   const archivo = input.files[0];
   if (!archivo) return;
 
-  // Redimensiona la imagen a máximo 200x200px antes de mandarla
   const base64 = await redimensionarImagen(archivo, 100);
 
   const fotoEl = document.getElementById('perfil-foto');
   if (fotoEl) fotoEl.src = base64;
 
-  const resultado = await llamarBackend('subirFotoPerfil', {
-    email: Sesion.email(),
-    fotoBase64: base64
-  });
-
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al subir la foto.', 'error');
-    return;
-  }
-
-  mostrarToast('Foto actualizada.', 'ok');
-
-  if (resultado.datos?.fotoUrl) {
-    const sesionActual = Sesion.obtener();
-    Sesion.guardar({ ...sesionActual, fotoPerfil: resultado.datos.fotoUrl });
+  try {
+    const respuesta = await fetch('/api/proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'subirFotoPerfil',
+        email: Sesion.email(),
+        fotoBase64: base64
+      })
+    });
+    const resultado = await respuesta.json();
+    if (!resultado.ok) {
+      mostrarToast(resultado.mensaje || 'Error al subir la foto.', 'error');
+      return;
+    }
+    mostrarToast('Foto actualizada.', 'ok');
+    if (resultado.datos?.fotoUrl) {
+      const sesionActual = Sesion.obtener();
+      Sesion.guardar({ ...sesionActual, fotoPerfil: resultado.datos.fotoUrl });
+    }
+  } catch (e) {
+    mostrarToast('Error de conexión al subir la foto.', 'error');
   }
 }
 
