@@ -1248,5 +1248,5 @@ img { max-width: 100%; display: block; }
   height: 280px;
   object-fit: contain;
   border-radius: 8px 8px 0 0;
-  background: var(--crema-oscura);
+ background: transparent;
 }
