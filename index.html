@@ -286,25 +286,25 @@
       <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
     </div>
     <div class="modal-body">
-      <form id="form-nueva-campana" onsubmit="crearNuevaCampana(event)">
-        <div class="form-grupo">
-          <label class="form-label">Nombre del libro *</label>
-          <input type="text" id="nc-nombre-libro" class="form-input" required />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">Nombre del autor *</label>
-          <input type="text" id="nc-nombre-autor" class="form-input" required />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">Sinopsis *</label>
-          <textarea id="nc-sinopsis" class="form-textarea" rows="4" required></textarea>
-        </div>
-       <div class="form-grupo">
-  <label class="form-label">¿Querés usar un libro de tu biblioteca?</label>
-  <select id="nc-libro-selector" class="form-input" onchange="precargarLibroEnCampana()">
-    <option value="">— Completar manualmente —</option>
-  </select>
-</div>
+  <form id="form-nueva-campana" onsubmit="crearNuevaCampana(event)">
+  <div class="form-grupo">
+    <label class="form-label">¿Querés usar un libro de tu biblioteca?</label>
+    <select id="nc-libro-selector" class="form-input" onchange="precargarLibroEnCampana()">
+      <option value="">— Completar manualmente —</option>
+    </select>
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Nombre del libro *</label>
+    <input type="text" id="nc-nombre-libro" class="form-input" required />
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Nombre del autor *</label>
+    <input type="text" id="nc-nombre-autor" class="form-input" required />
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Sinopsis *</label>
+    <textarea id="nc-sinopsis" class="form-textarea" rows="4" required></textarea>
+  </div>
 <div class="form-grupo">
   <label class="form-label">Género</label>
   <input type="text" id="nc-genero" class="form-input" placeholder="Romance, Dark Romance..." />
