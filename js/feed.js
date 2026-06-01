@@ -214,12 +214,7 @@ async function verDetalleCampaña(idCampaña) {
     ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; margin-bottom:20px;" onerror="this.style.display='none'" />`
     : '';
 
-  const visoresHtml = (c.linkEpub || c.linkPdf) ? `
-    <div style="display:flex; gap:10px; margin:16px 0; flex-wrap:wrap;">
-      ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.linkEpub}', '${c.nombreLibro}')">📖 Leer EPUB</button>` : ''}
-      ${c.linkPdf ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.linkPdf}', '${c.nombreLibro}')">📄 Leer PDF</button>` : ''}
-    </div>
-  ` : '';
+  const visoresHtml = '';
 
   const amazonHtml = c.linkAmazon
     ? `<a href="${c.linkAmazon}" target="_blank" class="btn-secundario btn-sm" style="display:inline-block; margin-top:8px;">🛒 Ver en Amazon</a>`
