@@ -13,6 +13,12 @@ let _postulacionesAutor = [];
 let _historialAutor     = [];
 let _librosAutor        = [];
 
+function convertirLinkDrive(url) {
+  if (!url) return url;
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  return url;
+}
 
 // ────────────────────────────────────────────────────────────
 // CARGAR PANEL AUTOR
@@ -487,7 +493,7 @@ async function crearNuevaCampana(event) {
     sinopsis:     document.getElementById('nc-sinopsis')?.value?.trim(),
     genero:       document.getElementById('nc-genero')?.value?.trim(),
    tropes: obtenerTropesComoTexto('nc'),
-    linkPortada:  document.getElementById('nc-link-portada')?.value?.trim(),
+   linkPortada:  convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim()),
     linkEpub:     document.getElementById('nc-link-epub')?.value?.trim(),
     linkPdf:      document.getElementById('nc-link-pdf')?.value?.trim(),
     linkAmazon:   document.getElementById('nc-link-amazon')?.value?.trim(),
@@ -769,7 +775,7 @@ async function agregarLibro(event) {
     sinopsisBreve:  document.getElementById('libro-sinopsis')?.value?.trim(),
     genero:         document.getElementById('libro-genero')?.value?.trim(),
     tropes: obtenerTropesComoTexto('libro'),
-    linkPortada:    document.getElementById('libro-portada')?.value?.trim(),
+   linkPortada: convertirLinkDrive(document.getElementById('libro-portada')?.value?.trim()),
     linkAmazon:     document.getElementById('libro-amazon')?.value?.trim()
   };
 
