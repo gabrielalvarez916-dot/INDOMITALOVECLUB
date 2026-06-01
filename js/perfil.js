@@ -194,7 +194,7 @@ async function subirFoto(input) {
   if (!archivo) return;
 
   // Redimensiona la imagen a máximo 200x200px antes de mandarla
-  const base64 = await redimensionarImagen(archivo, 200);
+  const base64 = await redimensionarImagen(archivo, 100);
 
   const fotoEl = document.getElementById('perfil-foto');
   if (fotoEl) fotoEl.src = base64;
@@ -228,7 +228,7 @@ function redimensionarImagen(archivo, maxSize) {
         canvas.height = maxSize;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, maxSize, maxSize);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
+        resolve(canvas.toDataURL('image/jpeg', 0.3));
       };
       img.src = e.target.result;
     };
