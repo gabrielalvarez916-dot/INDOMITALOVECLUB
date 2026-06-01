@@ -196,14 +196,15 @@ function mostrarModal(idModal) {
       renderizarSelectorTropes('libro-tropes-contenedor', 'libro');
     }
   }
-  if (idModal === 'modal-nueva-campana') {
+ if (idModal === 'modal-nueva-campana') {
     if (typeof inicializarModalNuevaCampana === 'function') {
       inicializarModalNuevaCampana();
     }
   }
+}  // ← ESTA LLAVE CIERRA mostrarModal
 
 /**
- * Cierra todos los modales abiertos.
+ * Cierra todos los modales abiertos
  * Se llama desde el botón ✕ de cada modal y desde el overlay.
  */
 function cerrarModales() {
