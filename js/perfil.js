@@ -266,9 +266,10 @@ async function guardarAvatar() {
 
   const email = Sesion.email();
 
-  const resultado = await llamarBackend('editarPerfil', {
+ const resultado = await llamarBackend('editarPerfil', {
     email,
-    fotoPerfil: _avatarSeleccionado
+    fotoPerfil: _avatarSeleccionado,
+    soloFoto: true
   });
 
   if (!resultado.ok) {
