@@ -1766,3 +1766,31 @@ img { max-width: 100%; display: block; }
   .slide-titulo { font-size: 28px; }
   .slide-portada-3d { width: 130px; height: 183px; }
 }
+/* ── Selector de avatares ── */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.avatar-opcion {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.avatar-opcion:hover {
+  border-color: #8B1A2B;
+  transform: scale(1.05);
+}
+
+.avatar-opcion.seleccionado {
+  border-color: #8B1A2B;
+  box-shadow: 0 0 0 3px rgba(139, 26, 43, 0.3);
+  transform: scale(1.08);
+}
