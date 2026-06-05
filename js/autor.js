@@ -213,26 +213,40 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
  * @returns {string} HTML de la card
  */
 function construirCardPostulacion(p) {
+  const r = p.reseñador;
+
   const botonesAccion = p.estado === 'pendiente' ? `
     <button class="btn-primario btn-sm" onclick="accionPostulacion('${p.idPostulacion}', 'aprobar')">Aprobar</button>
     <button class="btn-secundario btn-sm btn-peligro" onclick="accionPostulacion('${p.idPostulacion}', 'rechazar')">Rechazar</button>
   ` : '';
 
+  const rankingHtml = r?.ranking?.posicion ? `
+    <p class="postulacion-ranking">
+      🏅 <strong>#${r.ranking.posicion}</strong> en el ranking
+      · ${r.ranking.completion?.toFixed(0) ?? '—'}% completion
+      · Puntaje: ${r.ranking.puntaje?.toFixed(1) ?? '—'}
+    </p>
+  ` : '';
+
+  const badgesHtml = badgesRanking(r?.badges);
+
   return `
     <div class="postulacion-card">
       <div class="postulacion-card-header">
         <div>
-          <p class="postulacion-alias"><strong>${p.reseñador?.alias || p.email}</strong></p>
-          <p class="postulacion-meta">${p.reseñador?.pais || ''}${p.reseñador?.ciudad ? `, ${p.reseñador.ciudad}` : ''} · Nivel: ${p.reseñador?.labelNivel || '—'}</p>
+          <p class="postulacion-alias"><strong>${r?.alias || p.email}</strong></p>
+          <p class="postulacion-meta">${r?.pais || ''}${r?.ciudad ? `, ${r.ciudad}` : ''} · Nivel: ${r?.labelNivel || '—'}</p>
         </div>
         ${badgeEstado(p.estado)}
       </div>
+      ${badgesHtml ? `<div style="margin:6px 0; display:flex; gap:6px; flex-wrap:wrap;">${badgesHtml}</div>` : ''}
+      ${rankingHtml}
       ${p.descripcionLector ? `<p class="postulacion-descripcion">${truncarTexto(p.descripcionLector, 150)}</p>` : ''}
       <div class="postulacion-redes">
-  ${p.reseñador?.instagram ? `<a href="${p.reseñador.instagram}" target="_blank" class="red-link">Instagram</a>` : ''}
-  ${p.reseñador?.tiktok    ? `<a href="${p.reseñador.tiktok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
-  ${p.reseñador?.amazon    ? `<a href="${p.reseñador.amazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
-</div>
+        ${r?.instagram ? `<a href="${r.instagram}" target="_blank" class="red-link">Instagram</a>` : ''}
+        ${r?.tiktok    ? `<a href="${r.tiktok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
+        ${r?.amazon    ? `<a href="${r.amazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
+      </div>
       ${botonesAccion ? `<div class="postulacion-acciones">${botonesAccion}</div>` : ''}
     </div>
   `;
