@@ -140,6 +140,12 @@ function construirCardCampaña(c) {
         <h3 class="campana-titulo">${c.nombreLibro}</h3>
         ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
         <div class="campana-tropes">${tropesHtml}</div>
+        ${c.rankingLibro ? `
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0;">
+            ${c.rankingLibro.esTop5  ? `<span class="badge badge-top5">🏆 Top 5</span>` : ''}
+            ${c.rankingLibro.esTop20 && !c.rankingLibro.esTop5 ? `<span class="badge badge-top20">⭐ Top 20</span>` : ''}
+            <span style="font-size:12px; color:var(--gris-suave);">⭐ ${c.rankingLibro.promedio?.toFixed(1) ?? '—'} · ${c.rankingLibro.totalReseñas} reseña${c.rankingLibro.totalReseñas !== 1 ? 's' : ''}</span>
+          </div>` : ''}
         <div class="campana-datos">
           <div class="campana-dato">
             <span class="campana-dato-label">${icoSilla}Cupos</span>
