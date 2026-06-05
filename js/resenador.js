@@ -434,3 +434,112 @@ async function cargarRankingReseñador(email) {
     </div>
   `;
 }
+function seleccionarEstrellaLibro(valor) {
+  document.getElementById('resena-puntuacion-libro').value = valor;
+
+  const labels = ['', 'No me gustó', 'Estuvo bien', 'Me gustó', 'Muy bueno', '¡Excelente!'];
+  document.getElementById('resena-estrellas-label').textContent = labels[valor] || '';
+
+  document.querySelectorAll('#resena-estrellas-container .estrella').forEach(btn => {
+    btn.classList.toggle('activa', parseInt(btn.dataset.valor) <= valor);
+  });
+}
+
+async function cargarRankingLibros(mesAño) {
+  const contenedor = document.getElementById('ranking-libros-contenedor');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const params = mesAño ? { mesAño } : {};
+  const resultado = await llamarBackend('obtenerRankingLibros', params);
+
+  if (!resultado.ok) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+    return;
+  }
+
+  const { mes, recomendados, masLeidos, top5, top20 } = resultado.datos;
+
+  contenedor.innerHTML = `
+    <h3 class="panel-titulo" style="margin-bottom:24px;">Ranking de libros — ${mes}</h3>
+    <div class="ranking-libros-seccion">
+      <h4 class="ranking-libros-subtitulo">⭐ Recomendado por lectores</h4>
+      <p class="ranking-libros-desc">Libros con mayor puntuación promedio este mes</p>
+      <div class="ranking-libros-lista">
+        ${recomendados.slice(0, 5).map(l => construirCardRankingLibro(l, 'recomendado')).join('') || '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'}
+      </div>
+    </div>
+    <div class="ranking-libros-seccion" style="margin-top:32px;">
+      <h4 class="ranking-libros-subtitulo">📚 Más leído</h4>
+      <p class="ranking-libros-desc">Libros con más reseñas recibidas este mes</p>
+      <div class="ranking-libros-lista">
+        ${masLeidos.slice(0, 5).map(l => construirCardRankingLibro(l, 'masLeido')).join('') || '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'}
+      </div>
+    </div>
+    <div class="ranking-libros-seccion" style="margin-top:32px;">
+      <h4 class="ranking-libros-subtitulo">🏆 Top 5</h4>
+      <p class="ranking-libros-desc">Fórmula: 40% completion + 60% puntuación — mínimo 5 reseñas</p>
+      <div class="ranking-libros-lista">
+        ${top5.map(l => construirCardRankingLibro(l, 'top')).join('') || '<p class="estado-vacio-sub">No hay libros con 5 reseñas todavía.</p>'}
+      </div>
+    </div>
+    ${top20.length > 5 ? `
+    <div class="ranking-libros-seccion" style="margin-top:24px;">
+      <button class="btn-secundario btn-sm" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Ver') ? 'Ocultar Top 20' : 'Ver Top 20';">
+        Ver Top 20
+      </button>
+      <div style="display:none; margin-top:16px;">
+        <div class="ranking-libros-lista">
+          ${top20.slice(5).map(l => construirCardRankingLibro(l, 'top')).join('')}
+        </div>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function construirCardRankingLibro(libro, categoria) {
+  const portada = libro.linkPortada
+    ? `<img src="${libro.linkPortada}" alt="${libro.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />`
+    : '';
+
+  const estrellas = libro.promedioPuntuacion > 0
+    ? `<p style="font-size:13px; color:var(--bordo); margin:4px 0;">
+        ${'★'.repeat(Math.round(libro.promedioPuntuacion))}${'☆'.repeat(5 - Math.round(libro.promedioPuntuacion))}
+        <span style="font-size:12px; color:var(--gris-suave);">${libro.promedioPuntuacion.toFixed(1)} (${libro.cantidadPuntuaciones} voto${libro.cantidadPuntuaciones !== 1 ? 's' : ''})</span>
+      </p>`
+    : '';
+
+  const metricaExtra = categoria === 'masLeido'
+    ? `<p style="font-size:12px; color:var(--gris-suave);">📖 ${libro.totalReseñas} reseña${libro.totalReseñas !== 1 ? 's' : ''} — ${libro.completion.toFixed(0)}% completion</p>`
+    : categoria === 'top'
+    ? `<p style="font-size:12px; color:var(--gris-suave);">Puntaje: ${libro.puntajeFinal.toFixed(1)} · Reseñas: ${libro.totalReseñas}</p>`
+    : '';
+
+  const badgeTop = libro.esTop5
+    ? `<span style="background:var(--bordo); color:#fff; font-size:11px; padding:2px 8px; border-radius:20px; font-weight:700;">TOP 5</span>`
+    : libro.esTop20
+    ? `<span style="background:var(--rosa-claro); color:var(--bordo); font-size:11px; padding:2px 8px; border-radius:20px; font-weight:700;">TOP 20</span>`
+    : '';
+
+  const linkAmazon = libro.linkAmazon
+    ? `<a href="${libro.linkAmazon}" target="_blank" class="red-link" style="font-size:12px;">Ver en Amazon</a>`
+    : '';
+
+  return `
+    <div class="lista-item" style="align-items:flex-start;">
+      <div style="min-width:28px; font-size:20px; font-weight:700; color:var(--bordo); padding-top:4px;">#${libro.posicion}</div>
+      ${portada}
+      <div class="lista-item-body">
+        <p class="lista-item-titulo">${libro.nombreLibro}</p>
+        <p class="lista-item-meta">por ${libro.nombreAutor}</p>
+        ${estrellas}
+        ${metricaExtra}
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+          ${badgeTop}
+          ${linkAmazon}
+        </div>
+      </div>
+    </div>
+  `;
+}
