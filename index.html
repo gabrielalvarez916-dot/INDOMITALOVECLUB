@@ -536,6 +536,22 @@
     </div>
   </div>
 
+  <!-- Modal: selector de avatar -->
+<div id="modal-selector-avatar" class="modal modal-grande">
+  <div class="modal-header">
+    <h3 class="modal-titulo">Elegí tu avatar</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="form-info">Seleccioná el avatar que mejor te represente.</p>
+    <div id="avatar-grid" class="avatar-grid"></div>
+    <div id="avatar-error" class="mensaje-error" style="display:none;"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+    <button type="button" class="btn-primario" onclick="guardarAvatar()">Guardar avatar</button>
+  </div>
+</div>
 
   <!-- FOOTER -->
   <footer id="footer">
