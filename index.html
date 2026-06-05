@@ -378,7 +378,7 @@
     </div>
   </div>
 
-  <!-- Modal: cargar reseña -->
+<!-- Modal: cargar reseña -->
   <div id="modal-cargar-resena" class="modal">
     <div class="modal-header">
       <h3 class="modal-titulo">Cargar reseña</h3>
@@ -407,6 +407,18 @@
         <div class="form-grupo">
           <label class="form-label">Comentarios (opcional)</label>
           <textarea id="resena-comentarios" class="form-textarea" rows="3" placeholder="Algo que quieras comentarle al autor..."></textarea>
+        </div>
+        <div class="form-grupo" style="margin-top:16px;">
+          <label class="form-label">¿Cuántas estrellas le das al libro? <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+          <div class="estrellas-container" id="resena-estrellas-container">
+            <button type="button" class="estrella" data-valor="1" onclick="seleccionarEstrellaLibro(1)">★</button>
+            <button type="button" class="estrella" data-valor="2" onclick="seleccionarEstrellaLibro(2)">★</button>
+            <button type="button" class="estrella" data-valor="3" onclick="seleccionarEstrellaLibro(3)">★</button>
+            <button type="button" class="estrella" data-valor="4" onclick="seleccionarEstrellaLibro(4)">★</button>
+            <button type="button" class="estrella" data-valor="5" onclick="seleccionarEstrellaLibro(5)">★</button>
+          </div>
+          <p class="estrellas-label" id="resena-estrellas-label">Sin calificar</p>
+          <input type="hidden" id="resena-puntuacion-libro" value="" />
         </div>
         <div id="resena-error" class="mensaje-error" style="display:none;"></div>
         <div id="resena-ok" class="mensaje-ok" style="display:none;"></div>
