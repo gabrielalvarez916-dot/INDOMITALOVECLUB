@@ -180,68 +180,112 @@ setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
 
 
 // ────────────────────────────────────────────────────────────
-// FOTO DE PERFIL
+// SELECTOR DE AVATAR
 // ────────────────────────────────────────────────────────────
 
-/**
- * Sube la foto de perfil seleccionada por el usuario.
- * Convierte la imagen a base64 y la envía al backend.
- *
- * @param {HTMLInputElement} input — el input file
- */
-async function subirFoto(input) {
-  const archivo = input.files[0];
-  if (!archivo) return;
+const AVATARES = [
+  '14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK',
+  '1hbw_3J9q_9nppXZGkfPMXifjHMKzAfYI',
+  '1vqTplcfpDAtbGqgWLdunsuIHDqyu7BUn',
+  '1qEPNQOsz7dYS4zD8pYPIhaD54IkGjsYj',
+  '1aN9v7S8W5Zu8gJfPcyzBLv63VMb8cOJ8',
+  '1ncv_MR_W0wQX9cMW4T38t2KMcmMrpfPJ',
+  '1qwH_XLzW0Pa1GR4q4Xk5KMv1R_slyRHe',
+  '1ZR5EtoXqvKpPGsoHIHaB0ijV3StihvLD',
+  '1xjLbwGrTsunvPqStKcSDpRhwYChEG-2r',
+  '1hWQ8zLiXY5CcbbcS1H1PIDXEA7eZBP2D',
+  '1fofj8nvmZ5b0DeX1Bu6tE0JcvMwBaDnG',
+  '1rFm0xSGcDnumNHdPra8b5Qjs-Ips1Yv7',
+  '1pbSw-V95tbq1xKuqzjWMuhQJIEVktlTY',
+  '1FuWwmI-Ipxsg7TeJwCdgL4X04GJhgRTf',
+  '18LMYQLqppH3j4f2B5EcJCC5meKHygB5-',
+  '1ptD4HGSSZ_JJQv2PYwYnNbK1OItF15Lv',
+  '17tIY8MWZvNy391tJLj9qWHSA3y0bDdoX',
+  '1ETXG8zsbyGCBKb5eQRhrDVIL-N4al7-D',
+  '1vebFQcAKaCrR64NO8jMvZM_VsbPRm--x',
+  '1_3u_Ep3_26gM-xQMHwuQoXym-yL7_gkW',
+  '1XTnl4Y0YK4WBYC2-Ud7Yu5GUkEvRgK3u',
+  '18WZPoUzsYpecOzKtyInYiDeWMcdmOSAb',
+  '1fkcDOxLq8D5X4YqT5WWsEajO-TZlToYH',
+  '19MPn3LFIS-mdJwv3Xgy6F4601U2Phfkz',
+  '16ynVYeweir3LeRP_4Wm5q_03T0T7Zm-9',
+  '1LPPEg1dFBEZSeK0oO2wR8UdlRmls-Fj7',
+  '1c3n6ILGsXNpoIO9mi_Wkij5I8y1V-BhP',
+  '1UeFp2kzn9ZQxU7bWx3HhvC3e4sfherU0',
+  '1lbI5Qi4B1LOggnP-5kRS5Rr6qq3UxSji',
+  '1jJhXD8dMo7VvKkL9sh_6zo4_Zx42pmt8',
+  '1Cez9bj5QCzZcYtL7pQZsDyWaBB9Kd0s4',
+  '1Hu-CsIfOvsxNsI3HjG6N91PtVichRn9f',
+  '1zeAkLLiq3rVvvTUKJO_iCB3XvJ6TLmvg',
+  '1_XHh03PT2KvUtMI-s02CM1sSj4SAT5jB',
+  '1OKRSRq8MoN5dyGdVYxyl5_KTuDy4FgQD'
+].map(id => `/api/drive?id=${id}`);
 
-  const base64 = await redimensionarImagen(archivo, 100);
+let _avatarSeleccionado = null;
+
+/**
+ * Abre el modal de selección de avatar y renderiza el grid.
+ */
+function abrirSelectorAvatar() {
+  const grid = document.getElementById('avatar-grid');
+  if (!grid) return;
+
+  const fotoActual = document.getElementById('perfil-foto')?.src || '';
+  grid.innerHTML = '';
+  _avatarSeleccionado = null;
+
+  AVATARES.forEach((url, i) => {
+    const img = document.createElement('img');
+    img.src       = url;
+    img.alt       = `Avatar ${i + 1}`;
+    img.className = 'avatar-opcion' + (fotoActual.includes(url) ? ' seleccionado' : '');
+    img.dataset.url = url;
+
+    img.onclick = () => {
+      document.querySelectorAll('.avatar-opcion').forEach(el => el.classList.remove('seleccionado'));
+      img.classList.add('seleccionado');
+      _avatarSeleccionado = url;
+    };
+
+    grid.appendChild(img);
+  });
+
+  mostrarModal('modal-selector-avatar');
+}
+
+/**
+ * Guarda el avatar elegido en el backend y actualiza la UI.
+ */
+async function guardarAvatar() {
+  ocultarMensajes('avatar-error');
+
+  if (!_avatarSeleccionado) {
+    mostrarMensajeError('avatar-error', 'Seleccioná un avatar antes de guardar.');
+    return;
+  }
+
+  const email = Sesion.email();
+
+  const resultado = await llamarBackend('editarPerfil', {
+    email,
+    fotoPerfil: _avatarSeleccionado
+  });
+
+  if (!resultado.ok) {
+    mostrarMensajeError('avatar-error', resultado.mensaje || 'Error al guardar el avatar.');
+    return;
+  }
 
   const fotoEl = document.getElementById('perfil-foto');
-  if (fotoEl) fotoEl.src = base64;
+  if (fotoEl) fotoEl.src = _avatarSeleccionado;
 
-  try {
-    const respuesta = await fetch('/api/proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'subirFotoPerfil',
-        email: Sesion.email(),
-        fotoBase64: base64
-      })
-    });
-    const resultado = await respuesta.json();
-    if (!resultado.ok) {
-      mostrarToast(resultado.mensaje || 'Error al subir la foto.', 'error');
-      return;
-    }
-    mostrarToast('Foto actualizada.', 'ok');
-    if (resultado.datos?.fotoUrl) {
-      const sesionActual = Sesion.obtener();
-      Sesion.guardar({ ...sesionActual, fotoPerfil: resultado.datos.fotoUrl });
-    }
-  } catch (e) {
-    mostrarToast('Error de conexión al subir la foto.', 'error');
-  }
+  const sesionActual = Sesion.obtener();
+  Sesion.guardar({ ...sesionActual, fotoPerfil: _avatarSeleccionado });
+
+  cerrarModales();
+  mostrarToast('¡Avatar actualizado!', 'ok');
+  _avatarSeleccionado = null;
 }
-
-function redimensionarImagen(archivo, maxSize) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = maxSize;
-        canvas.height = maxSize;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, maxSize, maxSize);
-        resolve(canvas.toDataURL('image/jpeg', 0.3));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(archivo);
-  });
-}
-
 
 // ────────────────────────────────────────────────────────────
 // GUARDAR PERFIL Y POSTULARSE (primera vez)
