@@ -236,13 +236,15 @@ function abrirCargarResena(idCampaña) {
   const inputCampaña = document.getElementById('resena-id-campana');
   if (inputCampaña) inputCampaña.value = idCampaña;
 
-  // Limpia el formulario
   limpiarFormulario('form-cargar-resena');
   ocultarMensajes('resena-error', 'resena-ok');
 
+  document.getElementById('resena-puntuacion-libro').value = '';
+  document.getElementById('resena-estrellas-label').textContent = 'Sin calificar';
+  document.querySelectorAll('#resena-estrellas-container .estrella').forEach(e => e.classList.remove('activa'));
+
   mostrarModal('modal-cargar-resena');
 }
-
 /**
  * Envía la reseña al backend.
  * Se llama desde el submit del modal.
