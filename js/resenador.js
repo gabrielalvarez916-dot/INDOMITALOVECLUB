@@ -304,8 +304,14 @@ async function cargarHistorialReseñador(email) {
 
   const resultado = await llamarBackend('listarReseñasReseñador', { email });
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+ if (!resultado.ok) {
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <p class="estado-vacio-icono">📚</p>
+        <p class="estado-vacio-texto">Todavía no hay libros en el ranking.</p>
+        <p class="estado-vacio-sub">El ranking se arma cuando los libros acumulan al menos 3 reseñas.</p>
+      </div>
+    `;
     return;
   }
 
