@@ -258,11 +258,12 @@ async function enviarResena(event) {
   const idCampaña = document.getElementById('resena-id-campana')?.value;
 
   const datos = {
-    linkInstagram: document.getElementById('resena-instagram')?.value?.trim(),
-    linkTikTok:    document.getElementById('resena-tiktok')?.value?.trim(),
-    linkAmazon:    document.getElementById('resena-amazon')?.value?.trim(),
-    linkGoodreads: document.getElementById('resena-goodreads')?.value?.trim(),
-    comentarios:   document.getElementById('resena-comentarios')?.value?.trim()
+    linkInstagram:    document.getElementById('resena-instagram')?.value?.trim(),
+    linkTikTok:       document.getElementById('resena-tiktok')?.value?.trim(),
+    linkAmazon:       document.getElementById('resena-amazon')?.value?.trim(),
+    linkGoodreads:    document.getElementById('resena-goodreads')?.value?.trim(),
+    comentarios:      document.getElementById('resena-comentarios')?.value?.trim(),
+    puntuacionLibro:  document.getElementById('resena-puntuacion-libro')?.value || ''
   };
 
   const resultado = await llamarBackend('cargarReseña', {
