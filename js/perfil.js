@@ -139,7 +139,7 @@ async function guardarPerfil(event) {
  if (rol === 'reseñador') {
     datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
     datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
-    datos.tropesFavoritos   = obtenerTropesComoTexto('perfil');
+    datos.tropesFavoritos   = encodeURIComponent(obtenerTropesComoTexto('perfil'));
   }
 
   if (!datos.alias) {
