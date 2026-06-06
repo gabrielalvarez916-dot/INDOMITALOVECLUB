@@ -373,3 +373,44 @@ async function accionPagoAdmin(idPago, accion) {
   mostrarToast(accion === 'aprobar' ? 'Pago aprobado. Plan activado.' : 'Pago rechazado.', 'ok');
   await cargarPagosAdmin(email);
 }
+async function cargarEstadisticasAdmin() {
+  const contenedor = document.getElementById('admin-estadisticas-contenedor');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const resultado = await llamarBackend('adminEstadisticas', { email: Sesion.email() });
+
+  if (!resultado.ok) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+    return;
+  }
+
+  const { usuarios, campañas, reseñas } = resultado.datos;
+
+  contenedor.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><p class="stat-label">Autores</p><p class="stat-valor">${usuarios.totalAutores}</p></div>
+      <div class="stat-card"><p class="stat-label">Reseñadores</p><p class="stat-valor">${usuarios.totalReseñadores}</p></div>
+      <div class="stat-card"><p class="stat-label">Nuevos este mes</p><p class="stat-valor">${usuarios.nuevosEsteMes}</p></div>
+      <div class="stat-card"><p class="stat-label">Autores sin actividad</p><p class="stat-valor">${usuarios.autoresSinActividad}</p></div>
+      <div class="stat-card"><p class="stat-label">Reseñadores sin actividad</p><p class="stat-valor">${usuarios.reseñadoresSinActividad}</p></div>
+    </div>
+
+    <div class="form-separador">Campañas</div>
+    <div class="stats-grid">
+      <div class="stat-card"><p class="stat-label">Total</p><p class="stat-valor">${campañas.total}</p></div>
+      <div class="stat-card"><p class="stat-label">Activas</p><p class="stat-valor">${campañas.activas}</p></div>
+      <div class="stat-card"><p class="stat-label">Finalizadas</p><p class="stat-valor">${campañas.finalizadas}</p></div>
+      <div class="stat-card"><p class="stat-label">Canceladas</p><p class="stat-valor">${campañas.canceladas}</p></div>
+    </div>
+
+    <div class="form-separador">Reseñas</div>
+    <div class="stats-grid">
+      <div class="stat-card"><p class="stat-label">Total entregadas</p><p class="stat-valor">${reseñas.totalEntregadas}</p></div>
+      <div class="stat-card"><p class="stat-label">Este mes</p><p class="stat-valor">${reseñas.entregadasEsteMes}</p></div>
+      <div class="stat-card"><p class="stat-label">Completion global</p><p class="stat-valor">${reseñas.completionGlobal}%</p></div>
+      <div class="stat-card"><p class="stat-label">Completion del mes</p><p class="stat-valor">${reseñas.completionMes}%</p></div>
+    </div>
+  `;
+}
