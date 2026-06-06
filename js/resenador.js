@@ -343,6 +343,16 @@ function construirCardHistorialReseña(r) {
     ? `<p style="font-size:13px; color:var(--bordo);">${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)} (${r.puntuacion}/5)</p>`
     : `<p style="font-size:12px; color:var(--gris-suave);">Sin calificar todavía</p>`;
 
+  const completionHtml = r.completion != null ? `
+    <div style="margin-top:8px;">
+      <span class="completion-label">Completion</span>
+      <span class="completion-valor" style="margin-left:6px;">${r.completion}%</span>
+      <div class="completion-barra">
+        <div class="completion-fill" style="width:${r.completion}%"></div>
+      </div>
+    </div>
+  ` : '';
+  
   return `
     <div class="lista-item">
       ${c && c.linkPortada ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />` : ''}
@@ -353,6 +363,7 @@ function construirCardHistorialReseña(r) {
           Entregada: ${formatearFechaAmigable(r.fechaEntrega)}
         </p>
         ${estrellas}
+        ${completionHtml}
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
           ${r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link">Instagram</a>` : ''}
           ${r.linkTikTok    ? `<a href="${r.linkTikTok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
@@ -389,7 +400,7 @@ async function cargarRankingReseñador(email) {
 
   if (!d.enRanking) {
     contenedor.innerHTML = `
-      <div class="ranking-info">
+      <div class="ranking-vacio">
         <p class="estado-vacio-icono">🏅</p>
         <p class="estado-vacio-texto">Todavía no participás en el ranking de este mes.</p>
         <p class="estado-vacio-sub">Necesitás al menos una campaña aprobada para aparecer en el ranking.</p>
