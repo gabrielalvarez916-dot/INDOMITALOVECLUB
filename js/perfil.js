@@ -67,6 +67,7 @@ function ajustarFormularioPorRol(rol) {
   toggleElemento('seccion-biblioteca', esAutor);
   toggleElemento('grupo-generos', esReseñador);
   toggleElemento('grupo-descripcion', esReseñador);
+  toggleElemento('grupo-tropes-perfil', esReseñador);
 }
 
 
@@ -101,7 +102,10 @@ function rellenarFormularioPerfil(perfil) {
   }
 }
 
-
+if (Sesion.rol() === 'reseñador') {
+    const tropesArray = tropesTextoAArray(perfil.tropesFavoritos || '');
+    renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', tropesArray);
+  }
 // ────────────────────────────────────────────────────────────
 // GUARDAR PERFIL
 // ────────────────────────────────────────────────────────────
