@@ -34,6 +34,13 @@ async function cargarPerfil() {
   const perfil = resultado.datos.perfil;
   rellenarFormularioPerfil(perfil);
 
+  // Si es reseñador, carga los tropes guardados
+  // FIX: esto estaba suelto fuera de la función, lo movemos aquí
+  if (rol === 'reseñador' && perfil.tropesFavoritos) {
+    const tropesArray = tropesTextoAArray(perfil.tropesFavoritos);
+    renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', tropesArray);
+  }
+
   // Si es autor, carga también la biblioteca
   if (rol === 'autor') {
     toggleElemento('seccion-biblioteca', true);
@@ -62,12 +69,12 @@ async function cargarPerfil() {
  * @param {string} rol — 'autor' | 'reseñador' | 'admin'
  */
 function ajustarFormularioPorRol(rol) {
-  const esAutor = rol === 'autor';
+  const esAutor     = rol === 'autor';
   const esReseñador = rol === 'reseñador';
-  toggleElemento('seccion-biblioteca', esAutor);
-  toggleElemento('grupo-generos', esReseñador);
-  toggleElemento('grupo-descripcion', esReseñador);
-  toggleElemento('grupo-tropes-perfil', esReseñador);
+  toggleElemento('seccion-biblioteca',   esAutor);
+  toggleElemento('grupo-generos',        esReseñador);
+  toggleElemento('grupo-descripcion',    esReseñador);
+  toggleElemento('grupo-tropes-perfil',  esReseñador);
   if (esReseñador) {
     renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', []);
   }
@@ -105,10 +112,7 @@ function rellenarFormularioPerfil(perfil) {
   }
 }
 
-if (Sesion.rol() === 'reseñador' && perfil.tropesFavoritos) {
-    const tropesArray = tropesTextoAArray(perfil.tropesFavoritos);
-    renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', tropesArray);
-  }
+
 // ────────────────────────────────────────────────────────────
 // GUARDAR PERFIL
 // ────────────────────────────────────────────────────────────
@@ -127,19 +131,20 @@ async function guardarPerfil(event) {
   const rol   = Sesion.rol();
 
   const datos = {
-    alias:            document.getElementById('perfil-alias')?.value?.trim(),
-    pais:             document.getElementById('perfil-pais')?.value?.trim(),
-    ciudad:           document.getElementById('perfil-ciudad')?.value?.trim(),
-    instagram:        document.getElementById('perfil-instagram')?.value?.trim(),
-    tiktok:           document.getElementById('perfil-tiktok')?.value?.trim(),
-    amazon:           document.getElementById('perfil-amazon')?.value?.trim(),
+    alias:    document.getElementById('perfil-alias')?.value?.trim(),
+    pais:     document.getElementById('perfil-pais')?.value?.trim(),
+    ciudad:   document.getElementById('perfil-ciudad')?.value?.trim(),
+    instagram: document.getElementById('perfil-instagram')?.value?.trim(),
+    tiktok:   document.getElementById('perfil-tiktok')?.value?.trim(),
+    amazon:   document.getElementById('perfil-amazon')?.value?.trim(),
   };
 
   // Campos solo de reseñadores
- if (rol === 'reseñador') {
+  if (rol === 'reseñador') {
     datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
     datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
-    datos.tropesFavoritos   = encodeURIComponent(obtenerTropesComoTexto('perfil'));
+    // FIX: una sola llamada al backend, tropesFavoritos va junto con editarPerfil
+    datos.tropesFavoritos   = obtenerTropesComoTexto('perfil');
   }
 
   if (!datos.alias) {
@@ -148,50 +153,44 @@ async function guardarPerfil(event) {
   }
 
   const resultado = await llamarBackend('editarPerfil', {
-  email,
-  alias:             datos.alias,
-  pais:              datos.pais,
-  ciudad:            datos.ciudad,
-  instagram:         datos.instagram,
-  tiktok:            datos.tiktok,
-  amazon:            datos.amazon,
-  generos:           datos.generos,
-  descripcionLector: datos.descripcionLector,
-  tropesFavoritos:   datos.tropesFavoritos
-});
-if (!resultado.ok) {
-  
+    email,
+    alias:             datos.alias,
+    pais:              datos.pais,
+    ciudad:            datos.ciudad,
+    instagram:         datos.instagram,
+    tiktok:            datos.tiktok,
+    amazon:            datos.amazon,
+    generos:           datos.generos,
+    descripcionLector: datos.descripcionLector,
+    tropesFavoritos:   datos.tropesFavoritos
+  });
+
+  if (!resultado.ok) {
     mostrarMensajeError('perfil-error', resultado.mensaje || 'Error al guardar el perfil.');
     return;
   }
 
-  // Actualiza TODOS los datos en la sesión
-const sesionActual = Sesion.obtener();
-if (sesionActual) {
-  Sesion.guardar({ 
-    ...sesionActual, 
-    alias:            datos.alias,
-    pais:             datos.pais,
-    ciudad:           datos.ciudad,
-    instagram:        datos.instagram,
-    tiktok:           datos.tiktok,
-    amazon:           datos.amazon,
-    generos:          datos.generos,
-    descripcionLector: datos.descripcionLector
-  });
-  const aliasEl = document.getElementById('usuario-alias');
-  if (aliasEl) aliasEl.textContent = datos.alias;
-}
-
-if (rol === 'reseñador') {
-    await llamarBackend('guardarTropesFavoritos', {
-      email,
-      tropes: obtenerTropesComoTexto('perfil')
+  // Actualiza sesión
+  const sesionActual = Sesion.obtener();
+  if (sesionActual) {
+    Sesion.guardar({
+      ...sesionActual,
+      alias:             datos.alias,
+      pais:              datos.pais,
+      ciudad:            datos.ciudad,
+      instagram:         datos.instagram,
+      tiktok:            datos.tiktok,
+      amazon:            datos.amazon,
+      generos:           datos.generos,
+      descripcionLector: datos.descripcionLector,
     });
-  
-mostrarMensajeOk('perfil-ok', '¡Perfil guardado correctamente!');
-setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
-}
+    const aliasEl = document.getElementById('usuario-alias');
+    if (aliasEl) aliasEl.textContent = datos.alias;
+  }
+
+  mostrarMensajeOk('perfil-ok', '¡Perfil guardado correctamente!');
+  setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
+} // FIX: cierre correcto de guardarPerfil
 
 
 // ────────────────────────────────────────────────────────────
@@ -281,7 +280,7 @@ async function guardarAvatar() {
 
   const email = Sesion.email();
 
- const resultado = await llamarBackend('editarPerfil', {
+  const resultado = await llamarBackend('editarPerfil', {
     email,
     fotoPerfil: _avatarSeleccionado,
     soloFoto: true
@@ -303,6 +302,7 @@ async function guardarAvatar() {
   _avatarSeleccionado = null;
 }
 
+
 // ────────────────────────────────────────────────────────────
 // GUARDAR PERFIL Y POSTULARSE (primera vez)
 // ────────────────────────────────────────────────────────────
@@ -322,13 +322,13 @@ async function guardarPerfilYPostularse(event) {
   const idCampana = document.getElementById('completar-id-campana')?.value;
 
   const datos = {
-    pais:             document.getElementById('completar-pais')?.value?.trim(),
-    ciudad:           document.getElementById('completar-ciudad')?.value?.trim(),
-    instagram:        document.getElementById('completar-instagram')?.value?.trim(),
-    tiktok:           document.getElementById('completar-tiktok')?.value?.trim(),
-    amazon:           document.getElementById('completar-amazon')?.value?.trim(),
+    pais:              document.getElementById('completar-pais')?.value?.trim(),
+    ciudad:            document.getElementById('completar-ciudad')?.value?.trim(),
+    instagram:         document.getElementById('completar-instagram')?.value?.trim(),
+    tiktok:            document.getElementById('completar-tiktok')?.value?.trim(),
+    amazon:            document.getElementById('completar-amazon')?.value?.trim(),
     descripcionLector: document.getElementById('completar-descripcion')?.value?.trim(),
-    generos:          document.getElementById('completar-generos')?.value?.trim(),
+    generos:           document.getElementById('completar-generos')?.value?.trim(),
   };
 
   if (!datos.pais || !datos.ciudad) {
@@ -340,13 +340,13 @@ async function guardarPerfilYPostularse(event) {
   const resultadoPerfil = await llamarBackend('editarPerfil', { email, datos });
 
   if (!resultadoPerfil.ok) {
-  mostrarMensajeError('completar-error', resultadoPerfil.mensaje || 'Error al guardar el perfil.');
-  return;
-}
+    mostrarMensajeError('completar-error', resultadoPerfil.mensaje || 'Error al guardar el perfil.');
+    return;
+  }
 
-// Actualiza sesión AQUÍ, después del error
-const usuarioActual = Sesion.obtener();
-Sesion.guardar({ ...usuarioActual, ...datos });
+  // Actualiza sesión
+  const usuarioActual = Sesion.obtener();
+  Sesion.guardar({ ...usuarioActual, ...datos });
 
   // Luego se postula
   const resultadoPostulacion = await llamarBackend('postularseACampana', {
