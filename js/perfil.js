@@ -68,6 +68,9 @@ function ajustarFormularioPorRol(rol) {
   toggleElemento('grupo-generos', esReseñador);
   toggleElemento('grupo-descripcion', esReseñador);
   toggleElemento('grupo-tropes-perfil', esReseñador);
+  if (esReseñador) {
+    renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', []);
+  }
 }
 
 
@@ -102,8 +105,8 @@ function rellenarFormularioPerfil(perfil) {
   }
 }
 
-if (Sesion.rol() === 'reseñador') {
-    const tropesArray = tropesTextoAArray(perfil.tropesFavoritos || '');
+if (Sesion.rol() === 'reseñador' && perfil.tropesFavoritos) {
+    const tropesArray = tropesTextoAArray(perfil.tropesFavoritos);
     renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', tropesArray);
   }
 // ────────────────────────────────────────────────────────────
