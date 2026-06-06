@@ -139,6 +139,15 @@ function construirCardCampaña(c) {
         <p class="campana-autor">${c.nombreAutor}</p>
         <h3 class="campana-titulo">${c.nombreLibro}</h3>
         ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
+        ${c.coincidenciaTropes !== undefined ? `
+        <div style="margin:8px 0;">
+          <span style="font-size:13px; font-weight:600; color:var(--bordo);">
+            🎯 ${c.coincidenciaTropes}% de coincidencia con tus tropes
+          </span>
+          <div style="background:var(--crema-oscura); border-radius:20px; height:6px; margin-top:4px;">
+            <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:6px; border-radius:20px;"></div>
+          </div>
+        </div>` : ''}
         <div class="campana-tropes">${tropesHtml}</div>
         ${c.rankingLibro ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0;">
