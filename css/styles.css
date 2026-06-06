@@ -2147,3 +2147,53 @@ img { max-width: 100%; display: block; }
   .avatar-grid { grid-template-columns: repeat(4, 1fr); }
   .avatar-opcion { width: 100%; height: auto; aspect-ratio: 1; }
 }
+/* ── LOGIN FIXES ───────────────────────────────────────────── */
+
+/* Desktop + mobile: fondo blanco en columna izquierda para que el logo no tenga caja */
+.login-izquierda {
+  background: #ffffff;
+}
+
+/* Corazones: asegurar que sean relativos al section */
+.login-corazon {
+  position: absolute;
+  z-index: 1;
+}
+
+.login-layout {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #seccion-login {
+    padding-top: 0;
+  }
+
+  .login-izquierda {
+    padding-top: 32px;
+    justify-content: flex-start;
+  }
+
+  /* Corazones reposicionados para mobile */
+  .login-corazon-1 {
+    width: 160px;
+    top: -10px;
+    right: -10px;
+    opacity: 0.5;
+  }
+
+  .login-corazon-2 {
+    width: 80px;
+    top: 90px;
+    right: 10px;
+    opacity: 0.4;
+  }
+
+  .login-corazon-3,
+  .login-corazon-4,
+  .login-corazon-5 {
+    display: none;
+  }
+}
