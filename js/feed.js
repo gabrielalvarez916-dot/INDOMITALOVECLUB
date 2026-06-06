@@ -26,7 +26,7 @@ async function cargarFeed() {
   toggleElemento('feed-lista-titulo', false);
   toggleElemento('feed-ticker', false);
 
-  const resultado = await llamarBackend('listarCampanasFeed', {});
+  const resultado = await llamarBackend('listarCampanasFeed', { email: Sesion.email() || '' });
 
   toggleElemento('feed-cargando', false);
 
