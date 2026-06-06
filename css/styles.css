@@ -654,12 +654,10 @@ img { max-width: 100%; display: block; }
 
 .slide.activo { display: flex; }
 
-/* Portada centrada arriba */
 .slide-portada-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 1000px;
 }
 
 .slide-libro-3d {
@@ -667,10 +665,14 @@ img { max-width: 100%; display: block; }
   width: 180px;
   height: 256px;
   transform-style: preserve-3d;
-  transform: rotateY(-8deg) rotateX(1deg);
+  transform: perspective(1000px) rotateY(-8deg) rotateX(1deg);
   transition: transform 0.4s ease;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.slide-libro-3d:hover {
+  transform: perspective(1000px) rotateY(-4deg) rotateX(0deg) scale(1.03);
 }
 
 .slide-libro-3d:hover {
@@ -680,8 +682,8 @@ img { max-width: 100%; display: block; }
 .slide-libro-tapa {
   position: absolute;
   inset: 0;
-  width: 180px;
-  height: 256px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 2px 6px 6px 2px;
   box-shadow: 4px 8px 24px rgba(74,16,32,0.18), 0 2px 8px rgba(0,0,0,0.1);
@@ -693,8 +695,9 @@ img { max-width: 100%; display: block; }
   top: 0;
   width: 8px;
   height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0.15));
+  background: linear-gradient(to right, rgba(0,0,0,0.45), rgba(0,0,0,0.2));
   border-radius: 2px 0 0 2px;
+  filter: blur(1px);
 }
 
 .slide-libro-paginas {
