@@ -266,9 +266,10 @@ img { max-width: 100%; display: block; }
 }
 
 .login-logo img {
-  height: 100px;
-  width: 100px;
+  height: 120px;
+  width: 120px;
   object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(139,26,43,0.15));
 }
 
 .login-titulo {
@@ -278,6 +279,7 @@ img { max-width: 100%; display: block; }
   color: var(--bordo);
   margin-bottom: 8px;
   font-style: italic;
+   line-height: 1.15;
 }
 
 .login-subtitulo {
