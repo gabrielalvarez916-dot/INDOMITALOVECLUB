@@ -35,26 +35,61 @@
   </header>
 
 
- <!-- SECCIÓN: LOGIN -->
+<!-- SECCIÓN: LOGIN -->
   <section id="seccion-login" class="seccion">
-    <div class="login-container">
-      <div class="login-card">
 
-        <div class="login-logo">
-          <img src="Logo.png" alt="Indómita Love Club" />
+    <!-- Corazones decorativos de fondo -->
+    <div class="login-corazon login-corazon-1">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#F2C4CE"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-2">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#E8A0B0"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-3">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#F2C4CE"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-4">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#8B1A2B"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-5">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="none" stroke="#E8A0B0" stroke-width="6"/>
+      </svg>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="login-layout">
+
+      <!-- Columna izquierda: logo + texto + botón -->
+      <div class="login-izquierda">
+        <img src="Logo.png" alt="Indómita Love Club" class="login-logo-img" />
+
+        <div class="login-textos">
+          <h1 class="login-bienvenida">Bienvenida<br>al Love Club</h1>
+          <div class="login-separador-deco">
+            <span class="login-sep-linea"></span>
+            <span class="login-sep-corazon">♥</span>
+            <span class="login-sep-linea"></span>
+          </div>
+          <p class="login-subtitulo">La comunidad de romance donde aut@res y reseñad@res se encuentran</p>
         </div>
-
-        <h1 class="login-titulo">Indómita<br>Love Club</h1>
-        <p class="login-subtitulo">La comunidad de romance donde aut@res<br>y reseñad@res se encuentran</p>
 
         <!-- Paso 1: botón Google -->
         <div id="login-paso1">
-          <button class="btn-google" id="btn-google-login">
-            <svg width="18" height="18" viewBox="0 0 48 48">
-              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          <button class="btn-google-nuevo" id="btn-google-login">
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#fff" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#fff" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#fff" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#fff" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             </svg>
             Ingresar con Google
           </button>
@@ -91,11 +126,17 @@
 
         <!-- Error -->
         <div id="login-error" class="mensaje-error" style="display:none;"></div>
-
       </div>
+
+      <!-- Columna derecha: tipografía decorativa -->
+      <div class="login-derecha" aria-hidden="true">
+        <span class="login-deco-indomita">Indómita</span>
+        <span class="login-deco-love">love</span>
+      </div>
+
     </div>
   </section>
-
+  
   <!-- SECCIÓN: FEED -->
   <section id="seccion-feed" class="seccion" style="display:none;">
 
