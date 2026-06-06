@@ -186,9 +186,8 @@ if (sesionActual) {
 if (rol === 'reseñador') {
     await llamarBackend('guardarTropesFavoritos', {
       email,
-      tropes: encodeURIComponent(obtenerTropesComoTexto('perfil'))
+      tropes: obtenerTropesComoTexto('perfil')
     });
-  }
   
 mostrarMensajeOk('perfil-ok', '¡Perfil guardado correctamente!');
 setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
