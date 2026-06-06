@@ -102,7 +102,7 @@ function filtrarFeed() {
 
 
 // ────────────────────────────────────────────────────────────
-// CARD DE CAMPAÑA — imagen simple, sin efecto libro
+// CARD DE CAMPAÑA
 // ────────────────────────────────────────────────────────────
 
 function construirCardCampaña(c) {
@@ -140,20 +140,20 @@ function construirCardCampaña(c) {
         <h3 class="campana-titulo">${c.nombreLibro}</h3>
         ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
         ${c.coincidenciaTropes !== undefined ? `
-        <div style="margin:8px 0;">
-          <span style="font-size:13px; font-weight:600; color:var(--bordo);">
-            🎯 ${c.coincidenciaTropes}% de coincidencia con tus tropes
+        <div style="margin:6px 0;">
+          <span style="font-size:12px; font-weight:600; color:var(--bordo);">
+            🎯 ${c.coincidenciaTropes}% coincidencia
           </span>
-          <div style="background:var(--crema-oscura); border-radius:20px; height:6px; margin-top:4px;">
-            <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:6px; border-radius:20px;"></div>
+          <div style="background:var(--crema-oscura); border-radius:20px; height:5px; margin-top:3px;">
+            <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:5px; border-radius:20px;"></div>
           </div>
         </div>` : ''}
         <div class="campana-tropes">${tropesHtml}</div>
         ${c.rankingLibro ? `
-          <div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0;">
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0;">
             ${c.rankingLibro.esTop5  ? `<span class="badge badge-top5">🏆 Top 5</span>` : ''}
             ${c.rankingLibro.esTop20 && !c.rankingLibro.esTop5 ? `<span class="badge badge-top20">⭐ Top 20</span>` : ''}
-            <span style="font-size:12px; color:var(--gris-suave);">⭐ ${c.rankingLibro.promedio?.toFixed(1) ?? '—'} · ${c.rankingLibro.totalReseñas} reseña${c.rankingLibro.totalReseñas !== 1 ? 's' : ''}</span>
+            <span style="font-size:11px; color:var(--gris-suave);">⭐ ${c.rankingLibro.promedio?.toFixed(1) ?? '—'} · ${c.rankingLibro.totalReseñas} reseña${c.rankingLibro.totalReseñas !== 1 ? 's' : ''}</span>
           </div>` : ''}
         <div class="campana-datos">
           <div class="campana-dato">
@@ -165,10 +165,7 @@ function construirCardCampaña(c) {
             <span class="campana-dato-label">${icoReloj}Fecha límite</span>
             <span class="campana-dato-valor">${formatearFechaAmigable(c.fechaLimite)}</span>
           </div>
-          <div class="campana-dato-sep"></div>
-          <div class="campana-dato" style="margin-left:auto;">
-            ${botonHtml}
-          </div>
+          ${botonHtml ? `<div class="campana-dato-sep"></div><div class="campana-dato" style="margin-left:auto;">${botonHtml}</div>` : ''}
         </div>
       </div>
     </div>
@@ -219,7 +216,7 @@ async function verDetalleCampaña(idCampaña) {
       <p style="font-size:13px; color:var(--gris-suave); margin-bottom:4px;">por ${c.nombreAutor}</p>
       ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
       <p style="margin:16px 0; font-size:14px; line-height:1.6;">${c.sinopsis}</p>
-     ${c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : ''}
+      ${c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : ''}
       ${Sesion.rol() === 'reseñador' && c.coincidenciaTropes !== undefined ? `
         <div style="margin:12px 0;">
           <p style="font-size:13px; font-weight:600; color:var(--bordo); margin-bottom:4px;">
@@ -335,7 +332,7 @@ async function confirmarPostulacion(idCampaña) {
 
 
 // ────────────────────────────────────────────────────────────
-// SLIDER — portada con efecto libro 3D
+// SLIDER
 // ────────────────────────────────────────────────────────────
 
 const Slider = (() => {
@@ -382,15 +379,15 @@ const Slider = (() => {
     const rol = Sesion.rol();
 
     const portadaHtml = c.linkPortada
-      ? `<div class="slide-libro-3d">
+      ? `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
            <img class="slide-libro-tapa" src="${c.linkPortada}" alt="${c.nombreLibro}" />
            <div class="slide-libro-lomo"></div>
            <div class="slide-libro-paginas"></div>
            <div class="slide-libro-sombra"></div>
          </div>`
-      : `<div class="slide-libro-3d">
-           <div class="slide-libro-tapa" style="background:var(--crema-oscura);display:flex;align-items:center;justify-content:center;font-size:64px;">📖</div>
-           <div class="slide-libro-lomo" style="--portada-url: url('${c.linkPortada}')"></div>
+      : `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
+           <div class="slide-libro-tapa" style="background:var(--crema-oscura);display:flex;align-items:center;justify-content:center;font-size:64px;border-radius:2px 6px 6px 2px;">📖</div>
+           <div class="slide-libro-lomo"></div>
            <div class="slide-libro-paginas"></div>
            <div class="slide-libro-sombra"></div>
          </div>`;
@@ -408,36 +405,25 @@ const Slider = (() => {
       botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte →</button>`;
     }
 
-    const icoReloj = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-    const icoSilla = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>`;
+    const icoReloj = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    const icoSilla = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>`;
 
     return `
       <div class="slide" onclick="verDetalleCampaña('${c.id}')">
+        <div class="slide-portada-wrap">
+          ${portadaHtml}
+        </div>
         <div class="slide-info">
           ${c.genero ? `<span class="slide-genero">${c.genero}</span>` : ''}
           <h2 class="slide-titulo">${c.nombreLibro}</h2>
           <p class="slide-autor">por ${c.nombreAutor}</p>
           ${tropesHtml ? `<div class="slide-tropes">${tropesHtml}</div>` : ''}
-          <div class="slide-meta">
-            <div class="slide-meta-item">
-              <div class="slide-meta-icono">${icoReloj}</div>
-              <div>
-                <strong>${formatearFechaAmigable(c.fechaLimite)}</strong>
-                fecha límite
-              </div>
-            </div>
-            <div class="slide-meta-item">
-              <div class="slide-meta-icono">${icoSilla}</div>
-              <div>
-                <strong>${c.cuposDisponibles > 0 ? c.cuposDisponibles : 'Sin'} cupos</strong>
-                disponibles
-              </div>
-            </div>
+          <div class="slide-meta-linea">
+            <span class="slide-meta-dato">${icoReloj} ${formatearFechaAmigable(c.fechaLimite)}</span>
+            <span class="slide-meta-sep">|</span>
+            <span class="slide-meta-dato">${icoSilla} ${c.cuposDisponibles > 0 ? c.cuposDisponibles + ' lugares disponibles' : 'Sin cupos'}</span>
           </div>
           <div class="slide-acciones">${botonHtml}</div>
-        </div>
-        <div class="slide-portada-wrap">
-          ${portadaHtml}
         </div>
       </div>
     `;
