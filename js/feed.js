@@ -378,19 +378,15 @@ const Slider = (() => {
   function construirSlide(c) {
     const rol = Sesion.rol();
 
-    const portadaHtml = c.linkPortada
-      ? `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
-           <img class="slide-libro-tapa" src="${c.linkPortada}" alt="${c.nombreLibro}" />
-           <div class="slide-libro-lomo"></div>
-           <div class="slide-libro-paginas"></div>
-           <div class="slide-libro-sombra"></div>
-         </div>`
-      : `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
-           <div class="slide-libro-tapa" style="background:var(--crema-oscura);display:flex;align-items:center;justify-content:center;font-size:64px;border-radius:2px 6px 6px 2px;">📖</div>
-           <div class="slide-libro-lomo"></div>
-           <div class="slide-libro-paginas"></div>
-           <div class="slide-libro-sombra"></div>
-         </div>`;
+   const portadaHtml = c.linkPortada
+  ? `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
+       <img class="slide-libro-tapa" src="${c.linkPortada}" alt="${c.nombreLibro}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:2px 6px 6px 2px;" />
+       <div class="slide-libro-sombra"></div>
+     </div>`
+  : `<div class="slide-libro-3d" onclick="verDetalleCampaña('${c.id}')">
+       <div style="position:absolute;inset:0;background:var(--crema-oscura);display:flex;align-items:center;justify-content:center;font-size:64px;border-radius:2px 6px 6px 2px;">📖</div>
+       <div class="slide-libro-sombra"></div>
+     </div>`;
 
     const tropesHtml = c.tropes
       ? c.tropes.split(',').slice(0, 4).map(t =>
