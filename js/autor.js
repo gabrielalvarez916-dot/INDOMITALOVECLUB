@@ -240,6 +240,10 @@ function construirCardPostulacion(p) {
         ${badgeEstado(p.estado)}
       </div>
       ${badgesHtml ? `<div style="margin:6px 0; display:flex; gap:6px; flex-wrap:wrap;">${badgesHtml}</div>` : ''}
+      ${p.reseñador?.coincidenciaTropes !== null && p.reseñador?.coincidenciaTropes !== undefined ? `
+        <p class="postulacion-ranking">
+          🎯 <strong>${p.reseñador.coincidenciaTropes}%</strong> coincidencia de tropes
+        </p>` : ''}
       ${rankingHtml}
       ${p.descripcionLector ? `<p class="postulacion-descripcion">${truncarTexto(p.descripcionLector, 150)}</p>` : ''}
       <div class="postulacion-redes">
