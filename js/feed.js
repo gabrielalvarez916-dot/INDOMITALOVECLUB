@@ -109,8 +109,8 @@ function construirCardCampaña(c) {
   const rol = Sesion.rol();
 
   const portadaHtml = c.linkPortada
-    ? `<img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>`
-    : `<div class="campana-portada-lista-placeholder">📖</div>`;
+  ? `<img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>`
+  : `<div class="campana-portada-lista-placeholder">📖</div>`;
 
   const tropesHtml = c.tropes
     ? c.tropes.split(',').slice(0, 3).map(t =>
