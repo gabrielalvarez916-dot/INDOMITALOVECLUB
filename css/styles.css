@@ -210,7 +210,7 @@ img { max-width: 100%; display: block; }
 .seccion-angosta { max-width: 620px; }
 
 /* ============================================================
-   LOGIN NUEVO — reemplaza los estilos de #seccion-login
+   LOGIN
    ============================================================ */
 
 #seccion-login {
@@ -223,7 +223,6 @@ img { max-width: 100%; display: block; }
   padding: 0;
 }
 
-/* ── Layout dos columnas ──────────────────────────────────── */
 .login-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -233,8 +232,8 @@ img { max-width: 100%; display: block; }
   z-index: 2;
 }
 
-/* ── Columna izquierda ────────────────────────────────────── */
 .login-izquierda {
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -248,7 +247,6 @@ img { max-width: 100%; display: block; }
   width: 160px;
   height: auto;
   object-fit: contain;
-  mix-blend-mode: multiply;
 }
 
 .login-textos {
@@ -293,7 +291,6 @@ img { max-width: 100%; display: block; }
   max-width: 340px;
 }
 
-/* ── Botón Google ─────────────────────────────────────────── */
 .btn-google-nuevo {
   display: flex;
   align-items: center;
@@ -332,7 +329,6 @@ img { max-width: 100%; display: block; }
   line-height: 1.4;
 }
 
-/* ── Columna derecha decorativa ───────────────────────────── */
 .login-derecha {
   display: flex;
   flex-direction: column;
@@ -345,361 +341,36 @@ img { max-width: 100%; display: block; }
 }
 
 .login-deco-indomita {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--fuente-titulo);
   font-size: clamp(52px, 7vw, 88px);
   font-style: italic;
   font-weight: 700;
   color: var(--bordo);
   line-height: 1;
-  position: relative;
-  z-index: 2;
 }
 
 .login-deco-love {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--fuente-titulo);
   font-size: clamp(72px, 12vw, 140px);
   font-weight: 700;
   color: rgba(139,26,43,0.13);
   line-height: 0.9;
   letter-spacing: -4px;
-  position: relative;
-  z-index: 2;
 }
 
-/* ── Corazones decorativos ────────────────────────────────── */
 .login-corazon {
   position: absolute;
   pointer-events: none;
   z-index: 1;
 }
 
-.login-corazon-1 {
-  width: 320px;
-  top: -60px;
-  right: 80px;
-  opacity: 0.55;
-}
+.login-corazon-1 { width: 320px; top: -60px; right: 80px; opacity: 0.55; }
+.login-corazon-2 { width: 160px; top: 160px; right: 20px; opacity: 0.45; }
+.login-corazon-3 { width: 240px; bottom: -40px; right: 160px; opacity: 0.4; }
+.login-corazon-4 { width: 200px; bottom: -60px; right: -20px; opacity: 0.85; }
+.login-corazon-5 { width: 32px; top: 52%; right: 46%; opacity: 0.7; }
 
-.login-corazon-2 {
-  width: 160px;
-  top: 160px;
-  right: 20px;
-  opacity: 0.45;
-}
-
-.login-corazon-3 {
-  width: 240px;
-  bottom: -40px;
-  right: 160px;
-  opacity: 0.4;
-}
-
-.login-corazon-4 {
-  width: 200px;
-  bottom: -60px;
-  right: -20px;
-  opacity: 0.85;
-}
-
-/* corazón outline — solo desktop */
-.login-corazon-5 {
-  width: 32px;
-  top: 52%;
-  right: 46%;
-  opacity: 0.7;
-}
-
-/* ── Responsive mobile ────────────────────────────────────── */
-@media (max-width: 768px) {
-  #seccion-login {
-    align-items: flex-start;
-  }
-
-  .login-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    min-height: calc(100vh - 60px);
-  }
-
-  .login-izquierda {
-    padding: 40px 28px 48px;
-    gap: 20px;
-    justify-content: flex-start;
-    padding-top: 48px;
-  }
-
-  .login-bienvenida {
-    font-size: 34px;
-  }
-
-  .login-logo-img {
-    width: 110px;
-  }
-
-  /* Ocultar columna derecha en mobile */
-  .login-derecha {
-    display: none;
-  }
-
-  /* Corazones mobile: solo 2, pegados arriba a la derecha */
-  .login-corazon-1 {
-    width: 180px;
-    top: -20px;
-    right: -20px;
-    opacity: 0.5;
-  }
-
-  .login-corazon-2 {
-    width: 90px;
-    top: 100px;
-    right: 0px;
-    opacity: 0.4;
-  }
-
-  /* Ocultar el resto en mobile */
-  .login-corazon-3,
-  .login-corazon-4,
-  .login-corazon-5 {
-    display: none;
-  }
-
-  .btn-google-nuevo {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .login-subtitulo {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-izquierda {
-    padding: 36px 20px 40px;
-  }
-
-  .login-bienvenida {
-    font-size: 28px;
-  }
-}
-
-/* ── Botón Google nuevo ───────────────────────────────────── */
-.btn-google-nuevo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 28px;
-  background: var(--bordo);
-  color: var(--blanco);
-  border: none;
-  border-radius: var(--radio-pill);
-  font-family: var(--fuente-texto);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: var(--transicion);
-  width: fit-content;
-}
-
-.btn-google-nuevo:hover {
-  background: var(--bordo-oscuro);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(139,26,43,0.3);
-}
-
-.login-info {
-  font-size: 12px;
-  color: var(--gris-suave);
-  margin-top: 8px;
-}
-
-/* ── Columna derecha decorativa ───────────────────────────── */
-.login-derecha {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 40px 40px 60px;
-  position: relative;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.login-deco-indomita {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: clamp(52px, 7vw, 88px);
-  font-style: italic;
-  font-weight: 700;
-  color: var(--bordo);
-  line-height: 1;
-  position: relative;
-  z-index: 2;
-}
-
-.login-deco-love {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: clamp(72px, 12vw, 140px);
-  font-weight: 700;
-  color: rgba(139,26,43,0.13);
-  line-height: 0.9;
-  letter-spacing: -4px;
-  position: relative;
-  z-index: 2;
-}
-
-/* ── Corazones decorativos ────────────────────────────────── */
-.login-corazon {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.login-corazon-1 {
-  width: 320px;
-  top: -60px;
-  right: 80px;
-  opacity: 0.55;
-}
-
-.login-corazon-2 {
-  width: 160px;
-  top: 160px;
-  right: 20px;
-  opacity: 0.45;
-}
-
-.login-corazon-3 {
-  width: 240px;
-  bottom: -40px;
-  right: 160px;
-  opacity: 0.4;
-}
-
-.login-corazon-4 {
-  width: 200px;
-  bottom: -60px;
-  right: -20px;
-  opacity: 0.85;
-}
-
-.login-corazon-5 {
-  width: 32px;
-  top: 52%;
-  right: 46%;
-  opacity: 0.7;
-}
-
-/* ── Pregunta de rol ──────────────────────────────────────── */
-.login-pregunta {
-  font-family: var(--fuente-titulo);
-  font-size: 20px;
-  color: var(--bordo);
-  margin-bottom: 16px;
-  font-style: italic;
-  line-height: 1.4;
-}
-
-/* ── Responsive ───────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .login-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-  }
-
-  .login-izquierda {
-    padding: 48px 28px 40px;
-    gap: 20px;
-  }
-
-  .login-bienvenida {
-    font-size: 36px;
-  }
-
-  .login-logo-img {
-    width: 120px;
-  }
-
-  .login-derecha {
-    display: none;
-  }
-
-  .login-corazon-1 {
-    width: 200px;
-    top: -30px;
-    right: -20px;
-  }
-
-  .login-corazon-2 {
-    width: 100px;
-    top: 120px;
-    right: 10px;
-  }
-
-  .login-corazon-3,
-  .login-corazon-4 {
-    display: none;
-  }
-
-  .btn-google-nuevo {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-izquierda {
-    padding: 36px 20px 32px;
-  }
-
-  .login-bienvenida {
-    font-size: 30px;
-  }
-}
-
-.btn-google {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px 20px;
-  background: var(--blanco);
-  border: 1.5px solid var(--gris-borde);
-  border-radius: var(--radio-pill);
-  font-family: var(--fuente-texto);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--gris-texto);
-  cursor: pointer;
-  transition: var(--transicion);
-  margin-bottom: 12px;
-}
-
-.btn-google:hover {
-  border-color: var(--bordo);
-  box-shadow: var(--sombra);
-  transform: translateY(-1px);
-}
-
-.login-info {
-  font-size: 12px;
-  color: var(--gris-suave);
-  margin-top: 12px;
-}
-
-.login-pregunta {
-  font-family: var(--fuente-titulo);
-  font-size: 18px;
-  color: var(--bordo);
-  margin-bottom: 20px;
-  font-style: italic;
-}
-
-.rol-opciones {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.rol-opciones { display: flex; flex-direction: column; gap: 12px; }
 
 .rol-opcion {
   display: flex;
@@ -723,19 +394,47 @@ img { max-width: 100%; display: block; }
 }
 
 .rol-icono { font-size: 28px; flex-shrink: 0; }
+.rol-nombre { display: block; font-weight: 700; font-size: 15px; color: var(--bordo); }
+.rol-desc { display: block; font-size: 13px; color: var(--gris-suave); margin-top: 2px; }
 
-.rol-nombre {
-  display: block;
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--bordo);
+@media (max-width: 768px) {
+  #seccion-login {
+    min-height: auto;
+    padding-bottom: 48px;
+  }
+
+  .login-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .login-derecha { display: none; }
+
+  .login-izquierda {
+    padding: 40px 24px 48px;
+    gap: 20px;
+    justify-content: flex-start;
+  }
+
+  .login-logo-img { width: 110px; }
+  .login-bienvenida { font-size: 34px; }
+  .login-subtitulo { max-width: 100%; }
+
+  .btn-google-nuevo {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .login-corazon-1 { width: 160px; top: -10px; right: -10px; opacity: 0.45; }
+  .login-corazon-2 { width: 80px; top: 100px; right: 5px; opacity: 0.35; }
+  .login-corazon-3,
+  .login-corazon-4,
+  .login-corazon-5 { display: none; }
 }
 
-.rol-desc {
-  display: block;
-  font-size: 13px;
-  color: var(--gris-suave);
-  margin-top: 2px;
+@media (max-width: 480px) {
+  .login-izquierda { padding: 32px 20px 40px; }
+  .login-bienvenida { font-size: 28px; }
 }
 
 /* ── Panel header ─────────────────────────────────────────── */
@@ -1028,7 +727,6 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 4px 16px rgba(139,26,43,0.25);
 }
 
-/* Portada 3D */
 .slide-portada-wrap {
   display: flex;
   align-items: center;
@@ -1097,7 +795,6 @@ img { max-width: 100%; display: block; }
   filter: blur(5px);
 }
 
-/* Navegación slider */
 .slide-nav {
   display: flex;
   justify-content: center;
@@ -1305,11 +1002,7 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap;
 }
 
-.campana-dato {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
+.campana-dato { display: flex; flex-direction: column; gap: 1px; }
 
 .campana-dato-label {
   font-size: 10px;
@@ -1331,7 +1024,7 @@ img { max-width: 100%; display: block; }
   background: var(--gris-borde);
 }
 
-/* ── Cards internas (listas panel) ───────────────────────── */
+/* ── Cards internas ───────────────────────────────────────── */
 .campanas-lista,
 .postulaciones-lista,
 .arcs-lista {
@@ -1851,10 +1544,7 @@ img { max-width: 100%; display: block; }
   font-weight: 700;
 }
 
-.tropes-categoria-chevron {
-  font-size: 11px;
-  color: var(--gris-suave);
-}
+.tropes-categoria-chevron { font-size: 11px; color: var(--gris-suave); }
 
 .tropes-categoria-body {
   padding: 10px 14px;
@@ -1906,11 +1596,7 @@ img { max-width: 100%; display: block; }
   margin-bottom: 5px;
 }
 
-.tropes-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
+.tropes-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 
 .tropes-tag {
   background: var(--rosa-claro);
@@ -2024,11 +1710,10 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.3px;
 }
 
-/* ── Red link ─────────────────────────────────────────────── */
+/* ── Utilidades ───────────────────────────────────────────── */
 .red-link { color: var(--bordo); font-weight: 600; }
 .red-link:hover { color: var(--bordo-claro); }
 
-/* ── Match tropes ─────────────────────────────────────────── */
 .match-tropes {
   display: inline-flex;
   align-items: center;
@@ -2042,7 +1727,6 @@ img { max-width: 100%; display: block; }
   font-weight: 700;
 }
 
-/* ── Completion rate ──────────────────────────────────────── */
 .completion-barra {
   height: 6px;
   background: var(--gris-borde);
@@ -2072,7 +1756,6 @@ img { max-width: 100%; display: block; }
   color: var(--bordo);
 }
 
-/* ── Ranking vacío ────────────────────────────────────────── */
 .ranking-vacio {
   background: var(--crema-suave);
   border: 1.5px dashed var(--gris-borde);
@@ -2081,7 +1764,7 @@ img { max-width: 100%; display: block; }
   text-align: center;
 }
 
-/* ── Responsive ───────────────────────────────────────────── */
+/* ── Responsive general ───────────────────────────────────── */
 @media (max-width: 768px) {
   .header-inner { padding: 0 16px; }
   .logo-texto { display: none; }
@@ -2100,29 +1783,12 @@ img { max-width: 100%; display: block; }
   .slide-titulo { font-size: 32px; }
   .slide-libro-sombra { display: none; }
 
-  .slide-libro-3d {
-    width: 150px;
-    height: 215px;
-  }
+  .slide-libro-3d { width: 150px; height: 215px; }
+  .slide-libro-tapa { width: 150px; height: 215px; }
 
-  .slide-libro-tapa {
-    width: 150px;
-    height: 215px;
-  }
-
-  .campana-card-horizontal {
-    grid-template-columns: 90px 1fr;
-  }
-
-  .campana-card-horizontal .campana-portada-lista {
-    width: 90px;
-    height: 130px;
-  }
-
-  .campana-portada-lista-placeholder {
-    width: 90px;
-    height: 130px;
-  }
+  .campana-card-horizontal { grid-template-columns: 90px 1fr; }
+  .campana-card-horizontal .campana-portada-lista { width: 90px; height: 130px; }
+  .campana-portada-lista-placeholder { width: 90px; height: 130px; }
 
   .campana-titulo { font-size: 15px; }
   .campana-datos { gap: 12px; }
@@ -2140,60 +1806,9 @@ img { max-width: 100%; display: block; }
 }
 
 @media (max-width: 480px) {
-  .login-card { padding: 32px 20px; }
   .panel-titulo { font-size: 22px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .slide-titulo { font-size: 26px; }
   .avatar-grid { grid-template-columns: repeat(4, 1fr); }
   .avatar-opcion { width: 100%; height: auto; aspect-ratio: 1; }
-}
-/* ── LOGIN FIXES ───────────────────────────────────────────── */
-
-/* Desktop + mobile: fondo blanco en columna izquierda para que el logo no tenga caja */
-.login-izquierda {
-  background: #ffffff;
-}
-
-/* Corazones: asegurar que sean relativos al section */
-.login-corazon {
-  position: absolute;
-  z-index: 1;
-}
-
-.login-layout {
-  position: relative;
-  z-index: 2;
-}
-
-/* ── Mobile ────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  #seccion-login {
-    padding-top: 0;
-  }
-
-  .login-izquierda {
-    padding-top: 32px;
-    justify-content: flex-start;
-  }
-
-  /* Corazones reposicionados para mobile */
-  .login-corazon-1 {
-    width: 160px;
-    top: -10px;
-    right: -10px;
-    opacity: 0.5;
-  }
-
-  .login-corazon-2 {
-    width: 80px;
-    top: 90px;
-    right: 10px;
-    opacity: 0.4;
-  }
-
-  .login-corazon-3,
-  .login-corazon-4,
-  .login-corazon-5 {
-    display: none;
-  }
 }
