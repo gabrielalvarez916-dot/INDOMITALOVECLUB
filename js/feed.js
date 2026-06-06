@@ -219,7 +219,16 @@ async function verDetalleCampaña(idCampaña) {
       <p style="font-size:13px; color:var(--gris-suave); margin-bottom:4px;">por ${c.nombreAutor}</p>
       ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
       <p style="margin:16px 0; font-size:14px; line-height:1.6;">${c.sinopsis}</p>
-      ${c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : ''}
+     ${c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : ''}
+      ${Sesion.rol() === 'reseñador' && c.coincidenciaTropes !== undefined ? `
+        <div style="margin:12px 0;">
+          <p style="font-size:13px; font-weight:600; color:var(--bordo); margin-bottom:4px;">
+            🎯 ${c.coincidenciaTropes}% de coincidencia con tus tropes favoritos
+          </p>
+          <div style="background:var(--crema-oscura); border-radius:20px; height:6px;">
+            <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:6px; border-radius:20px;"></div>
+          </div>
+        </div>` : ''}
       <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--crema-oscura);">
         <p style="font-size:13px;"><strong>Cupos disponibles:</strong> ${c.cuposDisponibles} de ${c.cuposTotal}</p>
         <p style="font-size:13px;"><strong>Fecha límite:</strong> ${formatearFechaAmigable(c.fechaLimite)}</p>
