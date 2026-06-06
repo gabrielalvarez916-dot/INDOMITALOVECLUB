@@ -209,84 +209,262 @@ img { max-width: 100%; display: block; }
 
 .seccion-angosta { max-width: 620px; }
 
-/* ── Login ────────────────────────────────────────────────── */
+/* ============================================================
+   LOGIN NUEVO — reemplaza los estilos de #seccion-login
+   en styles.css
+   ============================================================ */
+
+/* ── Sección login ────────────────────────────────────────── */
 #seccion-login {
-  background: linear-gradient(150deg, var(--rosa-claro) 0%, var(--crema-suave) 50%, var(--crema) 100%);
-  align-items: center;
-  justify-content: center;
+  background: #FAF0F2;
   min-height: calc(100vh - 60px);
-  padding: 40px 24px;
+  display: flex;
+  align-items: stretch;
   position: relative;
   overflow: hidden;
+  padding: 0;
 }
 
-#seccion-login::before {
-  content: '♥';
-  position: absolute;
-  font-size: 320px;
-  color: var(--rosa);
-  opacity: 0.18;
-  top: -80px;
-  right: -60px;
-  line-height: 1;
-  pointer-events: none;
-}
-
-#seccion-login::after {
-  content: '♥';
-  position: absolute;
-  font-size: 200px;
-  color: var(--rosa);
-  opacity: 0.12;
-  bottom: -40px;
-  left: -40px;
-  line-height: 1;
-  pointer-events: none;
-}
-
-.login-container {
+/* ── Layout dos columnas ──────────────────────────────────── */
+.login-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   width: 100%;
-  max-width: 420px;
+  min-height: calc(100vh - 60px);
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
-.login-card {
-  background: var(--blanco);
-  border-radius: var(--radio-grande);
-  box-shadow: var(--sombra-fuerte);
-  padding: 48px 40px;
-  text-align: center;
-}
-
-.login-logo {
+/* ── Columna izquierda ────────────────────────────────────── */
+.login-izquierda {
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  margin-bottom: 20px;
+  padding: 60px 56px;
+  gap: 28px;
+  position: relative;
+  z-index: 2;
 }
 
-.login-logo img {
-  height: 120px;
-  width: 120px;
+.login-logo-img {
+  width: 160px;
+  height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 4px 16px rgba(139,26,43,0.15));
 }
 
-.login-titulo {
+.login-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-bienvenida {
   font-family: var(--fuente-titulo);
-  font-size: 30px;
+  font-size: 48px;
   font-weight: 700;
   color: var(--bordo);
-  margin-bottom: 8px;
-  font-style: italic;
-   line-height: 1.15;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.login-separador-deco {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+}
+
+.login-sep-linea {
+  flex: 1;
+  max-width: 48px;
+  height: 1px;
+  background: var(--rosa);
+}
+
+.login-sep-corazon {
+  font-size: 14px;
+  color: var(--rosa);
 }
 
 .login-subtitulo {
   font-size: 15px;
   color: var(--gris-medio);
-  margin-bottom: 32px;
-  line-height: 1.5;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 340px;
+}
+
+/* ── Botón Google nuevo ───────────────────────────────────── */
+.btn-google-nuevo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  background: var(--bordo);
+  color: var(--blanco);
+  border: none;
+  border-radius: var(--radio-pill);
+  font-family: var(--fuente-texto);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transicion);
+  width: fit-content;
+}
+
+.btn-google-nuevo:hover {
+  background: var(--bordo-oscuro);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139,26,43,0.3);
+}
+
+.login-info {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin-top: 8px;
+}
+
+/* ── Columna derecha decorativa ───────────────────────────── */
+.login-derecha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 40px 40px 60px;
+  position: relative;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.login-deco-indomita {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(52px, 7vw, 88px);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--bordo);
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.login-deco-love {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(72px, 12vw, 140px);
+  font-weight: 700;
+  color: rgba(139,26,43,0.13);
+  line-height: 0.9;
+  letter-spacing: -4px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Corazones decorativos ────────────────────────────────── */
+.login-corazon {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.login-corazon-1 {
+  width: 320px;
+  top: -60px;
+  right: 80px;
+  opacity: 0.55;
+}
+
+.login-corazon-2 {
+  width: 160px;
+  top: 160px;
+  right: 20px;
+  opacity: 0.45;
+}
+
+.login-corazon-3 {
+  width: 240px;
+  bottom: -40px;
+  right: 160px;
+  opacity: 0.4;
+}
+
+.login-corazon-4 {
+  width: 200px;
+  bottom: -60px;
+  right: -20px;
+  opacity: 0.85;
+}
+
+.login-corazon-5 {
+  width: 32px;
+  top: 52%;
+  right: 46%;
+  opacity: 0.7;
+}
+
+/* ── Pregunta de rol ──────────────────────────────────────── */
+.login-pregunta {
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  color: var(--bordo);
+  margin-bottom: 16px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .login-izquierda {
+    padding: 48px 28px 40px;
+    gap: 20px;
+  }
+
+  .login-bienvenida {
+    font-size: 36px;
+  }
+
+  .login-logo-img {
+    width: 120px;
+  }
+
+  .login-derecha {
+    display: none;
+  }
+
+  .login-corazon-1 {
+    width: 200px;
+    top: -30px;
+    right: -20px;
+  }
+
+  .login-corazon-2 {
+    width: 100px;
+    top: 120px;
+    right: 10px;
+  }
+
+  .login-corazon-3,
+  .login-corazon-4 {
+    display: none;
+  }
+
+  .btn-google-nuevo {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-izquierda {
+    padding: 36px 20px 32px;
+  }
+
+  .login-bienvenida {
+    font-size: 30px;
+  }
 }
 
 .btn-google {
