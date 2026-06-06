@@ -129,9 +129,10 @@ async function guardarPerfil(event) {
   };
 
   // Campos solo de reseñadores
-  if (rol === 'reseñador') {
-    datos.generos          = document.getElementById('perfil-generos')?.value?.trim();
+ if (rol === 'reseñador') {
+    datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
     datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
+    datos.tropesFavoritos   = obtenerTropesComoTexto('perfil');
   }
 
   if (!datos.alias) {
@@ -148,7 +149,8 @@ async function guardarPerfil(event) {
   tiktok:            datos.tiktok,
   amazon:            datos.amazon,
   generos:           datos.generos,
-  descripcionLector: datos.descripcionLector
+  descripcionLector: datos.descripcionLector,
+  tropesFavoritos:   datos.tropesFavoritos
 });
 if (!resultado.ok) {
   
