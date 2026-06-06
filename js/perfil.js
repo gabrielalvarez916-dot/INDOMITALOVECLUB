@@ -183,6 +183,13 @@ if (sesionActual) {
   if (aliasEl) aliasEl.textContent = datos.alias;
 }
 
+if (rol === 'reseñador') {
+    await llamarBackend('guardarTropesFavoritos', {
+      email,
+      tropes: encodeURIComponent(obtenerTropesComoTexto('perfil'))
+    });
+  }
+  
 mostrarMensajeOk('perfil-ok', '¡Perfil guardado correctamente!');
 setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
 }
