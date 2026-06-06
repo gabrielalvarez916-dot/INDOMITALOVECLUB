@@ -399,7 +399,7 @@ img { max-width: 100%; display: block; }
 
 @media (max-width: 768px) {
   #seccion-login {
-    min-height: auto;
+    min-height: 100svh;
     padding-bottom: 48px;
   }
 
