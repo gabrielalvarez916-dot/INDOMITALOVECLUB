@@ -1,18 +1,18 @@
 export default async function handler(req, res) {
   const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbz02LxMeAYZ8hcXXVyLFe2E9pLjBRJMicqlBn0MEa0pE_XWKwXyPH01bqLgLSkUb87q5A/exec';
-
-  res.setHeader('Access-Control-Allow-Origin', '*');
-
-  const paramsLimpios = new URLSearchParams();
-  for (const [clave, valor] of Object.entries(req.query)) {
-    paramsLimpios.append(clave, decodeURIComponent(valor));
-  }
-
+  const params = new URLSearchParams(req.query);
+  const url = `${BACKEND_URL}?${params.toString()}`;
   try {
-    const respuesta = await fetch(`${BACKEND_URL}?${paramsLimpios.toString()}`, { method: 'GET', redirect: 'follow' });
+    const respuesta = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow'
+    });
     const datos = await respuesta.json();
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/json');
     res.status(200).json(datos);
   } catch (e) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(500).json({ ok: false, mensaje: 'Error de conexión con el backend.' });
   }
 }
