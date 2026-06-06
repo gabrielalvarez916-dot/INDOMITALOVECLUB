@@ -400,41 +400,82 @@ img { max-width: 100%; display: block; }
 @media (max-width: 768px) {
   #seccion-login {
     min-height: 100svh;
-    padding-bottom: 48px;
+    background: #FAF0F2;
+    align-items: flex-start;
   }
 
   .login-layout {
     grid-template-columns: 1fr;
-    min-height: auto;
+    min-height: 100svh;
   }
 
   .login-derecha { display: none; }
 
   .login-izquierda {
-    padding: 40px 24px 48px;
-    gap: 20px;
-    justify-content: flex-start;
+    background: transparent;
+    padding: 60px 28px 48px;
+    gap: 24px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100svh;
   }
 
-  .login-logo-img { width: 110px; }
-  .login-bienvenida { font-size: 34px; }
-  .login-subtitulo { max-width: 100%; }
+  .login-logo-img {
+    width: 120px;
+    margin: 0 auto;
+  }
+
+  .login-bienvenida {
+    font-size: 36px;
+    text-align: center;
+  }
+
+  .login-subtitulo {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .login-separador-deco {
+    justify-content: center;
+  }
 
   .btn-google-nuevo {
     width: 100%;
     justify-content: center;
   }
 
-  .login-corazon-1 { width: 160px; top: -10px; right: -10px; opacity: 0.45; }
-  .login-corazon-2 { width: 80px; top: 100px; right: 5px; opacity: 0.35; }
-  .login-corazon-3,
+  .login-corazon-1 {
+    width: 200px;
+    top: -30px;
+    right: -30px;
+    opacity: 0.5;
+    display: block;
+  }
+
+  .login-corazon-2 {
+    width: 100px;
+    top: 120px;
+    right: -10px;
+    opacity: 0.4;
+    display: block;
+  }
+
+  .login-corazon-3 {
+    width: 150px;
+    bottom: 40px;
+    left: -30px;
+    opacity: 0.3;
+    display: block;
+  }
+
   .login-corazon-4,
   .login-corazon-5 { display: none; }
 }
 
 @media (max-width: 480px) {
-  .login-izquierda { padding: 32px 20px 40px; }
-  .login-bienvenida { font-size: 28px; }
+  .login-izquierda { padding: 48px 20px 40px; }
+  .login-bienvenida { font-size: 30px; }
 }
 
 /* ── Panel header ─────────────────────────────────────────── */
