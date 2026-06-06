@@ -211,10 +211,8 @@ img { max-width: 100%; display: block; }
 
 /* ============================================================
    LOGIN NUEVO — reemplaza los estilos de #seccion-login
-   en styles.css
    ============================================================ */
 
-/* ── Sección login ────────────────────────────────────────── */
 #seccion-login {
   background: #FAF0F2;
   min-height: calc(100vh - 60px);
@@ -250,6 +248,7 @@ img { max-width: 100%; display: block; }
   width: 160px;
   height: auto;
   object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 .login-textos {
@@ -292,6 +291,196 @@ img { max-width: 100%; display: block; }
   line-height: 1.6;
   margin: 0;
   max-width: 340px;
+}
+
+/* ── Botón Google ─────────────────────────────────────────── */
+.btn-google-nuevo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  background: var(--bordo);
+  color: var(--blanco);
+  border: none;
+  border-radius: var(--radio-pill);
+  font-family: var(--fuente-texto);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transicion);
+  width: fit-content;
+}
+
+.btn-google-nuevo:hover {
+  background: var(--bordo-oscuro);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139,26,43,0.3);
+}
+
+.login-info {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin-top: 8px;
+}
+
+.login-pregunta {
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  color: var(--bordo);
+  margin-bottom: 16px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ── Columna derecha decorativa ───────────────────────────── */
+.login-derecha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 40px 40px 60px;
+  position: relative;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.login-deco-indomita {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(52px, 7vw, 88px);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--bordo);
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.login-deco-love {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(72px, 12vw, 140px);
+  font-weight: 700;
+  color: rgba(139,26,43,0.13);
+  line-height: 0.9;
+  letter-spacing: -4px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Corazones decorativos ────────────────────────────────── */
+.login-corazon {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.login-corazon-1 {
+  width: 320px;
+  top: -60px;
+  right: 80px;
+  opacity: 0.55;
+}
+
+.login-corazon-2 {
+  width: 160px;
+  top: 160px;
+  right: 20px;
+  opacity: 0.45;
+}
+
+.login-corazon-3 {
+  width: 240px;
+  bottom: -40px;
+  right: 160px;
+  opacity: 0.4;
+}
+
+.login-corazon-4 {
+  width: 200px;
+  bottom: -60px;
+  right: -20px;
+  opacity: 0.85;
+}
+
+/* corazón outline — solo desktop */
+.login-corazon-5 {
+  width: 32px;
+  top: 52%;
+  right: 46%;
+  opacity: 0.7;
+}
+
+/* ── Responsive mobile ────────────────────────────────────── */
+@media (max-width: 768px) {
+  #seccion-login {
+    align-items: flex-start;
+  }
+
+  .login-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    min-height: calc(100vh - 60px);
+  }
+
+  .login-izquierda {
+    padding: 40px 28px 48px;
+    gap: 20px;
+    justify-content: flex-start;
+    padding-top: 48px;
+  }
+
+  .login-bienvenida {
+    font-size: 34px;
+  }
+
+  .login-logo-img {
+    width: 110px;
+  }
+
+  /* Ocultar columna derecha en mobile */
+  .login-derecha {
+    display: none;
+  }
+
+  /* Corazones mobile: solo 2, pegados arriba a la derecha */
+  .login-corazon-1 {
+    width: 180px;
+    top: -20px;
+    right: -20px;
+    opacity: 0.5;
+  }
+
+  .login-corazon-2 {
+    width: 90px;
+    top: 100px;
+    right: 0px;
+    opacity: 0.4;
+  }
+
+  /* Ocultar el resto en mobile */
+  .login-corazon-3,
+  .login-corazon-4,
+  .login-corazon-5 {
+    display: none;
+  }
+
+  .btn-google-nuevo {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .login-subtitulo {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-izquierda {
+    padding: 36px 20px 40px;
+  }
+
+  .login-bienvenida {
+    font-size: 28px;
+  }
 }
 
 /* ── Botón Google nuevo ───────────────────────────────────── */
