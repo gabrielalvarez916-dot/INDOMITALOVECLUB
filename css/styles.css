@@ -247,6 +247,7 @@ img { max-width: 100%; display: block; }
   width: 160px;
   height: auto;
   object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 .login-textos {
