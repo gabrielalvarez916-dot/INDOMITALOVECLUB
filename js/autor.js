@@ -533,6 +533,7 @@ async function crearNuevaCampana(event) {
     linkAmazon:   datos.linkAmazon,
     cuposTotal:   datos.cuposTotal,
     fechaLimite:  datos.fechaLimite
+   modalidadLectura: datos.modalidadLectura
 });
 
   toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
