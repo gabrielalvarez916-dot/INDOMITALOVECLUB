@@ -118,6 +118,12 @@ function construirCardCampaña(c) {
       ).join('')
     : '';
 
+  const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
+  ? `<p style="font-size:12px; color:var(--gris-suave); margin:6px 0 2px;">
+       📋 <strong>Requisitos:</strong> Contar con cuenta activa en ${c.plataformasReseña.join(' y ')}
+     </p>`
+  : '';
+
   let botonHtml = '';
   if (rol === 'reseñador') {
     if (c.cuposDisponibles > 0) {
@@ -148,7 +154,8 @@ function construirCardCampaña(c) {
             <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:5px; border-radius:20px;"></div>
           </div>
         </div>` : ''}
-        <div class="campana-tropes">${tropesHtml}</div>
+       <div class="campana-tropes">${tropesHtml}</div>
+${requisitosHtml}
         ${c.rankingLibro ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0;">
             ${c.rankingLibro.esTop5  ? `<span class="badge badge-top5">🏆 Top 5</span>` : ''}
@@ -221,7 +228,12 @@ async function verDetalleCampaña(idCampaña) {
       <p style="font-size:13px; color:var(--gris-suave); margin-bottom:4px;">por ${c.nombreAutor}</p>
       ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
       <p style="margin:16px 0; font-size:14px; line-height:1.6;">${c.sinopsis}</p>
-      ${c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : ''}
+     ${c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : ''}
+${c.plataformasReseña && c.plataformasReseña.length > 0
+  ? `<p style="font-size:13px; margin-top:8px;">
+       📋 <strong>Requisitos:</strong> Contar con cuenta activa en ${c.plataformasReseña.join(' y ')}
+     </p>`
+  : ''}
       ${Sesion.rol() === 'reseñador' && c.coincidenciaTropes !== undefined ? `
         <div style="margin:12px 0;">
           <p style="font-size:13px; font-weight:600; color:var(--bordo); margin-bottom:4px;">
