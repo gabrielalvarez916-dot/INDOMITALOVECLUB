@@ -997,6 +997,7 @@ img { max-width: 100%; display: block; }
   transition: var(--transicion);
   cursor: pointer;
   box-shadow: var(--sombra-card);
+  align-items: stretch;
 }
 
 .campana-card-horizontal:hover {
@@ -1008,8 +1009,8 @@ img { max-width: 100%; display: block; }
 .campana-card-horizontal .campana-portada-lista {
   width: 120px;
   height: 100%;
-  min-height: 165px;
   object-fit: cover;
+  object-position: center top;
   display: block;
 }
 
