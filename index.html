@@ -436,6 +436,19 @@
             <input type="text" id="nc-fecha-limite" class="form-input" placeholder="DD/MM/YYYY" required />
           </div>
         </div>
+    <div class="form-grupo">
+  <label class="form-label">Modalidad de lectura *</label>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="nc-modalidad-lectura" value="visor" checked />
+      <span>📖 Solo visor (sin descarga)</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-modalidad-lectura" value="descarga" />
+      <span>⬇️ Permite descarga <em class="form-hint">(puede atraer más reseñadores)</em></span>
+    </label>
+  </div>
+</div>
         <div id="nc-error" class="mensaje-error" style="display:none;"></div>
         <div id="nc-ok" class="mensaje-ok" style="display:none;"></div>
         <div class="modal-footer">
