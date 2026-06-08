@@ -1007,7 +1007,8 @@ img { max-width: 100%; display: block; }
 
 .campana-card-horizontal .campana-portada-lista {
   width: 120px;
-  height: 165px;
+  height: 100%;
+  min-height: 165px;
   object-fit: cover;
   display: block;
 }
@@ -1024,20 +1025,21 @@ img { max-width: 100%; display: block; }
 }
 
 .campana-card-horizontal .campana-info {
-  padding: 18px 22px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 4px;
   justify-content: center;
 }
 
 .campana-titulo {
   font-family: var(--fuente-titulo);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--bordo-oscuro);
-  line-height: 1.2;
+  line-height: 1.15;
   margin: 0;
+  font-style: italic;
 }
 
 .campana-autor {
