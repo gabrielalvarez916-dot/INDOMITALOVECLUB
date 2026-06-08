@@ -118,9 +118,11 @@ function construirCardCampaña(c) {
       ).join('')
     : '';
 
-  const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
+  const iconoPlataforma = { Amazon: '🛒', TikTok: '🎵', Instagram: '📸', Goodreads: '📚' };
+const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
   ? `<p style="font-size:12px; color:var(--gris-suave); margin:6px 0 2px;">
-       📋 <strong>Requisitos:</strong> Contar con cuenta activa en ${c.plataformasReseña.join(' y ')}
+       📋 <strong>Requisitos:</strong> Cuenta activa en 
+       ${c.plataformasReseña.map(p => `${iconoPlataforma[p] || ''}${p}`).join(' y ')}
      </p>`
   : '';
 
