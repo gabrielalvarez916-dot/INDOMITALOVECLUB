@@ -155,6 +155,11 @@ function construirCardCampaña(c) {
             ${c.rankingLibro.esTop20 && !c.rankingLibro.esTop5 ? `<span class="badge badge-top20">⭐ Top 20</span>` : ''}
             <span style="font-size:11px; color:var(--gris-suave);">⭐ ${c.rankingLibro.promedio?.toFixed(1) ?? '—'} · ${c.rankingLibro.totalReseñas} reseña${c.rankingLibro.totalReseñas !== 1 ? 's' : ''}</span>
           </div>` : ''}
+          const modalidadHtml = `<p class="campana-aclaracion">
+  ${c.modalidadLectura === 'descarga'
+    ? '⬇️ <strong>Aclaración:</strong> Se lee con descarga'
+    : '📖 <strong>Aclaración:</strong> Se lee en visor (sin descarga)'}
+</p>`;
         <div class="campana-datos">
           <div class="campana-dato">
             <span class="campana-dato-label">${icoSilla}Cupos</span>
