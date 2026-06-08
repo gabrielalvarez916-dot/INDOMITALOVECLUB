@@ -120,8 +120,8 @@ function construirCardCampaña(c) {
 
 const iconoPlataforma = { Amazon: '🛒', TikTok: '🎵', Instagram: '📸', Goodreads: '📚' };
 const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
-  ? `<p style="font-size:12px; color:var(--gris-suave); margin:6px 0 2px;">
-       📋 <strong>Requisitos:</strong> Cuenta activa en 
+ ? `<p style="font-size:12px; color:var(--bordo); background:var(--rosa-claro); padding:4px 10px; border-radius:20px; margin:4px 0; display:inline-block;">
+       📋 <strong>Requisitos:</strong> Cuenta activa en
        ${c.plataformasReseña.map(p => `${iconoPlataforma[p.trim()] || ''}${p.trim()}`).join(' y ')}
      </p>`
   : '';
@@ -172,7 +172,6 @@ ${requisitosHtml}
             <span class="campana-dato-label">${icoSilla}Cupos</span>
             <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>
           </div>
-          <div class="campana-dato-sep"></div>
           <div class="campana-dato">
             <span class="campana-dato-label">${icoReloj}Fecha límite</span>
             <span class="campana-dato-valor">${formatearFechaAmigable(c.fechaLimite)}</span>
