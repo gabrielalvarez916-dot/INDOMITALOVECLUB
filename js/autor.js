@@ -575,71 +575,93 @@ async function crearNuevaCampana(event) {
 // PLAN
 // ────────────────────────────────────────────────────────────
 
-/**
- * Carga y muestra la información del plan actual del autor.
- *
- * @param {string} email
- */
 async function cargarPlanAutor(email) {
   const contenedor = document.getElementById('autor-plan-info');
   if (!contenedor) return;
-
   const resultado = await llamarBackend('obtenerPerfil', { email });
   if (!resultado.ok) return;
-
   const u = resultado.datos.perfil;
   const plan = u.plan || 'free';
-  const estadoPlan = u.estadoPlan || '';
-  const fechaVenc  = u.fechaVencimientoPlan || '';
+  const fechaVenc = u.fechaVencimientoPlan || '';
 
-  const limites = {
-    free:    { campañas: 1,  reseñadores: 10  },
-    basic:   { campañas: 3,  reseñadores: 50  },
-    premium: { campañas: 5,  reseñadores: 100 }
-  };
-
-  const l = limites[plan] || limites.free;
+  const planes = [
+    {
+      id: 'free',
+      nombre: 'Free',
+      precio: '$0',
+      subprecio: 'Para empezar',
+      beneficios: ['1 campaña por mes', 'Hasta 10 reseñadores'],
+      esPremium: false
+    },
+    {
+      id: 'basic',
+      nombre: 'Basic',
+      precio: '$20.000',
+      subprecio: '$190.000/año',
+      beneficios: ['3 campañas por mes', 'Hasta 50 reseñadores'],
+      esPremium: false
+    },
+    {
+      id: 'premium',
+      nombre: 'Premium',
+      precio: '$40.000',
+      subprecio: '$380.000/año',
+      beneficios: ['5 campañas por mes', 'Hasta 100 reseñadores'],
+      esPremium: true
+    }
+  ];
 
   contenedor.innerHTML = `
-    <div class="plan-actual">
-      <div class="plan-nombre">
-        <span class="badge badge-plan">Plan ${plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
-        ${estadoPlan === 'activo' && fechaVenc ? `<span style="font-size:13px; color:var(--gris-suave);">Válido hasta ${formatearFechaAmigable(fechaVenc)}</span>` : ''}
-      </div>
-      <div class="plan-limites">
-        <p>📋 Hasta <strong>${l.campañas}</strong> campaña${l.campañas > 1 ? 's' : ''} por mes</p>
-        <p>👥 Hasta <strong>${l.reseñadores}</strong> reseñad@r${l.reseñadores > 1 ? 'es' : ''} por mes</p>
-      </div>
-    </div>
-
-    ${plan !== 'premium' ? `
-      <div class="plan-upgrade">
-        <p class="plan-upgrade-titulo">¿Querés más alcance?</p>
-        <div class="planes-opciones">
-          ${plan === 'free' ? `
-            <div class="plan-opcion">
-              <p class="plan-opcion-nombre">Basic</p>
-              <p class="plan-opcion-detalle">3 campañas · 50 reseñad@res</p>
-              <button class="btn-primario btn-sm" onclick="iniciarPago('basic')">Contratar</button>
+    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:24px;">Elegí tu plan</h3>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      ${planes.map(p => {
+        const esActual = p.id === plan;
+        const esMenor = (p.id === 'free' && (plan === 'basic' || plan === 'premium')) || (p.id === 'basic' && plan === 'premium');
+        return `
+          <div style="
+            background: ${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'};
+            border: ${esActual ? '2px solid var(--bordo)' : '1px solid var(--gris-borde)'};
+            border-radius: var(--radio-grande);
+            padding: 20px 22px;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--sombra-card);
+          ">
+            <div>
+              <span style="
+                display: inline-block;
+                background: ${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'};
+                color: ${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'};
+                font-size: 11px; font-weight: 700; padding: 3px 12px;
+                border-radius: var(--radio-pill); margin-bottom: 8px;
+              ">${p.nombre}${esActual ? ' ✓' : ''}</span>
+              <p style="font-family:var(--fuente-titulo); font-size:28px; font-weight:700; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; line-height:1.1; margin-bottom:2px;">${p.precio}<span style="font-size:14px; font-weight:400;">/mes</span></p>
+              <p style="font-size:12px; color:${p.esPremium ? 'rgba(255,255,255,0.7)' : 'var(--gris-suave)'}; margin-bottom:0;">${p.subprecio}</p>
             </div>
-          ` : ''}
-          <div class="plan-opcion">
-            <p class="plan-opcion-nombre">Premium</p>
-            <p class="plan-opcion-detalle">5 campañas · 100 reseñad@res</p>
-            <button class="btn-primario btn-sm" onclick="iniciarPago('premium')">Contratar</button>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${p.beneficios.map(b => `
+                <p style="font-size:13px; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; display:flex; align-items:center; gap:6px; margin:0;">
+                  <span style="color:${p.esPremium ? 'rgba(255,255,255,0.8)' : 'var(--bordo)'};">✓</span> ${b}
+                </p>
+              `).join('')}
+            </div>
+            <div>
+              ${esActual
+                ? `<button class="btn-sm" disabled style="background:${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'}; color:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Plan actual</button>`
+                : esMenor
+                ? ''
+                : `<button class="btn-sm" onclick="iniciarPago('${p.id}')" style="background:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; color:${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer;">Elegir ${p.nombre}</button>`
+              }
+            </div>
           </div>
-        </div>
-      </div>
-    ` : ''}
+        `;
+      }).join('')}
+    </div>
+    ${fechaVenc ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
   `;
 }
-
-/**
- * Inicia el flujo de pago para un plan.
- * Pregunta la moneda y redirige a la pasarela externa.
- *
- * @param {string} plan — 'basic' o 'premium'
- */
 async function iniciarPago(plan) {
   const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Mercado Pago (ARS)\nCancelar = Stripe (USD)')
     ? 'ARS'
