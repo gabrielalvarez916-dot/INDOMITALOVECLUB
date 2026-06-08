@@ -154,7 +154,8 @@ function construirCardCampaña(c) {
             <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:5px; border-radius:20px;"></div>
           </div>
         </div>` : ''}
-       <div class="campana-tropes">${tropesHtml}</div>
+       <div class="campana-tropes">
+      ${tropesHtml}</div>
 ${requisitosHtml}
         ${c.rankingLibro ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0;">
@@ -162,12 +163,9 @@ ${requisitosHtml}
             ${c.rankingLibro.esTop20 && !c.rankingLibro.esTop5 ? `<span class="badge badge-top20">⭐ Top 20</span>` : ''}
             <span style="font-size:11px; color:var(--gris-suave);">⭐ ${c.rankingLibro.promedio?.toFixed(1) ?? '—'} · ${c.rankingLibro.totalReseñas} reseña${c.rankingLibro.totalReseñas !== 1 ? 's' : ''}</span>
           </div>` : ''}
-          const modalidadHtml = `<p class="campana-aclaracion">
-  ${c.modalidadLectura === 'descarga'
-    ? '⬇️ <strong>Aclaración:</strong> Se lee con descarga'
-    : '📖 <strong>Aclaración:</strong> Se lee en visor (sin descarga)'}
-</p>`;
-         ${modalidadHtml}
+          ${c.modalidadLectura === 'descarga'
+            ? '<p class="campana-aclaracion">⬇️ <strong>Aclaración:</strong> Se lee con descarga</p>'
+            : '<p class="campana-aclaracion">📖 <strong>Aclaración:</strong> Se lee en visor (sin descarga)</p>'}
           <div class="campana-dato">
             <span class="campana-dato-label">${icoSilla}Cupos</span>
             <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>
