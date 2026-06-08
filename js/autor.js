@@ -505,36 +505,53 @@ async function crearNuevaCampana(event) {
   ocultarMensajes('nc-error', 'nc-ok');
   toggleBoton('btn-crear-campana', false, 'Creando...');
 
+  // Validar plataformas
+  const plataformasSeleccionadas = Array.from(
+    document.querySelectorAll('input[name="plataformas"]:checked')
+  ).map(cb => cb.value);
+
+  if (plataformasSeleccionadas.length < 1 || plataformasSeleccionadas.length > 2) {
+    const errPlat = document.getElementById('plataformas-error');
+    if (errPlat) { errPlat.textContent = 'Elegí entre 1 y 2 plataformas.'; errPlat.style.display = 'block'; }
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    return;
+  } else {
+    const errPlat = document.getElementById('plataformas-error');
+    if (errPlat) errPlat.style.display = 'none';
+  }
+
   const datos = {
-    nombreLibro:  document.getElementById('nc-nombre-libro')?.value?.trim(),
-    nombreAutor:  document.getElementById('nc-nombre-autor')?.value?.trim(),
-    sinopsis:     document.getElementById('nc-sinopsis')?.value?.trim(),
-    genero:       document.getElementById('nc-genero')?.value?.trim(),
-   tropes: obtenerTropesComoTexto('nc'),
-   linkPortada:  convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim()),
-    linkEpub:     document.getElementById('nc-link-epub')?.value?.trim(),
-    linkPdf:      document.getElementById('nc-link-pdf')?.value?.trim(),
-    linkAmazon:   document.getElementById('nc-link-amazon')?.value?.trim(),
-    cuposTotal:   parseInt(document.getElementById('nc-cupos')?.value),
-    fechaLimite:  document.getElementById('nc-fecha-limite')?.value?.trim()
-    modalidadLectura: document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor'
+    nombreLibro:      document.getElementById('nc-nombre-libro')?.value?.trim(),
+    nombreAutor:      document.getElementById('nc-nombre-autor')?.value?.trim(),
+    sinopsis:         document.getElementById('nc-sinopsis')?.value?.trim(),
+    genero:           document.getElementById('nc-genero')?.value?.trim(),
+    tropes:           obtenerTropesComoTexto('nc'),
+    linkPortada:      convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim()),
+    linkEpub:         document.getElementById('nc-link-epub')?.value?.trim(),
+    linkPdf:          document.getElementById('nc-link-pdf')?.value?.trim(),
+    linkAmazon:       document.getElementById('nc-link-amazon')?.value?.trim(),
+    cuposTotal:       parseInt(document.getElementById('nc-cupos')?.value),
+    fechaLimite:      document.getElementById('nc-fecha-limite')?.value?.trim(),
+    modalidadLectura: document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor',
+    plataformasResena: plataformasSeleccionadas
   };
 
- const resultado = await llamarBackend('crearCampana', {
-    email:        Sesion.email(),
-    nombreLibro:  datos.nombreLibro,
-    nombreAutor:  datos.nombreAutor,
-    sinopsis:     datos.sinopsis,
-    genero:       datos.genero,
-    tropes:       datos.tropes,
-    linkPortada:  datos.linkPortada,
-    linkEpub:     datos.linkEpub,
-    linkPdf:      datos.linkPdf,
-    linkAmazon:   datos.linkAmazon,
-    cuposTotal:   datos.cuposTotal,
-    fechaLimite:  datos.fechaLimite
-   modalidadLectura: datos.modalidadLectura
-});
+  const resultado = await llamarBackend('crearCampana', {
+    email:             Sesion.email(),
+    nombreLibro:       datos.nombreLibro,
+    nombreAutor:       datos.nombreAutor,
+    sinopsis:          datos.sinopsis,
+    genero:            datos.genero,
+    tropes:            datos.tropes,
+    linkPortada:       datos.linkPortada,
+    linkEpub:          datos.linkEpub,
+    linkPdf:           datos.linkPdf,
+    linkAmazon:        datos.linkAmazon,
+    cuposTotal:        datos.cuposTotal,
+    fechaLimite:       datos.fechaLimite,
+    modalidadLectura:  datos.modalidadLectura,
+    plataformasResena: datos.plataformasResena
+  });
 
   toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
 
