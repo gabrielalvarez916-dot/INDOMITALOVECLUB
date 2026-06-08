@@ -334,12 +334,16 @@ async function guardarPerfilYPostularse(event) {
 async function confirmarPostulacion(idCampaña) {
   const email = Sesion.email();
 
-  // Busca la campaña en los datos ya cargados
   const campaña = _campañasTodas.find(c => c.id === idCampaña);
   if (campaña && campaña.plataformasReseña && campaña.plataformasReseña.length > 0) {
     const usuario = Sesion.obtener();
-    const mapeo = { Amazon: usuario.amazon, TikTok: usuario.tiktok, Instagram: usuario.instagram };
+    const mapeo = {
+      Amazon:    usuario.amazon,
+      TikTok:    usuario.tiktok,
+      Instagram: usuario.instagram
+    };
     const faltantes = campaña.plataformasReseña
+      .map(p => p.trim())
       .filter(p => p !== 'Goodreads')
       .filter(p => !mapeo[p]);
 
@@ -362,7 +366,6 @@ async function confirmarPostulacion(idCampaña) {
 
   mostrarToast('¡Te postulaste exitosamente! El autor revisará tu perfil.', 'ok');
 }
-
 
 // ────────────────────────────────────────────────────────────
 // SLIDER
