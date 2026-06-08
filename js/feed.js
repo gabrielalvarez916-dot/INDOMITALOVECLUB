@@ -334,6 +334,21 @@ async function guardarPerfilYPostularse(event) {
 async function confirmarPostulacion(idCampaña) {
   const email = Sesion.email();
 
+  // Busca la campaña en los datos ya cargados
+  const campaña = _campañasTodas.find(c => c.id === idCampaña);
+  if (campaña && campaña.plataformasReseña && campaña.plataformasReseña.length > 0) {
+    const usuario = Sesion.obtener();
+    const mapeo = { Amazon: usuario.amazon, TikTok: usuario.tiktok, Instagram: usuario.instagram };
+    const faltantes = campaña.plataformasReseña
+      .filter(p => p !== 'Goodreads')
+      .filter(p => !mapeo[p]);
+
+    if (faltantes.length > 0) {
+      mostrarToast(`Para postularte necesitás cargar tu perfil de ${faltantes.join(' y ')} en tu perfil.`, 'error');
+      return;
+    }
+  }
+
   const resultado = await llamarBackend('postularse', {
     email,
     idCampana: idCampaña,
