@@ -160,7 +160,7 @@ function construirCardCampaña(c) {
     ? '⬇️ <strong>Aclaración:</strong> Se lee con descarga'
     : '📖 <strong>Aclaración:</strong> Se lee en visor (sin descarga)'}
 </p>`;
-        <div class="campana-datos">
+         ${modalidadHtml}
           <div class="campana-dato">
             <span class="campana-dato-label">${icoSilla}Cupos</span>
             <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>
@@ -234,6 +234,7 @@ async function verDetalleCampaña(idCampaña) {
       <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--crema-oscura);">
         <p style="font-size:13px;"><strong>Cupos disponibles:</strong> ${c.cuposDisponibles} de ${c.cuposTotal}</p>
         <p style="font-size:13px;"><strong>Fecha límite:</strong> ${formatearFechaAmigable(c.fechaLimite)}</p>
+        <p style="font-size:13px;">${c.modalidadLectura === 'descarga' ? '⬇️ <strong>Aclaración:</strong> Se lee con descarga del archivo' : '📖 <strong>Aclaración:</strong> Se lee en el visor (sin descarga)'}</p>
       </div>
       ${amazonHtml}
     `;
