@@ -517,6 +517,7 @@ async function crearNuevaCampana(event) {
     linkAmazon:   document.getElementById('nc-link-amazon')?.value?.trim(),
     cuposTotal:   parseInt(document.getElementById('nc-cupos')?.value),
     fechaLimite:  document.getElementById('nc-fecha-limite')?.value?.trim()
+    modalidadLectura: document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor'
   };
 
  const resultado = await llamarBackend('crearCampana', {
