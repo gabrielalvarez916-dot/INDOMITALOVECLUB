@@ -500,7 +500,7 @@ img { max-width: 100%; display: block; }
 /* ── Stats grid ───────────────────────────────────────────── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
   margin-bottom: 28px;
 }
