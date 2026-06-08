@@ -436,6 +436,26 @@
             <input type="text" id="nc-fecha-limite" class="form-input" placeholder="DD/MM/YYYY" required />
           </div>
         </div>
+    <!-- Plataformas de reseña -->
+<div class="form-grupo">
+  <label class="form-label">Plataformas de reseña <span style="color:var(--rojo, #c0392b);">*</span></label>
+  <p class="form-hint" style="margin-bottom:8px;">Elegí entre 1 y 2 plataformas donde querés recibir reseñas.</p>
+  <div id="plataformas-error" class="mensaje-error" style="display:none;"></div>
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:4px;">
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="Amazon"> Amazon
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="Goodreads"> Goodreads
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="Instagram"> Instagram
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="TikTok"> TikTok
+    </label>
+  </div>
+</div>
     <div class="form-grupo">
   <label class="form-label">Modalidad de lectura *</label>
   <div class="radio-grupo">
