@@ -1871,9 +1871,9 @@ img { max-width: 100%; display: block; }
   .slide-libro-3d { width: 150px; height: 215px; }
   .slide-libro-tapa { width: 150px; height: 215px; }
 
-  .campana-card-horizontal { grid-template-columns: 90px 1fr; }
-.campana-card-horizontal .campana-portada-lista { width: 90px; height: 135px; object-fit: cover; object-position: top center; }
-.campana-portada-lista-placeholder { width: 90px; height: 135px; }
+ .campana-card-horizontal { grid-template-columns: 90px 1fr; }
+.campana-card-horizontal .campana-portada-lista { width: 90px; height: 130px; object-fit: contain; object-position: top center; }
+.campana-portada-lista-placeholder { width: 90px; height: 130px; }
 
   .campana-titulo { font-size: 15px; }
   .campana-datos { gap: 12px; }
