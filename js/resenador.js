@@ -465,98 +465,83 @@ function seleccionarEstrellaLibro(valor) {
 async function cargarRankingLibros(mesAño) {
   const contenedor = document.getElementById('ranking-libros-contenedor');
   if (!contenedor) return;
-
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
-
   const params = mesAño ? { mesAño } : {};
   const resultado = await llamarBackend('obtenerRankingLibros', params);
-
   if (!resultado.ok) {
     contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
     return;
   }
-
   const { mes, recomendados, masLeidos, top5, top20 } = resultado.datos;
 
   contenedor.innerHTML = `
-    <h3 class="panel-titulo" style="margin-bottom:24px;">Ranking de libros — ${mes}</h3>
-    <div class="ranking-libros-seccion">
-      <h4 class="ranking-libros-subtitulo">⭐ Recomendado por lectores</h4>
-      <p class="ranking-libros-desc">Libros con mayor puntuación promedio este mes</p>
-      <div class="ranking-libros-lista">
-        ${recomendados.slice(0, 5).map(l => construirCardRankingLibro(l, 'recomendado')).join('') || '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'}
-      </div>
+    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); margin-bottom:24px;">Ranking de libros — ${mes}</h3>
+
+    <div style="margin-bottom:32px;">
+      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:4px;">🏆 Top 5</h4>
+      <p style="font-size:12px; color:var(--gris-suave); margin-bottom:16px;">Fórmula: 40% completion + 60% puntuación — mínimo 5 reseñas</p>
+      ${top5.length === 0
+        ? '<p class="estado-vacio-sub">No hay libros con 5 reseñas todavía.</p>'
+        : top5.map(l => construirCardRankingLibro(l, 'top5')).join('')}
     </div>
-    <div class="ranking-libros-seccion" style="margin-top:32px;">
-      <h4 class="ranking-libros-subtitulo">📚 Más leído</h4>
-      <p class="ranking-libros-desc">Libros con más reseñas recibidas este mes</p>
-      <div class="ranking-libros-lista">
-        ${masLeidos.slice(0, 5).map(l => construirCardRankingLibro(l, 'masLeido')).join('') || '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'}
-      </div>
-    </div>
-    <div class="ranking-libros-seccion" style="margin-top:32px;">
-      <h4 class="ranking-libros-subtitulo">🏆 Top 5</h4>
-      <p class="ranking-libros-desc">Fórmula: 40% completion + 60% puntuación — mínimo 5 reseñas</p>
-      <div class="ranking-libros-lista">
-        ${top5.map(l => construirCardRankingLibro(l, 'top')).join('') || '<p class="estado-vacio-sub">No hay libros con 5 reseñas todavía.</p>'}
-      </div>
-    </div>
+
     ${top20.length > 5 ? `
-    <div class="ranking-libros-seccion" style="margin-top:24px;">
-      <button class="btn-secundario btn-sm" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Ver') ? 'Ocultar Top 20' : 'Ver Top 20';">
-        Ver Top 20
-      </button>
-      <div style="display:none; margin-top:16px;">
-        <div class="ranking-libros-lista">
-          ${top20.slice(5).map(l => construirCardRankingLibro(l, 'top')).join('')}
-        </div>
-      </div>
+    <div style="margin-bottom:32px;">
+      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:16px;">Top 20</h4>
+      ${top20.slice(5).map(l => construirCardRankingLibro(l, 'top20')).join('')}
     </div>` : ''}
+
+    <div style="margin-bottom:32px;">
+      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:4px;">⭐ Recomendados por lectores</h4>
+      <p style="font-size:12px; color:var(--gris-suave); margin-bottom:16px;">Mayor puntuación promedio este mes</p>
+      ${recomendados.length === 0
+        ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
+        : recomendados.slice(0, 5).map(l => construirCardRankingLibro(l, 'recomendado')).join('')}
+    </div>
+
+    <div>
+      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:4px;">📚 Más leídos</h4>
+      <p style="font-size:12px; color:var(--gris-suave); margin-bottom:16px;">Más reseñas recibidas este mes</p>
+      ${masLeidos.length === 0
+        ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
+        : masLeidos.slice(0, 5).map(l => construirCardRankingLibro(l, 'masLeido')).join('')}
+    </div>
   `;
 }
 
 function construirCardRankingLibro(libro, categoria) {
+  const esTop5 = categoria === 'top5';
+
   const portada = libro.linkPortada
-    ? `<img src="${libro.linkPortada}" alt="${libro.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />`
-    : '';
+    ? `<img src="${libro.linkPortada}" alt="${libro.nombreLibro}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0; border:2px solid ${esTop5 ? 'var(--bordo)' : 'var(--gris-borde)'};" onerror="this.style.display='none'" />`
+    : `<div style="width:44px; height:44px; border-radius:50%; background:var(--rosa-claro); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">📖</div>`;
 
-  const estrellas = libro.promedioPuntuacion > 0
-    ? `<p style="font-size:13px; color:var(--bordo); margin:4px 0;">
-        ${'★'.repeat(Math.round(libro.promedioPuntuacion))}${'☆'.repeat(5 - Math.round(libro.promedioPuntuacion))}
-        <span style="font-size:12px; color:var(--gris-suave);">${libro.promedioPuntuacion.toFixed(1)} (${libro.cantidadPuntuaciones} voto${libro.cantidadPuntuaciones !== 1 ? 's' : ''})</span>
-      </p>`
-    : '';
-
-  const metricaExtra = categoria === 'masLeido'
-    ? `<p style="font-size:12px; color:var(--gris-suave);">📖 ${libro.totalReseñas} reseña${libro.totalReseñas !== 1 ? 's' : ''} — ${libro.completion.toFixed(0)}% completion</p>`
-    : categoria === 'top'
-    ? `<p style="font-size:12px; color:var(--gris-suave);">Puntaje: ${libro.puntajeFinal.toFixed(1)} · Reseñas: ${libro.totalReseñas}</p>`
-    : '';
-
-  const badgeTop = libro.esTop5
-    ? `<span style="background:var(--bordo); color:#fff; font-size:11px; padding:2px 8px; border-radius:20px; font-weight:700;">TOP 5</span>`
-    : libro.esTop20
-    ? `<span style="background:var(--rosa-claro); color:var(--bordo); font-size:11px; padding:2px 8px; border-radius:20px; font-weight:700;">TOP 20</span>`
-    : '';
-
-  const linkAmazon = libro.linkAmazon
-    ? `<a href="${libro.linkAmazon}" target="_blank" class="red-link" style="font-size:12px;">Ver en Amazon</a>`
-    : '';
+  const metrica = categoria === 'masLeido'
+    ? `<p style="font-size:12px; color:var(--gris-suave); margin:0;">${libro.totalReseñas} reseñas · ${libro.completion?.toFixed(0)}%</p>`
+    : categoria === 'recomendado'
+    ? `<p style="font-size:12px; color:var(--gris-suave); margin:0;">${libro.promedio?.toFixed(1)} ★ · ${libro.totalReseñas} reseñas</p>`
+    : `<div style="text-align:right;"><p style="font-size:14px; font-weight:700; color:var(--bordo); margin:0;">★ ${libro.promedio?.toFixed(1)}</p><p style="font-size:12px; color:var(--gris-suave); margin:0;">${libro.completion?.toFixed(0)}%</p></div>`;
 
   return `
-    <div class="lista-item" style="align-items:flex-start;">
-      <div style="min-width:28px; font-size:20px; font-weight:700; color:var(--bordo); padding-top:4px;">#${libro.posicion}</div>
+    <div style="
+      background: ${esTop5 ? 'var(--rosa-claro)' : 'var(--blanco)'};
+      border: 1px solid ${esTop5 ? 'var(--rosa)' : 'var(--gris-borde)'};
+      border-left: ${esTop5 ? '4px solid var(--bordo)' : '1px solid var(--gris-borde)'};
+      border-radius: var(--radio-grande);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--sombra-card);
+    ">
+      <p style="font-family:var(--fuente-titulo); font-size:${esTop5 ? '20px' : '16px'}; font-weight:700; color:var(--bordo); min-width:32px; margin:0;">#${libro.posicion}</p>
       ${portada}
-      <div class="lista-item-body">
-        <p class="lista-item-titulo">${libro.nombreLibro}</p>
-        <p class="lista-item-meta">por ${libro.nombreAutor}</p>
-        ${estrellas}
-        ${metricaExtra}
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;">
-          ${badgeTop}
-          ${linkAmazon}
-        </div>
+      <div style="flex:1; min-width:0;">
+        <p style="font-family:var(--fuente-titulo); font-size:15px; font-weight:700; color:var(--bordo-oscuro); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${libro.nombreLibro}</p>
+        <p style="font-size:12px; color:var(--gris-suave); margin:0;">por ${libro.nombreAutor}</p>
       </div>
+      ${metrica}
     </div>
   `;
 }
