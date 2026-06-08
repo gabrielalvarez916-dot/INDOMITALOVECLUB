@@ -60,24 +60,37 @@ async function cargarEstadisticasAutor(email) {
 
   const s = resultado.datos;
 
-  contenedor.innerHTML = `
-    <div class="stat-card">
-      <span class="stat-numero">${s.campañasActivas ?? 0}</span>
-      <span class="stat-label">Campañas activas</span>
+  const stats = [
+    { icono: '📣', valor: s.campañasActivas ?? 0, label: 'Campañas activas' },
+    { icono: '⭐', valor: s.reseñasRecibidas ?? 0, label: 'Reseñas recibidas' },
+    { icono: '👥', valor: s.reseñadoresAprobados ?? 0, label: 'Reseñadores aprobados' },
+    { icono: '📊', valor: s.promedioCalificaciones ? s.promedioCalificaciones.toFixed(1) : '—', label: 'Promedio de calificaciones' }
+  ];
+
+  contenedor.innerHTML = stats.map(s => `
+    <div style="
+      background: var(--blanco);
+      border: 1px solid var(--gris-borde);
+      border-radius: var(--radio-grande);
+      padding: 24px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--sombra-card);
+    ">
+      <div style="
+        width: 52px; height: 52px;
+        background: var(--rosa-claro);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; flex-shrink: 0;
+      ">${s.icono}</div>
+      <div>
+        <p style="font-family:var(--fuente-titulo); font-size:32px; font-weight:700; color:var(--bordo); line-height:1; margin-bottom:4px;">${s.valor}</p>
+        <p style="font-size:12px; color:var(--gris-suave); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin:0;">${s.label}</p>
+      </div>
     </div>
-    <div class="stat-card">
-     <span class="stat-numero">${s.reseñasRecibidas ?? 0}</span>
-<span class="stat-label">Reseñas recibidas</span>
-    </div>
-    <div class="stat-card">
-     <span class="stat-numero">${s.reseñadoresAprobados ?? 0}</span>
-<span class="stat-label">Reseñadores aprobados</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-numero">${s.promedioCalificaciones ? s.promedioCalificaciones.toFixed(1) : '—'}</span>
-      <span class="stat-label">Promedio de calificaciones</span>
-    </div>
-  `;
+  `).join('');
 }
 
 
