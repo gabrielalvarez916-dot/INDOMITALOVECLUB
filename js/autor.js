@@ -949,3 +949,32 @@ function precargarLibroEnCampana() {
   const tropesArray = tropesTextoAArray(libro.tropes || '');
   renderizarSelectorTropes('nc-tropes-contenedor', 'nc', tropesArray);
 }
+function construirCardRankingSlider(l) {
+  const portada = l.linkPortada
+    ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" onerror="this.style.display='none'" />`
+    : `<div style="width:100px;height:140px;background:var(--crema);border-radius:var(--radio);display:flex;align-items:center;justify-content:center;font-size:28px;">📖</div>`;
+  return `
+    <div class="ranking-slider-card">
+      ${portada}
+      <p class="ranking-slider-card-titulo">${l.nombreLibro}</p>
+      <p class="ranking-slider-card-autor">${l.nombreAutor}</p>
+    </div>
+  `;
+}
+
+function construirItemRankingTop(l, posicion) {
+  const portada = l.linkPortada
+    ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" onerror="this.style.display='none'" />`
+    : `<div style="width:52px;height:72px;background:var(--crema);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:20px;">📖</div>`;
+  return `
+    <div class="ranking-top-item">
+      <span class="ranking-top-item-pos">${posicion}</span>
+      ${portada}
+      <div class="ranking-top-item-info">
+        <p class="ranking-top-item-titulo">${l.nombreLibro}</p>
+        <p class="ranking-top-item-autor">${l.nombreAutor}</p>
+      </div>
+      <span class="ranking-top-item-puntaje">⭐ ${l.promedioPuntuacion?.toFixed(1) ?? '—'}</span>
+    </div>
+  `;
+}
