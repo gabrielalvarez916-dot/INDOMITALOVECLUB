@@ -461,7 +461,6 @@ function seleccionarEstrellaLibro(valor) {
     btn.classList.toggle('activa', parseInt(btn.dataset.valor) <= valor);
   });
 }
-
 async function cargarRankingLibros(mesAño) {
   const contenedor = document.getElementById('ranking-libros-contenedor');
   if (!contenedor) return;
@@ -472,76 +471,69 @@ async function cargarRankingLibros(mesAño) {
     contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
     return;
   }
-  const { mes, recomendados, masLeidos, top5, top20 } = resultado.datos;
+  const { mes, recomendados, masLeidos, top5 } = resultado.datos;
 
   contenedor.innerHTML = `
-    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); margin-bottom:24px;">Ranking de libros — ${mes}</h3>
+    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); margin-bottom:24px;">Ranking — ${mes}</h3>
 
-    <div style="margin-bottom:32px;">
-      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:4px;">🏆 Top 5</h4>
-      <p style="font-size:12px; color:var(--gris-suave); margin-bottom:16px;">Fórmula: 40% completion + 60% puntuación — mínimo 5 reseñas</p>
-      ${top5.length === 0
-        ? '<p class="estado-vacio-sub">No hay libros con 5 reseñas todavía.</p>'
-        : top5.map(l => construirCardRankingLibro(l, 'top5')).join('')}
+    <div style="margin-bottom:28px;">
+      <h4 class="ranking-seccion-titulo">⭐ Recomendados por lectores</h4>
+      <div class="ranking-slider">
+        ${recomendados.length === 0
+          ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
+          : recomendados.slice(0, 5).map(l => construirSliderCard(l, 'recomendado')).join('')}
+      </div>
     </div>
 
-    ${top20.length > 5 ? `
     <div style="margin-bottom:32px;">
-      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:16px;">Top 20</h4>
-      ${top20.slice(5).map(l => construirCardRankingLibro(l, 'top20')).join('')}
-    </div>` : ''}
-
-    <div style="margin-bottom:32px;">
-      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:4px;">⭐ Recomendados por lectores</h4>
-      <p style="font-size:12px; color:var(--gris-suave); margin-bottom:16px;">Mayor puntuación promedio este mes</p>
-      ${recomendados.length === 0
-        ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
-        : recomendados.slice(0, 5).map(l => construirCardRankingLibro(l, 'recomendado')).join('')}
+      <h4 class="ranking-seccion-titulo">📚 Más leídos</h4>
+      <div class="ranking-slider">
+        ${masLeidos.length === 0
+          ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
+          : masLeidos.slice(0, 5).map(l => construirSliderCard(l, 'masLeido')).join('')}
+      </div>
     </div>
 
     <div>
-      <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:4px;">📚 Más leídos</h4>
-      <p style="font-size:12px; color:var(--gris-suave); margin-bottom:16px;">Más reseñas recibidas este mes</p>
-      ${masLeidos.length === 0
-        ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
-        : masLeidos.slice(0, 5).map(l => construirCardRankingLibro(l, 'masLeido')).join('')}
+      <h4 class="ranking-seccion-titulo">🏆 Top 5</h4>
+      <div class="ranking-top-lista">
+        ${top5.length === 0
+          ? '<p class="estado-vacio-sub">No hay libros con 5 reseñas todavía.</p>'
+          : top5.map(l => construirTopItem(l)).join('')}
+      </div>
     </div>
   `;
 }
 
-function construirCardRankingLibro(libro, categoria) {
-  const esTop5 = categoria === 'top5';
-
-  const portada = libro.linkPortada
-    ? `<img src="${libro.linkPortada}" alt="${libro.nombreLibro}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0; border:2px solid ${esTop5 ? 'var(--bordo)' : 'var(--gris-borde)'};" onerror="this.style.display='none'" />`
-    : `<div style="width:44px; height:44px; border-radius:50%; background:var(--rosa-claro); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">📖</div>`;
-
+function construirSliderCard(libro, categoria) {
   const metrica = categoria === 'masLeido'
-    ? `<p style="font-size:12px; color:var(--gris-suave); margin:0;">${libro.totalReseñas} reseñas · ${libro.completion?.toFixed(0)}%</p>`
-    : categoria === 'recomendado'
-    ? `<p style="font-size:12px; color:var(--gris-suave); margin:0;">${libro.promedio?.toFixed(1)} ★ · ${libro.totalReseñas} reseñas</p>`
-    : `<div style="text-align:right;"><p style="font-size:14px; font-weight:700; color:var(--bordo); margin:0;">★ ${libro.promedio?.toFixed(1)}</p><p style="font-size:12px; color:var(--gris-suave); margin:0;">${libro.completion?.toFixed(0)}%</p></div>`;
+    ? `${libro.totalReseñas} reseñas`
+    : `★ ${libro.promedio?.toFixed(1)}`;
 
   return `
-    <div style="
-      background: ${esTop5 ? 'var(--rosa-claro)' : 'var(--blanco)'};
-      border: 1px solid ${esTop5 ? 'var(--rosa)' : 'var(--gris-borde)'};
-      border-left: ${esTop5 ? '4px solid var(--bordo)' : '1px solid var(--gris-borde)'};
-      border-radius: var(--radio-grande);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 10px;
-      box-shadow: var(--sombra-card);
-    ">
-      <p style="font-family:var(--fuente-titulo); font-size:${esTop5 ? '20px' : '16px'}; font-weight:700; color:var(--bordo); min-width:32px; margin:0;">#${libro.posicion}</p>
-      ${portada}
-      <div style="flex:1; min-width:0;">
-        <p style="font-family:var(--fuente-titulo); font-size:15px; font-weight:700; color:var(--bordo-oscuro); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${libro.nombreLibro}</p>
-        <p style="font-size:12px; color:var(--gris-suave); margin:0;">por ${libro.nombreAutor}</p>
+    <div class="ranking-slider-card">
+      ${libro.linkPortada
+        ? `<img src="${libro.linkPortada}" alt="${libro.nombreLibro}" onerror="this.style.display='none'" />`
+        : `<div style="width:100px; height:140px; background:var(--rosa-claro); border-radius:var(--radio); display:flex; align-items:center; justify-content:center; font-size:32px;">📖</div>`}
+      <p class="ranking-slider-card-titulo">${libro.nombreLibro}</p>
+      <p class="ranking-slider-card-autor">por ${libro.nombreAutor}</p>
+      <p style="font-size:11px; color:var(--bordo); font-weight:700;">${metrica}</p>
+    </div>
+  `;
+}
+
+function construirTopItem(libro) {
+  return `
+    <div class="ranking-top-item">
+      <p class="ranking-top-item-pos">#${libro.posicion}</p>
+      ${libro.linkPortada
+        ? `<img src="${libro.linkPortada}" alt="${libro.nombreLibro}" onerror="this.style.display='none'" />`
+        : `<div style="width:52px; height:72px; background:var(--rosa-claro); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:22px;">📖</div>`}
+      <div class="ranking-top-item-info">
+        <p class="ranking-top-item-titulo">${libro.nombreLibro}</p>
+        <p class="ranking-top-item-autor">por ${libro.nombreAutor}</p>
       </div>
-      ${metrica}
+      <p class="ranking-top-item-puntaje">★ ${libro.promedio?.toFixed(1)}</p>
     </div>
   `;
 }
