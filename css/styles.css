@@ -1900,3 +1900,111 @@ img { max-width: 100%; display: block; }
   .avatar-grid { grid-template-columns: repeat(4, 1fr); }
   .avatar-opcion { width: 100%; height: auto; aspect-ratio: 1; }
 }
+.ranking-seccion-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bordo);
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+.ranking-slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ranking-slider::-webkit-scrollbar { height: 4px; }
+.ranking-slider::-webkit-scrollbar-track { background: var(--crema-oscura); border-radius: 4px; }
+.ranking-slider::-webkit-scrollbar-thumb { background: var(--bordo); border-radius: 4px; }
+
+.ranking-slider-card {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ranking-slider-card img {
+  width: 100px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-card);
+}
+
+.ranking-slider-card-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bordo-oscuro);
+  line-height: 1.3;
+}
+
+.ranking-slider-card-autor {
+  font-size: 11px;
+  color: var(--gris-suave);
+}
+
+.ranking-top-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ranking-top-item {
+  display: grid;
+  grid-template-columns: 28px 52px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 10px 14px;
+  box-shadow: var(--sombra-card);
+}
+
+.ranking-top-item-pos {
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--bordo);
+  text-align: center;
+}
+
+.ranking-top-item img {
+  width: 52px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.ranking-top-item-info { min-width: 0; }
+
+.ranking-top-item-titulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bordo-oscuro);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ranking-top-item-autor {
+  font-size: 11px;
+  color: var(--gris-suave);
+  margin-top: 2px;
+}
+
+.ranking-top-item-puntaje {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bordo);
+  white-space: nowrap;
+}
