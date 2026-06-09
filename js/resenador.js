@@ -55,75 +55,24 @@ async function cargarEstadisticasReseñador(email) {
   const u = resultado.datos.perfil;
 
   contenedor.innerHTML = `
-  <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); margin-bottom:24px;">Ranking de libros — ${mes}</h3>
-
-  <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:12px;">📚 Más leídos</h4>
-  <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:12px; margin-bottom:28px;">
-    ${masLeidos.length === 0
-      ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
-      : masLeidos.slice(0, 10).map(l => `
-          <div style="flex-shrink:0; width:90px; display:flex; flex-direction:column; gap:6px;">
-            ${l.linkPortada
-              ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" style="width:90px; height:126px; object-fit:cover; border-radius:8px; box-shadow:var(--sombra-card);" onerror="this.style.display='none'" />`
-              : `<div style="width:90px; height:126px; background:var(--crema); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px;">📖</div>`}
-            <p style="font-size:11px; font-weight:700; color:var(--bordo-oscuro); line-height:1.3; margin:0;">${l.nombreLibro}</p>
-            <p style="font-size:10px; color:var(--gris-suave); margin:0;">${l.nombreAutor}</p>
-          </div>
-        `).join('')}
-  </div>
-
-  <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:12px;">⭐ Recomendados por lectores</h4>
-  <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:12px; margin-bottom:28px;">
-    ${recomendados.length === 0
-      ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
-      : recomendados.slice(0, 10).map(l => `
-          <div style="flex-shrink:0; width:90px; display:flex; flex-direction:column; gap:6px;">
-            ${l.linkPortada
-              ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" style="width:90px; height:126px; object-fit:cover; border-radius:8px; box-shadow:var(--sombra-card);" onerror="this.style.display='none'" />`
-              : `<div style="width:90px; height:126px; background:var(--crema); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px;">📖</div>`}
-            <p style="font-size:11px; font-weight:700; color:var(--bordo-oscuro); line-height:1.3; margin:0;">${l.nombreLibro}</p>
-            <p style="font-size:10px; color:var(--gris-suave); margin:0;">${l.nombreAutor}</p>
-          </div>
-        `).join('')}
-  </div>
-
-  <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:12px;">🏆 Top 5</h4>
-  <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:28px;">
-    ${top5.length === 0
-      ? '<p class="estado-vacio-sub">No hay libros con 5 reseñas todavía.</p>'
-      : top5.map((l, i) => `
-          <div style="display:grid; grid-template-columns:28px 52px 1fr auto; align-items:center; gap:12px; background:var(--rosa-claro); border:1px solid var(--rosa); border-left:4px solid var(--bordo); border-radius:var(--radio-grande); padding:10px 14px; box-shadow:var(--sombra-card);">
-            <p style="font-family:var(--fuente-titulo); font-size:20px; font-weight:700; color:var(--bordo); margin:0;">${i + 1}</p>
-            ${l.linkPortada
-              ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" style="width:52px; height:72px; object-fit:cover; border-radius:5px;" onerror="this.style.display='none'" />`
-              : `<div style="width:52px; height:72px; background:var(--crema); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:20px;">📖</div>`}
-            <div style="min-width:0;">
-              <p style="font-family:var(--fuente-titulo); font-size:14px; font-weight:700; color:var(--bordo-oscuro); font-style:italic; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${l.nombreLibro}</p>
-              <p style="font-size:11px; color:var(--gris-suave); margin:2px 0 0;">${l.nombreAutor}</p>
-            </div>
-            <p style="font-size:13px; font-weight:700; color:var(--bordo); white-space:nowrap; margin:0;">⭐ ${l.promedioPuntuacion?.toFixed(1) ?? '—'}</p>
-          </div>
-        `).join('')}
-  </div>
-
-  ${top20.length > 5 ? `
-  <h4 style="font-family:var(--fuente-titulo); font-size:18px; color:var(--bordo); font-style:italic; margin-bottom:12px;">Top 20</h4>
-  <div style="display:flex; flex-direction:column; gap:10px;">
-    ${top20.slice(5).map((l, i) => `
-        <div style="display:grid; grid-template-columns:28px 52px 1fr auto; align-items:center; gap:12px; background:var(--blanco); border:1px solid var(--gris-borde); border-radius:var(--radio-grande); padding:10px 14px; box-shadow:var(--sombra-card);">
-          <p style="font-family:var(--fuente-titulo); font-size:20px; font-weight:700; color:var(--bordo); margin:0;">${i + 6}</p>
-          ${l.linkPortada
-            ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" style="width:52px; height:72px; object-fit:cover; border-radius:5px;" onerror="this.style.display='none'" />`
-            : `<div style="width:52px; height:72px; background:var(--crema); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:20px;">📖</div>`}
-          <div style="min-width:0;">
-            <p style="font-family:var(--fuente-titulo); font-size:14px; font-weight:700; color:var(--bordo-oscuro); font-style:italic; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${l.nombreLibro}</p>
-            <p style="font-size:11px; color:var(--gris-suave); margin:2px 0 0;">${l.nombreAutor}</p>
-          </div>
-          <p style="font-size:13px; font-weight:700; color:var(--bordo); white-space:nowrap; margin:0;">⭐ ${l.promedioPuntuacion?.toFixed(1) ?? '—'}</p>
-        </div>
-      `).join('')}
-  </div>` : ''}
-`;
+    <div class="stat-card">
+      <span class="stat-numero">${u.totalReseñasHistoricas ?? 0}</span>
+      <span class="stat-label">Reseñas totales</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-badge">${u.labelNivel || 'Nuevo miembro'}</span>
+      <span class="stat-label">Nivel</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-numero">${u.ranking ? u.ranking.posicion : '—'}</span>
+      <span class="stat-label">Posición ranking</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-numero">${u.ranking ? u.ranking.porcentajeCompletion + '%' : '—'}</span>
+      <span class="stat-label">Completion este mes</span>
+    </div>
+  `;
+}
 
 
 // ────────────────────────────────────────────────────────────
