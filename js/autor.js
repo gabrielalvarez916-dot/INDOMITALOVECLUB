@@ -249,10 +249,26 @@ function construirCardPostulacion(p) {
     ? r.alias.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
+const avatarHtml = r?.fotoPerfil
+  ? `<img src="${r.fotoPerfil}" class="postulacion-avatar-img" onerror="this.style.display='none'" />`
+  : `<div class="postulacion-avatar">${iniciales}</div>`;
+
+  const redesHtml = [
+    r?.instagram ? `<a href="${r.instagram}" target="_blank" class="postulacion-red-link" title="Instagram">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+    </a>` : '',
+    r?.tiktok ? `<a href="${r.tiktok}" target="_blank" class="postulacion-red-link" title="TikTok">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 106.34 6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+    </a>` : '',
+    r?.amazon ? `<a href="${r.amazon}" target="_blank" class="postulacion-red-link" title="Amazon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.935 14.825C18.537 16.611 15.07 17.563 12.074 17.563c-4.131 0-7.85-1.528-10.661-4.073-.221-.2-.023-.472.242-.317 3.036 1.768 6.789 2.83 10.668 2.83 2.615 0 5.492-.543 8.14-1.667.4-.17.733.263.472.489z"/><path d="M21.877 13.733c-.301-.387-1.99-.183-2.75-.092-.231.028-.266-.173-.058-.319 1.347-.947 3.558-.674 3.815-.357.258.319-.067 2.534-1.332 3.594-.194.162-.379.076-.293-.139.285-.71.922-2.3.618-2.687z"/></svg>
+    </a>` : ''
+  ].filter(Boolean).join('');
+  
   return `
     <div class="postulacion-card">
       <div class="postulacion-card-top">
-        <div class="postulacion-avatar">${iniciales}</div>
+        ${avatarHtml}
         <div class="postulacion-info">
           <div class="postulacion-info-header">
             <p class="postulacion-alias">${r?.alias || p.email}</p>
