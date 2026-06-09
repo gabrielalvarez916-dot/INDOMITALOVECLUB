@@ -229,8 +229,10 @@ function construirCardPostulacion(p) {
   const r = p.reseñador;
 
   const botonesAccion = p.estado === 'pendiente' ? `
-    <button class="btn-primario btn-sm" onclick="accionPostulacion('${p.idPostulacion}', 'aprobar')">Aprobar</button>
-    <button class="btn-secundario btn-sm btn-peligro" onclick="accionPostulacion('${p.idPostulacion}', 'rechazar')">Rechazar</button>
+    <div class="postulacion-acciones">
+      <button class="btn-primario btn-sm" onclick="accionPostulacion('${p.idPostulacion}', 'aprobar')">Aprobar</button>
+      <button class="btn-secundario btn-sm btn-peligro" onclick="accionPostulacion('${p.idPostulacion}', 'rechazar')">Rechazar</button>
+    </div>
   ` : '';
 
   const rankingHtml = r?.ranking?.posicion ? `
@@ -243,32 +245,37 @@ function construirCardPostulacion(p) {
 
   const badgesHtml = badgesRanking(r?.badges);
 
+  const iniciales = r?.alias
+    ? r.alias.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
+
   return `
     <div class="postulacion-card">
-      <div class="postulacion-card-header">
-        <div>
-          <p class="postulacion-alias"><strong>${r?.alias || p.email}</strong></p>
+      <div class="postulacion-card-top">
+        <div class="postulacion-avatar">${iniciales}</div>
+        <div class="postulacion-info">
+          <div class="postulacion-info-header">
+            <p class="postulacion-alias">${r?.alias || p.email}</p>
+            ${badgeEstado(p.estado)}
+          </div>
           <p class="postulacion-meta">${r?.pais || ''}${r?.ciudad ? `, ${r.ciudad}` : ''} · Nivel: ${r?.labelNivel || '—'}</p>
+          ${p.reseñador?.coincidenciaTropes != null ? `
+            <p class="postulacion-tropes-match">🎯 <strong>${p.reseñador.coincidenciaTropes}%</strong> coincidencia de tropes</p>
+          ` : ''}
         </div>
-        ${badgeEstado(p.estado)}
       </div>
-      ${badgesHtml ? `<div style="margin:6px 0; display:flex; gap:6px; flex-wrap:wrap;">${badgesHtml}</div>` : ''}
-      ${p.reseñador?.coincidenciaTropes !== null && p.reseñador?.coincidenciaTropes !== undefined ? `
-        <p class="postulacion-ranking">
-          🎯 <strong>${p.reseñador.coincidenciaTropes}%</strong> coincidencia de tropes
-        </p>` : ''}
+      ${badgesHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0;">${badgesHtml}</div>` : ''}
       ${rankingHtml}
       ${p.descripcionLector ? `<p class="postulacion-descripcion">${truncarTexto(p.descripcionLector, 150)}</p>` : ''}
       <div class="postulacion-redes">
-        ${r?.instagram ? `<a href="${r.instagram}" target="_blank" class="red-link">Instagram</a>` : ''}
-        ${r?.tiktok    ? `<a href="${r.tiktok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
-        ${r?.amazon    ? `<a href="${r.amazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
+        ${r?.instagram ? `<a href="${r.instagram}" target="_blank" class="postulacion-red-link">ig</a>` : ''}
+        ${r?.tiktok    ? `<a href="${r.tiktok}"    target="_blank" class="postulacion-red-link">tt</a>` : ''}
+        ${r?.amazon    ? `<a href="${r.amazon}"    target="_blank" class="postulacion-red-link">az</a>` : ''}
       </div>
-      ${botonesAccion ? `<div class="postulacion-acciones">${botonesAccion}</div>` : ''}
+      ${botonesAccion}
     </div>
   `;
 }
-
 /**
  * Aprueba o rechaza una postulación.
  *
