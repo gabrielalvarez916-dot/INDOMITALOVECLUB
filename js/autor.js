@@ -144,31 +144,34 @@ function construirCardCampañaAutor(c) {
     : 0;
 
   return `
-    <div class="campana-card-panel">
-      <div class="campana-card-panel-header">
-        ${c.linkPortada ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="campana-thumb" onerror="this.style.display='none'" />` : ''}
-        <div class="campana-card-panel-info">
-          <h3 class="campana-titulo">${c.nombreLibro}</h3>
-          <p class="campana-autor">por ${c.nombreAutor}</p>
-          ${badgeEstado(c.estado)}
+    <div class="campana-panel-card">
+      <div class="campana-panel-portada">
+        ${c.linkPortada
+          ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" onerror="this.style.display='none'" />`
+          : `<div class="campana-panel-portada-placeholder">📖</div>`}
+        ${badgeEstado(c.estado)}
+      </div>
+      <div class="campana-panel-body">
+        <p class="campana-panel-titulo">${c.nombreLibro}</p>
+        <p class="campana-panel-autor">por ${c.nombreAutor}</p>
+        <div class="campana-panel-meta">
+          <span>📅 Hasta ${formatearFechaAmigable(c.fechaLimite)}</span>
+          ${c.postulacionesPendientes > 0 ? `<span>⏳ ${c.postulacionesPendientes} pendiente${c.postulacionesPendientes !== 1 ? 's' : ''}</span>` : ''}
+          ${c.reseñasEntregadas > 0 ? `<span>📝 ${c.reseñasEntregadas} reseña${c.reseñasEntregadas !== 1 ? 's' : ''}</span>` : ''}
         </div>
-      </div>
-      <div class="campana-card-panel-stats">
-        <span>${c.cuposTotal - c.cuposDisponibles} / ${c.cuposTotal} reseñad@res</span>
-        <span>Hasta ${formatearFechaAmigable(c.fechaLimite)}</span>
-      </div>
-      <div class="barra-progreso">
-        <div class="barra-progreso-fill" style="width:${porcentajeOcupacion}%"></div>
-      </div>
-      <div class="campana-card-panel-acciones">
-        <button class="btn-secundario btn-sm" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
-        <button class="btn-secundario btn-sm" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
-        <button class="btn-secundario btn-sm btn-peligro" onclick="confirmarCancelarCampana('${c.id}', '${c.nombreLibro}')">Cancelar</button>
+        <div class="barra-progreso">
+          <div class="barra-progreso-fill" style="width:${porcentajeOcupacion}%"></div>
+        </div>
+        <p class="campana-panel-cupos">${c.cuposTotal - c.cuposDisponibles} / ${c.cuposTotal} reseñad@res</p>
+        <div class="campana-panel-acciones">
+          <button class="btn-secundario btn-sm btn-full" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
+          <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+          <button class="btn-secundario btn-sm btn-full btn-peligro" onclick="confirmarCancelarCampana('${c.id}', '${c.nombreLibro}')">Cancelar campaña</button>
+        </div>
       </div>
     </div>
   `;
 }
-
 
 // ────────────────────────────────────────────────────────────
 // POSTULACIONES
