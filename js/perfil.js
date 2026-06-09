@@ -75,10 +75,8 @@ function ajustarFormularioPorRol(rol) {
   toggleElemento('grupo-generos',        esReseñador);
   toggleElemento('grupo-descripcion',    esReseñador);
   toggleElemento('grupo-tropes-perfil',  esReseñador);
-  if (esReseñador) {
-    renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', []);
   }
-}
+
 
 
 // ────────────────────────────────────────────────────────────
