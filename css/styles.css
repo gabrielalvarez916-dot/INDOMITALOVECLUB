@@ -2106,3 +2106,12 @@ img { max-width: 100%; display: block; }
   display: flex;
   gap: 8px;
 }
+
+.postulacion-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--rosa);
+  flex-shrink: 0;
+}
