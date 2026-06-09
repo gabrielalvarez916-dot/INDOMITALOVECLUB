@@ -503,7 +503,9 @@ async function cargarRankingLibros(mesAño) {
       </div>
     </div>
   `;
+  setTimeout(() => activarDragSliders(), 100);
 }
+
 
 function construirSliderCard(libro, categoria) {
   const metrica = categoria === 'masLeido'
@@ -536,4 +538,35 @@ function construirTopItem(libro) {
       <p class="ranking-top-item-puntaje">★ ${libro.promedio?.toFixed(1)}</p>
     </div>
   `;
+}
+function activarDragSliders() {
+  document.querySelectorAll('.ranking-slider').forEach(slider => {
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    slider.addEventListener('mousedown', e => {
+      isDown = true;
+      slider.style.cursor = 'grabbing';
+      startX = e.pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+    });
+    slider.addEventListener('mouseleave', () => {
+      isDown = false;
+      slider.style.cursor = 'grab';
+    });
+    slider.addEventListener('mouseup', () => {
+      isDown = false;
+      slider.style.cursor = 'grab';
+    });
+    slider.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      slider.scrollLeft = scrollLeft - walk;
+    });
+
+    slider.style.cursor = 'grab';
+  });
 }
