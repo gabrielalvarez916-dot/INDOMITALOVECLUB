@@ -42,60 +42,19 @@ function urlProxy(url) {
   if (!id) return null;
   return `/api/drive?id=${id}`;
 }
-
-
 // ────────────────────────────────────────────────────────────
 // ABRIR VISOR EPUB
 // ────────────────────────────────────────────────────────────
-
-async function inicializarEpub(url) {
-  const epubDiv  = document.getElementById('visor-epub');
-  const cargando = document.getElementById('visor-cargando');
-
-  if (!epubDiv) return;
-
-  try {
-    if (_visorEpub) { try { _visorEpub.destroy(); } catch {} _visorEpub = null; }
-
-    epubDiv.innerHTML = '';
-    if (cargando) cargando.style.display = 'flex';
-    epubDiv.style.display = 'none';
-
-    // Descarga el archivo como ArrayBuffer
-    const respuesta = await fetch(url);
-    if (!respuesta.ok) throw new Error('No se pudo descargar el archivo');
-    const buffer = await respuesta.arrayBuffer();
-
-    // Pasa el ArrayBuffer a Epub.js en lugar de la URL
-    _visorEpub = ePub(buffer);
-
-    const rendicion = _visorEpub.renderTo(epubDiv, {
-      width:  '100%',
-      height: '100%',
-      spread: 'none',
-      flow:   'paginated'
-    });
-
-    await rendicion.display();
-
-    if (cargando) cargando.style.display = 'none';
-    epubDiv.style.display = 'block';
-
-    const btnAnterior  = document.getElementById('visor-anterior');
-    const btnSiguiente = document.getElementById('visor-siguiente');
-    const ctrlEpub     = document.getElementById('visor-controles-epub');
-
-    if (ctrlEpub)     ctrlEpub.style.display = 'flex';
-    if (btnAnterior)  btnAnterior.onclick = () => rendicion.prev();
-    if (btnSiguiente) btnSiguiente.onclick = () => rendicion.next();
-
-  } catch (e) {
-    console.error('Error EPUB:', e);
-    if (cargando) cargando.style.display = 'none';
-    mostrarErrorVisor('No se pudo cargar el EPUB. Verificá que el archivo esté compartido en Drive como "Cualquiera con el link puede ver".');
-  }
+async function abrirVisorEpub(urlEpub, tituloLibro) {
+  if (!urlEpub) { mostrarToast('No hay archivo EPUB disponible.', 'error'); return; }
+  const proxyUrl = urlProxy(urlEpub);
+  if (!proxyUrl) { mostrarToast('Link de EPUB inválido.', 'error'); return; }
+  crearModalVisor();
+  configurarModalVisor(tituloLibro, 'epub');
+  mostrarModal('modal-visor');
+  await cargarLibreriaEpub();
+  await inicializarEpub(proxyUrl);
 }
-
 
 // ────────────────────────────────────────────────────────────
 // ABRIR VISOR PDF
