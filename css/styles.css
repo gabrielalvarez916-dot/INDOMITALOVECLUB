@@ -2008,3 +2008,101 @@ img { max-width: 100%; display: block; }
   color: var(--bordo);
   white-space: nowrap;
 }
+/* ── Postulacion cards ── */
+.postulacion-card {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--sombra-card);
+  transition: var(--transicion);
+}
+
+.postulacion-card:hover {
+  box-shadow: var(--sombra);
+}
+
+.postulacion-card-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.postulacion-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--rosa-claro);
+  color: var(--bordo);
+  font-family: var(--fuente-titulo);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid var(--rosa);
+}
+
+.postulacion-info { flex: 1; min-width: 0; }
+
+.postulacion-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.postulacion-alias {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--gris-texto);
+  margin: 0;
+}
+
+.postulacion-meta {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin: 0 0 4px;
+}
+
+.postulacion-tropes-match {
+  font-size: 13px;
+  color: var(--bordo);
+  margin: 0;
+}
+
+.postulacion-redes {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.postulacion-red-link {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--rosa-claro);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transicion);
+}
+
+.postulacion-red-link:hover {
+  background: var(--bordo);
+}
+
+.postulacion-red-link:hover svg {
+  stroke: var(--blanco);
+  fill: var(--blanco);
+}
+
+.postulacion-acciones {
+  display: flex;
+  gap: 8px;
+}
