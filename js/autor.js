@@ -283,11 +283,7 @@ const avatarHtml = r?.fotoPerfil
       ${badgesHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0;">${badgesHtml}</div>` : ''}
       ${rankingHtml}
       ${p.descripcionLector ? `<p class="postulacion-descripcion">${truncarTexto(p.descripcionLector, 150)}</p>` : ''}
-      <div class="postulacion-redes">
-        ${r?.instagram ? `<a href="${r.instagram}" target="_blank" class="postulacion-red-link">ig</a>` : ''}
-        ${r?.tiktok    ? `<a href="${r.tiktok}"    target="_blank" class="postulacion-red-link">tt</a>` : ''}
-        ${r?.amazon    ? `<a href="${r.amazon}"    target="_blank" class="postulacion-red-link">az</a>` : ''}
-      </div>
+     ${redesHtml ? `<div class="postulacion-redes">${redesHtml}</div>` : ''}
       ${botonesAccion}
     </div>
   `;
