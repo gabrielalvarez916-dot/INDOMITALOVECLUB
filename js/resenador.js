@@ -76,6 +76,7 @@ async function cargarEstadisticasReseñador(email) {
       <span class="stat-label">Completion este mes</span>
     </div>
   `;
+  }
 
 
 // ────────────────────────────────────────────────────────────
@@ -152,6 +153,7 @@ function construirCardPostulacionReseñador(p) {
       </div>
     </div>
   `;
+  }
 
 
 // ────────────────────────────────────────────────────────────
@@ -226,6 +228,7 @@ function construirCardArcActivo(p) {
       </div>
     </div>
   `;
+  }
 
 
 // ────────────────────────────────────────────────────────────
