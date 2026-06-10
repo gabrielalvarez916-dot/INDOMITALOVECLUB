@@ -397,68 +397,121 @@ async function cargarRankingReseñador(email) {
   const contenedor = document.getElementById('resenador-ranking-info');
   if (!contenedor) return;
 
-  const resultado = await llamarBackend('obtenerPosicionReseñador', { email });
+  const resultado = await llamarBackend('obtenerRankingReseñadores', {});
 
   if (!resultado.ok) {
     contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
     return;
   }
 
-  const d = resultado.datos;
+  const { mes, destacados, top5, top20, miPosicion } = resultado.datos;
 
-  if (!d.enRanking) {
+  // Estado vacío: sin participantes
+  if (!destacados || destacados.length === 0) {
     contenedor.innerHTML = `
       <div class="ranking-vacio">
-        <p class="estado-vacio-icono">🏅</p>
-        <p class="estado-vacio-texto">Todavía no participás en el ranking de este mes.</p>
+        <div class="ranking-vacio-medalla">
+          <svg viewBox="0 0 120 140" width="90" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(60,70)">
+              <!-- ramas decorativas -->
+              <path d="M-38,-10 Q-48,5 -36,20" stroke="#F2C4CE" stroke-width="2.5" fill="none"/>
+              <path d="M-36,-4 Q-50,10 -40,26" stroke="#F2C4CE" stroke-width="2" fill="none"/>
+              <path d="M-32,4 Q-46,18 -34,30" stroke="#F2C4CE" stroke-width="2" fill="none"/>
+              <path d="M38,-10 Q48,5 36,20" stroke="#F2C4CE" stroke-width="2.5" fill="none"/>
+              <path d="M36,-4 Q50,10 40,26" stroke="#F2C4CE" stroke-width="2" fill="none"/>
+              <path d="M32,4 Q46,18 34,30" stroke="#F2C4CE" stroke-width="2" fill="none"/>
+              <!-- destellos -->
+              <text x="-28" y="-22" font-size="10" fill="#C9A84C">✦</text>
+              <text x="22"  y="-22" font-size="10" fill="#C9A84C">✦</text>
+              <text x="-6"  y="-30" font-size="8"  fill="#C9A84C">✦</text>
+              <!-- medallon -->
+              <circle cx="0" cy="8" r="28" fill="#8B1A2B"/>
+              <circle cx="0" cy="8" r="22" fill="none" stroke="#F2C4CE" stroke-width="2"/>
+              <text x="0" y="14" text-anchor="middle" font-size="20" fill="#F2C4CE">★</text>
+              <!-- cinta -->
+              <polygon points="-14,34 0,26 14,34 10,50 0,44 -10,50" fill="#8B1A2B"/>
+              <polygon points="-14,34 -8,34 -4,50 -10,50" fill="#5C0F1A"/>
+              <polygon points="14,34 8,34 4,50 10,50" fill="#5C0F1A"/>
+            </g>
+          </svg>
+        </div>
+        <p class="estado-vacio-texto" style="font-style:italic;">Todavía no participás en el ranking de este mes.</p>
         <p class="estado-vacio-sub">Necesitás al menos una campaña aprobada para aparecer en el ranking.</p>
       </div>
     `;
     return;
   }
 
-  const usuario = Sesion.obtener();
-  const nivel = usuario?.nivel || '';
-  if (nivel === 'nuevo_miembro') {
-    contenedor.innerHTML = `
-      <div class="ranking-info">
-        <p class="estado-vacio-icono">🌱</p>
-        <p class="estado-vacio-texto">Todavía sos nuevo miembro.</p>
-        <p class="estado-vacio-sub">Necesitás 5 reseñas históricas para aparecer en el ranking.</p>
+  // Carrusel de destacados
+  const destacadosHtml = `
+    <div class="ranking-resenadores-seccion">
+      <h4 class="ranking-seccion-titulo">Reseñadores destacados</h4>
+      <div class="ranking-resenadores-carrusel-wrap">
+        <button class="ranking-carrusel-arrow ranking-carrusel-prev" onclick="moverCarruselResenadores(-1)" aria-label="Anterior">&#8592;</button>
+        <div class="ranking-resenadores-carrusel" id="carrusel-resenadores">
+          ${destacados.map(r => `
+            <div class="ranking-resenador-avatar-item">
+              <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-avatar-img" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+              <p class="ranking-resenador-avatar-alias">${r.alias}</p>
+              <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
+            </div>
+          `).join('')}
+        </div>
+        <button class="ranking-carrusel-arrow ranking-carrusel-next" onclick="moverCarruselResenadores(1)" aria-label="Siguiente">&#8594;</button>
       </div>
-    `;
-    return;
-  }
-
-  const badgesHtml = badgesRanking(d.badges);
-
-  contenedor.innerHTML = `
-    <div class="ranking-info">
-      <div class="ranking-posicion">#${d.posicion}</div>
-      <p class="ranking-posicion-label">en el ranking de ${d.mes}</p>
-      ${badgesHtml ? `<div style="margin:12px 0;">${badgesHtml}</div>` : ''}
-      <div class="ranking-stats">
-        <div class="ranking-stat-item">
-          <p class="ranking-stat-numero">${d.completion?.toFixed(1) ?? '—'}%</p>
-          <p class="ranking-stat-label">Completion</p>
-        </div>
-        <div class="ranking-stat-item">
-          <p class="ranking-stat-numero">${d.promedio?.toFixed(1) ?? '—'}</p>
-          <p class="ranking-stat-label">Promedio nota</p>
-        </div>
-        <div class="ranking-stat-item">
-          <p class="ranking-stat-numero">${d.entregadas ?? 0}</p>
-          <p class="ranking-stat-label">Reseñas entregadas</p>
-        </div>
-        <div class="ranking-stat-item">
-          <p class="ranking-stat-numero">${d.puntaje?.toFixed(1) ?? '—'}</p>
-          <p class="ranking-stat-label">Puntaje final</p>
-        </div>
-      </div>
-      ${d.badges?.top5 ? `<p style="margin-top:20px; font-size:14px; color:var(--bordo); font-weight:700;">🏆 Sos Top 5 este mes — tenés postulaciones ilimitadas y aprobación automática.</p>` : ''}
     </div>
   `;
+
+  // Top 5
+  const top5Html = top5 && top5.length > 0 ? `
+    <div class="ranking-resenadores-seccion">
+      <h4 class="ranking-seccion-titulo">Top 5</h4>
+      <div class="ranking-top-lista">
+        ${top5.map(r => `
+          <div class="ranking-resenador-top-item ranking-resenador-top-item--destacado">
+            <p class="ranking-top-item-pos">#${r.posicion}</p>
+            <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+            <div class="ranking-top-item-info">
+              <p class="ranking-top-item-titulo">${r.alias}</p>
+              <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
+            </div>
+            <div style="text-align:right;">
+              <p class="ranking-top-item-puntaje">★ ${r.promedio?.toFixed(1) ?? '—'}</p>
+              <p style="font-size:11px; color:var(--gris-suave);">${r.completion ?? '—'}%</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  // Top 20 (posiciones 6 en adelante)
+  const top20Html = top20 && top20.length > 0 ? `
+    <div class="ranking-resenadores-seccion">
+      <h4 class="ranking-seccion-titulo">Top 20</h4>
+      <div class="ranking-top-lista">
+        ${top20.map(r => `
+          <div class="ranking-resenador-top-item">
+            <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
+            <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+            <div class="ranking-top-item-info">
+              <p class="ranking-top-item-titulo">${r.alias}</p>
+            </div>
+            <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  contenedor.innerHTML = `
+    <h3 style="font-family:var(--fuente-titulo); font-size:22px; font-weight:700; color:var(--bordo); margin-bottom:20px; font-style:italic;">Ranking — ${mes}</h3>
+    ${destacadosHtml}
+    ${top5Html}
+    ${top20Html}
+  `;
 }
+
 function seleccionarEstrellaLibro(valor) {
   document.getElementById('resena-puntuacion-libro').value = valor;
 
@@ -577,4 +630,9 @@ function activarDragSliders() {
 
     slider.style.cursor = 'grab';
   });
+}
+function moverCarruselResenadores(dir) {
+  const carrusel = document.getElementById('carrusel-resenadores');
+  if (!carrusel) return;
+  carrusel.scrollBy({ left: dir * 110, behavior: 'smooth' });
 }
