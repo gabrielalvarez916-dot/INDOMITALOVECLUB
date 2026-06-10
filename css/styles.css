@@ -1983,7 +1983,197 @@ img { max-width: 100%; display: block; }
   object-fit: cover;
   border-radius: 5px;
 }
+/* ── Panel reseñador — Stats con corazón ─────────────────── */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
 
+.stat-icono-corazon {
+  font-size: 28px;
+  color: var(--bordo);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.stat-nivel {
+  font-size: 28px !important;
+}
+
+.stat-badge-nivel {
+  display: inline-block;
+  background: var(--rosa-claro);
+  color: var(--bordo);
+  border: 1px solid var(--rosa);
+  padding: 4px 12px;
+  border-radius: var(--radio-pill);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* ── Panel reseñador — Cards postulaciones ───────────────── */
+.postulacion-resena-card {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.postulacion-resena-card:last-child {
+  border-bottom: none;
+}
+
+.postulacion-resena-portada {
+  width: 64px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: var(--rosa-claro);
+}
+
+.postulacion-resena-portada--vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.postulacion-resena-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.postulacion-resena-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.postulacion-resena-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bordo);
+  font-style: italic;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.postulacion-resena-autor {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin: 0;
+}
+
+.postulacion-resena-fecha {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin: 2px 0 0;
+}
+
+/* ── Panel reseñador — ARCs activos grilla ───────────────── */
+.arcs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .arcs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.arc-card {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  overflow: hidden;
+  box-shadow: var(--sombra-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.arc-card-portada-wrap {
+  width: 100%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  background: var(--rosa-claro);
+}
+
+.arc-card-portada {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.arc-card-portada--vacia {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+.arc-card-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.arc-card-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bordo);
+  font-style: italic;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.arc-card-autor {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin: 0;
+}
+
+.arc-card-fecha {
+  font-size: 11px;
+  color: var(--gris-suave);
+  margin: 2px 0 6px;
+}
+
+.arc-card-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.arc-btn-resena {
+  color: var(--bordo) !important;
+  border-color: var(--gris-borde) !important;
+}
+
+.arc-btn-resena:hover {
+  background: var(--bordo) !important;
+  color: var(--blanco) !important;
+  border-color: var(--bordo) !important;
+}
 .ranking-top-item-info { min-width: 0; }
 
 .ranking-top-item-titulo {
