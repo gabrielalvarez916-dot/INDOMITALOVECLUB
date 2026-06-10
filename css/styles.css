@@ -2407,3 +2407,130 @@ img { max-width: 100%; display: block; }
     grid-template-columns: 1fr;
   }
 }
+/* ── Ranking reseñadores ─────────────────────────────────── */
+.ranking-resenadores-seccion {
+  margin-bottom: 28px;
+}
+
+.ranking-resenadores-carrusel-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ranking-resenadores-carrusel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 4px 12px;
+  flex: 1;
+  scrollbar-width: none;
+}
+
+.ranking-resenadores-carrusel::-webkit-scrollbar { display: none; }
+
+.ranking-resenador-avatar-item {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 80px;
+}
+
+.ranking-resenador-avatar-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid var(--rosa);
+  box-shadow: var(--sombra-card);
+  transition: var(--transicion);
+}
+
+.ranking-resenador-avatar-img:hover {
+  border-color: var(--bordo);
+  transform: scale(1.06);
+}
+
+.ranking-resenador-avatar-alias {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gris-texto);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-resenador-badge-nivel {
+  display: inline-block;
+  background: var(--rosa-claro);
+  color: var(--bordo);
+  border: 1px solid var(--rosa);
+  padding: 2px 8px;
+  border-radius: var(--radio-pill);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ranking-carrusel-arrow {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--bordo);
+  transition: var(--transicion);
+  flex-shrink: 0;
+  box-shadow: var(--sombra-card);
+}
+
+.ranking-carrusel-arrow:hover {
+  background: var(--bordo);
+  color: var(--blanco);
+  border-color: var(--bordo);
+}
+
+.ranking-resenador-top-item {
+  display: grid;
+  grid-template-columns: 28px 44px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 10px 14px;
+  box-shadow: var(--sombra-card);
+}
+
+.ranking-resenador-top-item--destacado {
+  border-left: 3px solid var(--bordo);
+  border-radius: 0 var(--radio-grande) var(--radio-grande) 0;
+}
+
+.ranking-resenador-top-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--rosa);
+}
+
+.ranking-vacio-medalla {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
