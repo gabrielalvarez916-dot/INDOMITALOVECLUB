@@ -338,7 +338,16 @@ async function guardarPerfilYPostularse(event) {
   }
 
   // Primero guarda el perfil
-  const resultadoPerfil = await llamarBackend('editarPerfil', { email, datos });
+  const resultadoPerfil = await llamarBackend('editarPerfil', {
+  email,
+  pais:              datos.pais,
+  ciudad:            datos.ciudad,
+  instagram:         datos.instagram,
+  tiktok:            datos.tiktok,
+  amazon:            datos.amazon,
+  descripcionLector: datos.descripcionLector,
+  generos:           datos.generos,
+});
 
   if (!resultadoPerfil.ok) {
     mostrarMensajeError('completar-error', resultadoPerfil.mensaje || 'Error al guardar el perfil.');
