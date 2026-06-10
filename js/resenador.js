@@ -54,25 +54,28 @@ async function cargarEstadisticasReseñador(email) {
 
   const u = resultado.datos.perfil;
 
-  contenedor.innerHTML = `
+ contenedor.innerHTML = `
     <div class="stat-card">
+      <span class="stat-icono-corazon">♥</span>
       <span class="stat-numero">${u.totalReseñasHistoricas ?? 0}</span>
       <span class="stat-label">Reseñas totales</span>
     </div>
     <div class="stat-card">
-      <span class="stat-badge">${u.labelNivel || 'Nuevo miembro'}</span>
-      <span class="stat-label">Nivel</span>
+      <span class="stat-icono-corazon">♥</span>
+      <span class="stat-numero stat-nivel">${u.labelNivel?.split(' ')[0] || 'Nuevo'}</span>
+      <span class="stat-badge-nivel">${u.labelNivel || 'Nuevo en la comunidad'}</span>
     </div>
     <div class="stat-card">
+      <span class="stat-icono-corazon">♥</span>
       <span class="stat-numero">${u.ranking ? u.ranking.posicion : '—'}</span>
       <span class="stat-label">Posición ranking</span>
     </div>
     <div class="stat-card">
+      <span class="stat-icono-corazon">♥</span>
       <span class="stat-numero">${u.ranking ? u.ranking.porcentajeCompletion + '%' : '—'}</span>
       <span class="stat-label">Completion este mes</span>
     </div>
   `;
-}
 
 
 // ────────────────────────────────────────────────────────────
@@ -135,19 +138,20 @@ function construirCardPostulacionReseñador(p) {
     </div>
   ` : '';
 
-  return `
-    <div class="lista-item">
-      ${portadaHtml}
-      <div class="lista-item-body">
-        <p class="lista-item-titulo">${c.nombreLibro}</p>
-        <p class="lista-item-meta">por ${c.nombreAutor}</p>
-        ${badgeEstado(p.estado)}
-        ${p.estado === 'aprobada' ? `<p style="font-size:12px; color:var(--gris-suave); margin-top:4px;">Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
+ return `
+    <div class="postulacion-resena-card">
+      ${c.linkPortada ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="postulacion-resena-portada" onerror="this.style.display='none'" />` : '<div class="postulacion-resena-portada postulacion-resena-portada--vacia">📖</div>'}
+      <div class="postulacion-resena-info">
+        <div class="postulacion-resena-header">
+          <p class="postulacion-resena-titulo">${c.nombreLibro}</p>
+          ${badgeEstado(p.estado)}
+        </div>
+        <p class="postulacion-resena-autor">por ${c.nombreAutor}</p>
+        ${p.estado === 'aprobada' ? `<p class="postulacion-resena-fecha">📅 Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
         ${linksLibro}
       </div>
     </div>
   `;
-}
 
 
 // ────────────────────────────────────────────────────────────
@@ -191,7 +195,7 @@ async function cargarArcsActivos(email) {
     return;
   }
 
-  contenedor.innerHTML = _arcsActivosReseñador.map(p => construirCardArcActivo(p)).join('');
+  contenedor.innerHTML = `<div class="arcs-grid">${_arcsActivosReseñador.map(p => construirCardArcActivo(p)).join('')}</div>`;
 }
 
 /**
@@ -203,24 +207,25 @@ async function cargarArcsActivos(email) {
 function construirCardArcActivo(p) {
   const c = p.campaña;
 
-  return `
-    <div class="lista-item">
-      ${c.linkPortada ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />` : ''}
-      <div class="lista-item-body">
-        <p class="lista-item-titulo">${c.nombreLibro}</p>
-        <p class="lista-item-meta">por ${c.nombreAutor}</p>
-        <p style="font-size:12px; color:var(--gris-suave); margin:4px 0;">
-          Fecha límite: <strong>${formatearFechaAmigable(c.fechaLimite)}</strong>
-        </p>
-        <div class="lista-item-acciones">
-          ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.linkEpub}', '${c.nombreLibro}')">📖 Leer EPUB</button>` : ''}
-          ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.linkPdf}', '${c.nombreLibro}')">📄 Leer PDF</button>`   : ''}
-          <button class="btn-primario btn-sm" onclick="abrirCargarResena('${c.id}')">Cargar reseña</button>
+ return `
+    <div class="arc-card">
+      <div class="arc-card-portada-wrap">
+        ${c.linkPortada
+          ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="arc-card-portada" onerror="this.style.display='none'" />`
+          : `<div class="arc-card-portada arc-card-portada--vacia">📖</div>`}
+      </div>
+      <div class="arc-card-body">
+        <p class="arc-card-titulo">${c.nombreLibro}</p>
+        <p class="arc-card-autor">por ${c.nombreAutor}</p>
+        <p class="arc-card-fecha">📅 Vence el ${formatearFechaAmigable(c.fechaLimite)}</p>
+        <div class="arc-card-acciones">
+          ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.linkEpub}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
+          ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.linkPdf}', '${c.nombreLibro}')">Leer PDF</button>`   : ''}
+          <button class="btn-secundario btn-full arc-btn-resena" onclick="abrirCargarResena('${c.id}')">✓ Entregar reseña</button>
         </div>
       </div>
     </div>
   `;
-}
 
 
 // ────────────────────────────────────────────────────────────
