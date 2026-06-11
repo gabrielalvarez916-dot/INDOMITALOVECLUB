@@ -105,11 +105,11 @@ async function manejarRespuestaGoogle(respuesta) {
   _toggleElemento('login-cargando', true);
   _toggleElemento('login-paso1', false);
 
-  const resultado = await fetch('/api/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: _emailGooglePendiente, googleToken: token })
-}).then(r => r.json());
+const resultado = await llamarBackend('loginConGoogle', {
+  email: _emailGooglePendiente,
+  googleToken: token
+});
+
 
   if (!resultado.ok) {
     mostrarErrorLogin(resultado.mensaje || 'Error al iniciar sesión.');
