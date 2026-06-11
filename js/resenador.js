@@ -274,6 +274,9 @@ async function enviarResena(event) {
     puntuacionLibro:  document.getElementById('resena-puntuacion-libro')?.value || ''
   };
 
+  console.log('enviando resena - idCampaña:', idCampaña);
+console.log('enviando resena - datos:', JSON.stringify(datos));
+
   const resultado = await llamarBackend('cargarReseña', {
     email: Sesion.email(),
     idCampana: idCampaña,
