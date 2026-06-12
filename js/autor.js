@@ -369,7 +369,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
         <p style="font-size:12px; color:var(--gris-suave);">Entregada: ${formatearFechaAmigable(r.fechaEntrega)}</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0;">
           ${r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link">Instagram</a>` : ''}
-          ${r.linkTikTok ? `<a href="${r.linkTikTok}" target="_blank" class="red-link">TikTok</a>` : ''}
+          ${r.linkTiktok    ? `<a href="${r.linkTiktok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
           ${r.linkAmazon    ? `<a href="${r.linkAmazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
           ${r.linkGoodreads ? `<a href="${r.linkGoodreads}" target="_blank" class="red-link">Goodreads</a>` : ''}
         </div>
