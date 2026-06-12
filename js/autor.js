@@ -374,44 +374,43 @@ async function verReseñasCampana(idCampana, nombreLibro) {
       ${r.linkGoodreads ? `<a href="${r.linkGoodreads}" target="_blank" class="red-link">Goodreads</a>` : ''}
     </div>
     ${r.comentarios ? `<p style="font-size:13px; color:var(--gris-suave);">"${r.comentarios}"</p>` : ''}
-    ${r.puntuacion
-      ? `<p style="font-size:13px;">Tu calificación: ${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)}</p>`
-      : `<button class="btn-secundario btn-sm" style="margin-top:8px;" onclick="abrirCalificarReseña('${r.idReseña}', '${r.reseñador?.alias || ''}')">Calificar reseña</button>`
-    }
+   ${r.puntuacion
+  ? `<p style="font-size:13px;">Tu calificación: ${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)}</p>`
+  : `<div style="margin-top:8px;">
+      <p style="font-size:13px; margin-bottom:6px;">Calificá esta reseña:</p>
+      <div style="display:flex; gap:6px;">
+        ${[1,2,3,4,5].map(n => `
+          <button onclick="calificarDirecto('${r.idReseña}', ${n}, this)" 
+            style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--gris-borde);">★</button>
+        `).join('')}
+      </div>
+    </div>`
+}
   </div>
 `).join('');
   }
 }
 
-/**
- * Abre el modal de calificación de una reseña.
- *
- * @param {string} idResena
- * @param {string} nombreReseñador
- */
-function abrirCalificarReseña(idResena, nombreReseñador) {
-  const inputId     = document.getElementById('calificar-id-resena');
-  const labelNombre = document.getElementById('calificar-nombre-resenador');
-  const inputPunt   = document.getElementById('calificar-puntuacion');
+async function calificarDirecto(idResena, puntuacion, boton) {
+  const resultado = await llamarBackend('calificarReseña', {
+    email: Sesion.email(),
+    idResena,
+    puntuacion
+  });
 
-  if (inputId)     inputId.value = idResena;
-  if (labelNombre) labelNombre.textContent = `Calificando la reseña de ${nombreReseñador}`;
-  if (inputPunt)   inputPunt.value = '';
+  if (!resultado.ok) {
+    mostrarToast(resultado.mensaje || 'Error al calificar.', 'error');
+    return;
+  }
 
-  document.querySelectorAll('.estrella').forEach(e => e.classList.remove('activa'));
-  const label = document.getElementById('estrellas-label');
-  if (label) label.textContent = 'Seleccioná una puntuación';
+  // Reemplaza las estrellas por la calificación guardada
+  const contenedor = boton.parentElement;
+  contenedor.parentElement.innerHTML = `
+    <p style="font-size:13px;">Tu calificación: ${'★'.repeat(puntuacion)}${'☆'.repeat(5 - puntuacion)}</p>
+  `;
 
-  ocultarMensajes('calificar-error', 'calificar-ok');
-
-  document.getElementById('modal-detalle-campana')?.classList.remove('activo');
-  document.getElementById('modal-overlay')?.classList.add('activo');
-  document.getElementById('modal-calificar-resena')?.classList.add('activo');
+  mostrarToast('¡Reseña calificada!', 'ok');
 }
-/**
- * Envía la calificación de una reseña al backend.
- * Se llama desde el botón del modal.
- */
 async function enviarCalificacion() {
   const idResena    = document.getElementById('calificar-id-resena')?.value;
   const puntuacion  = document.getElementById('calificar-puntuacion')?.value;
