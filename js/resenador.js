@@ -278,9 +278,14 @@ async function enviarResena(event) {
 console.log('enviando resena - datos:', JSON.stringify(datos));
 
   const resultado = await llamarBackend('cargarReseña', {
-  email:    Sesion.email(),
-  idCampana: idCampaña,
-  datos
+  email:                Sesion.email(),
+  idCampana:            idCampaña,
+  'datos.linkInstagram': datos.linkInstagram  || '',
+  'datos.linkTikTok':    datos.linkTikTok     || '',
+  'datos.linkAmazon':    datos.linkAmazon     || '',
+  'datos.linkGoodreads': datos.linkGoodreads  || '',
+  'datos.comentarios':   datos.comentarios    || '',
+  'datos.puntuacionLibro': datos.puntuacionLibro || ''
 });
 
   if (!resultado.ok) {
