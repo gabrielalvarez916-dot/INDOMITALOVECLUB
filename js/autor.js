@@ -390,25 +390,24 @@ async function verReseñasCampana(idCampana, nombreLibro) {
  * @param {string} nombreReseñador
  */
 function abrirCalificarReseña(idResena, nombreReseñador) {
-  cerrarModales();
-
   const inputId     = document.getElementById('calificar-id-resena');
   const labelNombre = document.getElementById('calificar-nombre-resenador');
   const inputPunt   = document.getElementById('calificar-puntuacion');
 
-  if (inputId)     inputId.value     = idResena;
+  if (inputId)     inputId.value = idResena;
   if (labelNombre) labelNombre.textContent = `Calificando la reseña de ${nombreReseñador}`;
-  if (inputPunt)   inputPunt.value   = '';
+  if (inputPunt)   inputPunt.value = '';
 
-  // Resetea las estrellas
   document.querySelectorAll('.estrella').forEach(e => e.classList.remove('activa'));
   const label = document.getElementById('estrellas-label');
   if (label) label.textContent = 'Seleccioná una puntuación';
 
   ocultarMensajes('calificar-error', 'calificar-ok');
-  mostrarModal('modal-calificar-resena');
+  
+  // Cierra el modal anterior y abre el nuevo con un pequeño delay
+  cerrarModales();
+  setTimeout(() => mostrarModal('modal-calificar-resena'), 300);
 }
-
 /**
  * Envía la calificación de una reseña al backend.
  * Se llama desde el botón del modal.
