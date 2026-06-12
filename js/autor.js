@@ -379,11 +379,9 @@ async function verReseñasCampana(idCampana, nombreLibro) {
   : `<div style="margin-top:8px;">
       <p style="font-size:13px; margin-bottom:6px;">Calificá esta reseña:</p>
       <div style="display:flex; gap:6px;">
-        ${[1,2,3,4,5].map(n => `
+     ${[1,2,3,4,5].map(n => `
   <button 
-    data-id="${r.idReseña}"
-    data-puntuacion="${n}"
-    onclick="calificarDirecto(this.dataset.id, this.dataset.puntuacion, this)" 
+    onclick="calificarDirecto('${r.idReseña}', ${n}, this)" 
     style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--gris-borde);">★</button>
 `).join('')}
       </div>
