@@ -365,7 +365,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
   if (body) {
     body.innerHTML = reseñas.map(r => `
       <div class="resena-card" style="border-bottom:1px solid var(--crema-oscura); padding:16px 0;">
-       <p style="font-weight:600;">${r.reseñador?.alias || '—'}</p>
+       <p style="font-weight:600;">${r.aliasReseñador || r.emailReseñador}</p>
         <p style="font-size:12px; color:var(--gris-suave);">Entregada: ${formatearFechaAmigable(r.fechaEntrega)}</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0;">
           ${r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link">Instagram</a>` : ''}
@@ -376,7 +376,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
         ${r.comentarios ? `<p style="font-size:13px; color:var(--gris-suave);">"${r.comentarios}"</p>` : ''}
         ${r.puntuacionAutor
           ? `<p style="font-size:13px;">Tu calificación: ${'★'.repeat(r.puntuacionAutor)}${'☆'.repeat(5 - r.puntuacionAutor)}</p>`
-          : `<button class="btn-secundario btn-sm" style="margin-top:8px;" onclick="abrirCalificarReseña('${r.idReseña}', '${r.reseñador?.alias || ''}')"Calificar reseña</button>`
+          : `<button class="btn-secundario btn-sm" style="margin-top:8px;" onclick="abrirCalificarReseña('${r.id}', '${r.aliasReseñador || r.emailReseñador}')"Calificar reseña</button>`
         }
       </div>
     `).join('');
