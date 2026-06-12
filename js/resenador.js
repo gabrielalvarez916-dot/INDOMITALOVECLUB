@@ -278,10 +278,10 @@ async function enviarResena(event) {
 console.log('enviando resena - datos:', JSON.stringify(datos));
 
   const resultado = await llamarBackend('cargarReseña', {
-    email: Sesion.email(),
-    idCampana: idCampaña,
-    datos
-  });
+  email:    Sesion.email(),
+  idCampana: idCampaña,
+  datos
+});
 
   if (!resultado.ok) {
     mostrarMensajeError('resena-error', resultado.mensaje);
