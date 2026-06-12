@@ -241,10 +241,10 @@ function construirCardArcActivo(p) {
  * @param {string} idCampaña
  */
 function abrirCargarResena(idCampaña) {
-  const inputCampaña = document.getElementById('resena-id-campana');
-  if (inputCampaña) inputCampaña.value = idCampaña;
+  limpiarFormulario('form-cargar-resena');  // ← primero limpiás
 
-  limpiarFormulario('form-cargar-resena');
+  const inputCampaña = document.getElementById('resena-id-campana');
+  if (inputCampaña) inputCampaña.value = idCampaña;  // ← después guardás el ID
   ocultarMensajes('resena-error', 'resena-ok');
 
   document.getElementById('resena-puntuacion-libro').value = '';
