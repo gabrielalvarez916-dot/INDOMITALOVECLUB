@@ -405,6 +405,7 @@ function abrirCalificarReseña(idResena, nombreReseñador) {
   ocultarMensajes('calificar-error', 'calificar-ok');
 
   document.getElementById('modal-detalle-campana')?.classList.remove('activo');
+  document.getElementById('modal-overlay')?.classList.add('activo');
   document.getElementById('modal-calificar-resena')?.classList.add('activo');
 }
 /**
