@@ -403,10 +403,9 @@ function abrirCalificarReseña(idResena, nombreReseñador) {
   if (label) label.textContent = 'Seleccioná una puntuación';
 
   ocultarMensajes('calificar-error', 'calificar-ok');
-  
-  // Cierra el modal anterior y abre el nuevo con un pequeño delay
-  cerrarModales();
-  setTimeout(() => mostrarModal('modal-calificar-resena'), 300);
+
+  document.getElementById('modal-detalle-campana')?.classList.remove('activo');
+  document.getElementById('modal-calificar-resena')?.classList.add('activo');
 }
 /**
  * Envía la calificación de una reseña al backend.
