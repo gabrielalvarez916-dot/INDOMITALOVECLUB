@@ -25,7 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     mostrarSeccion('login');
   }
 });
-
+  // ← NUEVO: si el link trae ?campana=ID, abre el detalle automáticamente
+  const params = new URLSearchParams(window.location.search);
+  const idCampanaURL = params.get('campana');
+  if (idCampanaURL && typeof verDetalleCampaña === 'function') {
+    setTimeout(() => verDetalleCampaña(idCampanaURL), 300);
+  }
+});
 
 // ────────────────────────────────────────────────────────────
 // NAVEGACIÓN ENTRE SECCIONES
