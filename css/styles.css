@@ -2534,3 +2534,38 @@ img { max-width: 100%; display: block; }
   justify-content: center;
   margin-bottom: 16px;
 }
+/* ── Botón flotante de soporte ───────────────────────────── */
+#btn-soporte-flotante {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 250;
+  background: var(--bordo);
+  color: var(--blanco);
+  border: none;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: var(--sombra-fuerte);
+  transition: var(--transicion);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#btn-soporte-flotante:hover {
+  background: var(--bordo-oscuro);
+  transform: translateY(-2px) scale(1.05);
+}
+
+@media (max-width: 480px) {
+  #btn-soporte-flotante {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    font-size: 19px;
+  }
+}
