@@ -1,144 +1,97 @@
-============================================================
-INSTRUCCIONES DE INTEGRACIÓN — FAQ Autores
-Indómita Love Club
-============================================================
+Ahí está el problema, confirmado. Te paso de nuevo el contenido completo y correcto del archivo — reemplazá **todo** lo que tenés en `js/faq-autor.js` por esto:El archivo que generé en su momento sí está completo. Lo que pasó es que en algún momento, al copiar/pegar entre todos los mensajes de este chat, se perdió el bloque del array. Acá te lo dejo entero, listo para copiar tal cual:
 
-No hay que modificar ninguna función ni archivo existente.
-Solo agregar 4 cosas, en 4 lugares puntuales.
+```javascript
+// ============================================================
+// faq-autor.js — Indómita Love Club
+// Sección de Preguntas Frecuentes para autores.
+// Archivo independiente: no modifica ninguna función existente.
+// ============================================================
 
+const FAQ_AUTOR_DATA = [
+  {
+    pregunta: '¿Por qué no se ve la portada de mi libro?',
+    respuesta: 'Casi siempre es un tema de permisos en Google Drive. Cuando subís el link de portada (o de EPUB/PDF), el archivo tiene que estar compartido como "Cualquier persona con el enlace puede ver". Para revisarlo: abrí el archivo en Drive → botón "Compartir" → en "Acceso general" elegí "Cualquier usuario con el enlace" → Lector. Si lo tenías en "Restringido", por eso no carga.'
+  },
+  {
+    pregunta: '¿Qué formato tienen que tener el EPUB y el PDF para funcionar?',
+    respuesta: 'Tienen que ser links de Google Drive con el archivo compartido públicamente (mismo permiso que la portada: "Cualquier usuario con el enlace"). Subís el archivo a tu Drive, lo compartís así, y pegás ese link al crear tu campaña.'
+  },
+  {
+    pregunta: '¿Puedo editar mi libro después de cargarlo?',
+    respuesta: 'Sí, desde tu biblioteca en "Mi perfil" podés modificar los datos de cualquier libro que hayas agregado.'
+  },
+  {
+    pregunta: '¿El sistema de campañas siempre es mensual?',
+    respuesta: 'Sí, todas las campañas duran un mes. Por eso la fecha límite que elijas al crear una campaña no puede superar el mes en curso.'
+  },
+  {
+    pregunta: '¿Qué diferencia hay entre "solo visor" y "permite descarga"?',
+    respuesta: '"Solo visor" significa que el reseñador lee el libro dentro de la plataforma, sin poder descargarlo a su dispositivo — te da más control sobre la copia. "Permite descarga" deja que el reseñador se baje el archivo, lo que puede resultar más atractivo para conseguir más postulantes, pero perdés ese control.'
+  },
+  {
+    pregunta: '¿Puedo tener más de una campaña activa al mismo tiempo?',
+    respuesta: 'Depende de tu plan: Free permite 1 campaña por mes, Basic hasta 3, y Premium hasta 5.'
+  },
+  {
+    pregunta: '¿Puedo cancelar una campaña ya creada? ¿Qué pasa con las postulaciones?',
+    respuesta: 'Sí, podés cancelarla desde tu panel en cualquier momento. Al cancelarla, la campaña deja de estar activa y las postulaciones pendientes quedan cerradas.'
+  },
+  {
+    pregunta: '¿Dónde veo las reseñas que me entregaron?',
+    respuesta: 'Desde tu panel, en la pestaña "Campañas activas", cada campaña tiene un botón "Ver reseñas" donde aparecen todas las que ya te entregaron, con sus links a cada plataforma.'
+  },
+  {
+    pregunta: '¿Para qué sirve calificar a los reseñadores?',
+    respuesta: 'Tu calificación con estrellas alimenta el ranking del reseñador dentro de la comunidad. Es importante que la completes: ayuda a que los autores puedan elegir mejor a quién aprobar en futuras campañas, y reconoce a los reseñadores que cumplen bien.'
+  },
+  {
+    pregunta: '¿Qué diferencia hay entre los planes Free, Basic y Premium?',
+    respuesta: 'Cuanto más alto el plan, más rápido podés hacer crecer tu comunidad de lectoras. Free te deja probar la plataforma con 1 campaña por mes y hasta 10 reseñadores — ideal para tu primer lanzamiento. Basic ($20.000/mes) te da 3 campañas por mes y hasta 50 reseñadores, para autoras que publican seguido o quieren más alcance por libro. Premium ($40.000/mes) te da hasta 5 campañas por mes y 100 reseñadores, pensado para quienes quieren maximizar la visibilidad de cada lanzamiento y mantener varias campañas corriendo en paralelo.'
+  },
+  {
+    pregunta: '¿Cómo hago el pago para cambiar de plan?',
+    respuesta: 'Al elegir un plan, te preguntamos si pagás desde Argentina (Mercado Pago) o desde el exterior (Stripe). Te abrimos el link de pago en una pestaña nueva para que completes la operación ahí.'
+  },
+  {
+    pregunta: 'Ya pagué, ¿cómo confirmo mi pago?',
+    respuesta: 'Después de pagar, te va a aparecer un formulario para subir tu comprobante (un link a la captura o factura). Sin ese paso no podemos confirmar tu pago.'
+  },
+  {
+    pregunta: '¿Cuánto tarda en activarse mi plan después de pagar?',
+    respuesta: 'La verificación es manual: revisamos cada comprobante nosotros mismos, así que puede demorar hasta 24 horas hábiles. Una vez aprobado, te llega un mail confirmando la activación.'
+  }
+];
 
-────────────────────────────────────────────────────────────
-1) SUBIR LOS DOS ARCHIVOS NUEVOS A TU REPO
-────────────────────────────────────────────────────────────
+/**
+ * Renderiza la sección de FAQ para autores.
+ * Se llama automáticamente cuando se muestra la sección #seccion-faq-autor.
+ */
+function cargarFaqAutor() {
+  const contenedor = document.getElementById('faq-autor-contenedor');
+  if (!contenedor) return;
 
-- js/faq-autor.js   (contenido y lógica del acordeón)
-- css/faq.css       (estilos, ya usa tus variables de styles.css)
-
-
-────────────────────────────────────────────────────────────
-2) EN <head> DEL index.html — agregar el link al CSS nuevo
-────────────────────────────────────────────────────────────
-
-Justo debajo de esta línea que ya tenés:
-
-  <link rel="stylesheet" href="css/styles.css" />
-
-Agregar:
-
-  <link rel="stylesheet" href="css/faq.css" />
-
-
-────────────────────────────────────────────────────────────
-3) EN EL <nav id="nav-principal"> — agregar el link de FAQ
-────────────────────────────────────────────────────────────
-
-Tu nav actual tiene esto:
-
-  <nav id="nav-principal">
-    <a href="#" class="nav-link" onclick="mostrarSeccion('feed')">Campañas</a>
-    <a href="#" class="nav-link" id="nav-panel" style="display:none;" onclick="mostrarPanelRol()">Mi panel</a>
-    <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Mi perfil</a>
-    <a href="#" class="nav-link" id="nav-admin" style="display:none;" onclick="mostrarSeccion('admin')">Admin</a>
-  </nav>
-
-Agregar una línea nueva, al lado de "Mi perfil" (mismo patrón: oculto por
-defecto, visible solo para autores logueados — igual que nav-perfil):
-
-  <nav id="nav-principal">
-    <a href="#" class="nav-link" onclick="mostrarSeccion('feed')">Campañas</a>
-    <a href="#" class="nav-link" id="nav-panel" style="display:none;" onclick="mostrarPanelRol()">Mi panel</a>
-    <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Mi perfil</a>
-    <a href="#" class="nav-link" id="nav-faq-autor" style="display:none;" onclick="mostrarSeccion('faq-autor')">Preguntas frecuentes</a>
-    <a href="#" class="nav-link" id="nav-admin" style="display:none;" onclick="mostrarSeccion('admin')">Admin</a>
-  </nav>
-
-NOTA: el mismo código que ya tenés en algún lado (probablemente en
-auth.js o ui.js) que muestra/oculta "nav-perfil" según el rol del
-usuario, es el que tiene que mostrar/ocultar "nav-faq-autor" también,
-pero SOLO cuando el rol es 'autor' (a diferencia de nav-perfil que
-es para todos los logueados). Buscá donde dice algo como:
-
-  document.getElementById('nav-perfil').style.display = 'block';
-
-y agregá al lado, dentro del mismo bloque donde se determina que el
-rol es 'autor':
-
-  const navFaqAutor = document.getElementById('nav-faq-autor');
-  if (navFaqAutor) navFaqAutor.style.display = (rol === 'autor') ? 'block' : 'none';
-
-(Esto es agregar una línea nueva en una función que ya existe — no
-hace falta reescribir nada de lo que ya está, solo sumar esa lógica
-extra donde corresponda.)
-
-
-────────────────────────────────────────────────────────────
-4) SECCIÓN NUEVA — pegar junto a las demás <section> existentes
-────────────────────────────────────────────────────────────
-
-Pegar esto, por ejemplo, justo después de </section> de
-"seccion-perfil" y antes de <!-- SECCIÓN: ADMIN -->:
-
-  <!-- SECCIÓN: FAQ AUTORES -->
-  <section id="seccion-faq-autor" class="seccion" style="display:none;">
-    <div class="seccion-inner seccion-angosta">
-      <h2 class="panel-titulo">Preguntas frecuentes</h2>
-      <p class="faq-intro">
-        Resolvé las dudas más comunes sobre cómo usar la plataforma.
-        Si tu pregunta no está acá, escribinos por el botón de soporte (💬)
-        o a indomitagencia@gmail.com.
-      </p>
-      <div id="faq-autor-contenedor" class="faq-lista"></div>
-      <div class="faq-footer-soporte">
-        ¿No encontraste lo que buscabas? Usá el botón de soporte 💬
-        en la esquina de la pantalla y te ayudamos a la brevedad.
+  contenedor.innerHTML = FAQ_AUTOR_DATA.map((item, i) => `
+    <div class="faq-item" id="faq-item-${i}">
+      <button type="button" class="faq-item-header" onclick="toggleFaqItem(${i})">
+        <span class="faq-item-pregunta">${item.pregunta}</span>
+        <span class="faq-item-chevron" id="faq-chevron-${i}">▾</span>
+      </button>
+      <div class="faq-item-body" id="faq-body-${i}">
+        <p class="faq-item-respuesta">${item.respuesta}</p>
       </div>
     </div>
-  </section>
+  `).join('');
+}
 
+/**
+ * Abre/cierra una pregunta del acordeón de FAQ.
+ * @param {number} indice
+ */
+function toggleFaqItem(indice) {
+  const item = document.getElementById(`faq-item-${indice}`);
+  if (!item) return;
+  item.classList.toggle('abierta');
+}
+```
 
-────────────────────────────────────────────────────────────
-5) SCRIPT — agregar js/faq-autor.js junto a los demás scripts
-────────────────────────────────────────────────────────────
-
-Donde ya tenés:
-
-  <script src="js/perfil.js"></script>
-  <script src="js/visor.js"></script>
-  <script src="js/soporte.js"></script>
-
-Agregar abajo de soporte.js:
-
-  <script src="js/faq-autor.js"></script>
-
-
-────────────────────────────────────────────────────────────
-6) DISPARAR LA CARGA AL MOSTRAR LA SECCIÓN
-────────────────────────────────────────────────────────────
-
-Tu función mostrarSeccion (en ui.js, probablemente) es la que
-hace section.style.display = 'block' / 'none' según el id.
-Buscá esa función y agregá un caso para que, al mostrar
-'faq-autor', se llame a cargarFaqAutor(). Por ejemplo, si tu
-mostrarSeccion ya tiene algo como:
-
-  function mostrarSeccion(nombre) {
-    ...
-    if (nombre === 'feed') cargarFeed();
-    if (nombre === 'perfil') cargarPerfil();
-    ...
-  }
-
-Agregar la línea:
-
-    if (nombre === 'faq-autor') cargarFaqAutor();
-
-Si tu mostrarSeccion no tiene ese patrón de "ifs" y hace otra
-cosa, decime cómo está armada esa función y te doy la línea
-exacta para pegar ahí.
-
-
-============================================================
-RESUMEN: 0 archivos existentes modificados en su lógica.
-Solo se agregan líneas nuevas (nav, script, sección) y 2
-archivos nuevos (faq-autor.js, faq.css).
-============================================================
+Borrá todo el contenido actual de `js/faq-autor.js` en GitHub y reemplazalo por esto completo. Después esperá a que Vercel haga el redeploy automático (o forzalo si tenés esa opción) y probá de nuevo.
