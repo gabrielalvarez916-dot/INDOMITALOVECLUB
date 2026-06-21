@@ -2569,3 +2569,115 @@ img { max-width: 100%; display: block; }
     font-size: 19px;
   }
 }
+ · CSS
+/* ============================================================
+   faq.css — Indómita Love Club
+   Estilos para la sección de Preguntas Frecuentes (autores).
+   Archivo independiente: no modifica styles.css existente.
+   Usa las mismas variables ya definidas en :root (styles.css).
+   ============================================================ */
+ 
+.faq-intro {
+  font-size: 14px;
+  color: var(--gris-suave);
+  margin-bottom: 24px;
+  line-height: 1.6;
+  max-width: 640px;
+}
+ 
+.faq-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+ 
+.faq-item {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  overflow: hidden;
+  box-shadow: var(--sombra-card);
+  transition: var(--transicion);
+}
+ 
+.faq-item:hover {
+  box-shadow: var(--sombra);
+}
+ 
+.faq-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--blanco);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transicion);
+}
+ 
+.faq-item-header:hover {
+  background: var(--rosa-claro);
+}
+ 
+.faq-item.abierta .faq-item-header {
+  background: var(--rosa-claro);
+}
+ 
+.faq-item-pregunta {
+  font-family: var(--fuente-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bordo);
+  font-style: italic;
+  line-height: 1.35;
+}
+ 
+.faq-item-chevron {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--gris-suave);
+  transition: transform 0.22s ease;
+}
+ 
+.faq-item.abierta .faq-item-chevron {
+  transform: rotate(180deg);
+  color: var(--bordo);
+}
+ 
+.faq-item-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+ 
+.faq-item.abierta .faq-item-body {
+  max-height: 600px;
+}
+ 
+.faq-item-respuesta {
+  padding: 0 20px 18px;
+  font-size: 14px;
+  color: var(--gris-texto);
+  line-height: 1.6;
+}
+ 
+.faq-footer-soporte {
+  margin-top: 28px;
+  padding: 18px 20px;
+  background: var(--rosa-claro);
+  border: 1px solid var(--rosa);
+  border-radius: var(--radio-grande);
+  font-size: 13px;
+  color: var(--bordo);
+  text-align: center;
+  line-height: 1.6;
+}
+ 
+@media (max-width: 480px) {
+  .faq-item-header { padding: 14px 16px; }
+  .faq-item-respuesta { padding: 0 16px 16px; }
+  .faq-item-pregunta { font-size: 14px; }
+}
