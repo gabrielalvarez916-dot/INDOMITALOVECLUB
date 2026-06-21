@@ -48,6 +48,7 @@ function mostrarSeccion(nombre) {
     'panel-autor',
     'panel-resenador',
     'perfil',
+    'faq-autor',
     'admin'
   ];
 
@@ -84,6 +85,9 @@ function mostrarSeccion(nombre) {
     case 'perfil':
       if (typeof cargarPerfil === 'function') cargarPerfil();
       break;
+    case 'faq-autor':                                                    // ← AGREGAR
+      if (typeof cargarFaqAutor === 'function') cargarFaqAutor();        // ← AGREGAR
+      break;          
     case 'admin':
       if (typeof cargarAdmin === 'function') cargarAdmin();
       break;
@@ -136,6 +140,12 @@ function mostrarHeaderLogueado(usuario) {
   const navPerfil = document.getElementById('nav-perfil');
   if (navPerfil) navPerfil.style.display = 'inline-block';
 
+   // Muestra botón FAQ solo si es autor
+  const navFaqAutor = document.getElementById('nav-faq-autor');
+  if (navFaqAutor) {
+    navFaqAutor.style.display = usuario.rol === 'autor' ? 'inline-block' : 'none';
+  }
+
   // Muestra botón Admin solo si es admin
   const navAdmin = document.getElementById('nav-admin');
   if (navAdmin) {
@@ -159,6 +169,9 @@ function mostrarHeaderDeslogueado() {
 
   const navPerfil = document.getElementById('nav-perfil');
   if (navPerfil) navPerfil.style.display = 'none';
+
+  const navFaqAutor = document.getElementById('nav-faq-autor');
+  if (navFaqAutor) navFaqAutor.style.display = 'none';
 
   const navAdmin = document.getElementById('nav-admin');
   if (navAdmin) navAdmin.style.display = 'none';
