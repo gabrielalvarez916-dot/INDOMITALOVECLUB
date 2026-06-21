@@ -666,13 +666,43 @@
   </div>
 </div>
 
+  <!-- Botón flotante de soporte -->
+<button id="btn-soporte-flotante" onclick="mostrarModal('modal-soporte')" title="Ayuda">💬</button>
+
+<!-- Modal: soporte -->
+<div id="modal-soporte" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">¿Necesitás ayuda?</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="form-info">Contanos qué pasó y te respondemos a la brevedad.</p>
+    <form id="form-soporte" onsubmit="enviarTicketSoporte(event)">
+      <div class="form-grupo">
+        <label class="form-label">Asunto</label>
+        <input type="text" id="soporte-asunto" class="form-input" placeholder="Ej: Error al calificar una reseña" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Mensaje *</label>
+        <textarea id="soporte-mensaje" class="form-textarea" rows="4" required placeholder="Contanos el problema con el mayor detalle posible..."></textarea>
+      </div>
+      <div id="soporte-error" class="mensaje-error" style="display:none;"></div>
+      <div id="soporte-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="submit" class="btn-primario">Enviar</button>
+      </div>
+    </form>
+  </div>
+</div>
+  
   <!-- FOOTER -->
   <footer id="footer">
-    <div class="footer-inner">
-      <p class="footer-texto">Indómita Love Club &copy; 2026 — Todos los derechos reservados</p>
-    </div>
-  </footer>
-
+  <div class="footer-inner">
+    <p class="footer-texto">Indómita Love Club &copy; 2026 — Todos los derechos reservados</p>
+    <p class="footer-texto">¿Necesitás ayuda? Escribinos a <a href="mailto:indomitagencia@gmail.com" style="color: rgba(245,236,215,0.8);">indomitagencia@gmail.com</a></p>
+  </div>
+</footer>
 
  <!-- SCRIPTS -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
