@@ -701,7 +701,7 @@ async function iniciarPago(plan) {
     ? 'ARS'
     : 'USD';
 
-  const resultado = await llamarBackend('iniciarSolicitudPago', {
+  const resultado = await llamarBackend('solicitarPlan', {
     email: Sesion.email(),
     planSolicitado: plan,
     moneda,
