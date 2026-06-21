@@ -1018,3 +1018,37 @@ function construirItemRankingTop(l, posicion) {
     </div>
   `;
 }
+/**
+ * Comparte una campaña por redes sociales o copia el link.
+ * En celular abre el menú nativo de compartir del sistema.
+ * En computadora copia el texto + link al portapapeles.
+ *
+ * @param {string} idCampana
+ * @param {string} nombreLibro
+ */
+async function compartirCampana(idCampana, nombreLibro) {
+  const url = `${CONFIG.FRONTEND_URL}/?campana=${idCampana}`;
+  const texto = `¡Postulate para reseñar "${nombreLibro}"! 📖✨`;
+
+  // Si el dispositivo soporta compartir nativo (celular)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: nombreLibro,
+        text: texto,
+        url: url
+      });
+    } catch (e) {
+      // El usuario cerró el menú de compartir sin elegir nada, no es un error real
+    }
+    return;
+  }
+
+  // En computadora: copia al portapapeles
+  try {
+    await navigator.clipboard.writeText(`${texto} ${url}`);
+    mostrarToast('¡Link copiado! Pegalo donde quieras.', 'ok');
+  } catch (e) {
+    mostrarToast('No se pudo copiar el link. Copialo manualmente: ' + url, 'error');
+  }
+}
