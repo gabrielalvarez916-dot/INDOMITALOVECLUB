@@ -553,7 +553,26 @@ async function crearNuevaCampana(event) {
     const errPlat = document.getElementById('plataformas-error');
     if (errPlat) errPlat.style.display = 'none';
   }
+// Validar que los links de Drive sean públicos
+  const linkPortadaTmp = convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim());
+  const linkEpubTmp    = document.getElementById('nc-link-epub')?.value?.trim();
+  const linkPdfTmp     = document.getElementById('nc-link-pdf')?.value?.trim();
 
+  toggleBoton('btn-crear-campana', false, 'Verificando links...');
+
+  const validacionLinks = await llamarBackend('validarLinksCampana', {
+    linkPortada: linkPortadaTmp,
+    linkEpub: linkEpubTmp,
+    linkPdf: linkPdfTmp
+  });
+
+  if (!validacionLinks.ok) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    const nombres = validacionLinks.linksInvalidos.join(', ');
+    mostrarMensajeError('nc-error', `El link de ${nombres} no es público. Verificá que esté compartido como "Cualquier usuario con el enlace" en Google Drive.`);
+    return;
+  }
+  
   const datos = {
     nombreLibro:      document.getElementById('nc-nombre-libro')?.value?.trim(),
     nombreAutor:      document.getElementById('nc-nombre-autor')?.value?.trim(),
