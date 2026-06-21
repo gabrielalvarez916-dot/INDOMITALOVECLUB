@@ -1,6 +1,3 @@
-Ahí está el problema, confirmado. Te paso de nuevo el contenido completo y correcto del archivo — reemplazá **todo** lo que tenés en `js/faq-autor.js` por esto:El archivo que generé en su momento sí está completo. Lo que pasó es que en algún momento, al copiar/pegar entre todos los mensajes de este chat, se perdió el bloque del array. Acá te lo dejo entero, listo para copiar tal cual:
-
-```javascript
 // ============================================================
 // faq-autor.js — Indómita Love Club
 // Sección de Preguntas Frecuentes para autores.
@@ -92,6 +89,3 @@ function toggleFaqItem(indice) {
   if (!item) return;
   item.classList.toggle('abierta');
 }
-```
-
-Borrá todo el contenido actual de `js/faq-autor.js` en GitHub y reemplazalo por esto completo. Después esperá a que Vercel haga el redeploy automático (o forzalo si tenés esa opción) y probá de nuevo.
