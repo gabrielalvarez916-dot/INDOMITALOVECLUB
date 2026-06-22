@@ -359,7 +359,7 @@ async function guardarPerfilYPostularse(event) {
   Sesion.guardar({ ...usuarioActual, ...datos });
 
   // Luego se postula
-  const resultadoPostulacion = await llamarBackend('postularseACampana', {
+ const resultadoPostulacion = await llamarBackend('postularse', {
     email,
     idCampana,
     aceptaConfidencialidad: true
