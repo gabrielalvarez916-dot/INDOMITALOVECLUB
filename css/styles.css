@@ -2681,3 +2681,64 @@ img { max-width: 100%; display: block; }
   .faq-item-respuesta { padding: 0 16px 16px; }
   .faq-item-pregunta { font-size: 14px; }
 }
+/* ── Banner publicitario ──────────────────────────────────── */
+.banner-publicitario-wrapper {
+  background: var(--blanco);
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.banner-publicitario {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.banner-publicitario-slide {
+  display: none;
+  width: 100%;
+}
+
+.banner-publicitario-slide.activo {
+  display: block;
+}
+
+.banner-publicitario-slide a,
+.banner-publicitario-slide img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.banner-publicitario-nav {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.banner-publicitario-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gris-borde);
+  border: none;
+  cursor: pointer;
+  transition: var(--transicion);
+  padding: 0;
+}
+
+.banner-publicitario-dot.activo {
+  background: var(--bordo);
+  width: 18px;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .banner-publicitario-slide a,
+  .banner-publicitario-slide img {
+    max-height: 140px;
+  }
+}
