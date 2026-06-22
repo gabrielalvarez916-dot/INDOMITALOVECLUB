@@ -26,6 +26,9 @@ async function cargarFeed() {
   toggleElemento('feed-lista-titulo', false);
   toggleElemento('feed-ticker', false);
 
+  // Carga el banner publicitario (no bloquea el resto del feed)
+  cargarBannerPublicitario();
+
   const resultado = await llamarBackend('listarCampanasFeed', { email: Sesion.email() || '' });
 
   toggleElemento('feed-cargando', false);
@@ -490,3 +493,85 @@ const Slider = (() => {
 
   return { init };
 })();
+// ────────────────────────────────────────────────────────────
+// BANNER PUBLICITARIO
+// ────────────────────────────────────────────────────────────
+
+const BannerPublicitario = (() => {
+  let banners = [];
+  let actual = 0;
+  let timer = null;
+  const INTERVALO = 6000;
+
+  async function cargar() {
+    const resultado = await llamarBackend('listarBannersActivos', {});
+    if (!resultado.ok) return;
+
+    banners = resultado.datos.banners || [];
+    const wrapper = document.getElementById('banner-publicitario-wrapper');
+
+    if (banners.length === 0) {
+      if (wrapper) wrapper.style.display = 'none';
+      return;
+    }
+
+    renderizar();
+    if (wrapper) wrapper.style.display = 'block';
+  }
+
+  function renderizar() {
+    const contenedor = document.getElementById('banner-publicitario');
+    const nav = document.getElementById('banner-publicitario-nav');
+    if (!contenedor) return;
+
+    contenedor.innerHTML = banners.map((b, i) => `
+      <div class="banner-publicitario-slide${i === 0 ? ' activo' : ''}" id="banner-slide-${i}">
+        ${b.linkDestino
+          ? `<a href="${b.linkDestino}" target="_blank" rel="noopener"><img src="${b.imagenUrl}" alt="Banner publicitario" /></a>`
+          : `<img src="${b.imagenUrl}" alt="Banner publicitario" />`}
+      </div>
+    `).join('');
+
+    if (nav) {
+      if (banners.length > 1) {
+        nav.innerHTML = banners.map((_, i) =>
+          `<button class="banner-publicitario-dot${i === 0 ? ' activo' : ''}" id="banner-dot-${i}" aria-label="Banner ${i + 1}"></button>`
+        ).join('');
+        nav.querySelectorAll('.banner-publicitario-dot').forEach((dot, i) => {
+          dot.addEventListener('click', () => { mostrar(i); reiniciarAutoplay(); });
+        });
+        iniciarAutoplay();
+      } else {
+        nav.innerHTML = '';
+      }
+    }
+  }
+
+  function mostrar(i) {
+    document.querySelectorAll('.banner-publicitario-slide').forEach((s, idx) => {
+      s.classList.toggle('activo', idx === i);
+    });
+    document.querySelectorAll('.banner-publicitario-dot').forEach((d, idx) => {
+      d.classList.toggle('activo', idx === i);
+    });
+    actual = i;
+  }
+
+  function iniciarAutoplay() {
+    clearInterval(timer);
+    if (banners.length <= 1) return;
+    timer = setInterval(() => {
+      mostrar((actual + 1) % banners.length);
+    }, INTERVALO);
+  }
+
+  function reiniciarAutoplay() {
+    iniciarAutoplay();
+  }
+
+  return { cargar };
+})();
+
+function cargarBannerPublicitario() {
+  BannerPublicitario.cargar();
+}
