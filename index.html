@@ -361,6 +361,7 @@
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas'); cargarEstadisticasAdmin()">Estadísticas</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-banners'); cargarBannersAdmin()">Banners</button>
       </div>
       <div id="tab-admin-usuarios" class="tab-contenido activo">
         <div id="admin-usuarios-lista"></div>
@@ -374,6 +375,10 @@
       <div id="tab-admin-estadisticas" class="tab-contenido">
   <div id="admin-estadisticas-contenedor"></div>
 </div>
+      <div id="tab-admin-banners" class="tab-contenido">
+        <div id="admin-banners-form-contenedor"></div>
+        <div id="admin-banners-lista" style="margin-top:24px;"></div>
+      </div>
     </div>
   </section>
 
