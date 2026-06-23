@@ -167,6 +167,7 @@ function construirCardCampañaAutor(c) {
           <button class="btn-secundario btn-sm btn-full" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
           <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
           <button class="btn-secundario btn-sm btn-full" onclick="compartirCampana('${c.id}', '${c.nombreLibro}')">📤 Compartir</button>
+          <button class="btn-secundario btn-sm btn-full" onclick="abrirEditarCampana('${c.id}')">✏️ Editar campaña</button>
           <button class="btn-secundario btn-sm btn-full btn-peligro" onclick="confirmarCancelarCampana('${c.id}', '${c.nombreLibro}')">Cancelar campaña</button>
         </div>
       </div>
@@ -866,7 +867,8 @@ function renderizarBiblioteca(libros) {
         ${l.sinopsisBreve ? `<p class="libro-sinopsis">${truncarTexto(l.sinopsisBreve, 100)}</p>` : ''}
       </div>
       <div class="libro-acciones">
-        <button class="btn-secundario btn-sm" onclick="eliminarLibroAutor('${l.id}', '${l.titulo}')">Eliminar</button>
+        <button class="btn-secundario btn-sm" onclick="abrirEditarLibro('${l.id}')">Editar</button>
+ <button class="btn-secundario btn-sm" onclick="eliminarLibroAutor('${l.id}', '${l.titulo}')">Eliminar</button>
       </div>
     </div>
   `).join('');
