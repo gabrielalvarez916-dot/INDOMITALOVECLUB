@@ -87,8 +87,8 @@ function mostrarBannerImpersonacion(nombreObjetivo) {
     ">Salir del modo admin</button>
   `;
   document.body.prepend(banner);
-
-  document.body.style.paddingTop = '50px';
+  const header = document.getElementById('header');
+  if (header) header.style.marginTop = '50px';
 
   document.getElementById('btn-salir-impersonacion').onclick = salirImpersonacion;
 }
@@ -97,6 +97,7 @@ function ocultarBannerImpersonacion() {
   const banner = document.getElementById('banner-impersonacion');
   if (banner) {
     banner.remove();
-    document.body.style.paddingTop = '';
+    const header = document.getElementById('header');
+    if (header) header.style.marginTop = '';
   }
 }
