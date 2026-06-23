@@ -111,3 +111,8 @@ function mostrarPanelRol() {
   else if (rol === 'admin') mostrarSeccion('admin');
   else mostrarSeccion('login');
 }
+const _sesionEmailOriginal = Sesion.email.bind(Sesion);
+Sesion.email = function() {
+  if (_impersonarEmailObjetivo) return _impersonarEmailObjetivo;
+  return _sesionEmailOriginal();
+};
