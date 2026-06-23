@@ -1055,3 +1055,152 @@ async function compartirCampana(idCampana, nombreLibro) {
     mostrarToast('No se pudo copiar el link. Copialo manualmente: ' + url, 'error');
   }
 }
+async function abrirEditarCampana(idCampana) {
+  const campana = _campañasAutor.find(c => c.id === idCampana);
+  if (!campana) return;
+
+  mostrarModal('modal-detalle-campana');
+
+  const titulo = document.getElementById('modal-detalle-titulo');
+  const body   = document.getElementById('modal-detalle-body');
+  const footer = document.getElementById('modal-detalle-footer');
+
+  if (titulo) titulo.textContent = `Editar campaña — ${campana.nombreLibro}`;
+  if (footer) footer.innerHTML = '';
+
+  if (body) body.innerHTML = `
+    <form id="form-editar-campana">
+      <div class="form-grupo">
+        <label class="form-label">Nombre del libro</label>
+        <input type="text" class="form-input" value="${campana.nombreLibro}" disabled />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Autor</label>
+        <input type="text" class="form-input" value="${campana.nombreAutor}" disabled />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Sinopsis</label>
+        <textarea id="ec-sinopsis" class="form-textarea" rows="4">${campana.sinopsis || ''}</textarea>
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Género</label>
+        <input type="text" id="ec-genero" class="form-input" value="${campana.genero || ''}" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Link de portada</label>
+        <input type="url" id="ec-link-portada" class="form-input" value="${campana.linkPortada || ''}" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Link EPUB</label>
+        <input type="url" id="ec-link-epub" class="form-input" value="" placeholder="Dejá vacío para no cambiar" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Link PDF</label>
+        <input type="url" id="ec-link-pdf" class="form-input" value="" placeholder="Dejá vacío para no cambiar" />
+      </div>
+      <div id="ec-error" class="mensaje-error" style="display:none;"></div>
+      <div id="ec-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-primario" onclick="guardarEditarCampana('${idCampana}')">Guardar cambios</button>
+      </div>
+    </form>
+  `;
+}
+
+async function guardarEditarCampana(idCampana) {
+  ocultarMensajes('ec-error', 'ec-ok');
+
+  const datos = {
+    sinopsis:    document.getElementById('ec-sinopsis')?.value?.trim(),
+    genero:      document.getElementById('ec-genero')?.value?.trim(),
+    linkPortada: document.getElementById('ec-link-portada')?.value?.trim(),
+    linkEpub:    document.getElementById('ec-link-epub')?.value?.trim(),
+    linkPdf:     document.getElementById('ec-link-pdf')?.value?.trim()
+  };
+
+  const resultado = await llamarBackend('editarCampana', {
+    email:       Sesion.email(),
+    idCampana,
+    ...datos
+  });
+
+  if (!resultado.ok) {
+    mostrarMensajeError('ec-error', resultado.mensaje);
+    return;
+  }
+
+  mostrarMensajeOk('ec-ok', '¡Campaña actualizada correctamente!');
+  setTimeout(async () => {
+    cerrarModales();
+    await cargarCampañasAutor(Sesion.email());
+  }, 1500);
+}
+
+async function abrirEditarLibro(idLibro) {
+  const libro = _librosAutor.find(l => l.id === idLibro);
+  if (!libro) return;
+
+  mostrarModal('modal-detalle-campana');
+
+  const titulo = document.getElementById('modal-detalle-titulo');
+  const body   = document.getElementById('modal-detalle-body');
+  const footer = document.getElementById('modal-detalle-footer');
+
+  if (titulo) titulo.textContent = `Editar libro — ${libro.titulo}`;
+  if (footer) footer.innerHTML = '';
+
+  if (body) body.innerHTML = `
+    <form id="form-editar-libro">
+      <div class="form-grupo">
+        <label class="form-label">Título</label>
+        <input type="text" class="form-input" value="${libro.titulo}" disabled />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Sinopsis</label>
+        <textarea id="el-sinopsis" class="form-textarea" rows="4">${libro.sinopsis || ''}</textarea>
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Género</label>
+        <input type="text" id="el-genero" class="form-input" value="${libro.genero || ''}" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Link de portada</label>
+        <input type="url" id="el-link-portada" class="form-input" value="${libro.linkPortada || ''}" />
+      </div>
+      <div id="el-error" class="mensaje-error" style="display:none;"></div>
+      <div id="el-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-primario" onclick="guardarEditarLibro('${idLibro}')">Guardar cambios</button>
+      </div>
+    </form>
+  `;
+}
+
+async function guardarEditarLibro(idLibro) {
+  ocultarMensajes('el-error', 'el-ok');
+
+  const datos = {
+    sinopsisBreve: document.getElementById('el-sinopsis')?.value?.trim(),
+    genero:        document.getElementById('el-genero')?.value?.trim(),
+    linkPortada:   document.getElementById('el-link-portada')?.value?.trim()
+  };
+
+  const resultado = await llamarBackend('editarLibro', {
+    email:    Sesion.email(),
+    idLibro,
+    ...datos
+  });
+
+  if (!resultado.ok) {
+    mostrarMensajeError('el-error', resultado.mensaje);
+    return;
+  }
+
+  mostrarMensajeOk('el-ok', '¡Libro actualizado correctamente!');
+  setTimeout(async () => {
+    cerrarModales();
+    await cargarBibliotecaPanel(Sesion.email());
+  }, 1500);
+}
