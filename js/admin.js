@@ -96,6 +96,10 @@ function construirFilaUsuarioAdmin(u) {
     ? `<button class="btn-secundario btn-sm" onclick="accionUsuarioAdmin('${u.email}', 'desbloquear')">Desbloquear</button>`
     : `<button class="btn-secundario btn-sm btn-peligro" onclick="accionUsuarioAdmin('${u.email}', 'bloquear')">Bloquear</button>`;
 
+  const botonVerComo = u.rol !== 'admin'
+    ? `<button class="btn-secundario btn-sm" onclick="iniciarImpersonacion('${u.email}')">Ver como</button>`
+    : '';
+
   return `
     <tr>
       <td>${u.email}</td>
@@ -104,7 +108,7 @@ function construirFilaUsuarioAdmin(u) {
       <td>${planTexto}</td>
       <td>${estadoBadge}</td>
       <td style="font-size:12px;">${u.fechaRegistro ? u.fechaRegistro.split(' ')[0] : '—'}</td>
-      <td>${botonBloqueo}</td>
+      <td style="display:flex; gap:6px;">${botonBloqueo}${botonVerComo}</td>
     </tr>
   `;
 }
