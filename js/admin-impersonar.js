@@ -74,13 +74,15 @@ async function iniciarImpersonacion(emailObjetivo) {
   mostrarBannerImpersonacion(resultado.datos.alias || emailObjetivo);
   mostrarToast(`Ahora estás viendo la plataforma como ${resultado.datos.alias || emailObjetivo}.`, 'ok');
 
-  // Recarga la sección actual para reflejar los datos del usuario impersonado
-  if (typeof mostrarSeccion === 'function') {
-    mostrarSeccion('feed');
-  } else {
-    location.reload();
+  // Actualiza el header para mostrar la navegación del usuario impersonado
+  if (typeof mostrarHeaderLogueado === 'function') {
+    mostrarHeaderLogueado({
+      alias: resultado.datos.alias || emailObjetivo,
+      email: resultado.datos.email,
+      rol: resultado.datos.rol
+    });
   }
-}
+  mostrarSeccion('feed');
 
 /**
  * Sale del modo impersonación y vuelve a la sesión de admin normal.
