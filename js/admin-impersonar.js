@@ -4,6 +4,7 @@
 
 let _impersonarEmailObjetivo = null;
 let _impersonarEmailAdminReal = null;
+let _impersonarRolObjetivo = null; 
 
 const _llamarBackendOriginal = llamarBackend;
 
@@ -37,6 +38,7 @@ async function iniciarImpersonacion(emailObjetivo) {
 
   _impersonarEmailObjetivo = emailObjetivo;
   _impersonarEmailAdminReal = emailAdmin;
+  _impersonarRolObjetivo = resultado.datos.rol;
 
   mostrarBannerImpersonacion(resultado.datos.alias || emailObjetivo);
   mostrarToast(`Ahora estás viendo la plataforma como ${resultado.datos.alias || emailObjetivo}.`, 'ok');
@@ -58,6 +60,7 @@ async function iniciarImpersonacion(emailObjetivo) {
 function salirImpersonacion() {
   _impersonarEmailObjetivo = null;
   _impersonarEmailAdminReal = null;
+  _impersonarRolObjetivo = null;
   ocultarBannerImpersonacion();
   location.reload();
 }
@@ -100,4 +103,11 @@ function ocultarBannerImpersonacion() {
     const header = document.getElementById('header');
     if (header) header.style.marginTop = '';
   }
+}
+function mostrarPanelRol() {
+  const rol = _impersonarRolObjetivo || Sesion.rol();
+  if (rol === 'autor') mostrarSeccion('panel-autor');
+  else if (rol === 'reseñador') mostrarSeccion('panel-resenador');
+  else if (rol === 'admin') mostrarSeccion('admin');
+  else mostrarSeccion('login');
 }
