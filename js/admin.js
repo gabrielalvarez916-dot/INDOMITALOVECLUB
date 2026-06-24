@@ -19,7 +19,8 @@ async function cargarAdmin() {
   await Promise.all([
     cargarUsuariosAdmin(email),
     cargarCampañasAdmin(email),
-    cargarPagosAdmin(email)
+    cargarPagosAdmin(email),
+    cargarTicketsAdmin(email)   
   ]);
 }
 
@@ -417,4 +418,93 @@ async function cargarEstadisticasAdmin() {
       <div class="stat-card"><p class="stat-label">Completion del mes</p><p class="stat-valor">${reseñas.completionMes}%</p></div>
     </div>
   `;
+}
+// ────────────────────────────────────────────────────────────
+// SOPORTE (TICKETS)
+// ────────────────────────────────────────────────────────────
+
+async function cargarTicketsAdmin(email) {
+  const contenedor = document.getElementById('admin-tickets-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const resultado = await llamarBackend('adminListarTickets', { email });
+
+  if (!resultado.ok) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+    return;
+  }
+
+  const tickets = resultado.datos.tickets || [];
+
+  if (tickets.length === 0) {
+    contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay tickets de soporte.</p></div>`;
+    return;
+  }
+
+  contenedor.innerHTML = `
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Asunto</th>
+          <th>Mensaje</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tickets.map(t => construirFilaTicketAdmin(t)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function construirFilaTicketAdmin(t) {
+  const estadoBadge = t.Estado === 'cerrado'
+    ? '<span class="badge badge-cancelada">Cerrado</span>'
+    : t.Estado === 'respondido'
+    ? '<span class="badge badge-aprobada">Respondido</span>'
+    : '<span class="badge badge-pendiente">Pendiente</span>';
+
+  const botones = t.Estado === 'cerrado' ? '' : `
+    ${t.Estado !== 'respondido' ? `<button class="btn-secundario btn-sm" onclick="accionTicketAdmin('${t.ID_Ticket}', 'respondido')">Respondido</button>` : ''}
+    <button class="btn-secundario btn-sm btn-peligro" onclick="accionTicketAdmin('${t.ID_Ticket}', 'cerrado')">Cerrar</button>
+  `;
+
+  return `
+    <tr>
+      <td style="font-size:12px;">${t.Email}</td>
+      <td><span class="badge badge-nivel">${t.Rol || '—'}</span></td>
+      <td>${t.Asunto}</td>
+      <td style="max-width:280px; font-size:12px;">${t.Mensaje}</td>
+      <td style="font-size:12px;">${t.Fecha ? t.Fecha.split(' ')[0] : '—'}</td>
+      <td>${estadoBadge}</td>
+      <td style="display:flex; gap:6px;">${botones}</td>
+    </tr>
+  `;
+}
+
+async function accionTicketAdmin(idTicket, nuevoEstado) {
+  const email = Sesion.email();
+
+  const confirmText = nuevoEstado === 'cerrado' ? '¿Cerrar este ticket?' : '¿Marcar como respondido?';
+  if (!confirm(confirmText)) return;
+
+  const resultado = await llamarBackend('adminActualizarEstadoTicket', {
+    email,
+    idTicket,
+    nuevoEstado
+  });
+
+  if (!resultado.ok) {
+    mostrarToast(resultado.mensaje, 'error');
+    return;
+  }
+
+  mostrarToast('Ticket actualizado.', 'ok');
+  await cargarTicketsAdmin(email);
 }
