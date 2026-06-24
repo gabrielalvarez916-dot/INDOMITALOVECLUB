@@ -127,6 +127,11 @@ function mostrarPasoEleccionRol() {
   _toggleElemento('login-cargando', false);
   _toggleElemento('login-paso1', false);
   _toggleElemento('login-paso2', true);
+
+  const inputNombre = document.getElementById('paso2-nombre');
+  const inputApellido = document.getElementById('paso2-apellido');
+  if (inputNombre) inputNombre.value = _nombreGooglePendiente || '';
+  if (inputApellido) inputApellido.value = _apellidoGooglePendiente || '';
 }
 
 async function seleccionarRol(rol) {
