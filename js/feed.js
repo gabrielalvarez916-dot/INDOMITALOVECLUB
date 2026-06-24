@@ -385,10 +385,10 @@ const Slider = (() => {
     const navEl = document.getElementById('slide-nav');
     if (!sliderEl || !navEl) return;
 
-    const campañasSlider = _campañasTodas.slice(0, 5);
+    const conPortada = _campañasTodas.filter(c => c.portadaValida);
+    mezclar(conPortada);
+    const campañasSlider = conPortada.slice(0, 5);
     if (campañasSlider.length === 0) return;
-
-    mezclar(campañasSlider);
 
     const slidesHtml = campañasSlider.map(c => construirSlide(c)).join('');
     sliderEl.insertAdjacentHTML('beforeend', slidesHtml);
