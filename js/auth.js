@@ -141,14 +141,23 @@ async function seleccionarRol(rol) {
     return;
   }
 
+  const nombre = document.getElementById('paso2-nombre')?.value.trim();
+  const apellido = document.getElementById('paso2-apellido')?.value.trim();
+
+  if (!nombre || !apellido) {
+    mostrarErrorLogin('Nombre y apellido son obligatorios.');
+    _toggleElemento('login-paso2', true);
+    return;
+  }
+
   _toggleElemento('login-paso2', false);
   _toggleElemento('login-cargando', true);
   _ocultarMensajes('login-error');
 
   const resultado = await llamarBackend('registrarUsuario', {
     email: _emailGooglePendiente,
-    nombre: _nombreGooglePendiente,
-    apellido: _apellidoGooglePendiente,
+    nombre: nombre,
+    apellido: apellido,
     rol: rol,
     googleToken: _tokenGooglePendiente
   });
