@@ -281,3 +281,53 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarSesionActiva();
   }
 });
+// ────────────────────────────────────────────────────────────
+// MODAL DE ACTUALIZACIONES
+// ────────────────────────────────────────────────────────────
+
+async function verificarModalActualizacion() {
+  const usuario = Sesion.obtener();
+  if (!usuario || !usuario.email) return;
+
+  const tipoActualizacion = 'actualizacion_junio_2026';
+
+  const resultado = await llamarBackend('verificarModalVisto', {
+    email: usuario.email,
+    tipoActualizacion: tipoActualizacion
+  });
+
+  if (resultado.ok && resultado.datos.debeVerModal) {
+    mostrarModalActualizaciones(tipoActualizacion);
+  }
+}
+
+function mostrarModalActualizaciones(tipoActualizacion) {
+  const modal = document.getElementById('modal-actualizaciones');
+  if (!modal) {
+    console.error('Modal de actualizaciones no encontrado en HTML');
+    return;
+  }
+  
+  const overlay = document.getElementById('modal-overlay');
+  if (overlay) overlay.style.display = 'block';
+  modal.style.display = 'block';
+  
+  const btnEntendido = document.getElementById('btn-modal-actualizaciones-entendido');
+  if (btnEntendido) {
+    btnEntendido.onclick = () => registrarModalVisto(tipoActualizacion);
+  }
+}
+
+async function registrarModalVisto(tipoActualizacion) {
+  const usuario = Sesion.obtener();
+  if (!usuario) return;
+
+  const resultado = await llamarBackend('registrarModalVisto', {
+    email: usuario.email,
+    tipoActualizacion: tipoActualizacion
+  });
+
+  if (resultado.ok) {
+    cerrarModales();
+  }
+}
