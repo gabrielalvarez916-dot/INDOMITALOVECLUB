@@ -360,6 +360,10 @@ async function registrarModalVisto(tipoActualizacion) {
   });
 
   if (resultado.ok) {
-    cerrarModales();
+    const modal = document.getElementById('modal-actualizaciones');
+    const overlay = document.getElementById('modal-overlay');
+    if (modal) modal.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
   }
 }
