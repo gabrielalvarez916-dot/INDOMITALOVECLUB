@@ -178,7 +178,7 @@ async function seleccionarRol(rol) {
 function completarLogin(usuario) {
   Sesion.guardar(usuario);
   mostrarHeaderLogueado(usuario);
-  verificarModalActualizacion();  // ← AGREGA ESTA LÍNEA AQUÍ
+  mostrarModalActualizaciones('actualizacion_junio_2026');
 
   _tokenGooglePendiente = null;
   _emailGooglePendiente = null;
