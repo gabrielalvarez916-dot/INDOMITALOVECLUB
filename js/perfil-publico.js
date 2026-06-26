@@ -103,7 +103,7 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
           : '';
         return `
           <div class="pp-libro-card">
-            ${libro.portada ? `<img src="${libro.portada}" alt="${_esc(libro.titulo)}" class="pp-libro-portada" />` : '<div class="pp-libro-portada pp-portada-placeholder">📖</div>'}
+            ${libro.portada ? `<img src="${libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada}" alt="${_esc(libro.titulo)}" class="pp-libro-portada" />` : '<div class="pp-libro-portada pp-portada-placeholder">📖</div>'}
             <div class="pp-libro-info">
               <p class="pp-libro-titulo">${_esc(libro.titulo)} ${badge}</p>
               ${libro.genero ? `<p class="pp-libro-genero">${_esc(libro.genero)}</p>` : ''}
