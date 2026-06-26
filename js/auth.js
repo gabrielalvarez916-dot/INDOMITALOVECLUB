@@ -308,6 +308,41 @@ function mostrarModalActualizaciones(tipoActualizacion) {
     return;
   }
   
+  const contenedor = document.getElementById('modal-actualizaciones-contenido');
+  if (contenedor) {
+    contenedor.innerHTML = `
+      <p><strong>Ahora cada reseñador y aut@r tiene un perfil público</strong> que muestra su trayectoria, reseñas entregadas, calificaciones y redes sociales.</p>
+      
+      <p style="margin-top:16px;"><strong>📅 Fechas límite: Clarificamos la diferencia</strong></p>
+      <p>PARA RESEÑADORES:</p>
+      <ul style="margin-left:16px;">
+        <li>Fecha de Postulación: hasta cuándo pueden postularse</li>
+        <li>Fecha de Entrega: 30 días desde que el aut@r aprueba tu postulación</li>
+      </ul>
+
+      <p style="margin-top:12px;">PARA AUTORES:</p>
+      <ul style="margin-left:16px;">
+        <li>Ven ambas fechas en el panel para cada reseñador aprobado</li>
+      </ul>
+
+      <p style="margin-top:16px;"><strong>🔗 Compartir campaña (Aut@res)</strong></p>
+      <p>Ahora cada campaña activa tiene un botón COMPARTIR para difundir fácilmente en Instagram, WhatsApp, Twitter y más.</p>
+
+      <p style="margin-top:16px;"><strong>✏️ Editar campañas y libros (Aut@res)</strong></p>
+      <p>Mientras tu campaña está activa, podés actualizar los datos de tu libro sin perder postulaciones. Cuando la campaña venza, necesitarás crear una nueva.</p>
+
+      <p style="margin-top:16px;"><strong>🐛 Bugs corregidos</strong></p>
+      <ul style="margin-left:16px;">
+        <li>Portadas que no se mostraban correctamente</li>
+        <li>Errores en la carga de reseñas</li>
+        <li>Problemas en dispositivos móviles</li>
+        <li>Mejoras de velocidad</li>
+      </ul>
+
+      <p style="margin-top:16px; color:#888; font-size:13px;">¿Dudas? Respondé el mail de actualizaciones o usá el botón de soporte 💬</p>
+    `;
+  }
+  
   const overlay = document.getElementById('modal-overlay');
   if (overlay) overlay.style.display = 'block';
   modal.style.display = 'block';
@@ -317,7 +352,6 @@ function mostrarModalActualizaciones(tipoActualizacion) {
     btnEntendido.onclick = () => registrarModalVisto(tipoActualizacion);
   }
 }
-
 async function registrarModalVisto(tipoActualizacion) {
   const usuario = Sesion.obtener();
   if (!usuario) return;
