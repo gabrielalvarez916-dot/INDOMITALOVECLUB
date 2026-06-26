@@ -460,7 +460,10 @@ async function cargarRankingReseñador(email) {
           ${destacados.map(r => `
             <div class="ranking-resenador-avatar-item">
               <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-avatar-img" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
-              <p class="ranking-resenador-avatar-alias">${r.alias}</p>
+              <p class="ranking-resenador-avatar-alias"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+  ${r.alias}
+</p>
               <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
             </div>
           `).join('')}
@@ -480,7 +483,10 @@ async function cargarRankingReseñador(email) {
             <p class="ranking-top-item-pos">#${r.posicion}</p>
             <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
             <div class="ranking-top-item-info">
-              <p class="ranking-top-item-titulo">${r.alias}</p>
+              <p class="ranking-top-item-titulo"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+  ${r.alias}
+</p>
               <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
             </div>
             <div style="text-align:right;">
@@ -503,7 +509,10 @@ async function cargarRankingReseñador(email) {
             <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
             <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
             <div class="ranking-top-item-info">
-              <p class="ranking-top-item-titulo">${r.alias}</p>
+              <p class="ranking-top-item-titulo"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+  ${r.alias}
+</p>
             </div>
             <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
           </div>
