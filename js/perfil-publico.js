@@ -178,6 +178,18 @@ function _pintarPerfilReseñador(perfil, postulaciones) {
     }
   }
 
+  // Descripción lectora
+const descripcionEl = document.getElementById('pp-reseñador-descripcion');
+if (descripcionEl) {
+  const bloqueDescripcion = document.getElementById('pp-bloque-descripcion');
+  if (perfil.descripcion) {
+    descripcionEl.textContent = perfil.descripcion;
+    if (bloqueDescripcion) bloqueDescripcion.style.display = '';
+  } else {
+    if (bloqueDescripcion) bloqueDescripcion.style.display = 'none';
+  }
+}
+  
   const tropesCont = document.getElementById('pp-reseñador-tropes');
   if (tropesCont) {
     if (perfil.tropesFavoritos) {
