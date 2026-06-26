@@ -303,57 +303,53 @@ async function verificarModalActualizacion() {
 
 function mostrarModalActualizaciones(tipoActualizacion) {
   const modal = document.getElementById('modal-actualizaciones');
-  if (!modal) {
-    console.error('Modal de actualizaciones no encontrado en HTML');
+  const overlay = document.getElementById('modal-overlay');
+  const contenedor = document.getElementById('modal-actualizaciones-contenido');
+  const btnEntendido = document.getElementById('btn-modal-actualizaciones-entendido');
+
+  if (!modal || !overlay || !contenedor || !btnEntendido) {
     return;
   }
-  
-  const contenedor = document.getElementById('modal-actualizaciones-contenido');
-  if (contenedor) {
-    contenedor.innerHTML = `
-      <p><strong>Ahora cada reseñador y aut@r tiene un perfil público</strong> que muestra su trayectoria, reseñas entregadas, calificaciones y redes sociales.</p>
-      
-      <p style="margin-top:16px;"><strong>📅 Fechas límite: Clarificamos la diferencia</strong></p>
-      <p>PARA RESEÑADORES:</p>
-      <ul style="margin-left:16px;">
-        <li>Fecha de Postulación: hasta cuándo pueden postularse</li>
-        <li>Fecha de Entrega: 30 días desde que el aut@r aprueba tu postulación</li>
-      </ul>
 
-      <p style="margin-top:12px;">PARA AUTORES:</p>
-      <ul style="margin-left:16px;">
-        <li>Ven ambas fechas en el panel para cada reseñador aprobado</li>
-      </ul>
+  contenedor.innerHTML = `
+    <p><strong>Ahora cada reseñador y aut@r tiene un perfil público</strong> que muestra su trayectoria, reseñas entregadas, calificaciones y redes sociales.</p>
+    
+    <p style="margin-top:16px;"><strong>📅 Fechas límite: Clarificamos la diferencia</strong></p>
+    <p><strong>PARA RESEÑADORES:</strong></p>
+    <ul style="margin-left:16px;">
+      <li>Fecha de Postulación: hasta cuándo pueden postularse</li>
+      <li>Fecha de Entrega: 30 días desde que el aut@r aprueba tu postulación</li>
+    </ul>
 
-      <p style="margin-top:16px;"><strong>🔗 Compartir campaña (Aut@res)</strong></p>
-      <p>Ahora cada campaña activa tiene un botón COMPARTIR para difundir fácilmente en Instagram, WhatsApp, Twitter y más.</p>
+    <p style="margin-top:12px;"><strong>PARA AUTORES:</strong></p>
+    <ul style="margin-left:16px;">
+      <li>Ven ambas fechas en el panel para cada reseñador aprobado</li>
+    </ul>
 
-      <p style="margin-top:16px;"><strong>✏️ Editar campañas y libros (Aut@res)</strong></p>
-      <p>Mientras tu campaña está activa, podés actualizar los datos de tu libro sin perder postulaciones. Cuando la campaña venza, necesitarás crear una nueva.</p>
+    <p style="margin-top:16px;"><strong>🔗 Compartir campaña (Aut@res)</strong></p>
+    <p>Ahora cada campaña activa tiene un botón COMPARTIR para difundir fácilmente en Instagram, WhatsApp, Twitter y más.</p>
 
-      <p style="margin-top:16px;"><strong>🐛 Bugs corregidos</strong></p>
-      <ul style="margin-left:16px;">
-        <li>Portadas que no se mostraban correctamente</li>
-        <li>Errores en la carga de reseñas</li>
-        <li>Problemas en dispositivos móviles</li>
-        <li>Mejoras de velocidad</li>
-      </ul>
+    <p style="margin-top:16px;"><strong>✏️ Editar campañas y libros (Aut@res)</strong></p>
+    <p>Mientras tu campaña está activa, podés actualizar los datos de tu libro sin perder postulaciones. Cuando la campaña venza, necesitarás crear una nueva.</p>
 
-      <p style="margin-top:16px; color:#888; font-size:13px;">¿Dudas? Respondé el mail de actualizaciones o usá el botón de soporte 💬</p>
-    `;
-  }
-  
-   const overlay = document.getElementById('modal-overlay');
-  if (overlay) overlay.classList.add('activo');
-  modal.classList.add('activo');
-  
-  // Evita scroll
+    <p style="margin-top:16px;"><strong>🐛 Bugs corregidos</strong></p>
+    <ul style="margin-left:16px;">
+      <li>Portadas que no se mostraban correctamente</li>
+      <li>Errores en la carga de reseñas</li>
+      <li>Problemas en dispositivos móviles</li>
+      <li>Mejoras de velocidad</li>
+    </ul>
+
+    <p style="margin-top:16px; color:#888; font-size:13px;">¿Dudas? Respondé el mail de actualizaciones o usá el botón de soporte 💬</p>
+  `;
+
+  overlay.style.display = 'block';
+  modal.style.display = 'block';
   document.body.style.overflow = 'hidden';
-  
-  const btnEntendido = document.getElementById('btn-modal-actualizaciones-entendido');
-  if (btnEntendido) {
-    btnEntendido.onclick = () => registrarModalVisto(tipoActualizacion);
-  }
+
+  btnEntendido.onclick = () => {
+    registrarModalVisto(tipoActualizacion);
+  };
 }
 
 async function registrarModalVisto(tipoActualizacion) {
