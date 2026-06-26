@@ -367,7 +367,10 @@ async function verReseñasCampana(idCampana, nombreLibro) {
   if (body) {
    body.innerHTML = reseñas.map(r => `
   <div class="resena-card" style="border-bottom:1px solid var(--crema-oscura); padding:16px 0;">
-    <p style="font-weight:600;">${r.reseñador?.alias || 'Reseñador'}</p>
+    <p style="font-weight:600; ${r.reseñador?.id ? 'cursor:pointer; color:var(--bordo);' : ''}"
+   ${r.reseñador?.id ? `onclick="abrirPerfilPublico('${r.reseñador.id}', 'reseñador')"` : ''}>
+  ${r.reseñador?.alias || 'Reseñador'}
+</p>
     <p style="font-size:12px; color:var(--gris-suave);">Entregada: ${formatearFechaAmigable(r.fechaEntrega)}</p>
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0;">
       ${r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link">Instagram</a>` : ''}
