@@ -89,7 +89,7 @@ async function _cargarPerfilReseñador(idReseñador) {
 
 function _pintarPerfilAutor(perfil, libros, campañas) {
   // Cabecera común
-  _pintarCabeceraComun(perfil, '-r');
+  _pintarCabeceraComun(perfil, '');
 
   // Libros
   const librosCont = document.getElementById('pp-autor-libros');
@@ -139,7 +139,7 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
 
 function _pintarPerfilReseñador(perfil, postulaciones) {
   // Cabecera común
-  _pintarCabeceraComun(perfil);
+  _pintarCabeceraComun(perfil, '-r');
 
   // Badge de nivel (siempre visible)
   const nivelCont = document.getElementById('pp-reseñador-nivel');
