@@ -311,38 +311,36 @@ function mostrarModalActualizaciones(tipoActualizacion) {
     return;
   }
 
-  contenedor.innerHTML = `
-    <p><strong>Ahora cada reseñador y aut@r tiene un perfil público</strong> que muestra su trayectoria, reseñas entregadas, calificaciones y redes sociales.</p>
-    
-    <p style="margin-top:16px;"><strong>📅 Fechas límite: Clarificamos la diferencia</strong></p>
-    <p><strong>PARA RESEÑADORES:</strong></p>
-    <ul style="margin-left:16px;">
-      <li>Fecha de Postulación: hasta cuándo pueden postularse</li>
-      <li>Fecha de Entrega: 30 días desde que el aut@r aprueba tu postulación</li>
-    </ul>
+ contenedor.innerHTML = `
+<p>Estamos emocionad@s de compartirte todas las mejoras que integramos en estos últimos días. Acá está el resumen de lo nuevo:</p>
 
-    <p style="margin-top:12px;"><strong>PARA AUTORES:</strong></p>
-    <ul style="margin-left:16px;">
-      <li>Ven ambas fechas en el panel para cada reseñador aprobado</li>
-    </ul>
+<p style="margin-top:16px;"><strong>📱 PERFILES PÚBLICOS DE RESEÑADOR Y AUTOR</strong></p>
+<p>Ahora cada reseñador y aut@r tiene un perfil público que muestra su trayectoria, reseñas entregadas, calificaciones y redes sociales.</p>
+<p>✓ Los puedes encontrar:
+  <br>• Desde las tarjetas de campañas (clickeá en el aut@r)
+  <br>• En el perfil de cualquier reseñador desde las reseñas</p>
+<p>Mostrá tu trabajo y conectá con la comunidad 💜</p>
 
-    <p style="margin-top:16px;"><strong>🔗 Compartir campaña (Aut@res)</strong></p>
-    <p>Ahora cada campaña activa tiene un botón COMPARTIR para difundir fácilmente en Instagram, WhatsApp, Twitter y más.</p>
+<p style="margin-top:16px;"><strong>📅 FECHAS LÍMITE: CLARIFICAMOS LA DIFERENCIA</strong></p>
+<p><strong>PARA RESEÑADORES:</strong>
+  <br>• Fecha de Postulación: hasta cuándo pueden postularse a la campaña
+  <br>• Fecha de Entrega: 30 días desde que el aut@r aprueba tu postulación</p>
+<p><strong>PARA AUTORES:</strong>
+  <br>• Ven ambas fechas en el panel para cada reseñador aprobado
+  <br>• La fecha de entrega es fija: 30 días desde la aprobación</p>
 
-    <p style="margin-top:16px;"><strong>✏️ Editar campañas y libros (Aut@res)</strong></p>
-    <p>Mientras tu campaña está activa, podés actualizar los datos de tu libro sin perder postulaciones. Cuando la campaña venza, necesitarás crear una nueva.</p>
+<p style="margin-top:16px;"><strong>🔗 COMPARTIR CAMPAÑA (Aut@res)</strong></p>
+<p>Ahora cada campaña activa tiene un botón COMPARTIR para difundir tu campaña fácilmente en redes.</p>
 
-    <p style="margin-top:16px;"><strong>🐛 Bugs corregidos</strong></p>
-    <ul style="margin-left:16px;">
-      <li>Portadas que no se mostraban correctamente</li>
-      <li>Errores en la carga de reseñas</li>
-      <li>Problemas en dispositivos móviles</li>
-      <li>Mejoras de velocidad</li>
-    </ul>
+<p style="margin-top:16px;"><strong>✏️ EDITAR CAMPAÑAS Y LIBROS (Aut@res)</strong></p>
+<p>Mientras tu campaña está activa, podés actualizar los datos de tu libro sin perder postulaciones. Cuando la campaña venza, necesitarás crear una nueva.</p>
 
-    <p style="margin-top:16px; color:#888; font-size:13px;">¿Dudas? Respondé el mail de actualizaciones o usá el botón de soporte 💬</p>
-  `;
+<p style="margin-top:16px;"><strong>🐛 BUGS CORREGIDOS</strong></p>
+<p>✓ Portadas que no se mostraban correctamente<br>✓ Errores en la carga de reseñas<br>✓ Problemas en dispositivos móviles<br>✓ Mejoras de velocidad</p>
 
+<p style="margin-top:16px; color:#888; font-size:13px;">¿Dudas? Respondé el mail o usá el botón de soporte 💬</p>
+`;
+  
   overlay.style.display = 'block';
   modal.style.display = 'block';
   document.body.style.overflow = 'hidden';
