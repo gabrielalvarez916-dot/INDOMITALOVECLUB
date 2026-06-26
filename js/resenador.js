@@ -147,7 +147,10 @@ function construirCardPostulacionReseñador(p) {
           <p class="postulacion-resena-titulo">${c.nombreLibro}</p>
           ${badgeEstado(p.estado)}
         </div>
-        <p class="postulacion-resena-autor">por ${c.nombreAutor}</p>
+        <p class="postulacion-resena-autor"
+   ${c.idAutor ? `onclick="abrirPerfilPublico('${c.idAutor}', 'autor')" style="cursor:pointer;"` : ''}>
+  por ${c.nombreAutor}
+</p>
         ${p.estado === 'aprobada' ? `<p class="postulacion-resena-fecha">📅 Fecha límite para entregar: ${formatearFechaAmigable(p.fechaLimiteEntrega || c.fechaLimite)}</p>` : ''}
         ${linksLibro}
       </div>
@@ -218,7 +221,10 @@ function construirCardArcActivo(p) {
       </div>
       <div class="arc-card-body">
         <p class="arc-card-titulo">${c.nombreLibro}</p>
-        <p class="arc-card-autor">por ${c.nombreAutor}</p>
+        <p class="arc-card-autor"
+   ${c.idAutor ? `onclick="abrirPerfilPublico('${c.idAutor}', 'autor')" style="cursor:pointer;"` : ''}>
+  por ${c.nombreAutor}
+</p>
         <p class="arc-card-fecha">📅 Vence el ${formatearFechaAmigable(p.fechaLimiteEntrega || c.fechaLimite)}</p>
         <div class="arc-card-acciones">
           ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.linkEpub}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
