@@ -16,10 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const usuario = Sesion.obtener();
 
   if (usuario) {
-    // Hay sesión activa: muestra el header con usuario y va al feed
     mostrarHeaderLogueado(usuario);
     mostrarSeccion('feed');
-    verificarModalActualizacion();
+    setTimeout(() => {
+      if (typeof verificarModalActualizacion === 'function') {
+        verificarModalActualizacion();
+      }
+    }, 100);
   } else {
     // No hay sesión: muestra pantalla de login
     mostrarHeaderDeslogueado();
