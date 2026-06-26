@@ -89,7 +89,7 @@ async function _cargarPerfilReseñador(idReseñador) {
 
 function _pintarPerfilAutor(perfil, libros, campañas) {
   // Cabecera común
-  _pintarCabeceraComun(perfil);
+  _pintarCabeceraComun(perfil, '-r');
 
   // Libros
   const librosCont = document.getElementById('pp-autor-libros');
@@ -217,17 +217,17 @@ function _pintarPerfilReseñador(perfil, postulaciones) {
 // PINTAR: CABECERA COMÚN (avatar, alias, país, ciudad, redes)
 // ────────────────────────────────────────────────────────────
 
-function _pintarCabeceraComun(perfil) {
-  const avatarEl = document.getElementById('pp-avatar');
+function _pintarCabeceraComun(perfil, sufijo = '') {
+  const avatarEl = document.getElementById('pp-avatar' + sufijo);
   if (avatarEl) {
     avatarEl.src = perfil.fotoPerfil || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK';
     avatarEl.alt = perfil.alias || 'Avatar';
   }
 
-  const aliasEl = document.getElementById('pp-alias');
+  const aliasEl = document.getElementById('pp-alias' + sufijo);
   if (aliasEl) aliasEl.textContent = perfil.alias || '—';
 
-  const ubicacionEl = document.getElementById('pp-ubicacion');
+  const ubicacionEl = document.getElementById('pp-ubicacion' + sufijo);
   if (ubicacionEl) {
     const partes = [perfil.ciudad, perfil.pais].filter(Boolean);
     ubicacionEl.textContent = partes.length ? partes.join(', ') : '';
@@ -235,7 +235,7 @@ function _pintarCabeceraComun(perfil) {
   }
 
   // Redes sociales
-  const redesEl = document.getElementById('pp-redes');
+  const redesEl = document.getElementById('pp-redes' + sufijo);
   if (redesEl) {
     const redes = [];
     if (perfil.instagram) redes.push(`<a href="${_esc(perfil.instagram)}" target="_blank" class="pp-red-link pp-red-instagram">Instagram</a>`);
@@ -245,7 +245,6 @@ function _pintarCabeceraComun(perfil) {
     redesEl.style.display = redes.length ? '' : 'none';
   }
 }
-
 
 // ────────────────────────────────────────────────────────────
 // CONTROL DEL MODAL
