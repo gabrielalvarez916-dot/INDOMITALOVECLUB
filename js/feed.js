@@ -147,7 +147,10 @@ const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
     <div class="campana-card-horizontal" onclick="verDetalleCampaña('${c.id}')">
       ${portadaHtml}
       <div class="campana-info">
-        <p class="campana-autor">${c.nombreAutor}</p>
+        <p class="campana-autor"
+   ${c.idAutor ? `onclick="event.stopPropagation(); abrirPerfilPublico('${c.idAutor}', 'autor')" style="cursor:pointer;"` : ''}>
+  ${c.nombreAutor}
+</p>
         <h3 class="campana-titulo">${c.nombreLibro}</h3>
         ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
         ${c.coincidenciaTropes !== undefined ? `
