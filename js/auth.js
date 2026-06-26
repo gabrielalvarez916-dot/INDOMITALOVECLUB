@@ -178,6 +178,7 @@ async function seleccionarRol(rol) {
 function completarLogin(usuario) {
   Sesion.guardar(usuario);
   mostrarHeaderLogueado(usuario);
+  verificarModalActualizacion();  // ← AGREGA ESTA LÍNEA AQUÍ
 
   _tokenGooglePendiente = null;
   _emailGooglePendiente = null;
@@ -198,7 +199,6 @@ function completarLogin(usuario) {
 
   mostrarToast(`¡Bienvenida, ${usuario.alias || usuario.nombre}!`, 'ok');
 }
-
 
 // ────────────────────────────────────────────────────────────
 // VERIFICACIÓN DE SESIÓN
