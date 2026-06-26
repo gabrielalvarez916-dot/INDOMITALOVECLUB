@@ -343,15 +343,19 @@ function mostrarModalActualizaciones(tipoActualizacion) {
     `;
   }
   
-  const overlay = document.getElementById('modal-overlay');
-  if (overlay) overlay.style.display = 'block';
-  modal.style.display = 'block';
+   const overlay = document.getElementById('modal-overlay');
+  if (overlay) overlay.classList.add('activo');
+  modal.classList.add('activo');
+  
+  // Evita scroll
+  document.body.style.overflow = 'hidden';
   
   const btnEntendido = document.getElementById('btn-modal-actualizaciones-entendido');
   if (btnEntendido) {
     btnEntendido.onclick = () => registrarModalVisto(tipoActualizacion);
   }
 }
+
 async function registrarModalVisto(tipoActualizacion) {
   const usuario = Sesion.obtener();
   if (!usuario) return;
