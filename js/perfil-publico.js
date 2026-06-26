@@ -123,8 +123,8 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
       campañasCont.innerHTML = campañas.map(c => `
         <div class="pp-campana-card">
           <p class="pp-campana-titulo">${_esc(c.nombreLibro)}</p>
-          ${c.fechaLimite ? `<p class="pp-campana-fecha">Fecha límite: ${_esc(c.fechaLimite)}</p>` : ''}
-          <button class="btn-secundario btn-sm" onclick="verDetalleCampana('${_esc(c.id)}'); cerrarModalPerfilPublico();">
+          ${c.fechaLimite ? `<p class="pp-campana-fecha">Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
+          <button class="btn-secundario btn-sm" onclick="cerrarModalPerfilPublico(); verDetalleCampaña('${_esc(c.id)}');">
             Ver campaña
           </button>
         </div>`).join('');
