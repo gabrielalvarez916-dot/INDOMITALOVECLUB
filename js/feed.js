@@ -147,8 +147,8 @@ const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
     <div class="campana-card-horizontal" onclick="verDetalleCampaña('${c.id}')">
       ${portadaHtml}
       <div class="campana-info">
-        <p class="campana-autor"
-   ${c.idAutor ? `onclick="event.stopPropagation(); abrirPerfilPublico('${c.idAutor}', 'autor')" style="cursor:pointer;"` : ''}>
+<p class="campana-autor"
+   ${c.idAutor ? `onclick="abrirPerfilAutorFeed(event, '${c.idAutor}')" style="cursor:pointer;"` : ''}>
   ${c.nombreAutor}
 </p>
         <h3 class="campana-titulo">${c.nombreLibro}</h3>
@@ -577,4 +577,9 @@ const BannerPublicitario = (() => {
 
 function cargarBannerPublicitario() {
   BannerPublicitario.cargar();
+}
+function abrirPerfilAutorFeed(event, idAutor) {
+  event.stopPropagation();
+  event.preventDefault();
+  abrirPerfilPublico(idAutor, 'autor');
 }
