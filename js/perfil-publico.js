@@ -232,7 +232,12 @@ if (descripcionEl) {
 function _pintarCabeceraComun(perfil, sufijo = '') {
   const avatarEl = document.getElementById('pp-avatar' + sufijo);
   if (avatarEl) {
-    avatarEl.src = perfil.fotoPerfil || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK';
+    const _resolverAvatar = (url) => {
+  if (!url) return '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK';
+  if (url.startsWith('/')) return 'https://indomitaloveclub.vercel.app' + url;
+  return url;
+};
+avatarEl.src = _resolverAvatar(perfil.fotoPerfil);
     avatarEl.alt = perfil.alias || 'Avatar';
   }
 
