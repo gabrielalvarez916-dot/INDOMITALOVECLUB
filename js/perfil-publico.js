@@ -41,7 +41,7 @@ async function _cargarPerfilAutor(idAutor) {
   const [resPerfil, resLibros, resCampañas] = await Promise.all([
     llamarBackend('obtenerPerfilPublicoAutor',   { idAutor }),
     llamarBackend('listarLibrosPerfilPublico',    { idAutor }),
-    llamarBackend('listarCampañasActivasPorAutor', { idAutor }),
+    llamarBackend('listarCampanasActivasPorAutor', { idAutor }),
   ]);
 
   if (!resPerfil.ok) {
