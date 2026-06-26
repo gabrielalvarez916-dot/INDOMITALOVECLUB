@@ -736,6 +736,104 @@
     </form>
   </div>
 </div>
+<div id="modal-perfil-publico" class="modal modal-grande">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="pp-modal-titulo">Perfil</h3>
+    <button class="modal-cerrar" onclick="cerrarModalPerfilPublico()">✕</button>
+  </div>
+ 
+  <div class="modal-body">
+ 
+    <!-- ESTADO: cargando -->
+    <div id="pp-cargando" class="cargando-container">
+      <div class="spinner"></div>
+      <p>Cargando perfil...</p>
+    </div>
+ 
+    <!-- ESTADO: error -->
+    <div id="pp-error" class="estado-vacio" style="display:none;">
+      <p class="estado-vacio-icono">😕</p>
+      <p class="estado-vacio-texto">No se pudo cargar el perfil.</p>
+    </div>
+ 
+    <!-- ── CABECERA COMÚN (visible en autor y reseñador) ── -->
+    <!-- Se pinta siempre que hay datos; queda dentro de cada bloque para no acoplar -->
+ 
+    <!-- BLOQUE AUTOR -->
+    <div id="pp-bloque-autor" style="display:none;">
+ 
+      <!-- Cabecera -->
+      <div class="pp-cabecera">
+        <img id="pp-avatar" src="" alt="Avatar" class="pp-avatar" />
+        <div class="pp-cabecera-info">
+          <p id="pp-alias"     class="pp-alias"></p>
+          <p id="pp-ubicacion" class="pp-ubicacion"></p>
+          <div id="pp-redes"   class="pp-redes"></div>
+        </div>
+      </div>
+ 
+      <!-- Libros -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Libros</p>
+        <div id="pp-autor-libros" class="pp-libros-lista"></div>
+      </div>
+ 
+      <!-- Campañas activas -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Campañas activas</p>
+        <div id="pp-autor-campanas" class="pp-campanas-lista"></div>
+      </div>
+ 
+    </div>
+    <!-- /BLOQUE AUTOR -->
+ 
+ 
+    <!-- BLOQUE RESEÑADOR -->
+    <div id="pp-bloque-reseñador" style="display:none;">
+ 
+      <!-- Cabecera (se reutilizan los mismos ids; solo uno de los bloques está visible) -->
+      <div class="pp-cabecera">
+        <img id="pp-avatar" src="" alt="Avatar" class="pp-avatar" />
+        <div class="pp-cabecera-info">
+          <p id="pp-alias"     class="pp-alias"></p>
+          <p id="pp-ubicacion" class="pp-ubicacion"></p>
+          <div id="pp-redes"   class="pp-redes"></div>
+        </div>
+      </div>
+ 
+      <!-- Nivel (siempre visible) -->
+      <div class="pp-bloque">
+        <div id="pp-reseñador-nivel" class="pp-badges-fila"></div>
+        <!-- Ranking + completion (solo si ≥5 reseñas) -->
+        <div id="pp-reseñador-ranking" class="pp-badges-fila" style="display:none; margin-top:8px;"></div>
+      </div>
+ 
+      <!-- Géneros favoritos -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Géneros favoritos</p>
+        <div id="pp-reseñador-generos"></div>
+      </div>
+ 
+      <!-- Tropes favoritos -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Tropes favoritos</p>
+        <div id="pp-reseñador-tropes" class="pp-tropes-lista"></div>
+      </div>
+ 
+      <!-- Postulaciones últimos 6 meses -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Actividad reciente</p>
+        <div id="pp-reseñador-postulaciones" class="pp-postulaciones-lista"></div>
+      </div>
+ 
+    </div>
+    <!-- /BLOQUE RESEÑADOR -->
+ 
+  </div>
+  <!-- /modal-body -->
+ 
+</div>
+<!-- /modal-perfil-publico -->
   
   <!-- FOOTER -->
   <footer id="footer">
@@ -760,6 +858,7 @@
 <script src="js/soporte.js"></script>
 <script src="js/faq-autor.js"></script>
 <script src="js/banners-admin.js"></script>
+<script src="js/perfil-publico.js"></script>
 
 </body>
 </html>
