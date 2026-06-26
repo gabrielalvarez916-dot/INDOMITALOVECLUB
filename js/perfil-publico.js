@@ -196,18 +196,18 @@ function _pintarPerfilReseñador(perfil, postulaciones) {
       postCont.innerHTML = '<p class="pp-vacio">Sin actividad reciente.</p>';
     } else {
       postCont.innerHTML = postulaciones.map(p => {
-        const estadoClase = {
-          'Pendiente':  'pp-estado-pendiente',
-          'Aprobado':   'pp-estado-aprobado',
-          'Reseñado':   'pp-estado-reseñado',
-        }[p.estado] || 'pp-estado-pendiente';
+  const estadoClase = {
+    'Pendiente':  'pp-estado-pendiente',
+    'Aprobado':   'pp-estado-aprobado',
+    'Reseñado':   'pp-estado-reseñado',
+  }[p.badgeEstado] || 'pp-estado-pendiente';
 
-        return `
-          <div class="pp-post-fila">
-            <span class="pp-post-libro">${_esc(p.nombreLibro || p.tituloLibro || '—')}</span>
-            <span class="pp-estado ${estadoClase}">${_esc(p.estado || '—')}</span>
-          </div>`;
-      }).join('');
+  return `
+    <div class="pp-post-fila">
+      <span class="pp-post-libro">${_esc(p.campaña?.nombreLibro || '—')}</span>
+      <span class="pp-estado ${estadoClase}">${_esc(p.badgeEstado || '—')}</span>
+    </div>`;
+}).join('');
     }
   }
 }
