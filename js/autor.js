@@ -238,6 +238,11 @@ function construirCardPostulacion(p) {
       <button class="btn-primario btn-sm" onclick="accionPostulacion('${p.idPostulacion}', 'aprobar')">Aprobar</button>
       <button class="btn-secundario btn-sm btn-peligro" onclick="accionPostulacion('${p.idPostulacion}', 'rechazar')">Rechazar</button>
     </div>
+  ` : p.estado === 'abandonada' ? `
+    <div style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px 16px; margin-top:12px; border-radius:0 4px 4px 0;">
+      <p style="font-weight:600; color:#856404; margin:0 0 8px;">Campaña abandonada</p>
+      ${p.motivoAbandonoPrivado ? `<p style="font-size:13px; color:#856404; margin:0; font-style:italic;">"${p.motivoAbandonoPrivado}"</p>` : ''}
+    </div>
   ` : '';
 
   const rankingHtml = r?.ranking?.posicion ? `
