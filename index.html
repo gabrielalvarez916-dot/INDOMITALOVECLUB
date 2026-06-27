@@ -586,6 +586,53 @@
     </div>
   </div>
 
+  <!-- Modal: abandonar campaña (DNF) -->
+  <div id="modal-dnf" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Abandonar campaña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dnf-id-postulacion" />
+      <p class="form-info" style="font-weight:700; color:var(--gris-texto);">
+        ¿Estás segur@ que querés abandonar la campaña de "<span id="dnf-nombre-libro"></span>"?
+      </p>
+
+      <div style="background:var(--rosa-claro); border-left:4px solid var(--bordo); padding:14px 16px; border-radius:0 8px 8px 0; margin:16px 0;">
+        <p style="font-weight:700; margin-bottom:8px; color:var(--bordo);">Si abandonás la campaña:</p>
+        <ul style="margin:0; padding-left:18px; font-size:13px; color:var(--gris-texto); line-height:1.7;">
+          <li>El autor será notificado.</li>
+          <li>El cupo volverá a estar disponible para otro reseñador.</li>
+          <li>Recordá que contás con <strong>3 DNF sin penalización por mes</strong>.</li>
+          <li>A partir de ese número, afectará tu porcentaje de completion.</li>
+        </ul>
+      </div>
+
+      <div class="form-grupo">
+        <label class="form-label">¿Por qué decidiste abandonar esta lectura?</label>
+        <p style="font-size:12px; color:var(--gris-suave); margin-top:-2px;">(Este comentario será visible solo para el autor)</p>
+        <textarea
+          id="dnf-motivo"
+          class="form-textarea"
+          rows="4"
+          maxlength="500"
+          placeholder="Contale al autor por qué decidiste abandonar esta lectura..."
+          oninput="actualizarContadorDNF()"
+        ></textarea>
+        <p style="font-size:12px; color:var(--gris-suave); text-align:right; margin-top:2px;">
+          <span id="dnf-char-count">0</span>/500
+        </p>
+      </div>
+
+      <div id="dnf-error" class="mensaje-error" style="display:none;"></div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" id="btn-confirmar-dnf" class="btn-peligro" onclick="confirmarDNF()">Confirmar abandono</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- Modal: calificar reseña -->
   <div id="modal-calificar-resena" class="modal">
     <div class="modal-header">
