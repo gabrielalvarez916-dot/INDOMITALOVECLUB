@@ -753,7 +753,6 @@ async function confirmarDNF(idPostulacion, motivo) {
     google.script.run.withSuccessHandler((result) => {
       if (result.success) {
         mostrarNotificacion('Campaña abandonada correctamente', 'success');
-        // Recargar ARCs activos
         cargarARCsActivas();
       } else {
         mostrarNotificacion(result.mensaje, 'error');
