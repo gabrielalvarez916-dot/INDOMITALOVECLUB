@@ -327,7 +327,7 @@ async function cargarHistorialReseñador(email) {
 
   const resultado = await llamarBackend('listarReseñasReseñador', { email });
 
- if (!resultado.ok) {
+  if (!resultado.ok) {
     contenedor.innerHTML = `
       <div class="estado-vacio">
         <p class="estado-vacio-icono">📚</p>
@@ -340,7 +340,27 @@ async function cargarHistorialReseñador(email) {
 
   _historialReseñador = resultado.datos.reseñas || [];
 
-  if (_historialReseñador.length === 0) {
+  // Obtener postulaciones abandonadas
+  const resultadoPostulaciones = await llamarBackend('listarPostulacionesReseñador', { email });
+  const postulacionesAbandonadas = resultadoPostulaciones.ok 
+    ? (resultadoPostulaciones.datos.postulaciones || []).filter(p => p.estado === 'abandonada')
+    : [];
+
+  // Combinar reseñas entregadas + abandonadas
+  const historialCombinado = [
+    ..._historialReseñador,
+    ...postulacionesAbandonadas.map(p => ({
+      id: p.idPostulacion,
+      nombreLibro: p.campaña?.nombreLibro,
+      nombreAutor: p.campaña?.nombreAutor,
+      linkPortada: p.campaña?.linkPortada,
+      fechaEntrega: p.fechaAbandonoPrivado || p.fechaAbandonoPrivado,
+      esAbandonada: true,
+      estado: 'abandonada'
+    }))
+  ];
+
+  if (historialCombinado.length === 0) {
     contenedor.innerHTML = `
       <div class="estado-vacio">
         <p class="estado-vacio-icono">📖</p>
@@ -350,7 +370,27 @@ async function cargarHistorialReseñador(email) {
     return;
   }
 
-  contenedor.innerHTML = _historialReseñador.map(r => construirCardHistorialReseña(r)).join('');
+  contenedor.innerHTML = historialCombinado
+    .map(r => r.esAbandonada ? construirCardHistorialDNF(r) : construirCardHistorialReseña(r))
+    .join('');
+}
+
+function construirCardHistorialDNF(p) {
+  return `
+    <div class="lista-item">
+      ${p.linkPortada ? `<img src="${p.linkPortada}" alt="${p.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />` : ''}
+      <div class="lista-item-body">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <p class="lista-item-titulo">${p.nombreLibro || 'Libro'}</p>
+          <span class="badge bg-danger">DNF</span>
+        </div>
+        ${p.nombreAutor ? `<p class="lista-item-meta">por ${p.nombreAutor}</p>` : ''}
+        <p style="font-size:12px; color:var(--gris-suave); margin:4px 0;">
+          Abandonada: ${formatearFechaAmigable(p.fechaEntrega) || 'sin fecha'}
+        </p>
+      </div>
+    </div>
+  `;
 }
 
 /**
