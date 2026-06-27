@@ -791,15 +791,16 @@ function abrirModalDNF(idPostulacion, libroTitulo, autorNombre) {
 async function confirmarDNF(idPostulacion, motivo) {
   try {
     google.script.run.withSuccessHandler((result) => {
-      if (result.success) {
-        mostrarNotificacion('Campaña abandonada correctamente', 'success');
-        cargarARCsActivas();
+      if (result.ok) {
+        mostrarToast('Campaña abandonada correctamente', 'ok');
+        cargarArcsActivos(Sesion.email());
+        cargarHistorialReseñador(Sesion.email());
       } else {
-        mostrarNotificacion(result.mensaje, 'error');
+        mostrarToast(result.mensaje || 'Error al abandonar', 'error');
       }
-    }).abandonarCampana(idPostulacion, motivo);
+    }).abandonarCampana(Sesion.email(), idPostulacion, motivo);
   } catch (error) {
     console.error('Error al abandonar campaña:', error);
-    mostrarNotificacion('Error al procesar el abandono', 'error');
+    mostrarToast('Error al procesar el abandono', 'error');
   }
 }
