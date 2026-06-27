@@ -700,4 +700,72 @@ function moverCarruselResenadores(dir) {
   if (!carrusel) return;
   carrusel.scrollBy({ left: dir * 110, behavior: 'smooth' });
 }
+// ────────────────────────────────────────────────────────────
+// ABANDONAR CAMPAÑA (DNF)
+// ────────────────────────────────────────────────────────────
 
+/**
+ * Abre el modal para abandonar una campaña (DNF).
+ * Usa el sistema de modales propio del sitio (mostrarModal/cerrarModales).
+ *
+ * @param {string} idPostulacion
+ * @param {string} nombreLibro
+ * @param {string} nombreAutor
+ */
+function abrirModalDNF(idPostulacion, nombreLibro, nombreAutor) {
+  document.getElementById('dnf-id-postulacion').value = idPostulacion;
+  document.getElementById('dnf-nombre-libro').textContent = nombreLibro || '';
+  document.getElementById('dnf-motivo').value = '';
+  document.getElementById('dnf-char-count').textContent = '0';
+  ocultarMensajes('dnf-error');
+
+  mostrarModal('modal-dnf');
+}
+
+/**
+ * Actualiza el contador de caracteres del textarea de motivo DNF.
+ * Se llama desde el oninput del textarea en el HTML.
+ */
+function actualizarContadorDNF() {
+  const textarea = document.getElementById('dnf-motivo');
+  const contador = document.getElementById('dnf-char-count');
+  if (textarea && contador) contador.textContent = textarea.value.length;
+}
+
+/**
+ * Confirma el abandono de la campaña (DNF).
+ * Se llama desde el botón "Confirmar abandono" del modal.
+ */
+async function confirmarDNF() {
+  ocultarMensajes('dnf-error');
+
+  const idPostulacion = document.getElementById('dnf-id-postulacion')?.value;
+  const motivo = document.getElementById('dnf-motivo')?.value?.trim();
+
+  if (!motivo) {
+    mostrarMensajeError('dnf-error', 'Por favor, contanos por qué decidiste abandonar esta lectura.');
+    return;
+  }
+
+  toggleBoton('btn-confirmar-dnf', false, 'Procesando...');
+
+  const resultado = await llamarBackend('abandonarCampana', {
+    email: Sesion.email(),
+    idPostulacion,
+    motivoAbandonoPrivado: motivo
+  });
+
+  toggleBoton('btn-confirmar-dnf', true, '', 'Confirmar abandono');
+
+  if (!resultado.ok) {
+    mostrarMensajeError('dnf-error', resultado.mensaje || 'Error al abandonar la campaña.');
+    return;
+  }
+
+  cerrarModales();
+  mostrarToast('Campaña abandonada correctamente.', 'ok');
+
+  await cargarArcsActivos(Sesion.email());
+  await cargarHistorialReseñador(Sesion.email());
+  await cargarEstadisticasReseñador(Sesion.email());
+}
