@@ -930,6 +930,47 @@
  
 </div>
 <!-- /modal-perfil-publico -->
+
+  <div id="modal-biblioteca" class="modal modal-grande">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="bib-modal-titulo">Biblioteca</h3>
+    <button class="modal-cerrar" onclick="cerrarModalBiblioteca()">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+    <div id="bib-cargando" class="cargando-container">
+      <div class="spinner"></div>
+      <p>Cargando biblioteca...</p>
+    </div>
+
+    <div id="bib-error" class="estado-vacio" style="display:none;">
+      <p class="estado-vacio-icono">😕</p>
+      <p class="estado-vacio-texto">No se pudo cargar la biblioteca.</p>
+    </div>
+
+    <div id="bib-contenido" style="display:none;">
+
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">📖 Leyendo actualmente</p>
+        <div id="bib-leyendo-actualmente" class="pp-libros-goodreads-grid"></div>
+      </div>
+
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">DNF (sin terminar)</p>
+        <div id="bib-dnf" class="pp-libros-goodreads-grid"></div>
+      </div>
+
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Libros leídos</p>
+        <div id="bib-libros-leidos" class="pp-libros-goodreads-grid"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
   
   <!-- FOOTER -->
   <footer id="footer">
