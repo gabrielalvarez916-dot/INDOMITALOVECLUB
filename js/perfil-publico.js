@@ -318,3 +318,201 @@ function _esc(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+function _pintarEncabezadoHistorico(encabezado) {
+  if (!encabezado) return;
+
+  const badgeCont = document.getElementById('pp-r-badge-historico');
+  if (badgeCont) {
+    badgeCont.innerHTML = encabezado.labelBadgeHistorico
+      ? `<span class="pp-badge pp-badge-nivel">🏅 ${_esc(encabezado.labelBadgeHistorico)}</span>`
+      : '';
+  }
+
+  const miembroDesdeEl = document.getElementById('pp-r-miembro-desde');
+  if (miembroDesdeEl) {
+    miembroDesdeEl.textContent = encabezado.miembroDesde
+      ? `Miembro desde ${formatearFechaAmigable(encabezado.miembroDesde)}`
+      : '';
+  }
+
+  const statsCont = document.getElementById('pp-r-stats');
+  if (statsCont) {
+    const completionRedondeado = Math.round(encabezado.completionHistorico || 0);
+    const calificacionRedondeada = encabezado.calificacionPromedio
+      ? encabezado.calificacionPromedio.toFixed(1)
+      : '—';
+
+    statsCont.innerHTML = `
+      <div class="pp-stat-item">
+        <span class="pp-stat-valor">${encabezado.reseñasEntregadas || 0}</span>
+        <span class="pp-stat-label">Reseñas entregadas</span>
+      </div>
+      <div class="pp-stat-item">
+        <span class="pp-stat-valor">${calificacionRedondeada}${encabezado.calificacionPromedio ? ' ★' : ''}</span>
+        <span class="pp-stat-label">Calificación promedio</span>
+      </div>
+      <div class="pp-stat-item">
+        <span class="pp-stat-valor">${completionRedondeado}%</span>
+        <span class="pp-stat-label">Completion histórico</span>
+      </div>
+      <div class="pp-stat-item">
+        <span class="pp-stat-valor">${_esc(encabezado.labelLigaActual || '—')}</span>
+        <span class="pp-stat-label">Liga actual</span>
+      </div>
+    `;
+  }
+
+  const insigniasCont = document.getElementById('pp-r-insignias');
+  if (insigniasCont) {
+    const insignias = encabezado.insignias || [];
+    if (insignias.length === 0) {
+      insigniasCont.innerHTML = '<p class="pp-vacio">Todavía sin insignias.</p>';
+    } else {
+      insigniasCont.innerHTML = insignias.map(i => `
+        <div class="pp-insignia-item" title="${_esc(i.Codigo)}">
+          <span class="pp-insignia-icono">${_iconoPorTipoInsignia(i.Tipo)}</span>
+          <span class="pp-insignia-label">${_esc(_labelInsignia(i))}</span>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+function _iconoPorTipoInsignia(tipo) {
+  const iconos = {
+    badge_historico: '🏅',
+    hito_resenas:    '📚',
+    top5:            '🏆',
+    top20:           '🥈',
+    liga:            '🎖️',
+    completion:      '✅',
+    reto:            '🔥',
+    evento:          '🎉'
+  };
+  return iconos[tipo] || '⭐';
+}
+
+function _labelInsignia(insignia) {
+  const partes = (insignia.Codigo || '').split('_').join(' ');
+  return partes.charAt(0).toUpperCase() + partes.slice(1);
+}
+
+function _pintarUltimosLibros(libros) {
+  const cont = document.getElementById('pp-r-ultimos-libros');
+  if (!cont) return;
+
+  if (libros.length === 0) {
+    cont.innerHTML = '<p class="pp-vacio">Todavía no reseñó ningún libro.</p>';
+    return;
+  }
+
+  cont.innerHTML = libros.map(l => _renderCardLibroGoodreads(l)).join('');
+}
+
+function _renderCardLibroGoodreads(libro) {
+  const portadaUrl = libro.linkPortada
+    ? (libro.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.linkPortada : libro.linkPortada)
+    : '';
+
+  const estrellas = '★'.repeat(libro.puntuacionLibro || 0) + '☆'.repeat(5 - (libro.puntuacionLibro || 0));
+
+  return `
+    <div class="pp-libro-goodreads-card">
+      ${portadaUrl
+        ? `<img src="${_esc(portadaUrl)}" alt="${_esc(libro.nombreLibro)}" class="pp-libro-goodreads-portada" />`
+        : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
+      <div class="pp-libro-goodreads-info">
+        <p class="pp-libro-goodreads-titulo">${_esc(libro.nombreLibro || '—')}</p>
+        <p class="pp-libro-goodreads-autor">${_esc(libro.nombreAutor || '')}</p>
+        <p class="pp-libro-goodreads-estrellas">${estrellas}</p>
+        ${libro.fechaEntrega ? `<p class="pp-libro-goodreads-fecha">${formatearFechaAmigable(libro.fechaEntrega)}</p>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function _renderCardLibroSimple(item, tipo) {
+  const portadaUrl = item.linkPortada
+    ? (item.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + item.linkPortada : item.linkPortada)
+    : '';
+
+  const etiqueta = tipo === 'dnf'
+    ? '<span class="pp-badge pp-badge-dnf">DNF</span>'
+    : '<span class="pp-badge pp-badge-leyendo">Leyendo</span>';
+
+  return `
+    <div class="pp-libro-goodreads-card">
+      ${portadaUrl
+        ? `<img src="${_esc(portadaUrl)}" alt="${_esc(item.nombreLibro)}" class="pp-libro-goodreads-portada" />`
+        : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
+      <div class="pp-libro-goodreads-info">
+        <p class="pp-libro-goodreads-titulo">${_esc(item.nombreLibro || '—')} ${etiqueta}</p>
+        <p class="pp-libro-goodreads-autor">${_esc(item.nombreAutor || '')}</p>
+      </div>
+    </div>
+  `;
+}
+
+async function abrirBiblioteca() {
+  if (!_idReseñadorPerfilActual) return;
+
+  mostrarModal('modal-biblioteca');
+  _estadoBiblioteca('cargando');
+
+  try {
+    const res = await llamarBackend('obtenerBibliotecaReseñador', { idReseñador: _idReseñadorPerfilActual });
+
+    if (!res.ok) {
+      _estadoBiblioteca('error');
+      return;
+    }
+
+    _pintarBiblioteca(res.datos);
+    _estadoBiblioteca('contenido');
+
+  } catch (e) {
+    _estadoBiblioteca('error');
+  }
+}
+
+function cerrarModalBiblioteca() {
+  cerrarModales();
+}
+
+function _estadoBiblioteca(estado) {
+  const bloques = ['bib-cargando', 'bib-error', 'bib-contenido'];
+  bloques.forEach(id => toggleElemento(id, false));
+
+  const mapa = { cargando: 'bib-cargando', error: 'bib-error', contenido: 'bib-contenido' };
+  if (mapa[estado]) toggleElemento(mapa[estado], true);
+}
+
+function _pintarBiblioteca(datos) {
+  const { leyendoActualmente = [], dnf = [], librosLeidos = [] } = datos;
+
+  const leyendoCont = document.getElementById('bib-leyendo-actualmente');
+  if (leyendoCont) {
+    leyendoCont.innerHTML = leyendoActualmente.length === 0
+      ? '<p class="pp-vacio">Sin lecturas en curso.</p>'
+      : leyendoActualmente.map(item => _renderCardLibroSimple(item, 'leyendo')).join('');
+  }
+
+  const dnfCont = document.getElementById('bib-dnf');
+  const dnfBloque = dnfCont ? dnfCont.closest('.pp-bloque') : null;
+  if (dnfCont) {
+    if (dnf.length === 0) {
+      if (dnfBloque) dnfBloque.style.display = 'none';
+    } else {
+      if (dnfBloque) dnfBloque.style.display = '';
+      dnfCont.innerHTML = dnf.map(item => _renderCardLibroSimple(item, 'dnf')).join('');
+    }
+  }
+
+  const leidosCont = document.getElementById('bib-libros-leidos');
+  if (leidosCont) {
+    leidosCont.innerHTML = librosLeidos.length === 0
+      ? '<p class="pp-vacio">Todavía no reseñó ningún libro.</p>'
+      : librosLeidos.map(l => _renderCardLibroGoodreads(l)).join('');
+  }
+}
