@@ -2799,3 +2799,207 @@ img { max-width: 100%; display: block; }
     max-height: 140px;
   }
 }
+/* ════════════════════════════════════════════════════════════
+   AGREGAR al final de css/styles.css
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Badge histórico + miembro desde ── */
+.pp-miembro-desde {
+  font-size: 13px;
+  color: var(--gris-suave, #888);
+  margin-top: 6px;
+}
+
+/* ── Estadísticas históricas: cards pequeñas, igual estilo que .stats-grid del panel ── */
+.pp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pp-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--rosa-claro, #f9f5ff);
+  border: 1px solid var(--bordo-claro, #e9e0f8);
+  border-radius: 10px;
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.pp-stat-valor {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--bordo, #7c3aed);
+  line-height: 1.2;
+}
+
+.pp-stat-label {
+  font-size: 11px;
+  color: var(--gris-suave, #888);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* ── Insignias: ícono grande arriba, nombre chico abajo, estilo logro de videojuego ── */
+.pp-insignias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.pp-insignia-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--rosa-claro, #f9f5ff);
+  border: 1px solid var(--bordo-claro, #e9e0f8);
+  border-radius: 12px;
+  padding: 12px 6px;
+}
+
+.pp-insignia-icono {
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.pp-insignia-label {
+  font-size: 11px;
+  color: var(--gris-texto, #333);
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: capitalize;
+}
+
+/* ── Truncado de 2 líneas: Sobre mí ── */
+.pp-texto-truncado {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pp-texto-truncado.pp-expandido {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* ── Truncado de 2 líneas: Tropes (lista de chips) ── */
+.pp-tropes-truncado {
+  max-height: 64px; /* aprox 2 filas de chips */
+  overflow: hidden;
+}
+
+.pp-tropes-truncado.pp-expandido {
+  max-height: none;
+  overflow: visible;
+}
+
+/* ── Botón "Ver más" / "Ver menos" ── */
+.pp-btn-vermas {
+  background: none;
+  border: none;
+  color: var(--bordo, #7c3aed);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.pp-btn-vermas:hover {
+  text-decoration: underline;
+}
+
+/* ── Cards de libros estilo Goodreads: portadas chicas, grid compacto ── */
+.pp-libros-goodreads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.pp-libro-goodreads-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--rosa-claro, #f9f5ff);
+  border: 1px solid var(--bordo-claro, #e9e0f8);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pp-libro-goodreads-portada {
+  width: 100%;
+  height: 150px;          /* clave: altura fija, evita portadas gigantes */
+  object-fit: cover;
+  display: block;
+}
+
+.pp-libro-goodreads-portada.pp-portada-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  background: var(--bordo-claro, #e9e0f8);
+}
+
+.pp-libro-goodreads-info {
+  padding: 8px 10px 10px;
+}
+
+.pp-libro-goodreads-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gris-texto, #333);
+  line-height: 1.3;
+  margin: 0 0 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pp-libro-goodreads-autor {
+  font-size: 11px;
+  color: var(--gris-suave, #888);
+  margin: 0 0 4px;
+}
+
+.pp-libro-goodreads-estrellas {
+  font-size: 13px;
+  color: #f5a623;
+  margin: 0 0 2px;
+  letter-spacing: 1px;
+}
+
+.pp-libro-goodreads-fecha {
+  font-size: 10px;
+  color: var(--gris-suave, #888);
+  margin: 0;
+}
+
+.pp-badge-dnf {
+  background: #fdecea;
+  color: #c0392b;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+.pp-badge-leyendo {
+  background: #fff4d6;
+  color: #b8860b;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 4px;
+}
