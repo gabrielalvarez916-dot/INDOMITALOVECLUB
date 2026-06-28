@@ -326,7 +326,8 @@ console.log('enviando resena - datos:', JSON.stringify(datos));
 
   setTimeout(async () => {
     cerrarModales();
-    mostrarToast('¡Reseña enviada! El autor recibirá una notificación.', 'ok');
+    const pts = resultado.datos?.puntosGanados ?? 100;
+    mostrarToast(`¡Reseña enviada! Ganaste +${pts} puntos ⭐`, 'ok');
     await cargarArcsActivos(Sesion.email());
     await cargarHistorialReseñador(Sesion.email());
     await cargarEstadisticasReseñador(Sesion.email());
