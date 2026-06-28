@@ -87,6 +87,11 @@ async function _cargarPerfilReseñador(idReseñador) {
   _pintarUltimosLibros(ultimosLibros);
   _estadoPerfilPublico('reseñador');
 }
+}).join('');
+    }
+  }
+}
+  _evaluarBotonesVerMas();
 
 // ────────────────────────────────────────────────────────────
 // PINTAR: PERFIL AUTOR
