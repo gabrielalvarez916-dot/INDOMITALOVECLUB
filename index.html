@@ -861,7 +861,33 @@
     <div id="pp-redes-r"   class="pp-redes"></div>
   </div>
 </div>
- 
+
+<!-- Badge histórico + miembro desde -->
+<div class="pp-bloque pp-encabezado-historico">
+  <div id="pp-r-badge-historico" class="pp-badges-fila"></div>
+  <p id="pp-r-miembro-desde" class="pp-miembro-desde"></p>
+</div>
+
+<!-- Estadísticas históricas como reseñador -->
+<div class="pp-bloque">
+  <p class="pp-bloque-titulo">Estadísticas como reseñad@r</p>
+  <div id="pp-r-stats" class="pp-stats-grid"></div>
+</div>
+
+<!-- Insignias -->
+<div class="pp-bloque">
+  <p class="pp-bloque-titulo">Insignias</p>
+  <div id="pp-r-insignias" class="pp-insignias-grid"></div>
+</div>
+
+<div class="pp-bloque">
+  <p class="pp-bloque-titulo">Últimos libros reseñados</p>
+  <div id="pp-r-ultimos-libros" class="pp-libros-goodreads-grid"></div>
+  <button class="btn-secundario btn-full" id="pp-btn-ver-biblioteca" style="margin-top:12px;" onclick="abrirBiblioteca()">
+    Ver biblioteca completa →
+  </button>
+</div>    
+      
       <!-- Nivel (siempre visible) -->
       <div class="pp-bloque">
         <div id="pp-reseñador-nivel" class="pp-badges-fila"></div>
@@ -887,10 +913,13 @@
         <div id="pp-reseñador-tropes" class="pp-tropes-lista"></div>
       </div>
  
-      <!-- Postulaciones últimos 6 meses -->
+     <!-- Últimos libros reseñados -->
       <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Actividad reciente</p>
-        <div id="pp-reseñador-postulaciones" class="pp-postulaciones-lista"></div>
+        <p class="pp-bloque-titulo">Últimos libros reseñados</p>
+        <div id="pp-r-ultimos-libros" class="pp-libros-goodreads-grid"></div>
+        <button class="btn-secundario btn-full" id="pp-btn-ver-biblioteca" style="margin-top:12px;" onclick="abrirBiblioteca()">
+          Ver biblioteca completa →
+        </button>
       </div>
  
     </div>
