@@ -556,10 +556,10 @@ async function cargarRankingReseñador(email) {
    ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
   ${r.alias}
 </p>
-              <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
+              <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? '—'} pts · ${r.completion ?? '—'}%</span>
             </div>
             <div style="text-align:right;">
-              <p class="ranking-top-item-puntaje">★ ${r.promedio?.toFixed(1) ?? '—'}</p>
+              <p class="ranking-top-item-puntaje">${r.puntosMensuales ?? '—'} pts</p>
               <p style="font-size:11px; color:var(--gris-suave);">${r.completion ?? '—'}%</p>
             </div>
           </div>
