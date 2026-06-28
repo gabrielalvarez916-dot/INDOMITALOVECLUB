@@ -62,10 +62,15 @@ async function _cargarPerfilAutor(idAutor) {
 // CARGA DE PERFIL RESEÑADOR
 // ────────────────────────────────────────────────────────────
 
+let _idReseñadorPerfilActual = null;
+
 async function _cargarPerfilReseñador(idReseñador) {
-  const [resPerfil, resPostulaciones] = await Promise.all([
-    llamarBackend('obtenerPerfilReseñador',               { idReseñador }),
-    llamarBackend('listarPostulacionesPublicasReseñador', { idReseñador }),
+  _idReseñadorPerfilActual = idReseñador;
+
+  const [resPerfil, resEncabezado, resUltimosLibros] = await Promise.all([
+    llamarBackend('obtenerPerfilReseñador',         { idReseñador }),
+    llamarBackend('obtenerEncabezadoPerfilPublico', { idReseñador }),
+    llamarBackend('obtenerUltimosLibrosLeidos',     { idReseñador }),
   ]);
 
   if (!resPerfil.ok) {
@@ -74,14 +79,14 @@ async function _cargarPerfilReseñador(idReseñador) {
   }
 
   const perfil        = resPerfil.datos.perfil;
-  const postulaciones = resPostulaciones.ok
-    ? (resPostulaciones.datos.postulaciones || [])
-    : [];
+  const encabezado     = resEncabezado.ok ? resEncabezado.datos : null;
+  const ultimosLibros  = resUltimosLibros.ok ? (resUltimosLibros.datos.libros || []) : [];
 
-  _pintarPerfilReseñador(perfil, postulaciones);
+  _pintarPerfilReseñador(perfil, []);
+  _pintarEncabezadoHistorico(encabezado);
+  _pintarUltimosLibros(ultimosLibros);
   _estadoPerfilPublico('reseñador');
 }
-
 
 // ────────────────────────────────────────────────────────────
 // PINTAR: PERFIL AUTOR
