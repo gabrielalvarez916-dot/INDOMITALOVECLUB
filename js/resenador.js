@@ -66,15 +66,10 @@ const badgeHistorico  = u.badgeHistorico  || '—';
     bronce:   '🥉 Liga Bronce'
   }[categoria] || '—';
 
-  contenedor.innerHTML = `
+ contenedor.innerHTML = `
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${u.totalReseñas ?? 0}</span>
-      <span class="stat-label">Reseñas totales</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero stat-nivel">${badgeHistorico}</span>
+      <span class="stat-badge-nivel">${badgeHistorico}</span>
       <span class="stat-label">Badge histórico</span>
     </div>
     <div class="stat-card">
