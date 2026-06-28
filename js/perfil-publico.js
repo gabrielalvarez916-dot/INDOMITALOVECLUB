@@ -148,24 +148,29 @@ function _pintarPerfilReseñador(perfil, postulaciones) {
     nivelCont.innerHTML = `<span class="pp-badge pp-badge-nivel">📚 ${_esc(String(nivel))}</span>`;
   }
 
-  // Badge ranking + completion (solo si ≥5 reseñas entregadas)
   const rankingCont = document.getElementById('pp-reseñador-ranking');
   if (rankingCont) {
-    const totalResenas = perfil.totalReseñas || perfil.reseñasEntregadas || 0;
-    if (totalResenas >= 5) {
-      const ranking    = perfil.rankingTexto || perfil.ranking || '';
-      const completion = perfil.completionRate != null
-        ? Math.round(perfil.completionRate) + '%'
-        : null;
-      rankingCont.innerHTML = `
-        ${ranking    ? `<span class="pp-badge pp-badge-ranking">🏆 ${_esc(String(ranking))}</span>` : ''}
-        ${completion ? `<span class="pp-badge pp-badge-completion">✅ ${completion} completado</span>` : ''}
-      `;
+    const badges = [];
+    if (perfil.posicionRanking)  badges.push(`<span class="pp-badge pp-badge-ranking">🏆 #${_esc(String(perfil.posicionRanking))}</span>`);
+    if (perfil.puntosMensuales)  badges.push(`<span class="pp-badge pp-badge-completion">⭐ ${_esc(String(perfil.puntosMensuales))} pts</span>`);
+    if (perfil.completion)       badges.push(`<span class="pp-badge pp-badge-completion">✅ ${_esc(String(Math.round(perfil.completion)))}% completado</span>`);
+    if (perfil.categoria) {
+      const labelCat = {
+        top5: '🏆 Top 5', top20: '🥈 Top 20',
+        diamante: '💎 Diamante', oro: '🥇 Oro',
+        plata: '🥈 Plata', bronce: '🥉 Bronce'
+      }[perfil.categoria] || perfil.categoria;
+      badges.push(`<span class="pp-badge pp-badge-nivel">${_esc(labelCat)}</span>`);
+    }
+
+    if (badges.length > 0) {
+      rankingCont.innerHTML = badges.join('');
       rankingCont.style.display = 'flex';
     } else {
       rankingCont.style.display = 'none';
     }
   }
+
 
   // Géneros y tropes favoritos
   const generosCont = document.getElementById('pp-reseñador-generos');
