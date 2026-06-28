@@ -887,16 +887,17 @@
         <div id="pp-reseñador-generos"></div>
       </div>
 
-      <!-- Descripción lectora -->
-<div class="pp-bloque" id="pp-bloque-descripcion">
+    <div class="pp-bloque" id="pp-bloque-descripcion">
   <p class="pp-bloque-titulo">Sobre mí</p>
-  <p id="pp-reseñador-descripcion" class="pp-etiquetas"></p>
+  <p id="pp-reseñador-descripcion" class="pp-texto-truncado"></p>
+  <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion" onclick="_toggleVerMas('descripcion')" style="display:none;">Ver más</button>
 </div>
  
-      <!-- Tropes favoritos -->
+     <!-- Tropes favoritos -->
       <div class="pp-bloque">
         <p class="pp-bloque-titulo">Tropes favoritos</p>
-        <div id="pp-reseñador-tropes" class="pp-tropes-lista"></div>
+        <div id="pp-reseñador-tropes" class="pp-tropes-lista pp-tropes-truncado"></div>
+        <button class="pp-btn-vermas" id="pp-btn-vermas-tropes" onclick="_toggleVerMas('tropes')" style="display:none;">Ver más</button>
       </div>
  
      <!-- Últimos libros reseñados -->
