@@ -54,7 +54,19 @@ async function cargarEstadisticasReseñador(email) {
 
   const u = resultado.datos.perfil;
 
- contenedor.innerHTML = `
+const badgeHistorico  = u.badgeHistorico  || '—';
+  const puntosMensuales = u.ranking?.puntosMensuales ?? '—';
+  const categoria       = u.ranking?.categoria || '';
+  const labelCategoria  = {
+    top5:     '🏆 Top 5',
+    top20:    '🥈 Top 20',
+    diamante: '💎 Liga Diamante',
+    oro:      '🥇 Liga Oro',
+    plata:    '🥈 Liga Plata',
+    bronce:   '🥉 Liga Bronce'
+  }[categoria] || '—';
+
+  contenedor.innerHTML = `
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
       <span class="stat-numero">${u.totalReseñas ?? 0}</span>
@@ -62,18 +74,28 @@ async function cargarEstadisticasReseñador(email) {
     </div>
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero stat-nivel">${u.labelNivel?.split(' ')[0] || 'Nuevo'}</span>
-      <span class="stat-badge-nivel">${u.labelNivel || 'Nuevo en la comunidad'}</span>
+      <span class="stat-numero stat-nivel">${badgeHistorico}</span>
+      <span class="stat-label">Badge histórico</span>
     </div>
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${u.ranking ? u.ranking.posicion : '—'}</span>
+      <span class="stat-numero">${u.ranking ? '#' + u.ranking.posicion : '—'}</span>
       <span class="stat-label">Posición ranking</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icono-corazon">♥</span>
+      <span class="stat-numero">${puntosMensuales}</span>
+      <span class="stat-label">Puntos este mes</span>
     </div>
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
       <span class="stat-numero">${u.ranking ? u.ranking.porcentajeCompletion + '%' : '—'}</span>
       <span class="stat-label">Completion este mes</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icono-corazon">♥</span>
+      <span class="stat-numero" style="font-size:14px;">${labelCategoria}</span>
+      <span class="stat-label">Categoría del mes</span>
     </div>
   `;
   }
