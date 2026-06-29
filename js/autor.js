@@ -1212,3 +1212,63 @@ async function guardarEditarLibro(idLibro) {
     await cargarBibliotecaPanel(Sesion.email());
   }, 1500);
 }
+/**
+ * Carga y muestra el ranking de libros con sellos de campaña.
+ */
+async function cargarRankingLibros() {
+  const contenedor = document.getElementById('ranking-libros-contenedor');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const resultado = await llamarBackend('listarRankingLibrosAutor', {
+    email: Sesion.email()
+  });
+
+  if (!resultado.ok) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+    return;
+  }
+
+  const libros = resultado.datos.libros || [];
+
+  if (libros.length === 0) {
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <p class="estado-vacio-icono">📊</p>
+        <p class="estado-vacio-texto">No tenés libros en el ranking todavía.</p>
+      </div>
+    `;
+    return;
+  }
+
+  contenedor.innerHTML = `
+    <table class="ranking-tabla">
+      <thead>
+        <tr>
+          <th>Libro</th>
+          <th>Promedio</th>
+          <th>Reseñas</th>
+          <th>Sello</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${libros.map((l, i) => `
+          <tr>
+            <td><strong>${_esc(l.nombreLibro)}</strong></td>
+            <td>⭐ ${l.promedioPuntuacion ? l.promedioPuntuacion.toFixed(2) : '—'}</td>
+            <td>${l.cantidadPuntuaciones || 0}</td>
+            <td>
+              ${l.selloCampaña 
+                ? `<span class="pp-badge pp-badge-sello pp-sello-${_esc(l.selloCampaña)}">
+                    ${_iconoSello(l.selloCampaña)} ${_labelSello(l.selloCampaña)}
+                  </span>`
+                : '—'
+              }
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
