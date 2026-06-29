@@ -3189,3 +3189,134 @@ img { max-width: 100%; display: block; }
     max-height: 280px;
   }
 }
+/* ═══ GAMIFICACIÓN ═══ */
+.pp-gamificacion-bloque {
+  background: linear-gradient(135deg, var(--rosa-claro) 0%, rgba(232, 160, 176, 0.3) 100%);
+  border-radius: var(--radio-grande);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.pp-gamificacion-header {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.pp-gamificacion-nivel,
+.pp-gamificacion-puntos {
+  flex: 1;
+  background: var(--blanco);
+  border-radius: var(--radio-grande);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--sombra-card);
+}
+
+.pp-gamificacion-nivel-valor,
+.pp-gamificacion-puntos-valor {
+  font-family: var(--fuente-titulo);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--bordo);
+  display: block;
+}
+
+.pp-insignias-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pp-insignia-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-pill);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gris-texto);
+}
+
+.pp-sellos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pp-sello-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--blanco);
+  border-radius: var(--radio-grande);
+  padding: 12px;
+  border: 1px solid var(--gris-borde);
+}
+
+.pp-sello-item img {
+  width: 48px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: var(--radio);
+}
+
+.pp-badge-sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radio-pill);
+}
+
+.pp-sello-legendaria {
+  background: #FFD700;
+  color: #333;
+}
+
+.pp-sello-destacada {
+  background: #FF69B4;
+  color: white;
+}
+
+.pp-sello-muy_exitosa {
+  background: #87CEEB;
+  color: white;
+}
+
+.pp-sello-exitosa {
+  background: #98FB98;
+  color: #333;
+}
+
+/* Tabla ranking */
+.ranking-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.ranking-tabla th,
+.ranking-tabla td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.ranking-tabla th {
+  background: var(--rosa-claro);
+  font-weight: 700;
+  color: var(--bordo);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ranking-tabla tr:hover {
+  background: var(--crema);
+}
