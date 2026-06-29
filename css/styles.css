@@ -3010,3 +3010,172 @@ img { max-width: 100%; display: block; }
   color: #f5a623;
   margin: 2px 0;
 }
+/* ============================================================
+   Buscador de Perfiles - Estilos
+   ============================================================ */
+
+.buscador-perfiles-container {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.buscador-perfiles-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.buscador-perfiles-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.buscador-perfiles-ico {
+  position: absolute;
+  left: 14px;
+  color: var(--gris-suave);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.buscador-perfiles-input {
+  width: 100%;
+  padding: 12px 14px 12px 40px;
+  border: 1.5px solid var(--crema-oscura);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  transition: all 0.2s ease;
+  color: var(--negro);
+}
+
+.buscador-perfiles-input::placeholder {
+  color: var(--gris-suave);
+}
+
+.buscador-perfiles-input:focus {
+  outline: none;
+  border-color: var(--bordo);
+  box-shadow: 0 0 0 3px rgba(170, 68, 96, 0.08);
+  background: white;
+}
+
+/* Dropdown de resultados */
+.buscador-perfiles-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--crema-oscura);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.buscador-perfiles-lista {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.buscador-perfiles-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--crema-clara);
+}
+
+.buscador-perfiles-item:last-child {
+  border-bottom: none;
+}
+
+.buscador-perfiles-item:hover {
+  background: var(--crema-clara);
+}
+
+.buscador-perfiles-item-foto {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--crema-oscura);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.buscador-perfiles-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.buscador-perfiles-item-alias {
+  font-weight: 600;
+  color: var(--negro);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.buscador-perfiles-item-rol {
+  font-size: 11px;
+  color: var(--gris-suave);
+  text-transform: capitalize;
+}
+
+.buscador-perfiles-item-vacio {
+  padding: 12px 14px;
+  text-align: center;
+  color: var(--gris-suave);
+  font-size: 13px;
+}
+
+.buscador-perfiles-item-cargando {
+  padding: 12px 14px;
+  text-align: center;
+  color: var(--gris-suave);
+  font-size: 13px;
+}
+
+.buscador-perfiles-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--crema-oscura);
+  border-top-color: var(--bordo);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .buscador-perfiles-input {
+    font-size: 16px;
+    padding: 11px 12px 11px 36px;
+  }
+
+  .buscador-perfiles-ico {
+    left: 12px;
+  }
+
+  .buscador-perfiles-dropdown {
+    max-height: 280px;
+  }
+}
