@@ -278,7 +278,7 @@ function _renderGamificacionAutor(gamif) {
       
       <div class="pp-bloque" style="margin-top:12px;">
         <p class="pp-bloque-titulo">Insignias</p>
-        <div class="pp-insignias-grid">${insigniasHtml}</div>
+        <div class="pp-insignias-grid-autor">${insigniasHtml}</div>
       </div>
 
       <div class="pp-bloque">
