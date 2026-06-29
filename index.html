@@ -194,6 +194,28 @@
         </select>
       </div>
 
+      <!-- Buscador de Perfiles -->
+<div class="buscador-perfiles-container">
+  <div class="buscador-perfiles-wrapper">
+    <div class="buscador-perfiles-input-group">
+      <svg class="buscador-perfiles-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input
+        id="buscador-perfiles-input"
+        type="text"
+        class="buscador-perfiles-input"
+        placeholder="Buscar autor o reseñador..."
+        autocomplete="off"
+      />
+    </div>
+    <div id="buscador-perfiles-dropdown" class="buscador-perfiles-dropdown" style="display:none;">
+      <ul id="buscador-perfiles-lista" class="buscador-perfiles-lista"></ul>
+    </div>
+  </div>
+</div>
+      
       <!-- Estados -->
       <div id="feed-cargando" class="cargando-container">
         <div class="spinner"></div>
