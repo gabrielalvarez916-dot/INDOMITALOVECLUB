@@ -94,21 +94,22 @@ async function _cargarPerfilReseñador(idReseñador) {
  * Se llama después de pintar el perfil del reseñador.
  */
 function _evaluarBotonesVerMas() {
-  const descripcionEl = document.getElementById('pp-reseñador-descripcion');
-  const btnDescripcion = document.getElementById('pp-btn-vermas-descripcion');
-  if (descripcionEl && btnDescripcion) {
-    const estaTruncado = descripcionEl.scrollHeight > descripcionEl.clientHeight;
-    btnDescripcion.style.display = estaTruncado ? 'inline-block' : 'none';
-  }
+  requestAnimationFrame(() => {
+    const descripcionEl = document.getElementById('pp-reseñador-descripcion');
+    const btnDescripcion = document.getElementById('pp-btn-vermas-descripcion');
+    if (descripcionEl && btnDescripcion) {
+      const estaTruncado = descripcionEl.scrollHeight > descripcionEl.clientHeight + 1;
+      btnDescripcion.style.display = estaTruncado ? 'inline-block' : 'none';
+    }
 
-  const tropesEl = document.getElementById('pp-reseñador-tropes');
-  const btnTropes = document.getElementById('pp-btn-vermas-tropes');
-  if (tropesEl && btnTropes) {
-    const estaTruncado = tropesEl.scrollHeight > tropesEl.clientHeight;
-    btnTropes.style.display = estaTruncado ? 'inline-block' : 'none';
-  }
+    const tropesEl = document.getElementById('pp-reseñador-tropes');
+    const btnTropes = document.getElementById('pp-btn-vermas-tropes');
+    if (tropesEl && btnTropes) {
+      const estaTruncado = tropesEl.scrollHeight > tropesEl.clientHeight + 1;
+      btnTropes.style.display = estaTruncado ? 'inline-block' : 'none';
+    }
+  });
 }
-
 /**
  * Expande o contrae el bloque de descripción o tropes al hacer
  * clic en "Ver más" / "Ver menos".
