@@ -238,6 +238,92 @@ function _renderCardLibroAutor(libro) {
       </div>
     </div>`;
 }
+// ═══ HELPERS GAMIFICACIÓN (AUTOR) ═══
+
+function _renderGamificacionAutor(gamif) {
+  const insigniasHtml = gamif.insignias && gamif.insignias.length > 0
+    ? gamif.insignias.map(i => `
+        <span class="pp-insignia-mini" title="${_esc(i.Codigo)}">
+          ${_iconoInsignia(i.Tipo)} ${_labelInsigniaAutor(i)}
+        </span>
+      `).join('')
+    : '<p class="pp-vacio" style="font-size:12px;">Sin insignias aún</p>';
+
+  const campañasConSelloHtml = gamif.campañasConSello && gamif.campañasConSello.length > 0
+    ? gamif.campañasConSello.map(c => `
+        <div class="pp-sello-item">
+          ${c.linkPortada ? `<img src="${_esc(c.linkPortada)}" alt="${_esc(c.nombreLibro)}" />` : ''}
+          <div>
+            <p style="font-weight:600; font-size:13px;">${_esc(c.nombreLibro)}</p>
+            <span class="pp-badge pp-badge-sello pp-sello-${_esc(c.sello)}">
+              ${_iconoSello(c.sello)} ${_esc(c.labelSello)}
+            </span>
+          </div>
+        </div>
+      `).join('')
+    : '<p class="pp-vacio" style="font-size:12px;">Sin campañas con sello aún</p>';
+
+  return `
+    <div class="pp-gamificacion-bloque">
+      <div class="pp-gamificacion-header">
+        <div class="pp-gamificacion-nivel">
+          <span class="pp-gamificacion-nivel-valor">${_esc(gamif.labelNivel || 'Nuevo Miembro')}</span>
+          <p style="font-size:11px; color:var(--gris-suave); margin:2px 0 0;">Nivel</p>
+        </div>
+        <div class="pp-gamificacion-puntos">
+          <span class="pp-gamificacion-puntos-valor">${gamif.puntosHistoricos || 0}</span>
+          <p style="font-size:11px; color:var(--gris-suave); margin:2px 0 0;">Puntos</p>
+        </div>
+      </div>
+      
+      <div class="pp-bloque" style="margin-top:12px;">
+        <p class="pp-bloque-titulo">Insignias</p>
+        <div class="pp-insignias-grid">${insigniasHtml}</div>
+      </div>
+
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Campañas con sello</p>
+        <div class="pp-sellos-lista">${campañasConSelloHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+function _iconoSello(codigo) {
+  const iconos = {
+    legendaria:  '🏆',
+    destacada:   '⭐',
+    muy_exitosa: '✨',
+    exitosa:     '💫'
+  };
+  return iconos[codigo] || '📖';
+}
+
+function _labelSello(codigo) {
+  const labels = {
+    legendaria:  'Legendaria',
+    destacada:   'Destacada',
+    muy_exitosa: 'Muy exitosa',
+    exitosa:     'Exitosa'
+  };
+  return labels[codigo] || '';
+}
+
+function _iconoInsignia(tipo) {
+  const iconos = {
+    nivel_autor:      '📚',
+    hito_campañas:    '🎖️',
+    sello_campaña:    '⭐',
+    evento:           '🎉'
+  };
+  return iconos[tipo] || '🏅';
+}
+
+function _labelInsigniaAutor(insignia) {
+  // insignia.Codigo es algo como "nivel_autor_sensei" o "hito_campañas_campañas_5"
+  const partes = (insignia.Codigo || '').split('_');
+  return partes.slice(-1)[0].replace(/([A-Z])/g, ' $1').trim() || insignia.Codigo;
+}
 // ────────────────────────────────────────────────────────────
 // PINTAR: PERFIL RESEÑADOR
 // ────────────────────────────────────────────────────────────
