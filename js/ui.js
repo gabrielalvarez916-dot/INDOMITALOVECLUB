@@ -59,7 +59,7 @@ function mostrarSeccion(nombre) {
     'panel-resenador',
     'perfil',
     'faq-autor',
-    'admin'
+    'admin',
     'biblioteca-resenador'
   ];
 
