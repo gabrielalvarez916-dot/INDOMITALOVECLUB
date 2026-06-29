@@ -144,52 +144,84 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
   // Cabecera común
   _pintarCabeceraComun(perfil, '');
 
-  // Libros
+  // Miembro desde
+  const miembroDesdeEl = document.getElementById('pp-autor-miembro-desde');
+  if (miembroDesdeEl) {
+    miembroDesdeEl.textContent = perfil.miembroDesde
+      ? `Miembro desde ${formatearFechaAmigable(perfil.miembroDesde)}`
+      : '';
+  }
+
+  // Libros — cards estilo Goodreads, igual que en reseñador
   const librosCont = document.getElementById('pp-autor-libros');
   if (librosCont) {
     if (libros.length === 0) {
       librosCont.innerHTML = '<p class="pp-vacio">Sin libros cargados aún.</p>';
     } else {
-      librosCont.innerHTML = libros.map(libro => {
-        const badge = libro.cantidadReseñas >= 5
-          ? '<span class="pp-badge pp-badge-destacado">⭐ +5 reseñas</span>'
-          : '';
-        const puntuacionHtml = libro.puntuacionPromedio !== null && libro.puntuacionPromedio !== undefined
-          ? `<p class="pp-libro-puntuacion">⭐ ${libro.puntuacionPromedio.toFixed(1)}</p>`
-          : '';
-        return `
-          <div class="pp-libro-card">
-            ${libro.portada ? `<img src="${libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada}" alt="${_esc(libro.titulo)}" class="pp-libro-portada" />` : '<div class="pp-libro-portada pp-portada-placeholder">📖</div>'}
-            <div class="pp-libro-info">
-              <p class="pp-libro-titulo">${_esc(libro.titulo)} ${badge}</p>
-              ${libro.genero ? `<p class="pp-libro-genero">${_esc(libro.genero)}</p>` : ''}
-              ${puntuacionHtml}
-              ${libro.amazon ? `<a href="${_esc(libro.amazon)}" target="_blank" class="pp-link-externo">Ver en Amazon →</a>` : ''}
-            </div>
-          </div>`;
-      }).join('');
+      librosCont.innerHTML = libros.map(libro => _renderCardLibroAutor(libro)).join('');
     }
   }
 
-  // Campañas activas
+  // Campañas activas — cards con portada
   const campañasCont = document.getElementById('pp-autor-campanas');
   if (campañasCont) {
     if (campañas.length === 0) {
       campañasCont.innerHTML = '<p class="pp-vacio">Sin campañas activas en este momento.</p>';
     } else {
-      campañasCont.innerHTML = campañas.map(c => `
-        <div class="pp-campana-card">
-          <p class="pp-campana-titulo">${_esc(c.nombreLibro)}</p>
-          ${c.fechaLimite ? `<p class="pp-campana-fecha">Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
-          <button class="btn-secundario btn-sm" onclick="cerrarModalPerfilPublico(); verDetalleCampaña('${_esc(c.id)}');">
-            Ver campaña
-          </button>
-        </div>`).join('');
+      campañasCont.innerHTML = campañas.map(c => {
+        const portadaUrl = c.portada
+          ? (c.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + c.portada : c.portada)
+          : '';
+        return `
+          <div class="pp-libro-goodreads-card">
+            ${portadaUrl
+              ? `<img src="${_esc(portadaUrl)}" alt="${_esc(c.nombreLibro)}" class="pp-libro-goodreads-portada" />`
+              : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
+            <div class="pp-libro-goodreads-info">
+              <p class="pp-libro-goodreads-titulo">${_esc(c.nombreLibro)}</p>
+              ${c.fechaLimite ? `<p class="pp-libro-goodreads-fecha">Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
+              <button class="btn-secundario btn-sm" style="margin-top:8px;" onclick="cerrarModalPerfilPublico(); verDetalleCampaña('${_esc(c.id)}');">
+                Ver campaña
+              </button>
+            </div>
+          </div>`;
+      }).join('');
     }
   }
 }
 
+/**
+ * Card de libro para el perfil público de autor — mismo estilo
+ * "Goodreads" que ya usamos para libros de reseñador, pero con
+ * género y puntuación promedio global en vez de estrellas de 1-5
+ * fijas y fecha de entrega.
+ */
+function _renderCardLibroAutor(libro) {
+  const portadaUrl = libro.portada
+    ? (libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada)
+    : '';
 
+  const badge = libro.cantidadReseñas >= 5
+    ? '<span class="pp-badge pp-badge-destacado">⭐ +5 reseñas</span>'
+    : '';
+
+  const puntuacionHtml = libro.puntuacionPromedio !== null && libro.puntuacionPromedio !== undefined
+    ? `<p class="pp-libro-puntuacion">⭐ ${libro.puntuacionPromedio.toFixed(1)}</p>`
+    : '';
+
+  return `
+    <div class="pp-libro-goodreads-card">
+      ${portadaUrl
+        ? `<img src="${_esc(portadaUrl)}" alt="${_esc(libro.titulo)}" class="pp-libro-goodreads-portada" />`
+        : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
+      <div class="pp-libro-goodreads-info">
+        <p class="pp-libro-goodreads-titulo">${_esc(libro.titulo)} ${badge}</p>
+        ${libro.genero ? `<p class="pp-libro-goodreads-autor">${_esc(libro.genero)}</p>` : ''}
+        ${puntuacionHtml}
+        ${libro.amazon ? `<a href="${_esc(libro.amazon)}" target="_blank" class="pp-link-externo">Ver en Amazon →</a>` : ''}
+      </div>
+    </div>`;
+}
 // ────────────────────────────────────────────────────────────
 // PINTAR: PERFIL RESEÑADOR
 // ────────────────────────────────────────────────────────────
