@@ -116,8 +116,8 @@ function _evaluarBotonesVerMas() {
  */
 function _toggleVerMas(bloque) {
   const mapaElementos = {
-    descripcion: { contenido: 'pp-reseñador-descripcion', boton: 'pp-btn-vermas-descripcion', claseTruncado: 'pp-texto-truncado' },
-    tropes:      { contenido: 'pp-reseñador-tropes',      boton: 'pp-btn-vermas-tropes',      claseTruncado: 'pp-tropes-truncado' }
+    descripcion: { contenido: 'pp-reseñador-descripcion', boton: 'pp-btn-vermas-descripcion' },
+    tropes:      { contenido: 'pp-reseñador-tropes',      boton: 'pp-btn-vermas-tropes' }
   };
 
   const config = mapaElementos[bloque];
@@ -127,8 +127,9 @@ function _toggleVerMas(bloque) {
   const botonEl = document.getElementById(config.boton);
   if (!contenidoEl || !botonEl) return;
 
+  // pp-texto-truncado / pp-tropes-truncado quedan SIEMPRE puestas;
+  // solo togglear pp-expandido, que es la que sobreescribe el recorte.
   const expandido = contenidoEl.classList.toggle('pp-expandido');
-  contenidoEl.classList.toggle(config.claseTruncado, !expandido);
   botonEl.textContent = expandido ? 'Ver menos' : 'Ver más';
 }
 
