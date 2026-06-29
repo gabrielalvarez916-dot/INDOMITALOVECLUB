@@ -60,6 +60,7 @@ function mostrarSeccion(nombre) {
     'perfil',
     'faq-autor',
     'admin'
+    'biblioteca-resenador'
   ];
 
   // Oculta todas
@@ -100,6 +101,9 @@ function mostrarSeccion(nombre) {
       break;          
     case 'admin':
       if (typeof cargarAdmin === 'function') cargarAdmin();
+      break;
+    case 'biblioteca-resenador':
+      if (typeof cargarBibliotecaSeccion === 'function') cargarBibliotecaSeccion();
       break;
   }
 }
