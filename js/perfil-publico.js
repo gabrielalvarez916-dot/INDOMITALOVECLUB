@@ -38,10 +38,11 @@ async function abrirPerfilPublico(id, rol) {
 // ────────────────────────────────────────────────────────────
 
 async function _cargarPerfilAutor(idAutor) {
-  const [resPerfil, resLibros, resCampañas] = await Promise.all([
+  const [resPerfil, resLibros, resCampañas, resGamif] = await Promise.all([
     llamarBackend('obtenerPerfilPublicoAutor',   { idAutor }),
     llamarBackend('listarLibrosPerfilPublico',    { idAutor }),
     llamarBackend('listarCampanasActivasPorAutor', { idAutor }),
+    llamarBackend('obtenerGamificacionAutor',     { idAutor })  // ← NUEVA LÍNEA
   ]);
 
   if (!resPerfil.ok) {
@@ -52,8 +53,9 @@ async function _cargarPerfilAutor(idAutor) {
   const perfil   = resPerfil.datos.perfil;
   const libros   = resLibros.ok   ? (resLibros.datos.libros   || []) : [];
   const campañas = resCampañas.ok ? (resCampañas.datos.campañas || []) : [];
+   const gamif    = resGamif.ok    ? resGamif.datos : null;
 
-  _pintarPerfilAutor(perfil, libros, campañas);
+  _pintarPerfilAutor(perfil, libros, campañas, gamif);
   _estadoPerfilPublico('autor');
 }
 
@@ -140,7 +142,7 @@ function _toggleVerMas(bloque) {
 // PINTAR: PERFIL AUTOR
 // ────────────────────────────────────────────────────────────
 
-function _pintarPerfilAutor(perfil, libros, campañas) {
+function _pintarPerfilAutor(perfil, libros, campañas, gamif) {
   // Cabecera común
   _pintarCabeceraComun(perfil, '');
 
@@ -150,6 +152,15 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
     miembroDesdeEl.textContent = perfil.miembroDesde
       ? `Miembro desde ${formatearFechaAmigable(perfil.miembroDesde)}`
       : '';
+  }
+
+  // ═══ GAMIFICACIÓN ═══
+  if (gamif) {
+    const gamifCont = document.getElementById('pp-autor-gamificacion');
+    if (gamifCont) {
+      gamifCont.innerHTML = _renderGamificacionAutor(gamif);
+      gamifCont.parentElement.style.display = '';
+    }
   }
 
   // Libros — cards estilo Goodreads, igual que en reseñador
@@ -178,7 +189,12 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
               ? `<img src="${_esc(portadaUrl)}" alt="${_esc(c.nombreLibro)}" class="pp-libro-goodreads-portada" />`
               : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
             <div class="pp-libro-goodreads-info">
-              <p class="pp-libro-goodreads-titulo">${_esc(c.nombreLibro)}</p>
+              <p class="pp-libro-goodreads-titulo">
+  ${_esc(c.nombreLibro)}
+  ${c.sello ? `<span class="pp-badge pp-badge-sello pp-sello-${c.sello}">
+    ${_iconoSello(c.sello)} ${_labelSello(c.sello)}
+  </span>` : ''}
+</p>
               ${c.fechaLimite ? `<p class="pp-libro-goodreads-fecha">Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
               <button class="btn-secundario btn-sm" style="margin-top:8px;" onclick="cerrarModalPerfilPublico(); verDetalleCampaña('${_esc(c.id)}');">
                 Ver campaña
