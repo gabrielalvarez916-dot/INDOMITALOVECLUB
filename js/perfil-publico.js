@@ -169,9 +169,10 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
       campañasCont.innerHTML = '<p class="pp-vacio">Sin campañas activas en este momento.</p>';
     } else {
       campañasCont.innerHTML = campañas.map(c => {
-        const portadaUrl = c.portada
-          ? (c.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + c.portada : c.portada)
-          : '';
+        campañasCont.innerHTML = campañas.map(c => {
+  const portadaUrl = c.linkPortada
+    ? (c.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + c.linkPortada : c.linkPortada)
+    : '';
         return `
           <div class="pp-libro-goodreads-card">
             ${portadaUrl
