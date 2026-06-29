@@ -85,6 +85,54 @@ async function _cargarPerfilReseñador(idReseñador) {
 }
 
 // ────────────────────────────────────────────────────────────
+// BOTONES "VER MÁS" (descripción y tropes del perfil reseñador)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Revisa si la descripción o los tropes están recortados visualmente
+ * (overflow), y si es así, muestra el botón "Ver más" correspondiente.
+ * Se llama después de pintar el perfil del reseñador.
+ */
+function _evaluarBotonesVerMas() {
+  const descripcionEl = document.getElementById('pp-reseñador-descripcion');
+  const btnDescripcion = document.getElementById('pp-btn-vermas-descripcion');
+  if (descripcionEl && btnDescripcion) {
+    const estaTruncado = descripcionEl.scrollHeight > descripcionEl.clientHeight;
+    btnDescripcion.style.display = estaTruncado ? 'inline-block' : 'none';
+  }
+
+  const tropesEl = document.getElementById('pp-reseñador-tropes');
+  const btnTropes = document.getElementById('pp-btn-vermas-tropes');
+  if (tropesEl && btnTropes) {
+    const estaTruncado = tropesEl.scrollHeight > tropesEl.clientHeight;
+    btnTropes.style.display = estaTruncado ? 'inline-block' : 'none';
+  }
+}
+
+/**
+ * Expande o contrae el bloque de descripción o tropes al hacer
+ * clic en "Ver más" / "Ver menos".
+ * @param {'descripcion'|'tropes'} bloque
+ */
+function _toggleVerMas(bloque) {
+  const mapaElementos = {
+    descripcion: { contenido: 'pp-reseñador-descripcion', boton: 'pp-btn-vermas-descripcion', claseTruncado: 'pp-texto-truncado' },
+    tropes:      { contenido: 'pp-reseñador-tropes',      boton: 'pp-btn-vermas-tropes',      claseTruncado: 'pp-tropes-truncado' }
+  };
+
+  const config = mapaElementos[bloque];
+  if (!config) return;
+
+  const contenidoEl = document.getElementById(config.contenido);
+  const botonEl = document.getElementById(config.boton);
+  if (!contenidoEl || !botonEl) return;
+
+  const expandido = contenidoEl.classList.toggle('pp-expandido');
+  contenidoEl.classList.toggle(config.claseTruncado, !expandido);
+  botonEl.textContent = expandido ? 'Ver menos' : 'Ver más';
+}
+
+// ────────────────────────────────────────────────────────────
 // PINTAR: PERFIL AUTOR
 // ────────────────────────────────────────────────────────────
 
