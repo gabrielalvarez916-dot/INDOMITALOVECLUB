@@ -185,16 +185,18 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif) {
           : '';
         return `
           <div class="pp-libro-goodreads-card">
-            ${portadaUrl
-              ? `<img src="${_esc(portadaUrl)}" alt="${_esc(c.nombreLibro)}" class="pp-libro-goodreads-portada" />`
-              : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
-            <div class="pp-libro-goodreads-info">
-              <p class="pp-libro-goodreads-titulo">
-  ${_esc(c.nombreLibro)}
-  ${c.sello ? `<span class="pp-badge pp-badge-sello pp-sello-${c.sello}">
-    ${_iconoSello(c.sello)} ${_labelSello(c.sello)}
-  </span>` : ''}
-</p>
+              <div class="pp-portada-con-sello">
+                ${portadaUrl
+                  ? `<img src="${_esc(portadaUrl)}" alt="${_esc(c.nombreLibro)}" class="pp-libro-goodreads-portada" />`
+                  : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
+                ${c.sello ? `
+                  <span class="pp-sello-flotante pp-sello-${_esc(c.sello)}">
+                    ${_iconoSello(c.sello)} ${_labelSello(c.sello)}
+                  </span>
+                ` : ''}
+              </div>
+              <div class="pp-libro-goodreads-info">
+                <p class="pp-libro-goodreads-titulo">${_esc(c.nombreLibro)}</p>
               ${c.fechaLimite ? `<p class="pp-libro-goodreads-fecha">Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
               <button class="btn-secundario btn-sm" style="margin-top:8px;" onclick="cerrarModalPerfilPublico(); verDetalleCampaña('${_esc(c.id)}');">
                 Ver campaña
@@ -243,48 +245,24 @@ function _renderCardLibroAutor(libro) {
 function _renderGamificacionAutor(gamif) {
   const insigniasHtml = gamif.insignias && gamif.insignias.length > 0
     ? gamif.insignias.map(i => `
-        <span class="pp-insignia-mini" title="${_esc(i.Codigo)}">
-          ${_iconoInsignia(i.Tipo)} ${_labelInsigniaAutor(i)}
-        </span>
-      `).join('')
-    : '<p class="pp-vacio" style="font-size:12px;">Sin insignias aún</p>';
-
-  const campañasConSelloHtml = gamif.campañasConSello && gamif.campañasConSello.length > 0
-    ? gamif.campañasConSello.map(c => `
-        <div class="pp-sello-item">
-          ${c.linkPortada ? `<img src="${_esc(c.linkPortada)}" alt="${_esc(c.nombreLibro)}" />` : ''}
-          <div>
-            <p style="font-weight:600; font-size:13px;">${_esc(c.nombreLibro)}</p>
-            <span class="pp-badge pp-badge-sello pp-sello-${_esc(c.sello)}">
-              ${_iconoSello(c.sello)} ${_esc(c.labelSello)}
-            </span>
-          </div>
+        <div class="pp-insignia-item" title="${_esc(i.Codigo)}">
+          <span class="pp-insignia-icono">${_iconoInsignia(i.Tipo)}</span>
+          <span class="pp-insignia-label">${_esc(_labelInsigniaAutor(i))}</span>
         </div>
       `).join('')
-    : '<p class="pp-vacio" style="font-size:12px;">Sin campañas con sello aún</p>';
+    : '<p class="pp-vacio">Sin insignias aún</p>';
 
   return `
-    <div class="pp-gamificacion-bloque">
-      <div class="pp-gamificacion-header">
-        <div class="pp-gamificacion-nivel">
-          <span class="pp-gamificacion-nivel-valor">${_esc(gamif.labelNivel || 'Nuevo Miembro')}</span>
-          <p style="font-size:11px; color:var(--gris-suave); margin:2px 0 0;">Nivel</p>
-        </div>
-        <div class="pp-gamificacion-puntos">
-          <span class="pp-gamificacion-puntos-valor">${gamif.puntosHistoricos || 0}</span>
-          <p style="font-size:11px; color:var(--gris-suave); margin:2px 0 0;">Puntos</p>
-        </div>
+    <div class="pp-bloque pp-encabezado-historico">
+      <div class="pp-badges-fila">
+        <span class="pp-badge pp-badge-nivel">📚 ${_esc(gamif.labelNivel || 'Nuevo Miembro')}</span>
+        <span class="pp-badge pp-badge-completion">⭐ ${gamif.puntosHistoricos || 0} pts</span>
       </div>
-      
-      <div class="pp-bloque" style="margin-top:12px;">
-        <p class="pp-bloque-titulo">Insignias</p>
-        <div class="pp-insignias-grid-autor">${insigniasHtml}</div>
-      </div>
+    </div>
 
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Campañas con sello</p>
-        <div class="pp-sellos-lista">${campañasConSelloHtml}</div>
-      </div>
+    <div class="pp-bloque">
+      <p class="pp-bloque-titulo">Insignias</p>
+      <div class="pp-insignias-grid">${insigniasHtml}</div>
     </div>
   `;
 }
