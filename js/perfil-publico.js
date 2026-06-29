@@ -82,6 +82,7 @@ async function _cargarPerfilReseñador(idReseñador) {
   _pintarEncabezadoHistorico(encabezado);
   _pintarUltimosLibros(ultimosLibros);
   _estadoPerfilPublico('reseñador');
+  _evaluarBotonesVerMas();
 }
 
 // ────────────────────────────────────────────────────────────
@@ -277,8 +278,6 @@ if (descripcionEl) {
       }).join('');
     }
   }
-
-  _evaluarBotonesVerMas();
 }
 
 // ────────────────────────────────────────────────────────────
