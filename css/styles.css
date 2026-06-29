@@ -3164,6 +3164,16 @@ img { max-width: 100%; display: block; }
   to { transform: rotate(360deg); }
 }
 
+/* ── Campaña vencida en feed (relleno) ── */
+.campana-vencida {
+  opacity: 0.6;
+  filter: grayscale(30%);
+}
+
+.campana-vencida:hover {
+  opacity: 0.75;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .buscador-perfiles-input {
