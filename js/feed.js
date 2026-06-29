@@ -3,6 +3,30 @@
 // Feed público de campañas, filtros, detalle, postulación
 // ============================================================
 
+function renderizarFeed(campañas) {
+  const grid = document.getElementById('feed-grid');
+  if (!grid) return;
+
+  if (campañas.length === 0) {
+    // ... código existente
+    return;
+  }
+
+  // AGREGA ESTO: muestra las cards SIN esperar a que carguen las imágenes
+  grid.innerHTML = campañas.map(c => construirCardCampaña(c)).join('');
+  
+  // Y carga las imágenes de fondo después
+  setTimeout(() => {
+    grid.querySelectorAll('img').forEach(img => {
+      img.loading = 'lazy'; // Carga solo cuando se ve
+    });
+  }, 0);
+
+  toggleElemento('feed-grid', true);
+  toggleElemento('feed-lista-titulo', true);
+  toggleElemento('feed-ticker', true);
+  toggleElemento('feed-vacio', false);
+}
 
 // ────────────────────────────────────────────────────────────
 // VARIABLES GLOBALES DEL FEED
