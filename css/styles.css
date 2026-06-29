@@ -3222,7 +3222,7 @@ img { max-width: 100%; display: block; }
   display: block;
 }
 
-.pp-insignias-grid {
+.pp-insignias-grid-autor {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
