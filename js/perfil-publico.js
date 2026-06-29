@@ -459,26 +459,69 @@ function _renderCardLibroSimple(item, tipo) {
   `;
 }
 
-async function abrirBiblioteca() {
-  if (!_idReseñadorPerfilActual) return;
+// Reemplaza la función abrirBiblioteca() existente
+async function abrirBiblioteca(idReseñadorOverride) {
+  const idReseñador = idReseñadorOverride || _idReseñadorPerfilActual;
+  if (!idReseñador) return;
 
-  mostrarModal('modal-biblioteca');
-  _estadoBiblioteca('cargando');
+  // Guarda el ID para que la sección sepa a quién cargar
+  _idReseñadorPerfilActual = idReseñador;
+
+  // Cierra el modal de perfil si estaba abierto
+  cerrarModales();
+
+  // Navega a la sección biblioteca
+  mostrarSeccion('biblioteca-resenador');
+}
+
+// Función nueva — se llama desde ui.js cuando se navega a 'biblioteca-resenador'
+async function cargarBibliotecaSeccion() {
+  // Si no hay ID seteado (entró desde el panel propio), resuelve desde sesión
+  if (!_idReseñadorPerfilActual) {
+    const email = Sesion.email();
+    if (!email) return;
+
+    const res = await llamarBackend('obtenerIdReseñadorPorEmail', { email });
+    if (!res.ok) {
+      _estadoBibliotecaSeccion('error');
+      return;
+    }
+    _idReseñadorPerfilActual = res.datos.idReseñador;
+  }
+
+  // Actualiza el título con el nombre si está disponible
+  const tituloEl = document.getElementById('bib-titulo-seccion');
+  if (tituloEl) tituloEl.textContent = 'Mi biblioteca';
+
+  _estadoBibliotecaSeccion('cargando');
 
   try {
-    const res = await llamarBackend('obtenerBibliotecaReseñador', { idReseñador: _idReseñadorPerfilActual });
+    const res = await llamarBackend('obtenerBibliotecaReseñador', {
+      idReseñador: _idReseñadorPerfilActual
+    });
 
     if (!res.ok) {
-      _estadoBiblioteca('error');
+      _estadoBibliotecaSeccion('error');
       return;
     }
 
     _pintarBiblioteca(res.datos);
-    _estadoBiblioteca('contenido');
+    _estadoBibliotecaSeccion('contenido');
 
   } catch (e) {
-    _estadoBiblioteca('error');
+    _estadoBibliotecaSeccion('error');
   }
+}
+
+// Control de estados para la sección (no modal)
+function _estadoBibliotecaSeccion(estado) {
+  const mapa = {
+    cargando: 'bib-cargando',
+    error:    'bib-error',
+    contenido:'bib-contenido'
+  };
+  ['bib-cargando', 'bib-error', 'bib-contenido'].forEach(id => toggleElemento(id, false));
+  if (mapa[estado]) toggleElemento(mapa[estado], true);
 }
 
 function cerrarModalBiblioteca() {
