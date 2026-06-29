@@ -154,12 +154,16 @@ function _pintarPerfilAutor(perfil, libros, campañas) {
         const badge = libro.cantidadReseñas >= 5
           ? '<span class="pp-badge pp-badge-destacado">⭐ +5 reseñas</span>'
           : '';
+        const puntuacionHtml = libro.puntuacionPromedio !== null && libro.puntuacionPromedio !== undefined
+          ? `<p class="pp-libro-puntuacion">⭐ ${libro.puntuacionPromedio.toFixed(1)}</p>`
+          : '';
         return `
           <div class="pp-libro-card">
             ${libro.portada ? `<img src="${libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada}" alt="${_esc(libro.titulo)}" class="pp-libro-portada" />` : '<div class="pp-libro-portada pp-portada-placeholder">📖</div>'}
             <div class="pp-libro-info">
               <p class="pp-libro-titulo">${_esc(libro.titulo)} ${badge}</p>
               ${libro.genero ? `<p class="pp-libro-genero">${_esc(libro.genero)}</p>` : ''}
+              ${puntuacionHtml}
               ${libro.amazon ? `<a href="${_esc(libro.amazon)}" target="_blank" class="pp-link-externo">Ver en Amazon →</a>` : ''}
             </div>
           </div>`;
