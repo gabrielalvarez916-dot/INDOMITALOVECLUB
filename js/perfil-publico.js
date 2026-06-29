@@ -66,32 +66,23 @@ let _idReseñadorPerfilActual = null;
 
 async function _cargarPerfilReseñador(idReseñador) {
   _idReseñadorPerfilActual = idReseñador;
-
   const [resPerfil, resEncabezado, resUltimosLibros] = await Promise.all([
     llamarBackend('obtenerPerfilReseñador',         { idReseñador }),
     llamarBackend('obtenerEncabezadoPerfilPublico', { idReseñador }),
     llamarBackend('obtenerUltimosLibrosLeidos',     { idReseñador }),
   ]);
-
   if (!resPerfil.ok) {
     _estadoPerfilPublico('error');
     return;
   }
-
-  const perfil        = resPerfil.datos.perfil;
-  const encabezado     = resEncabezado.ok ? resEncabezado.datos : null;
-  const ultimosLibros  = resUltimosLibros.ok ? (resUltimosLibros.datos.libros || []) : [];
-
+  const perfil       = resPerfil.datos.perfil;
+  const encabezado   = resEncabezado.ok ? resEncabezado.datos : null;
+  const ultimosLibros = resUltimosLibros.ok ? (resUltimosLibros.datos.libros || []) : [];
   _pintarPerfilReseñador(perfil, []);
   _pintarEncabezadoHistorico(encabezado);
   _pintarUltimosLibros(ultimosLibros);
   _estadoPerfilPublico('reseñador');
 }
-}).join('');
-    }
-  }
-}
-  _evaluarBotonesVerMas();
 
 // ────────────────────────────────────────────────────────────
 // PINTAR: PERFIL AUTOR
@@ -223,22 +214,22 @@ if (descripcionEl) {
       postCont.innerHTML = '<p class="pp-vacio">Sin actividad reciente.</p>';
     } else {
       postCont.innerHTML = postulaciones.map(p => {
-  const estadoClase = {
-    'Pendiente':  'pp-estado-pendiente',
-    'Aprobado':   'pp-estado-aprobado',
-    'Reseñado':   'pp-estado-reseñado',
-  }[p.badgeEstado] || 'pp-estado-pendiente';
-
-  return `
-    <div class="pp-post-fila">
-      <span class="pp-post-libro">${_esc(p.campaña?.nombreLibro || '—')}</span>
-      <span class="pp-estado ${estadoClase}">${_esc(p.badgeEstado || '—')}</span>
-    </div>`;
-}).join('');
+        const estadoClase = {
+          'Pendiente':  'pp-estado-pendiente',
+          'Aprobado':   'pp-estado-aprobado',
+          'Reseñado':   'pp-estado-reseñado',
+        }[p.badgeEstado] || 'pp-estado-pendiente';
+        return `
+          <div class="pp-post-fila">
+            <span class="pp-post-libro">${_esc(p.campaña?.nombreLibro || '—')}</span>
+            <span class="pp-estado ${estadoClase}">${_esc(p.badgeEstado || '—')}</span>
+          </div>`;
+      }).join('');
     }
   }
-}
 
+  _evaluarBotonesVerMas();
+}
 
 // ────────────────────────────────────────────────────────────
 // PINTAR: CABECERA COMÚN (avatar, alias, país, ciudad, redes)
