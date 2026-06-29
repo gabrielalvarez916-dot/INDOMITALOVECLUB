@@ -3003,3 +3003,10 @@ img { max-width: 100%; display: block; }
   border-radius: 6px;
   margin-left: 4px;
 }
+/* ── Puntuación promedio del libro (perfil público de autor) ── */
+.pp-libro-puntuacion {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f5a623;
+  margin: 2px 0;
+}
