@@ -63,6 +63,7 @@ async function _cargarPerfilAutor(idAutor) {
 // ────────────────────────────────────────────────────────────
 
 let _idReseñadorPerfilActual = null;
+let _bibliotecaEsPropia = false;
 
 async function _cargarPerfilReseñador(idReseñador) {
   _idReseñadorPerfilActual = idReseñador;
@@ -504,19 +505,16 @@ async function abrirBiblioteca(idReseñadorOverride) {
   const idReseñador = idReseñadorOverride || _idReseñadorPerfilActual;
   if (!idReseñador) return;
 
-  // Guarda el ID para que la sección sepa a quién cargar
   _idReseñadorPerfilActual = idReseñador;
+  _bibliotecaEsPropia = false;  // ← viene del perfil público de otra persona
 
-  // Cierra el modal de perfil si estaba abierto
   cerrarModales();
 
-  // Navega a la sección biblioteca
   mostrarSeccion('biblioteca-resenador');
 }
 
 // Función nueva — se llama desde ui.js cuando se navega a 'biblioteca-resenador'
 async function cargarBibliotecaSeccion() {
-  // Si no hay ID seteado (entró desde el panel propio), resuelve desde sesión
   if (!_idReseñadorPerfilActual) {
     const email = Sesion.email();
     if (!email) return;
@@ -527,11 +525,14 @@ async function cargarBibliotecaSeccion() {
       return;
     }
     _idReseñadorPerfilActual = res.datos.idReseñador;
+    _bibliotecaEsPropia = true;  // ← se resolvió desde la sesión propia
   }
 
-  // Actualiza el título con el nombre si está disponible
+  // Título: "Mi biblioteca" si es la propia, o el alias de la otra persona
   const tituloEl = document.getElementById('bib-titulo-seccion');
-  if (tituloEl) tituloEl.textContent = 'Mi biblioteca';
+  if (tituloEl) {
+    tituloEl.textContent = _bibliotecaEsPropia ? 'Mi biblioteca' : 'Biblioteca';
+  }
 
   _estadoBibliotecaSeccion('cargando');
 
