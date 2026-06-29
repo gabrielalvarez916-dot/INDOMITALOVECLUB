@@ -153,8 +153,10 @@ const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
      </p>`
   : '';
 
-  let botonHtml = '';
-  if (rol === 'reseñador') {
+ let botonHtml = '';
+  if (c.estaVencida) {
+    botonHtml = `<button class="btn-secundario btn-sm" disabled style="opacity:0.5; cursor:not-allowed;">Campaña cerrada</button>`;
+  } else if (rol === 'reseñador') {
     if (c.cuposDisponibles > 0) {
       botonHtml = `<button class="btn-primario btn-sm" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`;
     } else {
@@ -163,12 +165,12 @@ const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
   } else if (!rol) {
     botonHtml = `<button class="btn-secundario btn-sm" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte</button>`;
   }
-
+  
   const icoSilla = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>`;
   const icoReloj = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
 
   return `
-    <div class="campana-card-horizontal" onclick="verDetalleCampaña('${c.id}')">
+    <div class="campana-card-horizontal${c.estaVencida ? ' campana-vencida' : ''}" onclick="verDetalleCampaña('${c.id}')">
       ${portadaHtml}
       <div class="campana-info">
 <p class="campana-autor"
