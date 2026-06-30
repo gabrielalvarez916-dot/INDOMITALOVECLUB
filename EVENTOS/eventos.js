@@ -225,6 +225,14 @@ async function renderPaginaEvento() {
 
   const evento = _EventosState.eventoActivo;
 
+    // ← AGREGAR: pantalla de carga mientras se espera al backend
+  contenedor.innerHTML = `
+    <div class="cargando-container">
+      <div class="spinner"></div>
+      <p>Cargando evento...</p>
+    </div>
+  `;
+
   // Refresca el progreso al entrar a la página (puede haber cambiado
   // desde que se cargó la app, ej. el usuario aprobó un reseñador)
   const resultado = await llamarBackend('inicializarEventoUsuario', {
