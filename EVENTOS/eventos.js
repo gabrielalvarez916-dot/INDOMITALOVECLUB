@@ -161,14 +161,14 @@ function _mostrarModalInicioEvento(evento) {
   _iniciarAnimacionBesosCayendo(evento);
 
   btnEntendido.onclick = async () => {
-    await llamarBackend('marcarModalEventoVisto', {
-      idUsuario: _EventosState.idUsuario,
-      idEvento: evento.id
-    });
-    cerrarModales();
-    _detenerAnimacionBesosCayendo();
-  };
-}
+  await llamarBackend('marcarModalEventoVisto', {
+    idUsuario: _EventosState.idUsuario,
+    idEvento: evento.id
+  });
+  cerrarModales();
+  _detenerAnimacionBesosCayendo();
+  mostrarSeccion('evento'); // ← agregar esta línea
+};
 
 /**
  * Animación decorativa: íconos de beso cayendo dentro del modal.
