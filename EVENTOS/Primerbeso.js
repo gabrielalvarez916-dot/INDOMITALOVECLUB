@@ -45,13 +45,13 @@ const EVENTO_PRIMER_BESO = {
   // en el backend. NO usar rutas relativas: las imágenes no
   // viven en el repo del frontend desplegado en Vercel.
   // ────────────────────────────────────────────────────────
-  imagenes: {
-    insigniaColor:   'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/insignia_color.png?raw=true',
-    insigniaGris:    'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/insignia_gris.png?raw=true',
-    banner:          'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/banner.png?raw=true',
-    decoracionModal: 'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/modal_decoracion.png?raw=true',
-    fondo:           'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/fondo.jpg?raw=true',
-    iconoBeso:       'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/icono_beso.png?raw=true'
+ imagenes: {
+  insigniaColor:   'assets/eventos/primer_beso/insignia_color.png',
+  insigniaGris:    'assets/eventos/primer_beso/insignia_gris.png',
+  banner:          'assets/eventos/primer_beso/banner.png',
+  decoracionModal: 'assets/eventos/primer_beso/modal_decoracion.png',
+  fondo:           'assets/eventos/primer_beso/fondo.jpg',
+  iconoBeso:       'assets/eventos/primer_beso/icono_beso.png'
   },
 
   // ────────────────────────────────────────────────────────
