@@ -60,7 +60,8 @@ function mostrarSeccion(nombre) {
     'perfil',
     'faq-autor',
     'admin',
-    'biblioteca-resenador'
+    'biblioteca-resenador',
+    'evento'
   ];
 
   // Oculta todas
@@ -102,8 +103,11 @@ function mostrarSeccion(nombre) {
     case 'admin':
       if (typeof cargarAdmin === 'function') cargarAdmin();
       break;
-    case 'biblioteca-resenador':
+  case 'biblioteca-resenador':
       if (typeof cargarBibliotecaSeccion === 'function') cargarBibliotecaSeccion();
+      break;
+    case 'evento':
+      if (typeof renderPaginaEvento === 'function') renderPaginaEvento();
       break;
   }
 }
@@ -188,8 +192,11 @@ function mostrarHeaderDeslogueado() {
   const navFaqAutor = document.getElementById('nav-faq-autor');
   if (navFaqAutor) navFaqAutor.style.display = 'none';
 
-  const navAdmin = document.getElementById('nav-admin');
+ const navAdmin = document.getElementById('nav-admin');
   if (navAdmin) navAdmin.style.display = 'none';
+
+  const navEvento = document.getElementById('nav-evento');
+  if (navEvento) navEvento.style.display = 'none';
 }
 
 
