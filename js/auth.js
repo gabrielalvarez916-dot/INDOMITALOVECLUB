@@ -180,7 +180,7 @@ function completarLogin(usuario) {
   mostrarHeaderLogueado(usuario);
   iniciarNotificaciones();
   verificarModalActualizacion();
-  inicializarEventos();
+ if (typeof inicializarEventos === 'function') inicializarEventos();
 
   _tokenGooglePendiente = null;
   _emailGooglePendiente = null;
@@ -220,7 +220,7 @@ async function verificarSesionActiva() {
   }
   Sesion.guardar(resultado.datos.usuario);
   mostrarHeaderLogueado(resultado.datos.usuario);
-  inicializarEventos();
+   if (typeof inicializarEventos === 'function') inicializarEventos();
   const fotoEl = document.getElementById('perfil-foto');
   if (fotoEl && resultado.datos.usuario.fotoPerfil) {
     fotoEl.src = resultado.datos.usuario.fotoPerfil;
