@@ -3412,11 +3412,26 @@ img { max-width: 100%; display: block; }
   text-align: center;
 }
 
+#modal-evento-inicio .modal-body {
+  position: relative;
+  padding-top: 30px; /* o lo que necesites para que el contenido no choque con el marco */
+}
+
 .evento-modal-decoracion {
-  width: 100px;
-  height: auto;
-  margin: 0 auto 16px;
-  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill; /* o "contain" si querés que mantenga proporción */
+  pointer-events: none;
+  z-index: 0;
+  margin: 0;
+}
+
+.evento-modal-titulo,
+.evento-modal-texto {
+  position: relative;
+  z-index: 1;
 }
 
 .evento-modal-titulo {
