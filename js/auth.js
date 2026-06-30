@@ -368,17 +368,4 @@ async function registrarModalVisto(tipoActualizacion) {
     document.body.style.overflow = '';
   }
 }
-function cerrarSesion() {
-  detenerNotificaciones();  // ← PRIMERO detiene notificaciones
-  Sesion.cerrar();          // ← Luego limpia sesión
-  mostrarHeaderDeslogueado(); // ← Actualiza header
-  mostrarSeccion('login');  // ← Vuelve al login
-  mostrarToast('Sesión cerrada', 'ok');
-}
-function mostrarHeaderDeslogueado() {
-  const btnLogin = document.getElementById('btn-login-header');
-  const usuarioMenu = document.getElementById('usuario-menu');
-  if (btnLogin) btnLogin.style.display = '';
-  if (usuarioMenu) usuarioMenu.style.display = 'none';
-  detenerNotificaciones();
-}
+
