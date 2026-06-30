@@ -121,15 +121,15 @@ function _eventoActivoLocal(evento) {
 // ────────────────────────────────────────────────────────────
 
 function _mostrarBotonNavEvento(evento) {
-  const btn = document.getElementById('nav-btn-evento'); // TODO ID HTML
+  const btn = document.getElementById('nav-evento'); // sigue convención de nav-panel/nav-perfil/nav-admin
   if (!btn) return;
-  btn.style.display = 'inline-flex';
+  btn.style.display = 'inline-block';
   btn.textContent = `💋 ${evento.nombre}`;
   btn.onclick = () => mostrarSeccion('evento'); // requiere case 'evento' en mostrarSeccion() (ui.js)
 }
 
 function _ocultarBotonNavEvento() {
-  const btn = document.getElementById('nav-btn-evento'); // TODO ID HTML
+  const btn = document.getElementById('nav-evento');
   if (btn) btn.style.display = 'none';
 }
 
@@ -143,12 +143,10 @@ function _ocultarBotonNavEvento() {
 // ────────────────────────────────────────────────────────────
 
 function _mostrarModalInicioEvento(evento) {
-  const modal = document.getElementById('modal-evento-inicio'); // TODO ID HTML
-  const overlay = document.getElementById('modal-overlay');
   const contenedor = document.getElementById('modal-evento-inicio-contenido'); // TODO ID HTML
   const btnEntendido = document.getElementById('btn-modal-evento-entendido'); // TODO ID HTML
 
-  if (!modal || !overlay || !contenedor || !btnEntendido) {
+  if (!document.getElementById('modal-evento-inicio') || !contenedor || !btnEntendido) {
     console.warn('Faltan elementos del modal de evento en el HTML.');
     return;
   }
@@ -159,10 +157,7 @@ function _mostrarModalInicioEvento(evento) {
     <p class="evento-modal-texto">${_escaparHtml(evento.textoModal).replace(/\n/g, '<br>')}</p>
   `;
 
-  overlay.style.display = 'block';
-  modal.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-
+  mostrarModal('modal-evento-inicio'); // patrón real de ui.js (classList 'activo')
   _iniciarAnimacionBesosCayendo(evento);
 
   btnEntendido.onclick = async () => {
@@ -170,9 +165,7 @@ function _mostrarModalInicioEvento(evento) {
       idUsuario: _EventosState.idUsuario,
       idEvento: evento.id
     });
-    modal.style.display = 'none';
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
+    cerrarModales();
     _detenerAnimacionBesosCayendo();
   };
 }
@@ -221,7 +214,7 @@ function _detenerAnimacionBesosCayendo() {
 // ────────────────────────────────────────────────────────────
 
 async function renderPaginaEvento() {
-  const contenedor = document.getElementById('seccion-evento'); // TODO ID HTML
+  const contenedor = document.getElementById('seccion-evento');
   if (!contenedor) return;
 
   if (!_EventosState.eventoActivo) {
@@ -310,11 +303,9 @@ function _renderCardReto(reto) {
 // ────────────────────────────────────────────────────────────
 
 function _mostrarAnimacionEventoCompletado(evento, progreso) {
-  const modal = document.getElementById('modal-evento-completado'); // TODO ID HTML
-  const overlay = document.getElementById('modal-overlay');
   const contenedor = document.getElementById('modal-evento-completado-contenido'); // TODO ID HTML
 
-  if (!modal || !overlay || !contenedor) {
+  if (!document.getElementById('modal-evento-completado') || !contenedor) {
     mostrarToast(`¡Completaste el evento ${evento.nombre}! +${progreso.puntosAcumulados} puntos`, 'ok');
     return;
   }
@@ -326,14 +317,10 @@ function _mostrarAnimacionEventoCompletado(evento, progreso) {
     <button id="btn-cerrar-evento-completado" class="btn btn-primario">¡Genial!</button>
   `;
 
-  overlay.style.display = 'block';
-  modal.style.display = 'block';
-  document.body.style.overflow = 'hidden';
+  mostrarModal('modal-evento-completado'); // patrón real de ui.js
 
   document.getElementById('btn-cerrar-evento-completado').onclick = () => {
-    modal.style.display = 'none';
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
+    cerrarModales();
   };
 }
 
@@ -361,7 +348,7 @@ async function registrarAccionEventoSiCorresponde(accion) {
 
     // Refresca el progreso local en silencio (no repinta la UI a menos
     // que el usuario esté parado en la página del evento)
-    const seccionEvento = document.getElementById('seccion-evento'); // TODO ID HTML
+    const seccionEvento = document.getElementById('seccion-evento');
     if (seccionEvento && seccionEvento.style.display !== 'none') {
       renderPaginaEvento();
     }
