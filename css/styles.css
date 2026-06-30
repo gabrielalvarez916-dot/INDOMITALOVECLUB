@@ -3414,7 +3414,7 @@ img { max-width: 100%; display: block; }
 
 #modal-evento-inicio .modal-body {
   position: relative;
-  padding-top: 30px; /* o lo que necesites para que el contenido no choque con el marco */
+  padding-top: 100px; /* o lo que necesites para que el contenido no choque con el marco */
 }
 
 .evento-modal-decoracion {
