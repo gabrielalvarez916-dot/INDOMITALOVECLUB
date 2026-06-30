@@ -160,15 +160,16 @@ function _mostrarModalInicioEvento(evento) {
   mostrarModal('modal-evento-inicio'); // patrón real de ui.js (classList 'activo')
   _iniciarAnimacionBesosCayendo(evento);
 
-  btnEntendido.onclick = async () => {
-  await llamarBackend('marcarModalEventoVisto', {
-    idUsuario: _EventosState.idUsuario,
-    idEvento: evento.id
-  });
-  cerrarModales();
-  _detenerAnimacionBesosCayendo();
-  mostrarSeccion('evento'); // ← agregar esta línea
-};
+ btnEntendido.onclick = async () => {
+    await llamarBackend('marcarModalEventoVisto', {
+      idUsuario: _EventosState.idUsuario,
+      idEvento: evento.id
+    });
+    cerrarModales();
+    _detenerAnimacionBesosCayendo();
+    mostrarSeccion('evento');
+  };
+}
 
 /**
  * Animación decorativa: íconos de beso cayendo dentro del modal.
