@@ -24,7 +24,7 @@ const EVENTO_PRIMER_BESO = {
   // Si activoPorFecha es true, el evento se activa/desactiva solo
   // según fechaInicio y fechaFin (además de requerir activo: true).
   // Si es false, el flag "activo" manda solo (ignora fechas).
-  activoPorFecha: true,
+  activoPorFecha: false,
   fechaInicio: '2026-07-01',
   fechaFin:    '2026-07-15',
 
