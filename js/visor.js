@@ -71,6 +71,10 @@ async function abrirVisorPdf(urlPdf, tituloLibro) {
 
   await cargarLibreriaPdf();
   await inicializarPdf(proxyUrl);
+
+  if (Sesion.rol() === 'reseñador' && typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('leer_pdf');
+  }
 }
 
 
