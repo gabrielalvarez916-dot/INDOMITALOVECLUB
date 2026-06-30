@@ -152,7 +152,7 @@ function _mostrarModalInicioEvento(evento) {
   }
 
   contenedor.innerHTML = `
-    <img src="${evento.imagenes.decoracionModal}" alt="" class="evento-modal-decoracion" />
+    <img src="${evento.imagenes.iconoBeso}" alt="" class="evento-modal-decoracion" />
     <h2 class="evento-modal-titulo">${evento.nombre}</h2>
     <p class="evento-modal-texto">${_escaparHtml(evento.textoModal).replace(/\n/g, '<br>')}</p>
   `;
