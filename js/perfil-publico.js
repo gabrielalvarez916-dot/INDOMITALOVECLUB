@@ -17,15 +17,20 @@
 async function abrirPerfilPublico(id, rol) {
   if (!id || !rol) return;
 
-  // Muestra el modal con estado de carga inmediatamente
   _mostrarModalPerfilPublico();
   _estadoPerfilPublico('cargando');
 
   try {
     if (rol === 'autor') {
       await _cargarPerfilAutor(id);
+      if (Sesion.rol() === 'reseñador' && typeof registrarAccionEventoSiCorresponde === 'function') {
+        registrarAccionEventoSiCorresponde('revisar_perfil_autor');
+      }
     } else if (rol === 'reseñador') {
       await _cargarPerfilReseñador(id);
+      if (Sesion.rol() === 'autor' && typeof registrarAccionEventoSiCorresponde === 'function') {
+        registrarAccionEventoSiCorresponde('revisar_perfil_reseñador');
+      }
     }
   } catch (e) {
     _estadoPerfilPublico('error');
