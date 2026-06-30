@@ -2,7 +2,15 @@
 // evento_primer_beso.js — Indómita Love Club
 // Datos del evento "El Primer Beso".
 // Este archivo es SOLO DATOS. La lógica genérica vive en eventos.js.
-// Para activar/desactivar el evento, cambiar el flag "activo".
+//
+// IMPORTANTE: este archivo debe coincidir 1:1 con EventoPrimerBeso.gs
+// (backend) en: id, fechaInicio, fechaFin, e imágenes. Si se edita
+// algo acá, replicar el cambio también en el backend.
+//
+// Para activar/desactivar el evento manualmente, cambiar "activo".
+// activo + activoPorFecha acá son solo para que el frontend pueda
+// pintar instantáneamente sin esperar al backend; la validación
+// real y definitiva siempre la hace eventoEstaActivo() en el .gs.
 // ============================================================
 
 const EVENTO_PRIMER_BESO = {
@@ -10,34 +18,40 @@ const EVENTO_PRIMER_BESO = {
   // ────────────────────────────────────────────────────────
   // CONTROL DE ACTIVACIÓN
   // ────────────────────────────────────────────────────────
-  id: 'EVT_PRIMER_BESO',
+  id: 'primer_beso', // ← debe coincidir EXACTO con EVENTO_PRIMER_BESO.id en el backend
   activo: true, // ← cambiar a false para desactivar el evento manualmente
 
   // Si activoPorFecha es true, el evento se activa/desactiva solo
   // según fechaInicio y fechaFin (además de requerir activo: true).
   // Si es false, el flag "activo" manda solo (ignora fechas).
   activoPorFecha: true,
-  fechaInicio: '2026-07-01T00:00:00',
-  fechaFin:    '2026-07-15T23:59:59',
+  fechaInicio: '2026-07-01',
+  fechaFin:    '2026-07-15',
 
   // ────────────────────────────────────────────────────────
   // TEXTOS GENERALES
   // ────────────────────────────────────────────────────────
   nombre: 'El Primer Beso',
 
+  textoModal: '¡Comenzó el evento El Primer Beso!\nCumple los retos, suma puntos y gana la insignia exclusiva.',
+
   historia: {
     titulo: '¿De qué trata?',
-    texto: 'Hay historias que comienzan con un suspiro, una mirada o… un beso inolvidable. Durante este evento, completa los cinco retos, acumula puntos y obtén la insignia Primer Beso. Pero lo más importante... acompáñanos en los nervios, la emoción y lo único de este Primer Beso juntos.'
+    texto: 'Hay historias que comienzan con un suspiro, una mirada o… un beso inolvidable. Durante este evento, completa los cuatro retos, acumula puntos y obtén la insignia Primer Beso. Pero lo más importante... acompáñanos en los nervios, la emoción y lo único de este Primer Beso juntos.'
   },
 
   // ────────────────────────────────────────────────────────
-  // IMÁGENES (rutas en GitHub, ajustar si cambia la carpeta)
+  // IMÁGENES — URLs absolutas de GitHub (?raw=true), igual que
+  // en el backend. NO usar rutas relativas: las imágenes no
+  // viven en el repo del frontend desplegado en Vercel.
   // ────────────────────────────────────────────────────────
   imagenes: {
-    insigniaColor: '/assets/eventos/primer_beso/insignia_color.png',
-    insigniaGris:  '/assets/eventos/primer_beso/insignia_gris.png',
-    banner:        '/assets/eventos/primer_beso/banner.png',
-    decoracionModal: '/assets/eventos/primer_beso/decoracion_modal.png'
+    insigniaColor:   'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/insignia_color.png?raw=true',
+    insigniaGris:    'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/insignia_gris.png?raw=true',
+    banner:          'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/banner.png?raw=true',
+    decoracionModal: 'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/modal_decoracion.png?raw=true',
+    fondo:           'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/fondo.jpg?raw=true',
+    iconoBeso:       'https://github.com/gabrielalvarez916-dot/INDOMITALOVECLUB/blob/main/assets/eventos/primer_beso/icono_beso.png?raw=true'
   },
 
   // ────────────────────────────────────────────────────────
@@ -48,6 +62,10 @@ const EVENTO_PRIMER_BESO = {
   // desbloquear el N+1 y sumar a la insignia) si el reto N-1
   // también está completado. El conteo de acciones se guarda
   // siempre, ocurra en el orden que ocurra.
+  //
+  // El campo "accion" es solo informativo en el frontend (debug /
+  // posible estilizado por tipo). El cálculo real de progreso lo
+  // hace siempre el backend vía _configAccionesEvento().
   // ────────────────────────────────────────────────────────
 
   retos: {
