@@ -178,6 +178,7 @@ async function seleccionarRol(rol) {
 function completarLogin(usuario) {
   Sesion.guardar(usuario);
   mostrarHeaderLogueado(usuario);
+  iniciarNotificaciones();
   verificarModalActualizacion();
 
   _tokenGooglePendiente = null;
@@ -366,4 +367,18 @@ async function registrarModalVisto(tipoActualizacion) {
     if (overlay) overlay.style.display = 'none';
     document.body.style.overflow = '';
   }
+}
+function cerrarSesion() {
+  detenerNotificaciones();  // ← PRIMERO detiene notificaciones
+  Sesion.cerrar();          // ← Luego limpia sesión
+  mostrarHeaderDeslogueado(); // ← Actualiza header
+  mostrarSeccion('login');  // ← Vuelve al login
+  mostrarToast('Sesión cerrada', 'ok');
+}
+function mostrarHeaderDeslogueado() {
+  const btnLogin = document.getElementById('btn-login-header');
+  const usuarioMenu = document.getElementById('usuario-menu');
+  if (btnLogin) btnLogin.style.display = '';
+  if (usuarioMenu) usuarioMenu.style.display = 'none';
+  detenerNotificaciones();
 }
