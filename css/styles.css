@@ -3388,3 +3388,323 @@ img { max-width: 100%; display: block; }
     width: auto;
   }
 }
+/* ════════════════════════════════════════════════════════════
+   EVENTOS — Indómita Love Club
+   Agregar al final de css/styles.css
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Botón "Evento" en el nav ─────────────────────────────── */
+#nav-evento {
+  background: linear-gradient(135deg, var(--bordo) 0%, var(--bordo-claro) 100%);
+  color: var(--blanco) !important;
+  padding: 6px 16px;
+  font-weight: 700;
+}
+
+#nav-evento:hover {
+  background: linear-gradient(135deg, var(--bordo-oscuro) 0%, var(--bordo) 100%);
+  color: var(--blanco) !important;
+}
+
+/* ── Modal de inicio / completado: fondo decorativo ───────── */
+#modal-evento-inicio .modal-body,
+#modal-evento-completado .modal-body {
+  text-align: center;
+}
+
+.evento-modal-decoracion {
+  width: 100px;
+  height: auto;
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.evento-modal-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 26px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--bordo);
+  margin-bottom: 12px;
+}
+
+.evento-modal-texto {
+  font-size: 14px;
+  color: var(--gris-texto);
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+/* ── Animación: besos cayendo dentro del modal de inicio ──── */
+.evento-beso-cayendo {
+  position: absolute;
+  top: -40px;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  animation: evento-caida linear forwards;
+  z-index: 1;
+}
+
+@keyframes evento-caida {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(420px) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+/* ── Banner de la página del evento ───────────────────────── */
+.evento-banner {
+  width: 100%;
+  min-height: 220px;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radio-grande);
+  display: flex;
+  align-items: flex-end;
+  padding: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.evento-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(92,15,26,0) 0%, rgba(92,15,26,0.75) 100%);
+}
+
+.evento-banner h1 {
+  position: relative;
+  z-index: 1;
+  font-family: var(--fuente-titulo);
+  font-size: 32px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--blanco);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 768px) {
+  .evento-banner { min-height: 160px; padding: 18px; }
+  .evento-banner h1 { font-size: 24px; }
+}
+
+/* ── Historia / texto introductorio del evento ────────────── */
+.evento-historia {
+  background: var(--rosa-claro);
+  border: 1px solid var(--rosa);
+  border-radius: var(--radio-grande);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.evento-historia h3 {
+  font-family: var(--fuente-titulo);
+  font-size: 17px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--bordo);
+  margin-bottom: 8px;
+}
+
+.evento-historia p {
+  font-size: 14px;
+  color: var(--gris-texto);
+  line-height: 1.6;
+}
+
+/* ── Preview de insignia + puntos ─────────────────────────── */
+.evento-insignia-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.evento-insignia-preview img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(139,26,43,0.2));
+}
+
+.evento-insignia-preview p {
+  font-family: var(--fuente-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bordo);
+}
+
+/* ── Lista de retos ────────────────────────────────────────── */
+.evento-retos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.evento-reto {
+  background: var(--blanco);
+  border: 1.5px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 18px 20px;
+  box-shadow: var(--sombra-card);
+  transition: var(--transicion);
+}
+
+.evento-reto-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.evento-reto-nombre {
+  font-family: var(--fuente-titulo);
+  font-size: 17px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--bordo-oscuro);
+}
+
+.evento-reto-puntos {
+  background: var(--bordo);
+  color: var(--blanco);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radio-pill);
+  white-space: nowrap;
+}
+
+.evento-reto-bloqueado-msg {
+  font-size: 12px;
+  color: var(--gris-suave);
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.evento-subretos-lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.evento-subreto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--gris-texto);
+}
+
+.evento-subreto-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  color: var(--gris-suave);
+}
+
+.evento-subreto-desc { flex: 1; }
+
+.evento-subreto-progreso {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gris-suave);
+  white-space: nowrap;
+}
+
+/* Estado: completo */
+.evento-reto--completo {
+  border-color: var(--ok);
+  background: #F4FBF5;
+}
+
+.evento-reto--completo .evento-reto-puntos {
+  background: var(--ok);
+}
+
+.evento-subreto--completo .evento-subreto-check {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: var(--blanco);
+}
+
+.evento-subreto--completo .evento-subreto-desc {
+  color: var(--gris-suave);
+  text-decoration: line-through;
+}
+
+/* Estado: activo (desbloqueado, en progreso) */
+.evento-reto--activo {
+  border-color: var(--rosa);
+}
+
+.evento-reto--activo .evento-subreto-check {
+  border-color: var(--bordo);
+}
+
+/* Estado: bloqueado */
+.evento-reto--bloqueado {
+  opacity: 0.55;
+  background: var(--crema-suave);
+}
+
+.evento-reto--bloqueado .evento-reto-puntos {
+  background: var(--gris-suave);
+}
+
+/* ── Insignia grande en el modal de completado ────────────── */
+.evento-insignia-grande {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  margin: 0 auto 16px;
+  display: block;
+  filter: drop-shadow(0 6px 18px rgba(139,26,43,0.3));
+  animation: evento-insignia-pop 0.5s ease;
+}
+
+@keyframes evento-insignia-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  70%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+#modal-evento-completado h2 {
+  font-family: var(--fuente-titulo);
+  font-size: 24px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--bordo);
+  margin-bottom: 8px;
+}
+
+#modal-evento-completado p {
+  font-size: 14px;
+  color: var(--gris-texto);
+  margin-bottom: 20px;
+}
+
+/* ── Estado vacío (sin evento activo) ─────────────────────── */
+.evento-vacio {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 15px;
+  color: var(--gris-suave);
+}
