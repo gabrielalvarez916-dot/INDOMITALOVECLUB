@@ -172,6 +172,7 @@ function mostrarHeaderLogueado(usuario) {
  * Muestra el botón Ingresar, oculta el menú de usuario.
  */
 function mostrarHeaderDeslogueado() {
+  detenerNotificaciones(); 
   const btnLogin = document.getElementById('btn-login-header');
   if (btnLogin) btnLogin.style.display = 'inline-block';
 
@@ -305,6 +306,7 @@ function cambiarTab(tabClickeado, idContenido) {
  * Limpia la sesión local, actualiza el header y va al login.
  */
 function cerrarSesion() {
+  detenerNotificaciones();
   // Si Google está cargado, revoca el token
   if (typeof google !== 'undefined' && google.accounts) {
     google.accounts.id.disableAutoSelect();
