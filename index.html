@@ -24,6 +24,7 @@
         <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
        <a href="#" class="nav-link" id="nav-faq-autor" style="display:none;" onclick="mostrarSeccion('faq-autor')">Dudas</a>
         <a href="#" class="nav-link" id="nav-admin" style="display:none;" onclick="mostrarSeccion('admin')">Admin</a>
+        <a href="#" class="nav-link" id="nav-evento" style="display:none;" onclick="mostrarSeccion('evento')">💋 Evento</a>
       </nav>
       <div id="header-auth">
   <div id="notif-campana-cont" style="display:none;">
@@ -471,7 +472,11 @@
     </div>
   </section>
 
-
+<!-- SECCIÓN: EVENTO -->
+  <section id="seccion-evento" class="seccion" style="display:none;">
+    <div class="seccion-inner seccion-angosta"></div>
+  </section>
+  
   <!-- MODALES -->
   <div id="modal-overlay" class="modal-overlay" onclick="cerrarModales()"></div>
 
@@ -487,6 +492,30 @@
   <div class="modal-footer">
     <button type="button" class="btn-primario" id="btn-modal-actualizaciones-entendido" onclick="registrarModalVisto('actualizacion_junio_2026')">Entendido</button>
   </div>
+</div>
+
+  <!-- Modal: inicio de evento -->
+<div id="modal-evento-inicio" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">✨ Nuevo evento</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body" style="position:relative; overflow:hidden;">
+    <div id="evento-modal-animacion" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;"></div>
+    <div id="modal-evento-inicio-contenido" style="position:relative; text-align:center;"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn-primario" id="btn-modal-evento-entendido">¡Vamos!</button>
+  </div>
+</div>
+
+<!-- Modal: evento completado -->
+<div id="modal-evento-completado" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">🎉 ¡Insignia ganada!</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body" id="modal-evento-completado-contenido" style="text-align:center;"></div>
 </div>
   
   <!-- Modal: detalle de campaña -->
@@ -1009,6 +1038,8 @@
 <script src="js/ui.js"></script>
 <script src="js/admin-impersonar.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/evento_primer_beso.js"></script>
+<script src="js/eventos.js"></script>
 <script src="js/notificaciones.js"></script>
 <script src="js/feed.js"></script>
 <script src="js/buscador-perfiles.js"></script>
