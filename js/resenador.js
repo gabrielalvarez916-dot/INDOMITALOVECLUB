@@ -199,12 +199,8 @@ async function cargarArcsActivos(email) {
     return;
   }
 
-  // Filtra solo postulaciones aprobadas en campañas activas
-  _arcsActivosReseñador = (resultado.datos.postulaciones || []).filter(p =>
-    p.estado === 'aprobada' &&
-    p.campaña &&
-    p.campaña.estado === 'activa'
-  );
+  // Filtra solo postulaciones cuyo plazo personal del reseñador sigue vigente
+  _arcsActivosReseñador = (resultado.datos.postulaciones || []).filter(p => p.arcActiva);
 
   if (_arcsActivosReseñador.length === 0) {
     contenedor.innerHTML = `
