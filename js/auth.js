@@ -90,57 +90,45 @@ async function manejarRespuestaGoogle(respuesta) {
   }
 
   const token = respuesta.credential;
+  const datosGoogle = decodificarJWT(token); // solo para precargar nombre/apellido en el paso 2
 
-  const datosGoogle = decodificarJWT(token);
-  if (!datosGoogle) {
-    mostrarErrorLogin('Error al procesar los datos de Google.');
-    return;
-  }
-
-  _tokenGooglePendiente = token;
-  _emailGooglePendiente = datosGoogle.email;
-  _nombreGooglePendiente = datosGoogle.given_name || datosGoogle.name?.split(' ')[0] || '';
-  _apellidoGooglePendiente = datosGoogle.family_name || datosGoogle.name?.split(' ').slice(1).join(' ') || '';
+  _nombreGooglePendiente = datosGoogle?.given_name || datosGoogle?.name?.split(' ')[0] || '';
+  _apellidoGooglePendiente = datosGoogle?.family_name || datosGoogle?.name?.split(' ').slice(1).join(' ') || '';
 
   _toggleElemento('login-cargando', true);
   _toggleElemento('login-paso1', false);
 
-const resultado = await llamarBackend('loginConGoogle', {
-  email: _emailGooglePendiente,
-  googleToken: token
-});
+  // 1. Login real contra Supabase (verifica el token del lado del servidor)
+  const { data, error } = await supabaseClient.auth.signInWithIdToken({
+    provider: 'google',
+    token: token
+  });
 
-
-  if (!resultado.ok) {
-    mostrarErrorLogin(resultado.mensaje || 'Error al iniciar sesión.');
+  if (error) {
+    mostrarErrorLogin('Error al iniciar sesión: ' + error.message);
     return;
   }
 
-  if (resultado.datos.esNuevo) {
-    mostrarPasoEleccionRol();
-  } else {
-    completarLogin(resultado.datos.usuario);
+  // 2. ¿Ya tiene perfil en la tabla usuarios?
+  const { data: perfil, error: errorPerfil } = await supabaseClient
+    .from('usuarios')
+    .select('*')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  if (errorPerfil) {
+    mostrarErrorLogin('Error al verificar perfil: ' + errorPerfil.message);
+    return;
   }
-}
 
-function mostrarPasoEleccionRol() {
-  _toggleElemento('login-cargando', false);
-  _toggleElemento('login-paso1', false);
-  _toggleElemento('login-paso2', true);
-
-  const inputNombre = document.getElementById('paso2-nombre');
-  const inputApellido = document.getElementById('paso2-apellido');
-  if (inputNombre) inputNombre.value = _nombreGooglePendiente || '';
-  if (inputApellido) inputApellido.value = _apellidoGooglePendiente || '';
+  if (!perfil) {
+    mostrarPasoEleccionRol(); // usuario nuevo, falta elegir rol
+  } else {
+    completarLogin(perfil);
+  }
 }
 
 async function seleccionarRol(rol) {
-  if (!_tokenGooglePendiente || !_emailGooglePendiente) {
-    mostrarErrorLogin('Sesión expirada. Intentá ingresar nuevamente.');
-    resetearLogin();
-    return;
-  }
-
   const nombre = document.getElementById('paso2-nombre')?.value.trim();
   const apellido = document.getElementById('paso2-apellido')?.value.trim();
 
@@ -154,25 +142,31 @@ async function seleccionarRol(rol) {
   _toggleElemento('login-cargando', true);
   _ocultarMensajes('login-error');
 
-  const resultado = await llamarBackend('registrarUsuario', {
-    email: _emailGooglePendiente,
-    nombre: nombre,
-    apellido: apellido,
-    rol: rol,
-    googleToken: _tokenGooglePendiente
-  });
-
-  if (!resultado.ok) {
-    mostrarErrorLogin(resultado.mensaje || 'Error al registrarse.');
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    mostrarErrorLogin('Sesión expirada. Intentá ingresar nuevamente.');
+    resetearLogin();
     return;
   }
 
-  _tokenGooglePendiente = null;
-  _emailGooglePendiente = null;
-  _nombreGooglePendiente = null;
-  _apellidoGooglePendiente = null;
+  const { data: nuevoPerfil, error } = await supabaseClient
+    .from('usuarios')
+    .insert({
+      id: user.id,
+      email: user.email,
+      nombre: nombre,
+      apellido: apellido,
+      rol: rol
+    })
+    .select()
+    .single();
 
-  completarLogin(resultado.datos.usuario);
+  if (error) {
+    mostrarErrorLogin('Error al registrarse: ' + error.message);
+    return;
+  }
+
+  completarLogin(nuevoPerfil);
 }
 
 function completarLogin(usuario) {
@@ -207,26 +201,31 @@ function completarLogin(usuario) {
 // ────────────────────────────────────────────────────────────
 
 async function verificarSesionActiva() {
-  const usuario = Sesion.obtener();
-  if (!usuario) return;
-  const resultado = await llamarBackend('verificarSesion', {
-    email: usuario.email
-  });
-  if (!resultado.ok) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
     Sesion.cerrar();
     mostrarHeaderDeslogueado();
     mostrarSeccion('login');
     return;
   }
-  Sesion.guardar(resultado.datos.usuario);
-  mostrarHeaderLogueado(resultado.datos.usuario);
-   if (typeof inicializarEventos === 'function') inicializarEventos();
-  const fotoEl = document.getElementById('perfil-foto');
-  if (fotoEl && resultado.datos.usuario.fotoPerfil) {
-    fotoEl.src = resultado.datos.usuario.fotoPerfil;
-  }
-}
 
+  const { data: perfil, error } = await supabaseClient
+    .from('usuarios')
+    .select('*')
+    .eq('id', session.user.id)
+    .maybeSingle();
+
+  if (error || !perfil) {
+    Sesion.cerrar();
+    mostrarHeaderDeslogueado();
+    mostrarSeccion('login');
+    return;
+  }
+
+  Sesion.guardar(perfil);
+  mostrarHeaderLogueado(perfil);
+  if (typeof inicializarEventos === 'function') inicializarEventos();
+}
 
 
 // ────────────────────────────────────────────────────────────
