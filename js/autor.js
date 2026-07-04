@@ -707,6 +707,14 @@ async function crearNuevaCampana(event) {
     if (errPlat) errPlat.style.display = 'none';
   }
 
+  const plataformasValidas = ['Amazon', 'Goodreads', 'Instagram', 'TikTok'];
+if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
+  const errPlat = document.getElementById('plataformas-error');
+  if (errPlat) { errPlat.textContent = 'Plataforma de reseña inválida.'; errPlat.style.display = 'block'; }
+  toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+  return;
+}
+
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
