@@ -729,7 +729,6 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
     linkPdf:           document.getElementById('nc-link-pdf')?.value?.trim(),
     linkAmazon:        document.getElementById('nc-link-amazon')?.value?.trim(),
     cuposTotal:        parseInt(document.getElementById('nc-cupos')?.value),
-    fechaLimite:       document.getElementById('nc-fecha-limite')?.value?.trim(),
     modalidadLectura:  document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor',
     plataformasResena: plataformasSeleccionadas
   };
@@ -746,7 +745,6 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
       link_portada:       datos.linkPortada,
       link_amazon_libro:  datos.linkAmazon,
       cupos_total:        datos.cuposTotal,
-      fecha_limite:       datos.fechaLimite,
       modalidad_lectura:  datos.modalidadLectura,
       plataformas_resena: datos.plataformasResena
     })
@@ -1052,6 +1050,14 @@ async function eliminarLibroAutor(idLibro, titulo) {
 
 async function inicializarModalNuevaCampana() {
   renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
+
+   // Muestra la fecha de cierre calculada (hoy + 30 días). Ya no la elige el autor.
+  const fechaCierre = new Date();
+  fechaCierre.setDate(fechaCierre.getDate() + 30);
+  const infoFecha = document.getElementById('nc-fecha-limite-info');
+  if (infoFecha) {
+    infoFecha.textContent = `Tu campaña estará activa hasta el ${fechaCierre.toLocaleDateString('es-AR')}.`;
+  }
 
   const selector = document.getElementById('nc-libro-selector');
   if (!selector) return;
