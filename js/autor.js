@@ -1225,7 +1225,7 @@ async function guardarEditarCampana(idCampana) {
     linkPdf: document.getElementById('ec-link-pdf')?.value?.trim()
   };
 
-  const { data: { user } } = await supabaseClient.auth.getUser();  // ← esta línea y todo lo de abajo ya existía
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
   const { error } = await supabaseClient
@@ -1237,10 +1237,27 @@ async function guardarEditarCampana(idCampana) {
     })
     .eq('id', idCampana);
 
-
   if (error) {
     mostrarMensajeError('ec-error', error.message);
     return;
+  }
+
+  // Solo toca campanas_archivos si el autor escribió algo nuevo.
+  // "Dejá vacío para no cambiar" → si está vacío, no se manda nada.
+  if (datos.linkEpub || datos.linkPdf) {
+    const cambiosArchivos = {};
+    if (datos.linkEpub) cambiosArchivos.link_epub = datos.linkEpub;
+    if (datos.linkPdf)  cambiosArchivos.link_pdf  = datos.linkPdf;
+
+    const { error: errorArchivos } = await supabaseClient
+      .from('campanas_archivos')
+      .update(cambiosArchivos)
+      .eq('id_campana', idCampana);
+
+    if (errorArchivos) {
+      mostrarMensajeError('ec-error', errorArchivos.message);
+      return;
+    }
   }
 
   mostrarMensajeOk('ec-ok', '¡Campaña actualizada correctamente!');
@@ -1249,7 +1266,6 @@ async function guardarEditarCampana(idCampana) {
     await cargarCampañasAutor(user.id);
   }, 1500);
 }
-
 async function abrirEditarLibro(idLibro) {
   const libro = _librosAutor.find(l => l.id === idLibro);
   if (!libro) return;
