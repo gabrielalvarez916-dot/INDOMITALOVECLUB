@@ -71,15 +71,29 @@ function detenerNotificaciones() {
 // ────────────────────────────────────────────────────────────
 
 async function cargarNotificaciones() {
-  const email = Sesion.email();
-  if (!email) return;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
   try {
-    const res = await llamarBackend('obtenerNotificaciones', { email });
-    if (!res.ok) return;
+    const { data, error } = await supabaseClient
+      .from('notificaciones')
+      .select('*')
+      .eq('id_usuario', user.id)
+      .order('fecha', { ascending: false });
 
-    _notifCache = res.datos.notificaciones || [];
-    _pintarBadge(res.datos.noLeidas || 0);
+    if (error) throw error;
+
+    _notifCache = (data || []).map(n => ({
+      idNotificacion: n.id,
+      tipo: n.tipo,
+      leida: n.leida,
+      fecha: n.fecha,
+      referenciaId: n.referencia_id,
+      datosExtra: n.datos_extra
+    }));
+
+    const noLeidas = _notifCache.filter(n => !n.leida).length;
+    _pintarBadge(noLeidas);
     _pintarListaNotificaciones(_notifCache);
 
   } catch (e) {
@@ -145,11 +159,18 @@ function toggleNotificaciones() {
 }
 
 async function marcarTodasComoLeidas() {
-  const email = Sesion.email();
-  if (!email) return;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
   try {
-    await llamarBackend('marcarTodasLeidas', { email });
+    const { error } = await supabaseClient
+      .from('notificaciones')
+      .update({ leida: true })
+      .eq('id_usuario', user.id)
+      .eq('leida', false);
+
+    if (error) throw error;
+
     _pintarBadge(0);
     _notifCache = _notifCache.map(n => ({ ...n, leida: true }));
     _pintarListaNotificaciones(_notifCache);
@@ -159,17 +180,26 @@ async function marcarTodasComoLeidas() {
 }
 
 async function _clickNotificacion(idNotificacion) {
-  const email = Sesion.email();
-  if (!email) return;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
   // Marca como leída si no lo estaba (no rompe si ya lo está)
-  await llamarBackend('marcarNotificacionLeida', { email, idNotificacion });
+  await supabaseClient
+    .from('notificaciones')
+    .update({ leida: true })
+    .eq('id', idNotificacion)
+    .eq('id_usuario', user.id);
 
   // Navega según el tipo de notificación
   const notif = _notifCache.find(n => n.idNotificacion === idNotificacion);
   if (notif) {
     _navegarPorNotificacion(notif);
   }
+
+  // Cierra el panel
+  const panel = document.getElementById('notif-panel');
+  if (panel) panel.style.display = 'none';
+}
 
   // Cierra el panel
   const panel = document.getElementById('notif-panel');
