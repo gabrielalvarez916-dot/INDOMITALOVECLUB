@@ -1236,18 +1236,7 @@ async function guardarEditarCampana(idCampana) {
       link_portada: datos.linkPortada
     })
     .eq('id', idCampana);
-  
-const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
 
-  const { error } = await supabaseClient
-    .from('campanas')
-    .update({
-      sinopsis: datos.sinopsis,
-      genero: datos.genero,
-      link_portada: datos.linkPortada
-    })
-    .eq('id', idCampana);
 
   if (error) {
     mostrarMensajeError('ec-error', error.message);
