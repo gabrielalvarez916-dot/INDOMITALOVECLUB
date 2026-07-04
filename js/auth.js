@@ -129,8 +129,8 @@ async function manejarRespuestaGoogle(respuesta) {
     return;
   }
 
-  if (!perfil) {
-    mostrarPasoEleccionRol(); // usuario nuevo, falta elegir rol
+  if (!perfil || !perfil.rol) {
+    mostrarPasoEleccionRol(); // usuario nuevo o incompleto, falta elegir rol
   } else {
     completarLogin(perfil);
   }
@@ -159,16 +159,15 @@ async function seleccionarRol(rol) {
 
   const { data: nuevoPerfil, error } = await supabaseClient
     .from('usuarios')
-    .insert({
-      id: user.id,
-      email: user.email,
+    .update({
       nombre: nombre,
       apellido: apellido,
       rol: rol
     })
+    .eq('id', user.id)
     .select()
     .single();
-
+  
   if (error) {
     mostrarErrorLogin('Error al registrarse: ' + error.message);
     return;
@@ -223,7 +222,7 @@ async function verificarSesionActiva() {
     .eq('id', session.user.id)
     .maybeSingle();
 
-  if (error || !perfil) {
+  if (error || !perfil || !perfil.rol) {
     Sesion.cerrar();
     mostrarHeaderDeslogueado();
     mostrarSeccion('login');
