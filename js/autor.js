@@ -29,15 +29,15 @@ function convertirLinkDrive(url) {
  * Se llama automáticamente cuando se muestra la sección panel-autor.
  */
 async function cargarPanelAutor() {
-  const email = Sesion.email();
-  if (!email) return;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
   await Promise.all([
-    cargarEstadisticasAutor(email),
-    cargarCampañasAutor(email),
-    cargarHistorialAutor(email),
-    cargarPlanAutor(email),
-    cargarBibliotecaPanel(email)
+    cargarEstadisticasAutor(user.id),
+    cargarCampañasAutor(user.id),
+    cargarHistorialAutor(user.id),
+    cargarPlanAutor(user.id),
+    cargarBibliotecaPanel(user.id)
   ]);
 }
 
@@ -51,14 +51,41 @@ async function cargarPanelAutor() {
  *
  * @param {string} email
  */
-async function cargarEstadisticasAutor(email) {
+async function cargarEstadisticasAutor(idUsuario) {
   const contenedor = document.getElementById('autor-stats');
   if (!contenedor) return;
 
-  const resultado = await llamarBackend('estadisticasAutor', { email });
-  if (!resultado.ok) return;
+  const { data: campañas } = await supabaseClient
+    .from('campanas')
+    .select('id, estado')
+    .eq('id_usuario_autor', idUsuario);
 
-  const s = resultado.datos;
+  const idsCampanas = (campañas || []).map(c => c.id);
+  const campañasActivas = (campañas || []).filter(c => c.estado === 'activa').length;
+
+  let reseñasRecibidas = 0, promedioCalificaciones = null, reseñadoresAprobados = 0;
+
+  if (idsCampanas.length > 0) {
+    const { count } = await supabaseClient
+      .from('postulaciones')
+      .select('id', { count: 'exact', head: true })
+      .in('id_campana', idsCampanas)
+      .eq('estado', 'aprobada');
+    reseñadoresAprobados = count ?? 0;
+
+    const { data: resenas } = await supabaseClient
+      .from('resenas')
+      .select('puntuacion_libro')
+      .in('id_campana', idsCampanas);
+
+    reseñasRecibidas = resenas?.length || 0;
+    const puntuaciones = (resenas || []).map(r => r.puntuacion_libro).filter(p => p != null);
+    promedioCalificaciones = puntuaciones.length > 0
+      ? puntuaciones.reduce((a, b) => a + b, 0) / puntuaciones.length
+      : null;
+  }
+
+  const s = { campañasActivas, reseñasRecibidas, reseñadoresAprobados, promedioCalificaciones };
 
   const stats = [
     { icono: '📣', valor: s.campañasActivas ?? 0, label: 'Campañas activas' },
@@ -103,20 +130,45 @@ async function cargarEstadisticasAutor(email) {
  *
  * @param {string} email
  */
-async function cargarCampañasAutor(email) {
+async function cargarCampañasAutor(idUsuario) {
   const contenedor = document.getElementById('autor-campanas-lista');
   if (!contenedor) return;
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('listarCampanasAutor', { email });
+  const { data, error } = await supabaseClient
+    .from('campanas')
+    .select('*')
+    .eq('id_usuario_autor', idUsuario)
+    .eq('estado', 'activa')
+    .order('creado_en', { ascending: false });
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${error.message}</p>`;
     return;
   }
 
-  _campañasAutor = resultado.datos.campañas || [];
+  _campañasAutor = (data || []).map(_mapCampana);
+
+  if (_campañasAutor.length > 0) {
+    const ids = _campañasAutor.map(c => c.id);
+
+    const { data: postulacionesPend } = await supabaseClient
+      .from('postulaciones')
+      .select('id_campana')
+      .in('id_campana', ids)
+      .eq('estado', 'pendiente');
+
+    const { data: resenasEnt } = await supabaseClient
+      .from('resenas')
+      .select('id_campana')
+      .in('id_campana', ids);
+
+    _campañasAutor.forEach(c => {
+      c.postulacionesPendientes = (postulacionesPend || []).filter(p => p.id_campana === c.id).length;
+      c.reseñasEntregadas = (resenasEnt || []).filter(r => r.id_campana === c.id).length;
+    });
+  }
 
   if (_campañasAutor.length === 0) {
     contenedor.innerHTML = `
@@ -196,17 +248,62 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
 
   contenedor.innerHTML = `<p class="seccion-subtitulo">Postulaciones para <strong>${nombreLibro}</strong></p><div class="cargando-container"><div class="spinner"></div></div>`;
 
-  const resultado = await llamarBackend('listarPostulacionesCampana', {
-    email: Sesion.email(),
-    idCampana
-  });
+  const campanaActual = _campañasAutor.find(c => c.id === idCampana);
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  const { data, error } = await supabaseClient
+    .from('postulaciones')
+    .select(`
+     id, estado, motivo_abandono,
+      usuarios!postulaciones_id_usuario_resenador_fkey (
+        id, alias, pais, ciudad, instagram, tiktok, amazon, tropes_favoritos, descripcion_lector,
+        avatares ( imagen_url )
+      )
+    `)
+    .eq('id_campana', idCampana)
+    .order('fecha_postulacion', { ascending: false });
+
+  if (error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${error.message}</p>`;
     return;
   }
 
-  _postulacionesAutor = resultado.datos.postulaciones || [];
+  const idsResenadores = (data || []).map(p => p.usuarios?.id).filter(Boolean);
+  const mesActual = _mesActual();
+
+  const [{ data: rankings }, { data: insignias }] = await Promise.all([
+    supabaseClient.from('ranking').select('id_usuario_resenador, posicion, porcentaje_completion, puntos_mensuales, categoria').in('id_usuario_resenador', idsResenadores).eq('mes_año', mesActual),
+    supabaseClient.from('insignias').select('id_usuario, tipo, codigo').in('id_usuario', idsResenadores)
+  ]);
+
+  _postulacionesAutor = (data || []).map(p => {
+    const u = p.usuarios;
+    const rankingUsuario = (rankings || []).find(r => r.id_usuario_resenador === u?.id);
+    return {
+      idPostulacion: p.id,
+      idCampana,
+      estado: p.estado,
+      motivoAbandonoPrivado: p.motivo_abandono,
+      descripcionLector: u?.descripcion_lector,
+      reseñador: u ? {
+        id: u.id,
+        alias: u.alias,
+        pais: u.pais,
+        ciudad: u.ciudad,
+        instagram: u.instagram,
+        tiktok: u.tiktok,
+        amazon: u.amazon,
+        fotoPerfil: u.avatares?.imagen_url || null,
+        labelNivel: rankingUsuario ? rankingUsuario.categoria : null,
+        coincidenciaTropes: _coincidenciaTropes(campanaActual?.tropes, u.tropes_favoritos),
+        ranking: rankingUsuario ? {
+          posicion: rankingUsuario.posicion,
+          completion: rankingUsuario.porcentaje_completion,
+          puntaje: rankingUsuario.puntos_mensuales
+        } : null,
+        badges: (insignias || []).filter(i => i.id_usuario === u.id)
+      } : null
+    };
+  });
 
   if (_postulacionesAutor.length === 0) {
     contenedor.innerHTML = `
@@ -305,15 +402,25 @@ const avatarHtml = r?.fotoPerfil
  * @param {string} accion — 'aprobar' o 'rechazar'
  */
 async function accionPostulacion(idPostulacion, accion) {
-  const actionBackend = accion === 'aprobar' ? 'aprobarPostulacion' : 'rechazarPostulacion';
+  const postulacionActual = _postulacionesAutor.find(p => p.idPostulacion === idPostulacion);
 
-  const resultado = await llamarBackend(actionBackend, {
-    email: Sesion.email(),
-    idPostulacion
-  });
+  const cambios = {
+    estado: accion === 'aprobar' ? 'aprobada' : 'rechazada',
+    fecha_respuesta: new Date().toISOString()
+  };
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al procesar la postulación.', 'error');
+  if (accion === 'aprobar') {
+    const campana = _campañasAutor.find(c => c.id === postulacionActual?.idCampana);
+    if (campana?.fechaLimite) cambios.fecha_limite_entrega = campana.fechaLimite;
+  }
+
+  const { error } = await supabaseClient
+    .from('postulaciones')
+    .update(cambios)
+    .eq('id', idPostulacion);
+
+  if (error) {
+    mostrarToast('Error al procesar la postulación.', 'error');
     return;
   }
 
@@ -348,17 +455,31 @@ async function verReseñasCampana(idCampana, nombreLibro) {
   if (body)   body.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
   if (footer) footer.innerHTML = '';
 
-  const resultado = await llamarBackend('listarReseñasCampaña', {
-    email: Sesion.email(),
-    idCampana
-  });
+  const { data, error } = await supabaseClient
+    .from('resenas')
+    .select(`
+      id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios, puntuacion_autor,
+      usuarios!resenas_id_usuario_resenador_fkey ( id, alias )
+    `)
+    .eq('id_campana', idCampana)
+    .order('fecha_entrega', { ascending: false });
 
-  if (!resultado.ok) {
-    if (body) body.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error) {
+    if (body) body.innerHTML = `<p class="mensaje-error">${error.message}</p>`;
     return;
   }
 
-  const reseñas = resultado.datos.reseñas || [];
+  const reseñas = (data || []).map(r => ({
+    idReseña: r.id,
+    fechaEntrega: r.fecha_entrega,
+    linkInstagram: r.link_instagram,
+    linkTikTok: r.link_tiktok,
+    linkAmazon: r.link_amazon,
+    linkGoodreads: r.link_goodreads,
+    comentarios: r.comentarios,
+    puntuacion: r.puntuacion_autor,
+    reseñador: r.usuarios ? { id: r.usuarios.id, alias: r.usuarios.alias } : null
+  }));
 
   if (reseñas.length === 0) {
     if (body) body.innerHTML = `
@@ -403,14 +524,13 @@ async function verReseñasCampana(idCampana, nombreLibro) {
 }
 
 async function calificarDirecto(idResena, puntuacion, boton) {
-  const resultado = await llamarBackend('calificarReseña', {
-    email: Sesion.email(),
-    idResena,
-    puntuacion
-  });
+  const { error } = await supabaseClient
+    .from('resenas')
+    .update({ puntuacion_autor: puntuacion, fecha_puntuacion: new Date().toISOString() })
+    .eq('id', idResena);
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al calificar.', 'error');
+  if (error) {
+    mostrarToast('Error al calificar.', 'error');
     return;
   }
 
@@ -431,14 +551,13 @@ async function enviarCalificacion() {
     return;
   }
 
-  const resultado = await llamarBackend('calificarReseña', {
-    email: Sesion.email(),
-    idResena,
-    puntuacion: parseInt(puntuacion)
-  });
+  const { error } = await supabaseClient
+    .from('resenas')
+    .update({ puntuacion_autor: parseInt(puntuacion), fecha_puntuacion: new Date().toISOString() })
+    .eq('id', idResena);
 
-  if (!resultado.ok) {
-    mostrarMensajeError('calificar-error', resultado.mensaje);
+  if (error) {
+    mostrarMensajeError('calificar-error', error.message);
     return;
   }
 
@@ -456,18 +575,32 @@ async function enviarCalificacion() {
  *
  * @param {string} email
  */
-async function cargarHistorialAutor(email) {
+async function cargarHistorialAutor(idUsuario) {
   const contenedor = document.getElementById('autor-historial-lista');
   if (!contenedor) return;
 
-  const resultado = await llamarBackend('historialCampanasAutor', { email });
+  const { data, error } = await supabaseClient
+    .from('campanas')
+    .select('*')
+    .eq('id_usuario_autor', idUsuario)
+    .in('estado', ['finalizada', 'cancelada'])
+    .order('fecha_limite', { ascending: false });
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${error.message}</p>`;
     return;
   }
 
-  _historialAutor = resultado.datos.campañas || [];
+  _historialAutor = (data || []).map(_mapCampana);
+
+  if (_historialAutor.length > 0) {
+    const ids = _historialAutor.map(c => c.id);
+    const { data: resenasEnt } = await supabaseClient
+      .from('resenas').select('id_campana').in('id_campana', ids);
+    _historialAutor.forEach(c => {
+      c.reseñasEntregadas = (resenasEnt || []).filter(r => r.id_campana === c.id).length;
+    });
+  }
 
   if (_historialAutor.length === 0) {
     contenedor.innerHTML = `
@@ -517,21 +650,22 @@ function confirmarCancelarCampana(idCampana, nombreLibro) {
  * @param {string} idCampana
  */
 async function cancelarCampanaAutor(idCampana) {
-  const resultado = await llamarBackend('cancelarCampana', {
-    email: Sesion.email(),
-    idCampana
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { error } = await supabaseClient.rpc('cancelar_campana_propia', {
+    p_id_campana: idCampana
   });
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al cancelar la campaña.', 'error');
+  if (error) {
+    mostrarToast(error.message || 'Error al cancelar la campaña.', 'error');
     return;
   }
 
   mostrarToast('Campaña cancelada.', 'ok');
-  await cargarCampañasAutor(Sesion.email());
-  await cargarEstadisticasAutor(Sesion.email());
+  await cargarCampañasAutor(user.id);
+  await cargarEstadisticasAutor(user.id);
 }
-
 
 // ────────────────────────────────────────────────────────────
 // CREAR CAMPAÑA
@@ -837,14 +971,29 @@ async function subirComprobanteAutor(idPago) {
  *
  * @param {string} email
  */
-async function cargarBibliotecaPanel(email) {
+async function cargarBibliotecaPanel(idUsuario) {
   const contenedor = document.getElementById('biblioteca-lista');
   if (!contenedor) return;
 
-  const resultado = await llamarBackend('listarLibrosAutor', { email });
-  if (!resultado.ok) return;
+  const { data, error } = await supabaseClient
+    .from('libros')
+    .select('*')
+    .eq('id_usuario_autor', idUsuario)
+    .eq('eliminado', false)
+    .order('fecha_carga', { ascending: false });
 
-  _librosAutor = resultado.datos.libros || [];
+  if (error) return;
+
+  _librosAutor = (data || []).map(l => ({
+    id: l.id,
+    titulo: l.titulo,
+    sinopsisBreve: l.sinopsis_breve,
+    sinopsis: l.sinopsis_breve,
+    genero: l.genero,
+    tropes: l.tropes,
+    linkPortada: l.link_portada,
+    linkAmazon: l.link_amazon
+  }));
   renderizarBiblioteca(_librosAutor);
 }
 
@@ -907,25 +1056,28 @@ async function agregarLibro(event) {
     return;
   }
 
- const resultado = await llamarBackend('agregarLibro', {
-    email:         Sesion.email(),
-    titulo:        datos.titulo,
-    sinopsisBreve: datos.sinopsisBreve,
-    genero:        datos.genero,
-    tropes:        datos.tropes,
-    linkPortada:   datos.linkPortada,
-    linkAmazon:    datos.linkAmazon
-});
+ const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
-  if (!resultado.ok) {
-    mostrarMensajeError('libro-error', resultado.mensaje);
+  const { error } = await supabaseClient.from('libros').insert({
+    id_usuario_autor: user.id,
+    titulo: datos.titulo,
+    sinopsis_breve: datos.sinopsisBreve,
+    genero: datos.genero,
+    tropes: datos.tropes,
+    link_portada: datos.linkPortada,
+    link_amazon: datos.linkAmazon
+  });
+
+  if (error) {
+    mostrarMensajeError('libro-error', error.message);
     return;
   }
 
   document.getElementById('form-nuevo-libro')?.reset();
   cerrarModales();
   mostrarToast('Libro agregado a tu biblioteca.', 'ok');
-  await cargarBibliotecaPanel(Sesion.email());
+  await cargarBibliotecaPanel(user.id);
 }
 
 /**
@@ -937,18 +1089,21 @@ async function agregarLibro(event) {
 async function eliminarLibroAutor(idLibro, titulo) {
   if (!confirm(`¿Eliminar "${titulo}" de tu biblioteca?`)) return;
 
-  const resultado = await llamarBackend('eliminarLibro', {
-    email: Sesion.email(),
-    idLibro
-  });
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al eliminar el libro.', 'error');
+  const { error } = await supabaseClient
+    .from('libros')
+    .update({ eliminado: true })
+    .eq('id', idLibro);
+
+  if (error) {
+    mostrarToast('Error al eliminar el libro.', 'error');
     return;
   }
 
   mostrarToast('Libro eliminado.', 'ok');
-  await cargarBibliotecaPanel(Sesion.email());
+  await cargarBibliotecaPanel(user.id);
 }
 // ────────────────────────────────────────────────────────────
 // SELECTOR DE LIBRO EN NUEVA CAMPAÑA
@@ -960,10 +1115,7 @@ async function inicializarModalNuevaCampana() {
   const selector = document.getElementById('nc-libro-selector');
   if (!selector) return;
 
-  const resultado = await llamarBackend('listarLibrosAutor', { email: Sesion.email() });
-  if (!resultado.ok) return;
-
-  const libros = resultado.datos.libros || [];
+  const libros = _librosAutor;
   libros.forEach(l => {
     const option = document.createElement('option');
     option.value = l.id;
@@ -1116,32 +1268,27 @@ async function abrirEditarCampana(idCampana) {
   `;
 }
 
-async function guardarEditarCampana(idCampana) {
-  ocultarMensajes('ec-error', 'ec-ok');
+const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
-  const datos = {
-    sinopsis:    document.getElementById('ec-sinopsis')?.value?.trim(),
-    genero:      document.getElementById('ec-genero')?.value?.trim(),
-    linkPortada: document.getElementById('ec-link-portada')?.value?.trim(),
-    linkEpub:    document.getElementById('ec-link-epub')?.value?.trim(),
-    linkPdf:     document.getElementById('ec-link-pdf')?.value?.trim()
-  };
+  const { error } = await supabaseClient
+    .from('campanas')
+    .update({
+      sinopsis: datos.sinopsis,
+      genero: datos.genero,
+      link_portada: datos.linkPortada
+    })
+    .eq('id', idCampana);
 
-  const resultado = await llamarBackend('editarCampana', {
-    email:       Sesion.email(),
-    idCampana,
-    ...datos
-  });
-
-  if (!resultado.ok) {
-    mostrarMensajeError('ec-error', resultado.mensaje);
+  if (error) {
+    mostrarMensajeError('ec-error', error.message);
     return;
   }
 
   mostrarMensajeOk('ec-ok', '¡Campaña actualizada correctamente!');
   setTimeout(async () => {
     cerrarModales();
-    await cargarCampañasAutor(Sesion.email());
+    await cargarCampañasAutor(user.id);
   }, 1500);
 }
 
@@ -1195,21 +1342,27 @@ async function guardarEditarLibro(idLibro) {
     linkPortada:   document.getElementById('el-link-portada')?.value?.trim()
   };
 
-  const resultado = await llamarBackend('editarLibro', {
-    email:    Sesion.email(),
-    idLibro,
-    ...datos
-  });
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
-  if (!resultado.ok) {
-    mostrarMensajeError('el-error', resultado.mensaje);
+  const { error } = await supabaseClient
+    .from('libros')
+    .update({
+      sinopsis_breve: datos.sinopsisBreve,
+      genero: datos.genero,
+      link_portada: datos.linkPortada
+    })
+    .eq('id', idLibro);
+
+  if (error) {
+    mostrarMensajeError('el-error', error.message);
     return;
   }
 
   mostrarMensajeOk('el-ok', '¡Libro actualizado correctamente!');
   setTimeout(async () => {
     cerrarModales();
-    await cargarBibliotecaPanel(Sesion.email());
+    await cargarBibliotecaPanel(user.id);
   }, 1500);
 }
 /**
@@ -1221,16 +1374,38 @@ async function cargarRankingLibros() {
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('listarRankingLibrosAutor', {
-    email: Sesion.email()
-  });
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  const idsLibros = _librosAutor.map(l => l.id);
+
+  if (idsLibros.length === 0) {
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <p class="estado-vacio-icono">📊</p>
+        <p class="estado-vacio-texto">No tenés libros en el ranking todavía.</p>
+      </div>
+    `;
     return;
   }
 
-  const libros = resultado.datos.libros || [];
+  const { data, error } = await supabaseClient
+    .from('ranking_libros')
+    .select('*')
+    .in('id_libro', idsLibros)
+    .order('promedio_puntuacion', { ascending: false });
+
+  if (error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${error.message}</p>`;
+    return;
+  }
+
+  const libros = (data || []).map(l => ({
+    nombreLibro: l.nombre_libro,
+    promedioPuntuacion: l.promedio_puntuacion,
+    cantidadPuntuaciones: l.cantidad_puntuaciones,
+    selloCampaña: l.sello_campaña
+  }));
 
   if (libros.length === 0) {
     contenedor.innerHTML = `
