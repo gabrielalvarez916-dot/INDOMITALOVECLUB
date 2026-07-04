@@ -36,6 +36,7 @@ let _tokenGooglePendiente = null;
 let _emailGooglePendiente = null;
 let _nombreGooglePendiente = null;
 let _apellidoGooglePendiente = null;
+let _googleInicializado = false;
 
 window.onload = () => {
   if (typeof google !== 'undefined' && google.accounts) {
@@ -50,7 +51,10 @@ function inicializarGoogle() {
     auto_select: false,
     cancel_on_tap_outside: true
   });
+  _googleInicializado = true;
 }
+
+
 
 
 // ────────────────────────────────────────────────────────────
@@ -62,6 +66,10 @@ function iniciarLoginGoogle() {
     _mostrarMensajeError('login-error', 'Error al cargar Google. Recargá la página.');
     _toggleElemento('login-error', true);
     return;
+  }
+
+  if (!_googleInicializado) {
+    inicializarGoogle(); // ← se asegura de inicializar justo antes de renderizar
   }
 
   _ocultarMensajes('login-error');
