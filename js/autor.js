@@ -1201,6 +1201,28 @@ async function abrirEditarCampana(idCampana) {
   `;
 }
 
+async function guardarEditarCampana(idCampana) {
+  ocultarMensajes('ec-error', 'ec-ok');
+  const datos = {
+    sinopsis: document.getElementById('ec-sinopsis')?.value?.trim(),
+    genero: document.getElementById('ec-genero')?.value?.trim(),
+    linkPortada: document.getElementById('ec-link-portada')?.value?.trim(),
+    linkEpub: document.getElementById('ec-link-epub')?.value?.trim(),
+    linkPdf: document.getElementById('ec-link-pdf')?.value?.trim()
+  };
+
+  const { data: { user } } = await supabaseClient.auth.getUser();  // ← esta línea y todo lo de abajo ya existía
+  if (!user) return;
+
+  const { error } = await supabaseClient
+    .from('campanas')
+    .update({
+      sinopsis: datos.sinopsis,
+      genero: datos.genero,
+      link_portada: datos.linkPortada
+    })
+    .eq('id', idCampana);
+  
 const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
