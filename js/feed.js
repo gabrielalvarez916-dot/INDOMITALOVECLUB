@@ -40,8 +40,6 @@ let _campañasTodas = [];
 // ────────────────────────────────────────────────────────────
 
 async function cargarFeed() {
-  const grid = document.getElementById('feed-grid');
-  const cargando = document.getElementById('feed-cargando');
   const vacio = document.getElementById('feed-vacio');
 
   toggleElemento('feed-cargando', true);
@@ -50,27 +48,42 @@ async function cargarFeed() {
   toggleElemento('feed-lista-titulo', false);
   toggleElemento('feed-ticker', false);
 
-  // Carga el banner publicitario (no bloquea el resto del feed)
   cargarBannerPublicitario();
 
-  const resultado = await llamarBackend('listarCampanasFeed', { email: Sesion.email() || '' });
+  const { data: campanas, error } = await supabaseClient
+    .from('campanas')
+    .select('*')
+    .eq('estado', 'activa')
+    .order('creado_en', { ascending: false });
 
   toggleElemento('feed-cargando', false);
 
-  if (!resultado.ok) {
+  if (error) {
     toggleElemento('feed-vacio', true);
     if (vacio) {
       vacio.innerHTML = `
         <p class="estado-vacio-icono">⚠️</p>
         <p class="estado-vacio-texto">Error al cargar campañas</p>
-        <p class="estado-vacio-sub">${resultado.mensaje}</p>
+        <p class="estado-vacio-sub">${error.message}</p>
         <button class="btn-secundario" onclick="cargarFeed()" style="margin-top:16px;">Reintentar</button>
       `;
     }
     return;
   }
 
-  _campañasTodas = resultado.datos.campañas || [];
+  const idsLibros = [...new Set((campanas || []).map(c => c.id_libro).filter(Boolean))];
+  let rankingsPorLibro = {};
+
+  if (idsLibros.length > 0 && Sesion.activa()) {
+    const { data: rankings } = await supabaseClient
+      .from('ranking_libros')
+      .select('*')
+      .in('id_libro', idsLibros);
+
+    (rankings || []).forEach(r => { rankingsPorLibro[r.id_libro] = r; });
+  }
+
+  _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro]));
 
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
@@ -79,6 +92,48 @@ async function cargarFeed() {
 
   renderizarFeed(_campañasTodas);
   Slider.init();
+}
+
+function normalizarCampana(c, ranking) {
+  const usuario = Sesion.obtener();
+  const hoy = new Date();
+  const fechaLimite = new Date(c.fecha_limite);
+
+  let coincidenciaTropes;
+  if (usuario?.rol === 'reseñador' && usuario.tropes_favoritos && c.tropes) {
+    const favoritos = usuario.tropes_favoritos.split(',').map(t => t.trim().toLowerCase());
+    const propios = c.tropes.split(',').map(t => t.trim().toLowerCase());
+    const coincidencias = propios.filter(t => favoritos.includes(t));
+    coincidenciaTropes = propios.length > 0
+      ? Math.round((coincidencias.length / propios.length) * 100)
+      : 0;
+  }
+
+  return {
+    id: c.id,
+    idAutor: c.id_usuario_autor,
+    nombreLibro: c.nombre_libro,
+    nombreAutor: c.nombre_autor,
+    sinopsis: c.sinopsis,
+    tropes: c.tropes,
+    genero: c.genero,
+    linkPortada: c.link_portada,
+    portadaValida: !!c.link_portada,
+    linkAmazon: c.link_amazon_libro,
+    cuposDisponibles: c.cupos_disponibles,
+    cuposTotal: c.cupos_total,
+    fechaLimite: c.fecha_limite,
+    estaVencida: fechaLimite < hoy,
+    modalidadLectura: c.modalidad_lectura,
+    plataformasReseña: c.plataformas_resena || [],
+    coincidenciaTropes,
+    rankingLibro: ranking ? {
+      esTop5: ranking.es_top5,
+      esTop20: ranking.es_top20,
+      promedio: ranking.promedio_puntuacion,
+      totalReseñas: ranking.total_resenas
+    } : undefined
+  };
 }
 
 function renderizarFeed(campañas) {
@@ -231,18 +286,18 @@ async function verDetalleCampaña(idCampaña) {
   if (body) body.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
   if (footer) footer.innerHTML = '';
 
-  const email = Sesion.email();
-  const resultado = await llamarBackend('obtenerDetalleCampana', {
-    email: email || '',
-    idCampana: idCampaña
-  });
+  const { data: campanaRaw, error } = await supabaseClient
+    .from('campanas')
+    .select('*')
+    .eq('id', idCampaña)
+    .single();
 
-  if (!resultado.ok) {
-    if (body) body.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error || !campanaRaw) {
+    if (body) body.innerHTML = `<p class="mensaje-error">${error?.message || 'Campaña no encontrada'}</p>`;
     return;
   }
 
-  const c = resultado.datos.campaña;
+  const c = normalizarCampana(campanaRaw);
   if (titulo) titulo.textContent = c.nombreLibro;
 
   const portadaHtml = c.linkPortada
@@ -363,11 +418,10 @@ async function guardarPerfilYPostularse(event) {
 }
 
 async function confirmarPostulacion(idCampaña) {
-  const email = Sesion.email();
+  const usuario = Sesion.obtener();
 
   const campaña = _campañasTodas.find(c => c.id === idCampaña);
   if (campaña && campaña.plataformasReseña && campaña.plataformasReseña.length > 0) {
-    const usuario = Sesion.obtener();
     const mapeo = {
       Amazon:    usuario.amazon,
       TikTok:    usuario.tiktok,
@@ -384,14 +438,16 @@ async function confirmarPostulacion(idCampaña) {
     }
   }
 
-  const resultado = await llamarBackend('postularse', {
-    email,
-    idCampana: idCampaña,
-    aceptaConfidencialidad: true
-  });
+  const { error } = await supabaseClient
+    .from('postulaciones')
+    .insert({
+      id_campana: idCampaña,
+      id_usuario_resenador: usuario.id,
+      acepta_confidencialidad: true
+    });
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al postularse.', 'error');
+  if (error) {
+    mostrarToast(error.message || 'Error al postularse.', 'error');
     return;
   }
 
@@ -532,11 +588,19 @@ const BannerPublicitario = (() => {
   let timer = null;
   const INTERVALO = 6000;
 
-  async function cargar() {
-    const resultado = await llamarBackend('listarBannersActivos', {});
-    if (!resultado.ok) return;
+ async function cargar() {
+    const { data, error } = await supabaseClient
+      .from('banners')
+      .select('*')
+      .eq('activo', true)
+      .order('orden', { ascending: true });
 
-    banners = resultado.datos.banners || [];
+    if (error) return;
+
+    banners = (data || []).map(b => ({
+      imagenUrl: b.imagen_url,
+      linkDestino: b.link_destino
+    }));
     const wrapper = document.getElementById('banner-publicitario-wrapper');
 
     if (banners.length === 0) {
