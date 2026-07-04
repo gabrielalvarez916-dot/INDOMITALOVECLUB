@@ -308,16 +308,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function verificarModalActualizacion() {
   const usuario = Sesion.obtener();
-  if (!usuario || !usuario.email) return;
+  if (!usuario) return;
 
   const tipoActualizacion = 'actualizacion_junio_2026';
 
-  const resultado = await llamarBackend('verificarModalVisto', {
-    email: usuario.email,
-    tipoActualizacion: tipoActualizacion
-  });
+  const { data, error } = await supabaseClient
+    .from('modal_actualizaciones')
+    .select('id')
+    .eq('id_usuario', usuario.id)
+    .eq('tipo_actualizacion', tipoActualizacion)
+    .maybeSingle();
 
-  if (resultado.ok && resultado.datos.debeVerModal) {
+  if (error) {
+    console.error('Error verificando modal:', error);
+    return;
+  }
+
+  if (!data) {
     mostrarModalActualizaciones(tipoActualizacion);
   }
 }
@@ -375,17 +382,21 @@ async function registrarModalVisto(tipoActualizacion) {
   const usuario = Sesion.obtener();
   if (!usuario) return;
 
-  const resultado = await llamarBackend('registrarModalVisto', {
-    email: usuario.email,
-    tipoActualizacion: tipoActualizacion
-  });
+  const { error } = await supabaseClient
+    .from('modal_actualizaciones')
+    .insert({
+      id_usuario: usuario.id,
+      tipo_actualizacion: tipoActualizacion
+    });
 
-  if (resultado.ok) {
+  if (!error) {
     const modal = document.getElementById('modal-actualizaciones');
     const overlay = document.getElementById('modal-overlay');
     if (modal) modal.style.display = 'none';
     if (overlay) overlay.style.display = 'none';
     document.body.style.overflow = '';
+  } else {
+    console.error('Error registrando modal visto:', error);
   }
 }
 
