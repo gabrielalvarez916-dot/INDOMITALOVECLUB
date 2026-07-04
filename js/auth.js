@@ -159,12 +159,13 @@ async function seleccionarRol(rol) {
 
   const { data: nuevoPerfil, error } = await supabaseClient
     .from('usuarios')
-    .update({
+    .upsert({
+      id: user.id,
+      email: user.email,
       nombre: nombre,
       apellido: apellido,
       rol: rol
     })
-    .eq('id', user.id)
     .select()
     .single();
   
