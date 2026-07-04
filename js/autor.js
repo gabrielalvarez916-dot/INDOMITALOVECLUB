@@ -15,9 +15,18 @@ let _librosAutor        = [];
 
 function convertirLinkDrive(url) {
   if (!url) return url;
-  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
   return url;
+}
+
+function _labelLiga(codigo) {
+  switch (codigo) {
+    case 'diamante': return 'Liga Diamante';
+    case 'oro':      return 'Liga Oro';
+    case 'plata':    return 'Liga Plata';
+    default:         return 'Liga Bronce';
+  }
 }
 
 // ────────────────────────────────────────────────────────────
@@ -293,7 +302,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
         tiktok: u.tiktok,
         amazon: u.amazon,
         fotoPerfil: u.avatares?.imagen_url || null,
-        labelNivel: rankingUsuario ? rankingUsuario.categoria : null,
+        labelNivel: rankingUsuario ? _labelLiga(rankingUsuario.categoria) : null,
         coincidenciaTropes: _coincidenciaTropes(campanaActual?.tropes, u.tropes_favoritos),
         ranking: rankingUsuario ? {
           posicion: rankingUsuario.posicion,
@@ -410,8 +419,9 @@ async function accionPostulacion(idPostulacion, accion) {
   };
 
   if (accion === 'aprobar') {
-    const campana = _campañasAutor.find(c => c.id === postulacionActual?.idCampana);
-    if (campana?.fechaLimite) cambios.fecha_limite_entrega = campana.fechaLimite;
+    const fechaLimiteEntrega = new Date();
+    fechaLimiteEntrega.setDate(fechaLimiteEntrega.getDate() + 30);
+    cambios.fecha_limite_entrega = fechaLimiteEntrega.toISOString();
   }
 
   const { error } = await supabaseClient
@@ -683,7 +693,6 @@ async function crearNuevaCampana(event) {
   ocultarMensajes('nc-error', 'nc-ok');
   toggleBoton('btn-crear-campana', false, 'Creando...');
 
-  // Validar plataformas
   const plataformasSeleccionadas = Array.from(
     document.querySelectorAll('input[name="plataformas"]:checked')
   ).map(cb => cb.value);
@@ -697,63 +706,63 @@ async function crearNuevaCampana(event) {
     const errPlat = document.getElementById('plataformas-error');
     if (errPlat) errPlat.style.display = 'none';
   }
-// Validar que los links de Drive sean públicos
-  const linkPortadaTmp = convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim());
-  const linkEpubTmp    = document.getElementById('nc-link-epub')?.value?.trim();
-  const linkPdfTmp     = document.getElementById('nc-link-pdf')?.value?.trim();
 
-  toggleBoton('btn-crear-campana', false, 'Verificando links...');
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
-  const validacionLinks = await llamarBackend('validarLinksCampana', {
-    linkPortada: linkPortadaTmp,
-    linkEpub: linkEpubTmp,
-    linkPdf: linkPdfTmp
-  });
-
-  if (!validacionLinks.ok) {
-    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-    const nombres = validacionLinks.linksInvalidos.join(', ');
-    mostrarMensajeError('nc-error', `El link de ${nombres} no es público. Verificá que esté compartido como "Cualquier usuario con el enlace" en Google Drive.`);
-    return;
-  }
-  
   const datos = {
-    nombreLibro:      document.getElementById('nc-nombre-libro')?.value?.trim(),
-    nombreAutor:      document.getElementById('nc-nombre-autor')?.value?.trim(),
-    sinopsis:         document.getElementById('nc-sinopsis')?.value?.trim(),
-    genero:           document.getElementById('nc-genero')?.value?.trim(),
-    tropes:           obtenerTropesComoTexto('nc'),
-    linkPortada:      convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim()),
-    linkEpub:         document.getElementById('nc-link-epub')?.value?.trim(),
-    linkPdf:          document.getElementById('nc-link-pdf')?.value?.trim(),
-    linkAmazon:       document.getElementById('nc-link-amazon')?.value?.trim(),
-    cuposTotal:       parseInt(document.getElementById('nc-cupos')?.value),
-    fechaLimite:      document.getElementById('nc-fecha-limite')?.value?.trim(),
-    modalidadLectura: document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor',
+    nombreLibro:       document.getElementById('nc-nombre-libro')?.value?.trim(),
+    nombreAutor:       document.getElementById('nc-nombre-autor')?.value?.trim(),
+    sinopsis:          document.getElementById('nc-sinopsis')?.value?.trim(),
+    genero:            document.getElementById('nc-genero')?.value?.trim(),
+    tropes:            obtenerTropesComoTexto('nc'),
+    linkPortada:       convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim()),
+    linkEpub:          document.getElementById('nc-link-epub')?.value?.trim(),
+    linkPdf:           document.getElementById('nc-link-pdf')?.value?.trim(),
+    linkAmazon:        document.getElementById('nc-link-amazon')?.value?.trim(),
+    cuposTotal:        parseInt(document.getElementById('nc-cupos')?.value),
+    fechaLimite:       document.getElementById('nc-fecha-limite')?.value?.trim(),
+    modalidadLectura:  document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor',
     plataformasResena: plataformasSeleccionadas
   };
 
-  const resultado = await llamarBackend('crearCampana', {
-    email:             Sesion.email(),
-    nombreLibro:       datos.nombreLibro,
-    nombreAutor:       datos.nombreAutor,
-    sinopsis:          datos.sinopsis,
-    genero:            datos.genero,
-    tropes:            datos.tropes,
-    linkPortada:       datos.linkPortada,
-    linkEpub:          datos.linkEpub,
-    linkPdf:           datos.linkPdf,
-    linkAmazon:        datos.linkAmazon,
-    cuposTotal:        datos.cuposTotal,
-    fechaLimite:       datos.fechaLimite,
-    modalidadLectura:  datos.modalidadLectura,
-    plataformasResena: datos.plataformasResena
-  });
+  const { data: campanaCreada, error } = await supabaseClient
+    .from('campanas')
+    .insert({
+      id_usuario_autor:   user.id,
+      nombre_libro:       datos.nombreLibro,
+      nombre_autor:       datos.nombreAutor,
+      sinopsis:           datos.sinopsis,
+      genero:             datos.genero,
+      tropes:             datos.tropes,
+      link_portada:       datos.linkPortada,
+      link_amazon_libro:  datos.linkAmazon,
+      cupos_total:        datos.cuposTotal,
+      fecha_limite:       datos.fechaLimite,
+      modalidad_lectura:  datos.modalidadLectura,
+      plataformas_resena: datos.plataformasResena
+    })
+    .select()
+    .single();
+
+  if (error) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', error.message);
+    return;
+  }
+
+  const { error: errorArchivos } = await supabaseClient
+    .from('campanas_archivos')
+    .insert({
+      id_campana: campanaCreada.id,
+      link_epub: datos.linkEpub,
+      link_pdf: datos.linkPdf
+    });
 
   toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
 
-  if (!resultado.ok) {
-    mostrarMensajeError('nc-error', resultado.mensaje);
+  if (errorArchivos) {
+    mostrarMensajeError('nc-error', errorArchivos.message);
     return;
   }
 
@@ -762,8 +771,8 @@ async function crearNuevaCampana(event) {
 
   setTimeout(async () => {
     cerrarModales();
-    await cargarCampañasAutor(Sesion.email());
-    await cargarEstadisticasAutor(Sesion.email());
+    await cargarCampañasAutor(user.id);
+    await cargarEstadisticasAutor(user.id);
   }, 1500);
 }
 
@@ -772,15 +781,20 @@ async function crearNuevaCampana(event) {
 // PLAN
 // ────────────────────────────────────────────────────────────
 
-async function cargarPlanAutor(email) {
+async function cargarPlanAutor(idUsuario) {
   const contenedor = document.getElementById('autor-plan-info');
   if (!contenedor) return;
-  const resultado = await llamarBackend('obtenerPerfil', { email });
-  if (!resultado.ok) return;
-  const u = resultado.datos.perfil;
-  const plan = u.plan || 'free';
-  const fechaVenc = u.fechaVencimientoPlan || '';
 
+  const { data: u, error } = await supabaseClient
+    .from('usuarios')
+    .select('plan, fecha_vencimiento_plan')
+    .eq('id', idUsuario)
+    .single();
+
+  if (error || !u) return;
+  const plan = u.plan || 'free';
+  const fechaVenc = u.fecha_vencimiento_plan || '';
+  
   const planes = [
     {
       id: 'free',
@@ -860,104 +874,23 @@ async function cargarPlanAutor(email) {
   `;
 }
 async function iniciarPago(plan) {
-  const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Mercado Pago (ARS)\nCancelar = Stripe (USD)')
+  const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Mercado Pago (ARS)\nCancelar = PayPal (USD)')
     ? 'ARS'
     : 'USD';
 
-  const resultado = await llamarBackend('solicitarPlan', {
-    email: Sesion.email(),
-    planSolicitado: plan,
-    moneda,
-    metodoPago: moneda === 'ARS' ? 'mercadopago' : 'stripe'
+  const funcion = moneda === 'ARS' ? 'crear-suscripcion' : 'crear-suscripcion-paypal';
+
+  const { data, error } = await supabaseClient.functions.invoke(funcion, {
+    body: { plan }
   });
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al iniciar el pago.', 'error');
+  if (error || !data?.ok) {
+    mostrarToast(data?.error || error?.message || 'Error al iniciar el pago.', 'error');
     return;
   }
 
-  // Guarda el idPago para cuando vuelva de la pasarela
-  sessionStorage.setItem('idPagoPendiente', resultado.datos.idPago);
-  sessionStorage.setItem('planPendiente', plan);
-
-  // Redirige a la pasarela externa
-  window.open(resultado.datos.urlPago, '_blank');
-
-  // Muestra el formulario para subir comprobante
-  setTimeout(() => mostrarFormComprobante(resultado.datos.idPago), 1000);
-}
-
-/**
- * Muestra el modal para subir el comprobante de pago.
- *
- * @param {string} idPago
- */
-function mostrarFormComprobante(idPago) {
-  mostrarModal('modal-detalle-campana');
-
-  const titulo = document.getElementById('modal-detalle-titulo');
-  const body   = document.getElementById('modal-detalle-body');
-  const footer = document.getElementById('modal-detalle-footer');
-
-  if (titulo) titulo.textContent = 'Subir comprobante de pago';
-  if (footer) footer.innerHTML = '';
-
-  if (body) {
-    body.innerHTML = `
-      <p class="form-info">Completá el pago en la ventana que se abrió y luego subí el comprobante acá.</p>
-      <p class="form-info" style="color:var(--gris-suave); font-size:13px;">La activación del plan puede demorar hasta 24 horas hábiles.</p>
-
-      <div class="form-grupo" style="margin-top:20px;">
-        <label class="form-label">Link del comprobante *</label>
-        <input type="url" id="comprobante-url" class="form-input" placeholder="https://drive.google.com/... o link de captura" />
-      </div>
-      <div class="form-grupo">
-        <label class="form-label">Monto pagado</label>
-        <input type="text" id="comprobante-monto" class="form-input" placeholder="Ej: 5000" />
-      </div>
-
-      <div id="comprobante-error" class="mensaje-error" style="display:none;"></div>
-      <div id="comprobante-ok" class="mensaje-ok" style="display:none;"></div>
-
-      <div style="margin-top:20px; display:flex; gap:10px;">
-        <button class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
-        <button class="btn-primario" onclick="subirComprobanteAutor('${idPago}')">Enviar comprobante</button>
-      </div>
-    `;
-  }
-}
-
-/**
- * Sube el comprobante de pago al backend.
- *
- * @param {string} idPago
- */
-async function subirComprobanteAutor(idPago) {
-  const comprobanteUrl = document.getElementById('comprobante-url')?.value?.trim();
-  const monto          = document.getElementById('comprobante-monto')?.value?.trim();
-
-  if (!comprobanteUrl) {
-    mostrarMensajeError('comprobante-error', 'El link del comprobante es obligatorio.');
-    return;
-  }
-
-  const resultado = await llamarBackend('subirComprobante', {
-    email: Sesion.email(),
-    idPago,
-    comprobanteUrl,
-    monto
-  });
-
-  if (!resultado.ok) {
-    mostrarMensajeError('comprobante-error', resultado.mensaje);
-    return;
-  }
-
-  mostrarMensajeOk('comprobante-ok', '¡Comprobante enviado! El admin verificará tu pago pronto.');
-  sessionStorage.removeItem('idPagoPendiente');
-  sessionStorage.removeItem('planPendiente');
-
-  setTimeout(() => cerrarModales(), 2000);
+  mostrarToast('Te llevamos a completar el pago. Cuando se confirme, tu plan se activa solo.', 'ok');
+  window.open(data.urlPago, '_blank');
 }
 
 
