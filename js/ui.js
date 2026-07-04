@@ -314,11 +314,10 @@ function cambiarTab(tabClickeado, idContenido) {
  */
 function cerrarSesion() {
   detenerNotificaciones();
-  // Si Google está cargado, revoca el token
+  supabaseClient.auth.signOut(); // ← agregar esta línea
   if (typeof google !== 'undefined' && google.accounts) {
     google.accounts.id.disableAutoSelect();
   }
-
   Sesion.cerrar();
   mostrarHeaderDeslogueado();
   mostrarSeccion('login');
