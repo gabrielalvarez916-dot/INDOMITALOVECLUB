@@ -190,6 +190,10 @@ async function _clickNotificacion(idNotificacion) {
     .eq('id', idNotificacion)
     .eq('id_usuario', user.id);
 
+   const idx = _notifCache.findIndex(n => n.idNotificacion === idNotificacion);
+  if (idx !== -1) _notifCache[idx].leida = true;
+  _pintarBadge(_notifCache.filter(n => !n.leida).length);
+  
   // Navega según el tipo de notificación
   const notif = _notifCache.find(n => n.idNotificacion === idNotificacion);
   if (notif) {
