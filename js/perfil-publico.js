@@ -54,6 +54,8 @@ async function _cargarPerfilAutor(idAutor) {
     return;
   }
 
+  perfil.miembroDesde = perfil.fechaRegistro;
+
   _pintarPerfilAutor(perfil, libros || [], campañas || [], perfil);
   _estadoPerfilPublico('autor');
 }
@@ -355,8 +357,8 @@ function _pintarPerfilReseñador(perfil, postulaciones) {
 const descripcionEl = document.getElementById('pp-reseñador-descripcion');
 if (descripcionEl) {
   const bloqueDescripcion = document.getElementById('pp-bloque-descripcion');
-  if (perfil.descripcion) {
-    descripcionEl.textContent = perfil.descripcion;
+if (perfil.descripcionLector) {
+    descripcionEl.textContent = perfil.descripcionLector;
     if (bloqueDescripcion) bloqueDescripcion.style.display = '';
   } else {
     if (bloqueDescripcion) bloqueDescripcion.style.display = 'none';
