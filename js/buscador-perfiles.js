@@ -76,15 +76,15 @@ const BuscadorPerfiles = (() => {
    */
   async function buscar(query) {
     try {
-      const resultado = await llamarBackend('buscarPerfiles', { query });
+      const { data: perfiles, error } = await supabaseClient.rpc('buscar_perfiles', { p_query: query });
 
-      if (!resultado.ok) {
-        mostrarError(resultado.mensaje);
+      if (error) {
+        console.error(error);
+        mostrarError('Error al buscar perfiles');
         return;
       }
 
-      const perfiles = resultado.datos.perfiles || [];
-      renderizarResultados(perfiles, query);
+      renderizarResultados(perfiles || [], query);
       
     } catch (error) {
       console.error('Error en búsqueda:', error);
