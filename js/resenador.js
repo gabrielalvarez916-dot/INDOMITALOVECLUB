@@ -124,7 +124,7 @@ const categoria       = ranking?.categoria || '';
     </div>
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${ranking ? '#' + ranking.posicion : '—'}
+      <span class="stat-numero">${ranking ? '#' + ranking.posicion : '—'}</span>
       <span class="stat-label">Posición ranking</span>
     </div>
     <div class="stat-card">
@@ -430,12 +430,6 @@ _historialReseñador = (reseñas || []).map(r => ({
 }));
 
 const postulacionesAbandonadas = (await obtenerPostulacionesReseñador()).filter(p => p.estado === 'abandonada');
-
-  // Obtener postulaciones abandonadas
-  const resultadoPostulaciones = await llamarBackend('listarPostulacionesReseñador', { email });
-  const postulacionesAbandonadas = resultadoPostulaciones.ok 
-    ? (resultadoPostulaciones.datos.postulaciones || []).filter(p => p.estado === 'abandonada')
-    : [];
 
   // Combinar reseñas entregadas + abandonadas
   const historialCombinado = [
