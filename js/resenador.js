@@ -4,6 +4,51 @@
 // historial, ranking, cargar reseña
 // ============================================================
 
+const DURACION_PLAN_DIAS_RESEÑA = 30; // igual que en Apps Script, no está en tabla `configuracion`
+
+async function obtenerPostulacionesReseñador() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabaseClient
+    .from('postulaciones')
+    .select(`
+      id, estado, fecha_postulacion, fecha_respuesta, fecha_limite_entrega, fecha_abandono, motivo_abandono,
+      campanas ( id, nombre_libro, nombre_autor, link_portada, id_usuario_autor, estado, fecha_limite,
+        campanas_archivos ( link_epub, link_pdf ) )
+    `)
+    .eq('id_usuario_resenador', user.id);
+
+  if (error) { console.error(error); return []; }
+
+  const ahora = new Date();
+  return (data || [])
+    .filter(p => {
+      if (p.estado === 'pendiente') return true;
+      const fechaResolucion = new Date(p.fecha_respuesta || p.fecha_postulacion);
+      if (isNaN(fechaResolucion.getTime())) return true;
+      const limite = new Date(fechaResolucion);
+      limite.setDate(limite.getDate() + DURACION_PLAN_DIAS_RESEÑA);
+      return ahora <= limite;
+    })
+    .map(p => ({
+      idPostulacion: p.id,
+      estado: p.estado,
+      fechaLimiteEntrega: p.fecha_limite_entrega,
+      fechaAbandonoPrivado: p.fecha_abandono,
+      campaña: p.campanas ? {
+        id: p.campanas.id,
+        nombreLibro: p.campanas.nombre_libro,
+        nombreAutor: p.campanas.nombre_autor,
+        linkPortada: p.campanas.link_portada,
+        idAutor: p.campanas.id_usuario_autor,
+        estado: p.campanas.estado,
+        fechaLimite: p.campanas.fecha_limite,
+        linkEpub: p.campanas.campanas_archivos?.link_epub || '',
+        linkPdf: p.campanas.campanas_archivos?.link_pdf || ''
+      } : null
+    }));
+}
 
 // ────────────────────────────────────────────────────────────
 // VARIABLES GLOBALES DEL PANEL RESEÑADOR
@@ -49,14 +94,19 @@ async function cargarEstadisticasReseñador(email) {
   const contenedor = document.getElementById('resenador-stats');
   if (!contenedor) return;
 
-  const resultado = await llamarBackend('obtenerPerfil', { email });
-  if (!resultado.ok) return;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+if (!user) return;
 
-  const u = resultado.datos.perfil;
+const mesActual = new Date().toISOString().slice(0, 7);
 
-const badgeHistorico  = u.badgeHistorico  || '—';
-  const puntosMensuales = u.ranking?.puntosMensuales ?? '—';
-  const categoria       = u.ranking?.categoria || '';
+const [{ data: gamificacion }, { data: ranking }] = await Promise.all([
+  supabaseClient.from('gamificacion').select('badge_historico').eq('id_usuario', user.id).maybeSingle(),
+  supabaseClient.from('ranking').select('posicion, puntos_mensuales, porcentaje_completion, categoria').eq('id_usuario_resenador', user.id).eq('mes_año', mesActual).maybeSingle()
+]);
+
+const badgeHistorico  = gamificacion?.badge_historico || '—';
+const puntosMensuales = ranking?.puntos_mensuales ?? '—';
+const categoria       = ranking?.categoria || '';
   const labelCategoria  = {
     top5:     '🏆 Top 5',
     top20:    '🥈 Top 20',
@@ -74,7 +124,7 @@ const badgeHistorico  = u.badgeHistorico  || '—';
     </div>
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${u.ranking ? '#' + u.ranking.posicion : '—'}</span>
+      <span class="stat-numero">${ranking ? '#' + ranking.posicion : '—'}
       <span class="stat-label">Posición ranking</span>
     </div>
     <div class="stat-card">
@@ -84,7 +134,7 @@ const badgeHistorico  = u.badgeHistorico  || '—';
     </div>
     <div class="stat-card">
       <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${u.ranking ? u.ranking.porcentajeCompletion + '%' : '—'}</span>
+      <span class="stat-numero">${ranking ? ranking.porcentaje_completion + '%' : '—'}</span>
       <span class="stat-label">Completion este mes</span>
     </div>
     <div class="stat-card">
@@ -111,15 +161,8 @@ async function cargarPostulacionesReseñador(email) {
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('listarPostulacionesReseñador', { email });
-
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
-    return;
-  }
-
-  _postulacionesReseñador = resultado.datos.postulaciones || [];
-
+  _postulacionesReseñador = await obtenerPostulacionesReseñador();
+  
   if (_postulacionesReseñador.length === 0) {
     contenedor.innerHTML = `
       <div class="estado-vacio">
@@ -192,19 +235,12 @@ async function cargarArcsActivos(email) {
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('listarPostulacionesReseñador', { email });
-
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
-    return;
-  }
-
-  // Filtra solo postulaciones aprobadas en campañas activas
-  _arcsActivosReseñador = (resultado.datos.postulaciones || []).filter(p =>
-    p.estado === 'aprobada' &&
-    p.campaña &&
-    p.campaña.estado === 'activa'
-  );
+  const postulaciones = await obtenerPostulacionesReseñador();
+_arcsActivosReseñador = postulaciones.filter(p =>
+  p.estado === 'aprobada' &&
+  p.campaña &&
+  p.campaña.estado === 'activa'
+);
 
   if (_arcsActivosReseñador.length === 0) {
     contenedor.innerHTML = `
@@ -301,28 +337,42 @@ async function enviarResena(event) {
   console.log('enviando resena - idCampaña:', idCampaña);
 console.log('enviando resena - datos:', JSON.stringify(datos));
 
-  const resultado = await llamarBackend('cargarReseña', {
-  email:                Sesion.email(),
-  idCampana:            idCampaña,
-  'datos.linkInstagram': datos.linkInstagram  || '',
-  'datos.linkTikTok':    datos.linkTikTok     || '',
-  'datos.linkAmazon':    datos.linkAmazon     || '',
-  'datos.linkGoodreads': datos.linkGoodreads  || '',
-  'datos.comentarios':   datos.comentarios    || '',
-  'datos.puntuacionLibro': datos.puntuacionLibro || ''
-});
+  const { data: { user } } = await supabaseClient.auth.getUser();
 
-  if (!resultado.ok) {
-    mostrarMensajeError('resena-error', resultado.mensaje);
+  const { data: postulacionAprobada } = await supabaseClient
+    .from('postulaciones')
+    .select('id')
+    .eq('id_campana', idCampaña)
+    .eq('estado', 'aprobada')
+    .maybeSingle();
+
+  if (!postulacionAprobada) {
+    mostrarMensajeError('resena-error', 'No tenés una postulación aprobada en esta campaña.');
     return;
   }
+
+  const { error } = await supabaseClient.from('resenas').insert({
+    id_campana: idCampaña,
+    id_postulacion: postulacionAprobada.id,
+    id_usuario_resenador: user.id,
+    link_instagram: datos.linkInstagram || '',
+    link_tiktok: datos.linkTikTok || '',
+    link_amazon: datos.linkAmazon || '',
+    link_goodreads: datos.linkGoodreads || '',
+    comentarios: datos.comentarios || '',
+    puntuacion_libro: datos.puntuacionLibro ? parseInt(datos.puntuacionLibro) : null
+  });
+  
+  if (error) {
+  mostrarMensajeError('resena-error', 'Debés cargar al menos un link de reseña.');
+  return;
+}
 
   mostrarMensajeOk('resena-ok', '¡Reseña cargada correctamente!');
 
   setTimeout(async () => {
     cerrarModales();
-    const pts = resultado.datos?.puntosGanados ?? 100;
-    mostrarToast(`¡Reseña enviada! Ganaste +${pts} puntos ⭐`, 'ok');
+    mostrarToast('¡Reseña enviada! Ganaste +100 puntos ⭐', 'ok');
     await cargarArcsActivos(Sesion.email());
     await cargarHistorialReseñador(Sesion.email());
     await cargarEstadisticasReseñador(Sesion.email());
@@ -343,20 +393,43 @@ async function cargarHistorialReseñador(email) {
   const contenedor = document.getElementById('resenador-historial-lista');
   if (!contenedor) return;
 
-  const resultado = await llamarBackend('listarReseñasReseñador', { email });
+  const { data: { user } } = await supabaseClient.auth.getUser();
+if (!user) return;
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `
-      <div class="estado-vacio">
-        <p class="estado-vacio-icono">📚</p>
-        <p class="estado-vacio-texto">Todavía no hay libros en el ranking.</p>
-        <p class="estado-vacio-sub">El ranking se arma cuando los libros acumulan al menos 3 reseñas.</p>
-      </div>
-    `;
-    return;
-  }
+const { data: reseñas, error } = await supabaseClient
+  .from('resenas')
+  .select(`id, fecha_entrega, puntuacion_autor, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios,
+    campanas ( nombre_libro, nombre_autor, link_portada )`)
+  .eq('id_usuario_resenador', user.id)
+  .order('fecha_entrega', { ascending: false });
 
-  _historialReseñador = resultado.datos.reseñas || [];
+if (error) {
+  contenedor.innerHTML = `
+    <div class="estado-vacio">
+      <p class="estado-vacio-icono">📚</p>
+      <p class="estado-vacio-texto">Todavía no hay libros en el ranking.</p>
+      <p class="estado-vacio-sub">El ranking se arma cuando los libros acumulan al menos 3 reseñas.</p>
+    </div>
+  `;
+  return;
+}
+
+_historialReseñador = (reseñas || []).map(r => ({
+  fechaEntrega: r.fecha_entrega,
+  puntuacion: r.puntuacion_autor,
+  completion: null,
+  linkInstagram: r.link_instagram,
+  linkTikTok: r.link_tiktok,
+  linkAmazon: r.link_amazon,
+  linkGoodreads: r.link_goodreads,
+  campaña: r.campanas ? {
+    nombreLibro: r.campanas.nombre_libro,
+    nombreAutor: r.campanas.nombre_autor,
+    linkPortada: r.campanas.link_portada
+  } : null
+}));
+
+const postulacionesAbandonadas = (await obtenerPostulacionesReseñador()).filter(p => p.estado === 'abandonada');
 
   // Obtener postulaciones abandonadas
   const resultadoPostulaciones = await llamarBackend('listarPostulacionesReseñador', { email });
@@ -470,15 +543,14 @@ async function cargarRankingReseñador(email) {
   const contenedor = document.getElementById('resenador-ranking-info');
   if (!contenedor) return;
 
-  const resultado = await llamarBackend('obtenerRankingReseñadores', {});
+  const { data, error } = await supabaseClient.rpc('obtener_ranking_resenadores');
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
-    return;
-  }
+if (error) {
+  contenedor.innerHTML = `<p class="mensaje-error">Error al cargar el ranking.</p>`;
+  return;
+}
 
-  const { mes, destacados, top5, top20, miPosicion } = resultado.datos;
-
+const { mes, destacados, top5, top20 } = data;
   // Estado vacío: sin participantes
   if (!destacados || destacados.length === 0) {
     contenedor.innerHTML = `
@@ -608,14 +680,23 @@ async function cargarRankingLibros(mesAño) {
   const contenedor = document.getElementById('ranking-libros-contenedor');
   if (!contenedor) return;
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
-  const params = mesAño ? { mesAño } : {};
-  const resultado = await llamarBackend('obtenerRankingLibros', params);
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
-    return;
-  }
-  const { mes, recomendados, masLeidos, top5 } = resultado.datos;
+  const mesActual = mesAño || new Date().toISOString().slice(0, 7);
+const mes = new Date(mesActual + '-01').toLocaleString('es-AR', { month: 'long', year: 'numeric' });
 
+const [{ data: recD }, { data: masD }, { data: topD }] = await Promise.all([
+  supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).not('pos_recomendado', 'is', null).order('pos_recomendado').limit(5),
+  supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).not('pos_mas_leido', 'is', null).order('pos_mas_leido').limit(5),
+  supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).eq('es_top5', true).order('pos_top')
+]);
+
+const adaptar = l => ({
+  nombreLibro: l.nombre_libro, nombreAutor: l.nombre_autor, linkPortada: l.link_portada,
+  promedio: l.promedio_puntuacion, totalReseñas: l.total_resenas, posicion: l.pos_top
+});
+
+const recomendados = (recD || []).map(adaptar);
+const masLeidos     = (masD || []).map(adaptar);
+const top5          = (topD || []).map(adaptar);
   contenedor.innerHTML = `
     <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); margin-bottom:24px;">Ranking — ${mes}</h3>
 
@@ -767,18 +848,17 @@ async function confirmarDNF() {
 
   toggleBoton('btn-confirmar-dnf', false, 'Procesando...');
 
-  const resultado = await llamarBackend('abandonarCampana', {
-    email: Sesion.email(),
-    idPostulacion,
-    motivoAbandonoPrivado: motivo
-  });
+  const { data, error } = await supabaseClient.rpc('abandonar_postulacion', {
+  p_postulacion: idPostulacion,
+  p_motivo: motivo
+});
 
-  toggleBoton('btn-confirmar-dnf', true, '', 'Confirmar abandono');
+toggleBoton('btn-confirmar-dnf', true, '', 'Confirmar abandono');
 
-  if (!resultado.ok) {
-    mostrarMensajeError('dnf-error', resultado.mensaje || 'Error al abandonar la campaña.');
-    return;
-  }
+if (error || data?.error) {
+  mostrarMensajeError('dnf-error', data?.error || 'Error al abandonar la campaña.');
+  return;
+}
 
   cerrarModales();
   mostrarToast('Campaña abandonada correctamente.', 'ok');
