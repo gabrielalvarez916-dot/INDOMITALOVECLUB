@@ -1,6 +1,6 @@
 // ============================================================
 // admin.js — Indómita Love Club
-// Panel admin: usuarios, campañas, pagos, configuración, errores
+// Panel admin: usuarios, campañas, suscripciones, configuración, errores
 // ============================================================
 
 
@@ -13,14 +13,11 @@
  * Se llama automáticamente cuando se muestra la sección admin.
  */
 async function cargarAdmin() {
-  const email = Sesion.email();
-  if (!email) return;
-
   await Promise.all([
-    cargarUsuariosAdmin(email),
-    cargarCampañasAdmin(email),
-    cargarPagosAdmin(email),
-    cargarTicketsAdmin(email)   
+    cargarUsuariosAdmin(),
+    cargarCampañasAdmin(),
+    cargarSuscripcionesAdmin(),
+    cargarTicketsAdmin()
   ]);
 }
 
@@ -31,23 +28,21 @@ async function cargarAdmin() {
 
 /**
  * Carga y muestra la lista de usuarios en el panel admin.
- *
- * @param {string} email
  */
-async function cargarUsuariosAdmin(email) {
+async function cargarUsuariosAdmin() {
   const contenedor = document.getElementById('admin-usuarios-lista');
   if (!contenedor) return;
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('adminListarUsuarios', { email });
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_usuarios');
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar los usuarios.'}</p>`;
     return;
   }
 
-  const usuarios = resultado.datos.usuarios || [];
+  const usuarios = resultado.usuarios || [];
 
   if (usuarios.length === 0) {
     contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay usuarios registrados.</p></div>`;
@@ -76,7 +71,6 @@ async function cargarUsuariosAdmin(email) {
     </table>
   `;
 
-  // Guarda los usuarios para filtrar
   window._usuariosAdmin = usuarios;
 }
 
@@ -108,7 +102,7 @@ function construirFilaUsuarioAdmin(u) {
       <td><span class="badge badge-nivel">${u.rol}</span></td>
       <td>${planTexto}</td>
       <td>${estadoBadge}</td>
-      <td style="font-size:12px;">${u.fechaRegistro ? u.fechaRegistro.split(' ')[0] : '—'}</td>
+      <td style="font-size:12px;">${u.fechaRegistro ? String(u.fechaRegistro).split('T')[0] : '—'}</td>
       <td style="display:flex; gap:6px;">${botonBloqueo}${botonVerComo}</td>
     </tr>
   `;
@@ -135,9 +129,6 @@ function filtrarUsuariosAdmin() {
  * @param {string} accion — 'bloquear' o 'desbloquear'
  */
 async function accionUsuarioAdmin(emailUsuario, accion) {
-  const email = Sesion.email();
-  const accionBackend = accion === 'bloquear' ? 'adminBloquearUsuario' : 'adminDesbloquearUsuario';
-
   let motivo = '';
   if (accion === 'bloquear') {
     motivo = prompt(`¿Motivo del bloqueo de ${emailUsuario}?`) || '';
@@ -146,19 +137,20 @@ async function accionUsuarioAdmin(emailUsuario, accion) {
     if (!confirm(`¿Desbloquear a ${emailUsuario}?`)) return;
   }
 
-  const resultado = await llamarBackend(accionBackend, {
-    email,
-    emailObjetivo: emailUsuario,
-    motivo
-  });
+  const rpcNombre = accion === 'bloquear' ? 'admin_bloquear_usuario' : 'admin_desbloquear_usuario';
+  const params = accion === 'bloquear'
+    ? { p_email: emailUsuario, p_motivo: motivo }
+    : { p_email: emailUsuario };
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje, 'error');
+  const { error } = await supabaseClient.rpc(rpcNombre, params);
+
+  if (error) {
+    mostrarToast(error.message || 'Error al actualizar el usuario.', 'error');
     return;
   }
 
   mostrarToast(accion === 'bloquear' ? 'Usuario bloqueado.' : 'Usuario desbloqueado.', 'ok');
-  await cargarUsuariosAdmin(email);
+  await cargarUsuariosAdmin();
 }
 
 
@@ -168,23 +160,21 @@ async function accionUsuarioAdmin(emailUsuario, accion) {
 
 /**
  * Carga y muestra la lista de campañas en el panel admin.
- *
- * @param {string} email
  */
-async function cargarCampañasAdmin(email) {
+async function cargarCampañasAdmin() {
   const contenedor = document.getElementById('admin-campanas-lista');
   if (!contenedor) return;
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('adminListarCampanas', { email });
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_campanas');
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar las campañas.'}</p>`;
     return;
   }
 
-  const campañas = resultado.datos.campañas || [];
+  const campañas = resultado.campañas || [];
 
   if (campañas.length === 0) {
     contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay campañas registradas.</p></div>`;
@@ -243,155 +233,125 @@ async function cancelarCampañaAdmin(idCampaña, nombreLibro) {
   const motivo = prompt(`¿Motivo de la cancelación de "${nombreLibro}"?`);
   if (motivo === null) return;
 
-  const resultado = await llamarBackend('adminCancelarCampana', {
-    email: Sesion.email(),
-    idCampana: idCampaña,
-    motivo
+  const { error } = await supabaseClient.rpc('admin_cancelar_campana', {
+    p_id_campana: idCampaña,
+    p_motivo: motivo
   });
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje, 'error');
+  if (error) {
+    mostrarToast(error.message || 'Error al cancelar la campaña.', 'error');
     return;
   }
 
   mostrarToast('Campaña cancelada.', 'ok');
-  await cargarCampañasAdmin(Sesion.email());
+  await cargarCampañasAdmin();
 }
 
 
 // ────────────────────────────────────────────────────────────
-// PAGOS
+// SUSCRIPCIONES (antes "Pagos" — ahora es solo lectura,
+// la activación/rechazo la maneja automáticamente el webhook
+// de Mercado Pago / PayPal, no el admin)
 // ────────────────────────────────────────────────────────────
 
 /**
- * Carga y muestra la lista de pagos en el panel admin.
- *
- * @param {string} email
+ * Carga y muestra la lista de suscripciones en el panel admin.
  */
-async function cargarPagosAdmin(email) {
+async function cargarSuscripcionesAdmin() {
   const contenedor = document.getElementById('admin-pagos-lista');
   if (!contenedor) return;
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('adminListarPagos', { email });
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_suscripciones');
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar las suscripciones.'}</p>`;
     return;
   }
 
-  const pagos = resultado.datos.pagos || [];
+  const suscripciones = resultado.suscripciones || [];
 
-  if (pagos.length === 0) {
-    contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay pagos registrados.</p></div>`;
+  if (suscripciones.length === 0) {
+    contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay suscripciones registradas.</p></div>`;
     return;
   }
 
   contenedor.innerHTML = `
+    <p class="form-info" style="margin-bottom:14px;">
+      Las suscripciones se activan y desactivan automáticamente por webhook de Mercado Pago / PayPal. Esta tabla es solo informativa.
+    </p>
     <table class="admin-tabla">
       <thead>
         <tr>
           <th>Email</th>
           <th>Plan</th>
-          <th>Monto</th>
-          <th>Método</th>
           <th>Estado</th>
-          <th>Fecha</th>
-          <th>Comprobante</th>
-          <th>Acciones</th>
+          <th>Monto</th>
+          <th>Proveedor</th>
+          <th>Próximo pago</th>
+          <th>Último pago</th>
         </tr>
       </thead>
       <tbody>
-        ${pagos.map(p => construirFilaPagoAdmin(p)).join('')}
+        ${suscripciones.map(s => construirFilaSuscripcionAdmin(s)).join('')}
       </tbody>
     </table>
   `;
 }
 
 /**
- * Construye la fila de un pago para la tabla admin.
+ * Construye la fila de una suscripción para la tabla admin.
  *
- * @param {Object} p — datos del pago
+ * @param {Object} s — datos de la suscripción
  * @returns {string} HTML de la fila
  */
-function construirFilaPagoAdmin(p) {
-  const botonesAccion = p.estadoPago === 'pendiente' ? `
-    <button class="btn-primario btn-sm" onclick="accionPagoAdmin('${p.id}', 'aprobar')">Aprobar</button>
-    <button class="btn-secundario btn-sm btn-peligro" onclick="accionPagoAdmin('${p.id}', 'rechazar')">Rechazar</button>
-  ` : '';
+function construirFilaSuscripcionAdmin(s) {
+  const estadoBadge = {
+    activa: '<span class="badge badge-aprobada">Activa</span>',
+    autorizada: '<span class="badge badge-aprobada">Autorizada</span>',
+    pendiente: '<span class="badge badge-pendiente">Pendiente</span>',
+    pausada: '<span class="badge badge-pendiente">Pausada</span>',
+    cancelada: '<span class="badge badge-cancelada">Cancelada</span>',
+    pago_fallido: '<span class="badge badge-rechazada">Pago fallido</span>'
+  }[s.estado] || s.estado;
 
-  const comprobanteLink = p.comprobanteUrl
-    ? `<a href="${p.comprobanteUrl}" target="_blank" class="red-link">Ver</a>`
+  const ultimoPagoTexto = s.ultimoPago
+    ? `${s.ultimoPago.monto ?? '—'} (${s.ultimoPago.estado}) — ${s.ultimoPago.fecha ? String(s.ultimoPago.fecha).split('T')[0] : '—'}`
     : '—';
-
-  const estadoBadge = p.estadoPago === 'aprobado'
-    ? '<span class="badge badge-aprobada">Aprobado</span>'
-    : p.estadoPago === 'rechazado'
-    ? '<span class="badge badge-rechazada">Rechazado</span>'
-    : '<span class="badge badge-pendiente">Pendiente</span>';
 
   return `
     <tr>
-      <td style="font-size:12px;">${p.email}</td>
-      <td>${p.planSolicitado}</td>
-      <td>${p.monto || '—'} ${p.moneda || ''}</td>
-      <td style="font-size:12px;">${p.metodoPago}</td>
+      <td style="font-size:12px;">${s.email}</td>
+      <td>${s.plan}</td>
       <td>${estadoBadge}</td>
-      <td style="font-size:12px;">${p.fechaSolicitud ? p.fechaSolicitud.split(' ')[0] : '—'}</td>
-      <td>${comprobanteLink}</td>
-      <td style="display:flex; gap:6px;">${botonesAccion}</td>
+      <td>${s.monto || '—'} ${s.moneda || ''}</td>
+      <td style="font-size:12px;">${s.proveedorPago}</td>
+      <td style="font-size:12px;">${s.fechaProximoPago ? String(s.fechaProximoPago).split('T')[0] : '—'}</td>
+      <td style="font-size:12px;">${ultimoPagoTexto}</td>
     </tr>
   `;
 }
 
-/**
- * Aprueba o rechaza un pago.
- *
- * @param {string} idPago
- * @param {string} accion — 'aprobar' o 'rechazar'
- */
-async function accionPagoAdmin(idPago, accion) {
-  const email = Sesion.email();
 
-  let motivo = '';
-  if (accion === 'rechazar') {
-    motivo = prompt('¿Motivo del rechazo?') || '';
-    if (motivo === null) return;
-  } else {
-    if (!confirm('¿Aprobar este pago y activar el plan?')) return;
-  }
+// ────────────────────────────────────────────────────────────
+// ESTADÍSTICAS
+// ────────────────────────────────────────────────────────────
 
-  const accionBackend = accion === 'aprobar' ? 'adminAprobarPago' : 'adminRechazarPago';
-
-  const resultado = await llamarBackend(accionBackend, {
-    email,
-    idPago,
-    motivo
-  });
-
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje, 'error');
-    return;
-  }
-
-  mostrarToast(accion === 'aprobar' ? 'Pago aprobado. Plan activado.' : 'Pago rechazado.', 'ok');
-  await cargarPagosAdmin(email);
-}
 async function cargarEstadisticasAdmin() {
   const contenedor = document.getElementById('admin-estadisticas-contenedor');
   if (!contenedor) return;
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('adminEstadisticas', { email: Sesion.email() });
+  const { data: resultado, error } = await supabaseClient.rpc('admin_estadisticas');
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar las estadísticas.'}</p>`;
     return;
   }
 
-  const { usuarios, campañas, reseñas } = resultado.datos;
+  const { usuarios, campañas, reseñas } = resultado;
 
   contenedor.innerHTML = `
     <div class="stats-grid">
@@ -419,24 +379,26 @@ async function cargarEstadisticasAdmin() {
     </div>
   `;
 }
+
+
 // ────────────────────────────────────────────────────────────
 // SOPORTE (TICKETS)
 // ────────────────────────────────────────────────────────────
 
-async function cargarTicketsAdmin(email) {
+async function cargarTicketsAdmin() {
   const contenedor = document.getElementById('admin-tickets-lista');
   if (!contenedor) return;
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('adminListarTickets', { email });
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_tickets');
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar los tickets.'}</p>`;
     return;
   }
 
-  const tickets = resultado.datos.tickets || [];
+  const tickets = resultado.tickets || [];
 
   if (tickets.length === 0) {
     contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay tickets de soporte.</p></div>`;
@@ -464,24 +426,24 @@ async function cargarTicketsAdmin(email) {
 }
 
 function construirFilaTicketAdmin(t) {
-  const estadoBadge = t.Estado === 'cerrado'
+  const estadoBadge = t.estado === 'cerrado'
     ? '<span class="badge badge-cancelada">Cerrado</span>'
-    : t.Estado === 'respondido'
+    : t.estado === 'respondido'
     ? '<span class="badge badge-aprobada">Respondido</span>'
     : '<span class="badge badge-pendiente">Pendiente</span>';
 
-  const botones = t.Estado === 'cerrado' ? '' : `
-    ${t.Estado !== 'respondido' ? `<button class="btn-secundario btn-sm" onclick="accionTicketAdmin('${t.ID_Ticket}', 'respondido')">Respondido</button>` : ''}
-    <button class="btn-secundario btn-sm btn-peligro" onclick="accionTicketAdmin('${t.ID_Ticket}', 'cerrado')">Cerrar</button>
+  const botones = t.estado === 'cerrado' ? '' : `
+    ${t.estado !== 'respondido' ? `<button class="btn-secundario btn-sm" onclick="accionTicketAdmin('${t.idTicket}', 'respondido')">Respondido</button>` : ''}
+    <button class="btn-secundario btn-sm btn-peligro" onclick="accionTicketAdmin('${t.idTicket}', 'cerrado')">Cerrar</button>
   `;
 
   return `
     <tr>
-      <td style="font-size:12px;">${t.Email}</td>
-      <td><span class="badge badge-nivel">${t.Rol || '—'}</span></td>
-      <td>${t.Asunto}</td>
-      <td style="max-width:280px; font-size:12px;">${t.Mensaje}</td>
-      <td style="font-size:12px;">${t.Fecha ? t.Fecha.split(' ')[0] : '—'}</td>
+      <td style="font-size:12px;">${t.email}</td>
+      <td><span class="badge badge-nivel">${t.rol || '—'}</span></td>
+      <td>${t.asunto}</td>
+      <td style="max-width:280px; font-size:12px;">${t.mensaje}</td>
+      <td style="font-size:12px;">${t.fecha ? String(t.fecha).split('T')[0] : '—'}</td>
       <td>${estadoBadge}</td>
       <td style="display:flex; gap:6px;">${botones}</td>
     </tr>
@@ -489,22 +451,19 @@ function construirFilaTicketAdmin(t) {
 }
 
 async function accionTicketAdmin(idTicket, nuevoEstado) {
-  const email = Sesion.email();
-
   const confirmText = nuevoEstado === 'cerrado' ? '¿Cerrar este ticket?' : '¿Marcar como respondido?';
   if (!confirm(confirmText)) return;
 
-  const resultado = await llamarBackend('adminActualizarEstadoTicket', {
-    email,
-    idTicket,
-    nuevoEstado
+  const { data: resultado, error } = await supabaseClient.rpc('admin_actualizar_estado_ticket', {
+    p_id_ticket: idTicket,
+    p_nuevo_estado: nuevoEstado
   });
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje, 'error');
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || 'Error al actualizar el ticket.', 'error');
     return;
   }
 
   mostrarToast('Ticket actualizado.', 'ok');
-  await cargarTicketsAdmin(email);
+  await cargarTicketsAdmin();
 }
