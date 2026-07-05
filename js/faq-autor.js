@@ -46,18 +46,20 @@ const FAQ_AUTOR_DATA = [
     respuesta: 'Cuanto más alto el plan, más rápido podés hacer crecer tu comunidad de lectoras. Free te deja probar la plataforma con 1 campaña por mes y hasta 10 reseñadores — ideal para tu primer lanzamiento. Basic ($20.000/mes) te da 3 campañas por mes y hasta 50 reseñadores, para autoras que publican seguido o quieren más alcance por libro. Premium ($40.000/mes) te da hasta 5 campañas por mes y 100 reseñadores, pensado para quienes quieren maximizar la visibilidad de cada lanzamiento y mantener varias campañas corriendo en paralelo.'
   },
   {
+    {
     pregunta: '¿Cómo hago el pago para cambiar de plan?',
-    respuesta: 'Al elegir un plan, te preguntamos si pagás desde Argentina (Mercado Pago) o desde el exterior (Stripe). Te abrimos el link de pago en una pestaña nueva para que completes la operación ahí.'
+    respuesta: 'Al elegir un plan, te preguntamos si pagás desde Argentina (Mercado Pago) o desde el exterior (PayPal). Te abrimos el link de pago en una pestaña nueva para que completes la suscripción ahí.'
   },
   {
-    pregunta: 'Ya pagué, ¿cómo confirmo mi pago?',
-    respuesta: 'Después de pagar, te va a aparecer un formulario para subir tu comprobante (un link a la captura o factura). Sin ese paso no podemos confirmar tu pago.'
+    pregunta: '¿Cómo confirmo mi pago?',
+    respuesta: 'No hace falta que hagas nada más: en cuanto Mercado Pago o PayPal confirman el pago, tu plan se activa automáticamente en la plataforma.'
   },
   {
     pregunta: '¿Cuánto tarda en activarse mi plan después de pagar?',
-    respuesta: 'La verificación es manual: revisamos cada comprobante nosotros mismos, así que puede demorar hasta 24 horas hábiles. Una vez aprobado, te llega un mail confirmando la activación.'
+    respuesta: 'Es automático. Apenas se aprueba el pago del lado de Mercado Pago o PayPal, tu cuenta pasa a estar activa en el plan elegido — no hay revisión manual de por medio.'
   }
 ];
+
 
 /**
  * Renderiza la sección de FAQ para autores.
