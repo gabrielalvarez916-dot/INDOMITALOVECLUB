@@ -43,24 +43,18 @@ async function abrirPerfilPublico(id, rol) {
 // ────────────────────────────────────────────────────────────
 
 async function _cargarPerfilAutor(idAutor) {
-  const [resPerfil, resLibros, resCampañas, resGamif] = await Promise.all([
-    llamarBackend('obtenerPerfilPublicoAutor',   { idAutor }),
-    llamarBackend('listarLibrosPerfilPublico',    { idAutor }),
-    llamarBackend('listarCampanasActivasPorAutor', { idAutor }),
-    llamarBackend('obtenerGamificacionAutor',     { idAutor })  // ← NUEVA LÍNEA
+  const [{ data: perfil, error: errPerfil }, { data: libros }, { data: campañas }] = await Promise.all([
+    supabaseClient.rpc('obtener_perfil_publico_autor', { p_id_autor: idAutor }),
+    supabaseClient.rpc('listar_libros_perfil_publico',  { p_id_autor: idAutor }),
+    supabaseClient.rpc('listar_campanas_activas_por_autor', { p_id_autor: idAutor })
   ]);
 
-  if (!resPerfil.ok) {
+  if (errPerfil || !perfil || perfil.error) {
     _estadoPerfilPublico('error');
     return;
   }
 
-  const perfil   = resPerfil.datos.perfil;
-  const libros   = resLibros.ok   ? (resLibros.datos.libros   || []) : [];
-  const campañas = resCampañas.ok ? (resCampañas.datos.campañas || []) : [];
-   const gamif    = resGamif.ok    ? resGamif.datos : null;
-
-  _pintarPerfilAutor(perfil, libros, campañas, gamif);
+  _pintarPerfilAutor(perfil, libros || [], campañas || [], perfil);
   _estadoPerfilPublico('autor');
 }
 
@@ -74,21 +68,21 @@ let _bibliotecaEsPropia = false;
 
 async function _cargarPerfilReseñador(idReseñador) {
   _idReseñadorPerfilActual = idReseñador;
-  const [resPerfil, resEncabezado, resUltimosLibros] = await Promise.all([
-    llamarBackend('obtenerPerfilReseñador',         { idReseñador }),
-    llamarBackend('obtenerEncabezadoPerfilPublico', { idReseñador }),
-    llamarBackend('obtenerUltimosLibrosLeidos',     { idReseñador }),
+  const [{ data: perfil, error: errPerfil }, { data: ultimosLibros }] = await Promise.all([
+    supabaseClient.rpc('obtener_perfil_resenador', { p_id_resenador: idReseñador }),
+    supabaseClient.rpc('obtener_ultimos_libros_leidos', { p_id_resenador: idReseñador })
   ]);
-  if (!resPerfil.ok) {
+  if (errPerfil || !perfil || perfil.error) {
     _estadoPerfilPublico('error');
     return;
   }
-  const perfil       = resPerfil.datos.perfil;
-  const encabezado   = resEncabezado.ok ? resEncabezado.datos : null;
-  const ultimosLibros = resUltimosLibros.ok ? (resUltimosLibros.datos.libros || []) : [];
   _pintarPerfilReseñador(perfil, []);
-  _pintarEncabezadoHistorico(encabezado);
-  _pintarUltimosLibros(ultimosLibros);
+  _pintarEncabezadoHistorico({
+    ...perfil,
+    miembroDesde: perfil.fechaRegistro,
+    reseñasEntregadas: perfil.totalLibrosLeidos
+  });
+  _pintarUltimosLibros(ultimosLibros || []);
   _estadoPerfilPublico('reseñador');
   _evaluarBotonesVerMas();
 }
@@ -250,8 +244,8 @@ function _renderCardLibroAutor(libro) {
 function _renderGamificacionAutor(gamif) {
   const insigniasHtml = gamif.insignias && gamif.insignias.length > 0
     ? gamif.insignias.map(i => `
-        <div class="pp-insignia-item" title="${_esc(i.Codigo)}">
-          <span class="pp-insignia-icono">${_iconoInsignia(i.Tipo)}</span>
+        <div class="pp-insignia-item" title="${_esc(i.codigo)}">
+          <span class="pp-insignia-icono">${_iconoInsignia(i.tipo)}</span>
           <span class="pp-insignia-label">${_esc(_labelInsigniaAutor(i))}</span>
         </div>
       `).join('')
@@ -303,9 +297,9 @@ function _iconoInsignia(tipo) {
 }
 
 function _labelInsigniaAutor(insignia) {
-  // insignia.Codigo es algo como "nivel_autor_sensei" o "hito_campañas_campañas_5"
-  const partes = (insignia.Codigo || '').split('_');
-  return partes.slice(-1)[0].replace(/([A-Z])/g, ' $1').trim() || insignia.Codigo;
+  // insignia.codigo es algo como "nivel_autor_sensei" o "hito_campañas_campañas_5"
+  const partes = (insignia.codigo || '').split('_');
+  return partes.slice(-1)[0].replace(/([A-Z])/g, ' $1').trim() || insignia.codigo;
 }
 // ────────────────────────────────────────────────────────────
 // PINTAR: PERFIL RESEÑADOR
@@ -414,7 +408,7 @@ function _pintarCabeceraComun(perfil, sufijo = '') {
   if (url.startsWith('/')) return 'https://indomitaloveclub.vercel.app' + url;
   return url;
 };
-avatarEl.src = _resolverAvatar(perfil.fotoPerfil);
+avatarEl.src = _resolverAvatar(perfil.avatarUrl);
     avatarEl.alt = perfil.alias || 'Avatar';
   }
 
@@ -537,8 +531,8 @@ function _pintarEncabezadoHistorico(encabezado) {
       insigniasCont.innerHTML = '<p class="pp-vacio">Todavía sin insignias.</p>';
     } else {
       insigniasCont.innerHTML = insignias.map(i => `
-        <div class="pp-insignia-item" title="${_esc(i.Codigo)}">
-          <span class="pp-insignia-icono">${_iconoPorTipoInsignia(i.Tipo)}</span>
+        <div class="pp-insignia-item" title="${_esc(i.codigo)}">
+          <span class="pp-insignia-icono">${_iconoPorTipoInsignia(i.tipo)}</span>
           <span class="pp-insignia-label">${_esc(_labelInsignia(i))}</span>
         </div>
       `).join('');
@@ -561,7 +555,7 @@ function _iconoPorTipoInsignia(tipo) {
 }
 
 function _labelInsignia(insignia) {
-  const partes = (insignia.Codigo || '').split('_').join(' ');
+  const partes = (insignia.codigo || '').split('_').join(' ');
   return partes.charAt(0).toUpperCase() + partes.slice(1);
 }
 
@@ -640,12 +634,12 @@ async function cargarBibliotecaSeccion() {
     const email = Sesion.email();
     if (!email) return;
 
-    const res = await llamarBackend('obtenerIdReseñadorPorEmail', { email });
-    if (!res.ok) {
+    const { data: idRes, error: errId } = await supabaseClient.rpc('obtener_id_resenador_por_email', { p_email: email });
+    if (errId || !idRes || idRes.error) {
       _estadoBibliotecaSeccion('error');
       return;
     }
-    _idReseñadorPerfilActual = res.datos.idReseñador;
+    _idReseñadorPerfilActual = idRes.id;
     _bibliotecaEsPropia = true;  // ← se resolvió desde la sesión propia
   }
 
@@ -658,16 +652,16 @@ async function cargarBibliotecaSeccion() {
   _estadoBibliotecaSeccion('cargando');
 
   try {
-    const res = await llamarBackend('obtenerBibliotecaReseñador', {
-      idReseñador: _idReseñadorPerfilActual
+    const { data: biblioteca, error: errBib } = await supabaseClient.rpc('obtener_biblioteca_resenador', {
+      p_id_resenador: _idReseñadorPerfilActual
     });
 
-    if (!res.ok) {
+    if (errBib || !biblioteca || biblioteca.error) {
       _estadoBibliotecaSeccion('error');
       return;
     }
 
-    _pintarBiblioteca(res.datos);
+    _pintarBiblioteca(biblioteca);
     _estadoBibliotecaSeccion('contenido');
 
   } catch (e) {
