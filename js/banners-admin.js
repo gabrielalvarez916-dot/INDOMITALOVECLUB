@@ -62,17 +62,16 @@ async function crearBannerAdmin(event) {
   const linkDestino = document.getElementById('banner-link-destino')?.value?.trim();
   const orden = document.getElementById('banner-orden')?.value;
 
-  const resultado = await llamarBackend('adminCrearBanner', {
-    email: Sesion.email(),
-    imagenUrl,
-    linkDestino,
-    orden
+  const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
+    p_imagen_url: imagenUrl,
+    p_link_destino: linkDestino,
+    p_orden: orden ? parseInt(orden, 10) : 0
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Agregar banner');
 
-  if (!resultado.ok) {
-    mostrarMensajeError('banner-error', resultado.mensaje);
+  if (error || !resultado || resultado.error) {
+    mostrarMensajeError('banner-error', resultado?.error || 'Error al crear el banner.');
     return;
   }
 
@@ -84,7 +83,7 @@ async function crearBannerAdmin(event) {
 }
 
 /**
- * Pide al backend la lista completa de banners y la renderiza.
+ * Pide a Supabase la lista completa de banners y la renderiza.
  */
 async function refrescarListaBanners() {
   const contenedor = document.getElementById('admin-banners-lista');
@@ -92,14 +91,14 @@ async function refrescarListaBanners() {
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const resultado = await llamarBackend('adminListarBanners', { email: Sesion.email() });
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_banners');
 
-  if (!resultado.ok) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado.mensaje}</p>`;
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar los banners.'}</p>`;
     return;
   }
 
-  _bannersAdmin = resultado.datos.banners || [];
+  _bannersAdmin = resultado.banners || [];
 
   if (_bannersAdmin.length === 0) {
     contenedor.innerHTML = `
@@ -150,14 +149,13 @@ function construirCardBannerAdmin(b) {
  * @param {boolean} nuevoEstado
  */
 async function toggleBannerAdmin(idBanner, nuevoEstado) {
-  const resultado = await llamarBackend('adminToggleBanner', {
-    email: Sesion.email(),
-    idBanner,
-    activo: nuevoEstado
+  const { data: resultado, error } = await supabaseClient.rpc('admin_toggle_banner', {
+    p_id_banner: idBanner,
+    p_activo: nuevoEstado
   });
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al cambiar el estado del banner.', 'error');
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || 'Error al cambiar el estado del banner.', 'error');
     return;
   }
 
@@ -173,13 +171,12 @@ async function toggleBannerAdmin(idBanner, nuevoEstado) {
 async function eliminarBannerAdmin(idBanner) {
   if (!confirm('¿Eliminar este banner? Esta acción no se puede deshacer.')) return;
 
-  const resultado = await llamarBackend('adminEliminarBanner', {
-    email: Sesion.email(),
-    idBanner
+  const { data: resultado, error } = await supabaseClient.rpc('admin_eliminar_banner', {
+    p_id_banner: idBanner
   });
 
-  if (!resultado.ok) {
-    mostrarToast(resultado.mensaje || 'Error al eliminar el banner.', 'error');
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || 'Error al eliminar el banner.', 'error');
     return;
   }
 
