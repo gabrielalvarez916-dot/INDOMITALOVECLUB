@@ -236,11 +236,14 @@ async function cargarArcsActivos(email) {
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
   const postulaciones = await obtenerPostulacionesReseñador();
-_arcsActivosReseñador = postulaciones.filter(p =>
-  p.estado === 'aprobada' &&
-  p.campaña &&
-  p.campaña.estado === 'activa'
-);
+  const ahora = new Date();
+  // Un ARC está activo mientras la postulación siga aprobada y no haya vencido
+  // el plazo PERSONAL de entrega del reseñador (no el estado global de la campaña).
+  _arcsActivosReseñador = postulaciones.filter(p =>
+    p.estado === 'aprobada' &&
+    p.fechaLimiteEntrega &&
+    ahora <= new Date(p.fechaLimiteEntrega)
+  );
 
   if (_arcsActivosReseñador.length === 0) {
     contenedor.innerHTML = `
