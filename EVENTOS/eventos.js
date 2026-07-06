@@ -69,22 +69,23 @@ async function inicializarEventos() {
     _EventosState.idUsuario = usuario.id;
     _EventosState.rol = usuario.rol;
 
-    const resultado = await llamarBackend('inicializarEventoUsuario', {
-      idUsuario: usuario.id,
-      rol: usuario.rol
+    const { data: resultado, error } = await supabaseClient.rpc('inicializar_evento_usuario', {
+      p_usuario: usuario.id,
+      p_rol: usuario.rol,
+      p_id_evento: candidato.id
     });
 
-    if (!resultado.ok || !resultado.datos || !resultado.datos.activo) {
+    if (error || !resultado || !resultado.activo) {
       _ocultarBotonNavEvento();
       return;
     }
 
     _EventosState.eventoActivo = candidato;
-    _EventosState.progreso = resultado.datos.progreso;
+    _EventosState.progreso = resultado.progreso;
 
     _mostrarBotonNavEvento(candidato);
 
-    if (!resultado.datos.modalVisto) {
+    if (!resultado.modalVisto) {
       _mostrarModalInicioEvento(candidato);
     }
 
@@ -161,9 +162,9 @@ function _mostrarModalInicioEvento(evento) {
   _iniciarAnimacionBesosCayendo(evento);
 
  btnEntendido.onclick = async () => {
-    await llamarBackend('marcarModalEventoVisto', {
-      idUsuario: _EventosState.idUsuario,
-      idEvento: evento.id
+    await supabaseClient.rpc('marcar_modal_evento_visto', {
+      p_usuario: _EventosState.idUsuario,
+      p_id_evento: evento.id
     });
     cerrarModales();
     _detenerAnimacionBesosCayendo();
@@ -235,18 +236,19 @@ async function renderPaginaEvento() {
 
   // Refresca el progreso al entrar a la página (puede haber cambiado
   // desde que se cargó la app, ej. el usuario aprobó un reseñador)
-  const resultado = await llamarBackend('inicializarEventoUsuario', {
-    idUsuario: _EventosState.idUsuario,
-    rol: _EventosState.rol
+  const { data: resultado, error } = await supabaseClient.rpc('inicializar_evento_usuario', {
+    p_usuario: _EventosState.idUsuario,
+    p_rol: _EventosState.rol,
+    p_id_evento: evento.id
   });
 
-  if (!resultado.ok || !resultado.datos.activo) {
+  if (error || !resultado || !resultado.activo) {
     contenedor.innerHTML = `<p class="evento-vacio">Este evento ya finalizó.</p>`;
     return;
   }
 
   const progresoAnterior = _EventosState.progreso;
-  _EventosState.progreso = resultado.datos.progreso;
+  _EventosState.progreso = resultado.progreso;
   const progreso = _EventosState.progreso;
 
   const yaEstabaCompleto = progresoAnterior && progresoAnterior.eventoCompleto;
@@ -349,10 +351,10 @@ async function registrarAccionEventoSiCorresponde(accion) {
   try {
     if (!_EventosState.eventoActivo || !_EventosState.idUsuario) return;
 
-    await llamarBackend('registrarAccionDirectaEvento', {
-      idUsuario: _EventosState.idUsuario,
-      idEvento: _EventosState.eventoActivo.id,
-      accion: accion
+    await supabaseClient.rpc('registrar_accion_directa_evento', {
+      p_usuario: _EventosState.idUsuario,
+      p_id_evento: _EventosState.eventoActivo.id,
+      p_accion: accion
     });
 
     // Refresca el progreso local en silencio (no repinta la UI a menos
