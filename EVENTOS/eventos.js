@@ -1,7 +1,8 @@
 // ============================================================
 // eventos.js — Indómita Love Club
 // Motor GENÉRICO de eventos. No contiene datos de ningún evento
-// puntual: esos viven en archivos tipo evento_primer_beso.js.
+// puntual: esos viven enteramente en la tabla public.eventos de
+// Supabase (nombre, textos, imágenes, retos).
 // Este archivo sabe cómo:
 //   1. Detectar si hay un evento activo y mostrarlo (modal + animación)
 //   2. Renderizar la página del evento (retos, progreso, insignia)
@@ -9,25 +10,21 @@
 //   4. Disparar la animación final cuando el usuario completa el evento
 //
 // Para agregar un evento nuevo en el futuro:
-//   - Crear su archivo de datos (mismo formato que EVENTO_PRIMER_BESO)
-//   - Agregarlo al array EVENTOS_REGISTRADOS más abajo
-//   - Crear su .gs en el backend con la misma estructura
-//   - El resto (UI, animaciones, conteo) ya funciona solo.
+//   - Cargar su fila en la tabla eventos de Supabase (activo = false)
+//   - Cuando se quiera lanzar: poner su activo = true (esto exige que
+//     el anterior esté en false, hay un índice único en la tabla que
+//     solo permite un evento activo a la vez).
+//   - No hace falta tocar ni un archivo de código para esto.
 // ============================================================
 
 
 // ────────────────────────────────────────────────────────────
-// REGISTRO DE EVENTOS DISPONIBLES EN EL FRONTEND
-// Agregar acá cada nuevo evento (su objeto de datos, definido en
-// su propio archivo tipo evento_NOMBRE.js, cargado antes que este
-// script en el HTML).
+// Título fijo del bloque "historia" del evento. Es el mismo rótulo
+// para cualquier evento; el texto de abajo sí cambia por evento y
+// viene de Supabase (columna historia de la fila activa).
 // ────────────────────────────────────────────────────────────
 
-const EVENTOS_REGISTRADOS = [
-  // EVENTO_PRIMER_BESO debe estar definido por evento_primer_beso.js,
-  // cargado ANTES que eventos.js en el HTML.
-  typeof EVENTO_PRIMER_BESO !== 'undefined' ? EVENTO_PRIMER_BESO : null
-].filter(Boolean);
+const _EVENTOS_TITULO_HISTORIA = '¿De qué trata?';
 
 
 // ────────────────────────────────────────────────────────────
@@ -57,22 +54,14 @@ async function inicializarEventos() {
     // Solo reseñador y autor tienen retos de evento (admin no participa)
     if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador') return;
 
-    // Busca, de los eventos registrados en el frontend, cuál está
-    // marcado como activo localmente (chequeo rápido, sin pegarle
-    // al backend si ni siquiera el frontend lo tiene activo).
-    const candidato = EVENTOS_REGISTRADOS.find(ev => _eventoActivoLocal(ev));
-    if (!candidato) {
-      _ocultarBotonNavEvento();
-      return;
-    }
-
     _EventosState.idUsuario = usuario.id;
     _EventosState.rol = usuario.rol;
 
+    // Ya no se manda p_id_evento: la función busca sola el evento
+    // con activo = true en Supabase y devuelve sus datos + progreso.
     const { data: resultado, error } = await supabaseClient.rpc('inicializar_evento_usuario', {
       p_usuario: usuario.id,
-      p_rol: usuario.rol,
-      p_id_evento: candidato.id
+      p_rol: usuario.rol
     });
 
     if (error || !resultado || !resultado.activo) {
@@ -80,37 +69,18 @@ async function inicializarEventos() {
       return;
     }
 
-    _EventosState.eventoActivo = candidato;
+    _EventosState.eventoActivo = resultado.evento;
     _EventosState.progreso = resultado.progreso;
 
-    _mostrarBotonNavEvento(candidato);
+    _mostrarBotonNavEvento(resultado.evento);
 
     if (!resultado.modalVisto) {
-      _mostrarModalInicioEvento(candidato);
+      _mostrarModalInicioEvento(resultado.evento);
     }
 
   } catch (e) {
     console.error('Error al inicializar eventos:', e);
   }
-}
-
-/**
- * Chequeo local rápido (sin backend) de si un evento debería
- * estar activo, según sus propios flags de fecha/activo.
- * Es solo para decidir si vale la pena consultar al backend;
- * la validación real y definitiva siempre la hace el backend.
- */
-function _eventoActivoLocal(evento) {
-  if (!evento.activo) return false;
-  if (!evento.activoPorFecha) return true;
-
-  const ahora = new Date();
-  const inicio = new Date(evento.fechaInicio);
-  const fin = new Date(evento.fechaFin);
-  // fin inclusive hasta las 23:59:59 del día de fin
-  fin.setHours(23, 59, 59, 999);
-
-  return ahora >= inicio && ahora <= fin;
 }
 
 
@@ -224,8 +194,6 @@ async function renderPaginaEvento() {
     return;
   }
 
-  const evento = _EventosState.eventoActivo;
-
     // ← AGREGAR: pantalla de carga mientras se espera al backend
   contenedor.innerHTML = `
     <div class="cargando-container">
@@ -234,18 +202,21 @@ async function renderPaginaEvento() {
     </div>
   `;
 
-  // Refresca el progreso al entrar a la página (puede haber cambiado
-  // desde que se cargó la app, ej. el usuario aprobó un reseñador)
+  // Refresca el evento y el progreso al entrar a la página (puede haber
+  // cambiado desde que se cargó la app: otro admin activó un evento
+  // nuevo, o el usuario aprobó un reseñador, etc.)
   const { data: resultado, error } = await supabaseClient.rpc('inicializar_evento_usuario', {
     p_usuario: _EventosState.idUsuario,
-    p_rol: _EventosState.rol,
-    p_id_evento: evento.id
+    p_rol: _EventosState.rol
   });
 
   if (error || !resultado || !resultado.activo) {
     contenedor.innerHTML = `<p class="evento-vacio">Este evento ya finalizó.</p>`;
     return;
   }
+
+  _EventosState.eventoActivo = resultado.evento;
+  const evento = _EventosState.eventoActivo;
 
   const progresoAnterior = _EventosState.progreso;
   _EventosState.progreso = resultado.progreso;
@@ -260,8 +231,8 @@ async function renderPaginaEvento() {
     </div>
 
     <div class="evento-historia">
-      <h3>${evento.historia.titulo || ''}</h3>
-      <p>${evento.historia.texto || evento.historia}</p>
+      <h3>${_EVENTOS_TITULO_HISTORIA}</h3>
+      <p>${evento.historia}</p>
     </div>
 
     <div class="evento-insignia-preview">
