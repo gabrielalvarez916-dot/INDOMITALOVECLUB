@@ -12,6 +12,7 @@ let _campañasAutor      = [];
 let _postulacionesAutor = [];
 let _historialAutor     = [];
 let _librosAutor        = [];
+let _portadaPrecargadaCampana = null; // URL de portada existente cuando se precarga un libro de la biblioteca
 
 function convertirLinkDrive(url) {
   if (!url) return url;
@@ -718,13 +719,31 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
+  const archivoPortada = document.getElementById('nc-link-portada')?.files?.[0];
+  let linkPortada = _portadaPrecargadaCampana;
+  if (archivoPortada) {
+    try {
+      linkPortada = await subirImagen('PORTADAS', `${user.id}/${crypto.randomUUID()}`, archivoPortada);
+    } catch (errPortada) {
+      toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+      mostrarMensajeError('nc-error', errPortada.message);
+      return;
+    }
+  }
+
+  if (!linkPortada) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', 'La portada es obligatoria.');
+    return;
+  }
+
   const datos = {
     nombreLibro:       document.getElementById('nc-nombre-libro')?.value?.trim(),
     nombreAutor:       document.getElementById('nc-nombre-autor')?.value?.trim(),
     sinopsis:          document.getElementById('nc-sinopsis')?.value?.trim(),
     genero:            document.getElementById('nc-genero')?.value?.trim(),
     tropes:            obtenerTropesComoTexto('nc'),
-    linkPortada:       convertirLinkDrive(document.getElementById('nc-link-portada')?.value?.trim()),
+    linkPortada:       linkPortada,
     linkEpub:          document.getElementById('nc-link-epub')?.value?.trim(),
     linkPdf:           document.getElementById('nc-link-pdf')?.value?.trim(),
     linkAmazon:        document.getElementById('nc-link-amazon')?.value?.trim(),
@@ -981,22 +1000,34 @@ async function agregarLibro(event) {
 
   ocultarMensajes('libro-error');
 
-  const datos = {
-    titulo:         document.getElementById('libro-titulo')?.value?.trim(),
-    sinopsisBreve:  document.getElementById('libro-sinopsis')?.value?.trim(),
-    genero:         document.getElementById('libro-genero')?.value?.trim(),
-    tropes: obtenerTropesComoTexto('libro'),
-   linkPortada: convertirLinkDrive(document.getElementById('libro-portada')?.value?.trim()),
-    linkAmazon:     document.getElementById('libro-amazon')?.value?.trim()
-  };
-
-  if (!datos.titulo) {
+  const titulo = document.getElementById('libro-titulo')?.value?.trim();
+  if (!titulo) {
     mostrarMensajeError('libro-error', 'El título es obligatorio.');
     return;
   }
 
- const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
+
+  const archivoPortada = document.getElementById('libro-portada')?.files?.[0];
+  let linkPortada = null;
+  if (archivoPortada) {
+    try {
+      linkPortada = await subirImagen('PORTADAS', `${user.id}/${crypto.randomUUID()}`, archivoPortada);
+    } catch (errPortada) {
+      mostrarMensajeError('libro-error', errPortada.message);
+      return;
+    }
+  }
+
+  const datos = {
+    titulo:         titulo,
+    sinopsisBreve:  document.getElementById('libro-sinopsis')?.value?.trim(),
+    genero:         document.getElementById('libro-genero')?.value?.trim(),
+    tropes: obtenerTropesComoTexto('libro'),
+    linkPortada: linkPortada,
+    linkAmazon:     document.getElementById('libro-amazon')?.value?.trim()
+  };
 
   const { error } = await supabaseClient.from('libros').insert({
     id_usuario_autor: user.id,
@@ -1075,6 +1106,8 @@ function precargarLibroEnCampana() {
   const selector = document.getElementById('nc-libro-selector');
   const idLibro  = selector?.value;
 
+  const previewPortada = document.getElementById('nc-portada-preview');
+
   if (!idLibro) {
     document.getElementById('nc-nombre-libro').value = '';
     document.getElementById('nc-nombre-autor').value = '';
@@ -1082,6 +1115,8 @@ function precargarLibroEnCampana() {
     document.getElementById('nc-genero').value       = '';
     document.getElementById('nc-link-portada').value = '';
     document.getElementById('nc-link-amazon').value  = '';
+    _portadaPrecargadaCampana = null;
+    if (previewPortada) previewPortada.innerHTML = '';
     renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
     return;
   }
@@ -1093,8 +1128,17 @@ function precargarLibroEnCampana() {
   document.getElementById('nc-nombre-autor').value = Sesion.obtener()?.alias || '';
   document.getElementById('nc-sinopsis').value     = libro.sinopsis    || '';
   document.getElementById('nc-genero').value       = libro.genero      || '';
-  document.getElementById('nc-link-portada').value = libro.linkPortada || '';
+  document.getElementById('nc-link-portada').value = '';
   document.getElementById('nc-link-amazon').value  = libro.linkAmazon  || '';
+
+  // La portada del libro ya está subida a Storage; se reutiliza si el autor
+  // no elige un archivo nuevo en el input de portada de la campaña.
+  _portadaPrecargadaCampana = libro.linkPortada || null;
+  if (previewPortada) {
+    previewPortada.innerHTML = libro.linkPortada
+      ? `<img src="${libro.linkPortada}" alt="Portada del libro" style="max-width:120px; display:block; margin-top:8px; border-radius:6px;" />`
+      : '';
+  }
 
   const tropesArray = tropesTextoAArray(libro.tropes || '');
   renderizarSelectorTropes('nc-tropes-contenedor', 'nc', tropesArray);
@@ -1194,8 +1238,10 @@ async function abrirEditarCampana(idCampana) {
         <input type="text" id="ec-genero" class="form-input" value="${campana.genero || ''}" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">Link de portada</label>
-        <input type="url" id="ec-link-portada" class="form-input" value="${campana.linkPortada || ''}" />
+        <label class="form-label">Portada</label>
+        ${campana.linkPortada ? `<img src="${campana.linkPortada}" alt="Portada actual" style="max-width:120px; display:block; margin-bottom:8px; border-radius:6px;" />` : ''}
+        <input type="file" id="ec-link-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
+        <p class="form-hint">Dejá vacío para no cambiar la portada actual.</p>
       </div>
       <div class="form-grupo">
         <label class="form-label">Link EPUB</label>
@@ -1217,24 +1263,37 @@ async function abrirEditarCampana(idCampana) {
 
 async function guardarEditarCampana(idCampana) {
   ocultarMensajes('ec-error', 'ec-ok');
-  const datos = {
-    sinopsis: document.getElementById('ec-sinopsis')?.value?.trim(),
-    genero: document.getElementById('ec-genero')?.value?.trim(),
-    linkPortada: document.getElementById('ec-link-portada')?.value?.trim(),
-    linkEpub: document.getElementById('ec-link-epub')?.value?.trim(),
-    linkPdf: document.getElementById('ec-link-pdf')?.value?.trim()
-  };
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
+  const archivoPortada = document.getElementById('ec-link-portada')?.files?.[0];
+  let linkPortada;
+  if (archivoPortada) {
+    try {
+      linkPortada = await subirImagen('PORTADAS', `${user.id}/${crypto.randomUUID()}`, archivoPortada);
+    } catch (errPortada) {
+      mostrarMensajeError('ec-error', errPortada.message);
+      return;
+    }
+  }
+
+  const datos = {
+    sinopsis: document.getElementById('ec-sinopsis')?.value?.trim(),
+    genero: document.getElementById('ec-genero')?.value?.trim(),
+    linkEpub: document.getElementById('ec-link-epub')?.value?.trim(),
+    linkPdf: document.getElementById('ec-link-pdf')?.value?.trim()
+  };
+
+  const cambiosCampana = {
+    sinopsis: datos.sinopsis,
+    genero: datos.genero
+  };
+  if (linkPortada) cambiosCampana.link_portada = linkPortada;
+
   const { error } = await supabaseClient
     .from('campanas')
-    .update({
-      sinopsis: datos.sinopsis,
-      genero: datos.genero,
-      link_portada: datos.linkPortada
-    })
+    .update(cambiosCampana)
     .eq('id', idCampana);
 
   if (error) {
@@ -1294,8 +1353,10 @@ async function abrirEditarLibro(idLibro) {
         <input type="text" id="el-genero" class="form-input" value="${libro.genero || ''}" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">Link de portada</label>
-        <input type="url" id="el-link-portada" class="form-input" value="${libro.linkPortada || ''}" />
+        <label class="form-label">Portada</label>
+        ${libro.linkPortada ? `<img src="${libro.linkPortada}" alt="Portada actual" style="max-width:120px; display:block; margin-bottom:8px; border-radius:6px;" />` : ''}
+        <input type="file" id="el-link-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
+        <p class="form-hint">Dejá vacío para no cambiar la portada actual.</p>
       </div>
       <div id="el-error" class="mensaje-error" style="display:none;"></div>
       <div id="el-ok" class="mensaje-ok" style="display:none;"></div>
@@ -1310,22 +1371,34 @@ async function abrirEditarLibro(idLibro) {
 async function guardarEditarLibro(idLibro) {
   ocultarMensajes('el-error', 'el-ok');
 
-  const datos = {
-    sinopsisBreve: document.getElementById('el-sinopsis')?.value?.trim(),
-    genero:        document.getElementById('el-genero')?.value?.trim(),
-    linkPortada:   document.getElementById('el-link-portada')?.value?.trim()
-  };
-
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
+  const archivoPortada = document.getElementById('el-link-portada')?.files?.[0];
+  let linkPortada;
+  if (archivoPortada) {
+    try {
+      linkPortada = await subirImagen('PORTADAS', `${user.id}/${crypto.randomUUID()}`, archivoPortada);
+    } catch (errPortada) {
+      mostrarMensajeError('el-error', errPortada.message);
+      return;
+    }
+  }
+
+  const datos = {
+    sinopsisBreve: document.getElementById('el-sinopsis')?.value?.trim(),
+    genero:        document.getElementById('el-genero')?.value?.trim()
+  };
+
+  const cambiosLibro = {
+    sinopsis_breve: datos.sinopsisBreve,
+    genero: datos.genero
+  };
+  if (linkPortada) cambiosLibro.link_portada = linkPortada;
+
   const { error } = await supabaseClient
     .from('libros')
-    .update({
-      sinopsis_breve: datos.sinopsisBreve,
-      genero: datos.genero,
-      link_portada: datos.linkPortada
-    })
+    .update(cambiosLibro)
     .eq('id', idLibro);
 
   if (error) {
