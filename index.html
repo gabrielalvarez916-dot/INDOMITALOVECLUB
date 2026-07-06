@@ -449,6 +449,7 @@
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-tickets'); cargarTicketsAdmin(Sesion.email())">Soporte</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas'); cargarEstadisticasAdmin()">Estadísticas</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-banners'); cargarBannersAdmin()">Banners</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-eventos'); cargarEventosAdmin()">Eventos</button>
       </div>
       <div id="tab-admin-usuarios" class="tab-contenido activo">
         <div id="admin-usuarios-lista"></div>
@@ -468,6 +469,10 @@
       <div id="tab-admin-banners" class="tab-contenido">
         <div id="admin-banners-form-contenedor"></div>
         <div id="admin-banners-lista" style="margin-top:24px;"></div>
+      </div>
+      <div id="tab-admin-eventos" class="tab-contenido">
+        <div id="admin-eventos-form-contenedor"></div>
+        <div id="admin-eventos-lista" style="margin-top:24px;"></div>
       </div>
     </div>
   </section>
@@ -1056,6 +1061,7 @@
 <script src="js/soporte.js"></script>
 <script src="js/faq-autor.js"></script>
 <script src="js/banners-admin.js"></script>
+<script src="js/eventos-admin.js"></script>
 <script src="js/perfil-publico.js"></script>
 
 </body>
