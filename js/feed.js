@@ -394,19 +394,24 @@ async function guardarPerfilYPostularse(event) {
     return;
   }
 
-  const resultadoPerfil = await llamarBackend('completarDatosPostulacion', {
-    email: Sesion.email(),
-    pais:              datos.pais,
-    ciudad:            datos.ciudad,
-    instagram:         datos.instagram,
-    tiktok:            datos.tiktok,
-    amazon:            datos.amazon,
-    descripcionLector: datos.descripcionLector,
-    generos:           datos.generos
-  });
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
 
-  if (!resultadoPerfil.ok) {
-    mostrarMensajeError('completar-error', resultadoPerfil.mensaje);
+  const { error: errorPerfil } = await supabaseClient
+    .from('usuarios')
+    .update({
+      pais:               datos.pais,
+      ciudad:             datos.ciudad,
+      instagram:          datos.instagram,
+      tiktok:             datos.tiktok,
+      amazon:             datos.amazon,
+      descripcion_lector: datos.descripcionLector,
+      generos:            datos.generos
+    })
+    .eq('id', user.id);
+
+  if (errorPerfil) {
+    mostrarMensajeError('completar-error', errorPerfil.message);
     return;
   }
 

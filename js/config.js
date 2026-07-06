@@ -3,23 +3,10 @@
 // Configuración global del frontend
 // ============================================================
 const CONFIG = {
-  BACKEND_URL: '/api/proxy',
   FRONTEND_URL: 'https://indomitaloveclub.vercel.app',
   EMAIL_ADMIN: 'indomitagencia@gmail.com',
   NOMBRE_APP: 'Indómita Love Club',
 };
-
-async function llamarBackend(accion, datos = {}) {
-  try {
-    const params = new URLSearchParams({ action: accion, ...datos });
-    const respuesta = await fetch(`${CONFIG.BACKEND_URL}?${params.toString()}`);
-    if (!respuesta.ok) throw new Error('Error de red: ' + respuesta.status);
-    return await respuesta.json();
-  } catch (e) {
-    console.error('Error llamando al backend:', e);
-    return { ok: false, mensaje: 'Error de conexión. Intentá nuevamente.' };
-  }
-}
 
 const Sesion = {
   guardar(usuario) {
