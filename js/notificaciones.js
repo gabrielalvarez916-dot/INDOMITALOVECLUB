@@ -183,27 +183,20 @@ async function _clickNotificacion(idNotificacion) {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
-  // Marca como leída si no lo estaba (no rompe si ya lo está)
   await supabaseClient
     .from('notificaciones')
     .update({ leida: true })
     .eq('id', idNotificacion)
     .eq('id_usuario', user.id);
 
-   const idx = _notifCache.findIndex(n => n.idNotificacion === idNotificacion);
+  const idx = _notifCache.findIndex(n => n.idNotificacion === idNotificacion);
   if (idx !== -1) _notifCache[idx].leida = true;
   _pintarBadge(_notifCache.filter(n => !n.leida).length);
-  
-  // Navega según el tipo de notificación
+
   const notif = _notifCache.find(n => n.idNotificacion === idNotificacion);
   if (notif) {
     _navegarPorNotificacion(notif);
   }
-
-  // Cierra el panel
-  const panel = document.getElementById('notif-panel');
-  if (panel) panel.style.display = 'none';
-}
 
   // Cierra el panel
   const panel = document.getElementById('notif-panel');
