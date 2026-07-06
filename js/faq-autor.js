@@ -45,7 +45,6 @@ const FAQ_AUTOR_DATA = [
     pregunta: '¿Qué diferencia hay entre los planes Free, Basic y Premium?',
     respuesta: 'Cuanto más alto el plan, más rápido podés hacer crecer tu comunidad de lectoras. Free te deja probar la plataforma con 1 campaña por mes y hasta 10 reseñadores — ideal para tu primer lanzamiento. Basic ($20.000/mes) te da 3 campañas por mes y hasta 50 reseñadores, para autoras que publican seguido o quieren más alcance por libro. Premium ($40.000/mes) te da hasta 5 campañas por mes y 100 reseñadores, pensado para quienes quieren maximizar la visibilidad de cada lanzamiento y mantener varias campañas corriendo en paralelo.'
   },
-  {
     {
     pregunta: '¿Cómo hago el pago para cambiar de plan?',
     respuesta: 'Al elegir un plan, te preguntamos si pagás desde Argentina (Mercado Pago) o desde el exterior (PayPal). Te abrimos el link de pago en una pestaña nueva para que completes la suscripción ahí.'
