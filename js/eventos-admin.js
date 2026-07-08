@@ -30,7 +30,7 @@ function _eventoFormVacio() {
     textoModal: '',
     historia: '',
     imagenesActuales: {}, // URLs ya subidas (al editar)
-    retos: { autor: [], resenador: [] }
+    retos: { autor: [], reseñador: [] }
   };
 }
 
@@ -122,8 +122,8 @@ function renderizarFormEvento() {
       <button type="button" class="btn-secundario btn-sm" onclick="agregarRetoAdmin('autor')">+ Agregar reto (autor)</button>
 
       <h4 class="panel-titulo" style="font-size:16px; margin-top:20px;">Retos — Reseñador</h4>
-      <div id="ev-retos-resenador">${_construirBloqueRetosRol('resenador')}</div>
-      <button type="button" class="btn-secundario btn-sm" onclick="agregarRetoAdmin('resenador')">+ Agregar reto (reseñador)</button>
+      <div id="ev-retos-reseñador">${_construirBloqueRetosRol('reseñador')}</div>
+      <button type="button" class="btn-secundario btn-sm" onclick="agregarRetoAdmin('reseñador')">+ Agregar reto (reseñador)</button>
 
       <div id="evento-error" class="mensaje-error" style="display:none; margin-top:16px;"></div>
       <div id="evento-ok" class="mensaje-ok" style="display:none;"></div>
@@ -359,7 +359,7 @@ function editarEventoAdmin(idEvento) {
     imagenesActuales: e.imagenes || {},
     retos: {
       autor: (e.retos?.autor || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) })),
-      resenador: (e.retos?.resenador || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) }))
+      reseñador: (e.retos?.reseñador || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) }))
     }
   };
   renderizarFormEvento();
