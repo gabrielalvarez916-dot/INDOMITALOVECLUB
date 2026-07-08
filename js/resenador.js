@@ -34,6 +34,7 @@ async function obtenerPostulacionesReseñador() {
     .map(p => ({
       idPostulacion: p.id,
       estado: p.estado,
+      fechaPostulacion: p.fecha_postulacion,
       fechaLimiteEntrega: p.fecha_limite_entrega,
       fechaAbandonoPrivado: p.fecha_abandono,
       campaña: p.campanas ? {
@@ -303,22 +304,96 @@ function construirCardArcActivo(p) {
  *
  * @param {string} idCampaña
  */
+let _resenaEnCurso = null; // guarda la postulación + campaña completa mientras se carga la reseña
+
 function abrirCargarResena(idCampaña) {
-  limpiarFormulario('form-cargar-resena');  // ← primero limpiás
+  const item = _arcsActivosReseñador.find(p => p.campaña && p.campaña.id === idCampaña);
+  if (!item) return;
 
-  const inputCampaña = document.getElementById('resena-id-campana');
-  if (inputCampaña) inputCampaña.value = idCampaña;  // ← después guardás el ID
-  ocultarMensajes('resena-error', 'resena-ok');
+  _resenaEnCurso = item;
 
+  limpiarFormulario('form-cargar-resena');
+  ocultarMensajes('resena-error', 'resena-ok', 'paso1-error');
+
+  document.getElementById('resena-id-campana').value = idCampaña;
+
+  // Auto: portada, autor, título (no lo carga el reseñador)
+  const portadaEl = document.getElementById('paso1-portada');
+  portadaEl.style.display = '';
+  portadaEl.src = item.campaña.linkPortada || '';
+  document.getElementById('paso1-titulo').textContent = item.campaña.nombreLibro || '';
+  document.getElementById('paso1-autor').textContent = 'por ' + (item.campaña.nombreAutor || '');
+
+  // Auto: fechas
+  document.getElementById('paso1-fecha-postulacion').textContent = item.fechaPostulacion ? formatearFechaAmigable(item.fechaPostulacion) : '—';
+  document.getElementById('paso1-fecha-entrega').textContent = formatearFechaAmigable(new Date().toISOString());
+
+  // Reset estrellas
   document.getElementById('resena-puntuacion-libro').value = '';
   document.getElementById('resena-estrellas-label').textContent = 'Sin calificar';
   document.querySelectorAll('#resena-estrellas-container .estrella').forEach(e => e.classList.remove('activa'));
 
+  // Reset moods
+  document.querySelectorAll('input[name="resena-mood"]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.mood-chip').classList.remove('activo');
+  });
+
+  // Reset frases favoritas
+  document.getElementById('resena-frase-1').value = '';
+  document.getElementById('resena-frase-2').value = '';
+  document.getElementById('resena-frase-3').value = '';
+
+  // Reset ratings decorativos
+  document.querySelectorAll('.rating-decorativo-btn').forEach(b => b.classList.remove('activo'));
+  ['romance', 'spice', 'drama', 'estilo'].forEach(cat => {
+    document.getElementById('resena-rating-' + cat).value = '';
+  });
+
+  _mostrarPasoResena(1);
   mostrarModal('modal-cargar-resena');
 }
+
 /**
- * Envía la reseña al backend.
- * Se llama desde el submit del modal.
+ * Selecciona un valor 1-5 para un rating decorativo (romance, spice, drama, estilo).
+ * No afecta el ranking ni la calificación real del libro.
+ */
+function seleccionarRatingDecorativo(categoria, valor) {
+  document.getElementById('resena-rating-' + categoria).value = valor;
+  document.querySelectorAll(`.rating-decorativo-btn[data-categoria="${categoria}"]`).forEach(btn => {
+    btn.classList.toggle('activo', parseInt(btn.dataset.valor) <= valor);
+  });
+}
+
+/**
+ * Muestra el Paso 1 o el Paso 2 del modal de reseña y actualiza el indicador.
+ */
+function _mostrarPasoResena(numero) {
+  document.getElementById('resena-paso1').style.display = numero === 1 ? '' : 'none';
+  document.getElementById('resena-paso2').style.display = numero === 2 ? '' : 'none';
+  document.getElementById('resena-paso-indicador').textContent = `Paso ${numero}/2`;
+}
+
+/**
+ * Valida el Paso 1 (frase favorita obligatoria) y avanza al Paso 2.
+ */
+function irAPasoResena2() {
+  ocultarMensajes('paso1-error');
+  const frase1 = document.getElementById('resena-frase-1')?.value?.trim();
+  if (!frase1) {
+    mostrarMensajeError('paso1-error', 'La primera frase favorita es obligatoria.');
+    return;
+  }
+  _mostrarPasoResena(2);
+}
+
+function volverAPasoResena1() {
+  _mostrarPasoResena(1);
+}
+
+/**
+ * Envía la reseña completa (Paso 1 + Paso 2) al backend en un solo insert.
+ * Se llama desde el submit del Paso 2/2.
  *
  * @param {Event} event
  */
@@ -328,17 +403,30 @@ async function enviarResena(event) {
 
   const idCampaña = document.getElementById('resena-id-campana')?.value;
 
+  const frase1 = document.getElementById('resena-frase-1')?.value?.trim();
+  if (!frase1) {
+    mostrarMensajeError('resena-error', 'La primera frase favorita es obligatoria.');
+    _mostrarPasoResena(1);
+    return;
+  }
+
+  const moods = Array.from(document.querySelectorAll('input[name="resena-mood"]:checked')).map(cb => cb.value);
+
   const datos = {
     linkInstagram:    document.getElementById('resena-instagram')?.value?.trim(),
     linkTikTok:       document.getElementById('resena-tiktok')?.value?.trim(),
     linkAmazon:       document.getElementById('resena-amazon')?.value?.trim(),
     linkGoodreads:    document.getElementById('resena-goodreads')?.value?.trim(),
     comentarios:      document.getElementById('resena-comentarios')?.value?.trim(),
-    puntuacionLibro:  document.getElementById('resena-puntuacion-libro')?.value || ''
+    puntuacionLibro:  document.getElementById('resena-puntuacion-libro')?.value || '',
+    frase1,
+    frase2: document.getElementById('resena-frase-2')?.value?.trim(),
+    frase3: document.getElementById('resena-frase-3')?.value?.trim(),
+    ratingRomance: document.getElementById('resena-rating-romance')?.value || '',
+    ratingSpice:   document.getElementById('resena-rating-spice')?.value || '',
+    ratingDrama:   document.getElementById('resena-rating-drama')?.value || '',
+    ratingEstilo:  document.getElementById('resena-rating-estilo')?.value || ''
   };
-
-  console.log('enviando resena - idCampaña:', idCampaña);
-console.log('enviando resena - datos:', JSON.stringify(datos));
 
   const { data: { user } } = await supabaseClient.auth.getUser();
 
@@ -363,9 +451,17 @@ console.log('enviando resena - datos:', JSON.stringify(datos));
     link_amazon: datos.linkAmazon || '',
     link_goodreads: datos.linkGoodreads || '',
     comentarios: datos.comentarios || '',
-    puntuacion_libro: datos.puntuacionLibro ? parseInt(datos.puntuacionLibro) : null
+    puntuacion_libro: datos.puntuacionLibro ? parseInt(datos.puntuacionLibro) : null,
+    moods: moods.length ? moods : null,
+    frase_favorita_1: datos.frase1,
+    frase_favorita_2: datos.frase2 || null,
+    frase_favorita_3: datos.frase3 || null,
+    rating_romance: datos.ratingRomance ? parseInt(datos.ratingRomance) : null,
+    rating_spice: datos.ratingSpice ? parseInt(datos.ratingSpice) : null,
+    rating_drama: datos.ratingDrama ? parseInt(datos.ratingDrama) : null,
+    rating_estilo: datos.ratingEstilo ? parseInt(datos.ratingEstilo) : null
   });
-  
+
   if (error) {
     if (error.code === '23505') {
       mostrarMensajeError('resena-error', 'Ya habías cargado una reseña para este libro.');
@@ -389,7 +485,6 @@ console.log('enviando resena - datos:', JSON.stringify(datos));
     await cargarEstadisticasReseñador(Sesion.email());
   }, 1500);
 }
-
 
 // ────────────────────────────────────────────────────────────
 // HISTORIAL
