@@ -30,6 +30,37 @@ function _labelLiga(codigo) {
   }
 }
 
+/**
+ * Convierte una fila de la tabla `campanas` (snake_case, tal cual la
+ * devuelve Supabase) al objeto camelCase que usa el panel del autor.
+ *
+ * @param {Object} c — fila cruda de Supabase
+ * @returns {Object}
+ */
+function _mapCampana(c) {
+  return {
+    id:                c.id,
+    idUsuarioAutor:    c.id_usuario_autor,
+    idLibro:           c.id_libro,
+    nombreLibro:       c.nombre_libro,
+    nombreAutor:       c.nombre_autor,
+    sinopsis:          c.sinopsis,
+    tropes:            c.tropes,
+    genero:            c.genero,
+    linkPortada:       c.link_portada,
+    linkAmazon:        c.link_amazon_libro,
+    cuposTotal:        c.cupos_total,
+    cuposDisponibles:  c.cupos_disponibles,
+    fechaInicio:       c.fecha_inicio,
+    fechaLimite:       c.fecha_limite,
+    estado:            c.estado,
+    mesAño:            c.mes_año,
+    modalidadLectura:  c.modalidad_lectura,
+    plataformasResena: c.plataformas_resena,
+    creadoEn:          c.creado_en
+  };
+}
+
 // ────────────────────────────────────────────────────────────
 // CARGAR PANEL AUTOR
 // ────────────────────────────────────────────────────────────
