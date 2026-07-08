@@ -3708,3 +3708,253 @@ img { max-width: 100%; display: block; }
   font-size: 15px;
   color: var(--gris-suave);
 }
+/* ════════════════════════════════════════════════════════════
+   BIBLIOTECA — Estantería (Parte A)
+   ════════════════════════════════════════════════════════════ */
+.estante-seccion { margin-bottom: 36px; }
+
+.estante-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bordo);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.estante-fila-wrap { position: relative; }
+
+.estante-fila {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 4px 4px;
+  scrollbar-width: none;
+}
+
+.estante-fila::-webkit-scrollbar { display: none; }
+
+.estante-tabla {
+  height: 14px;
+  margin: -6px 4px 0;
+  background: linear-gradient(180deg, var(--bordo-claro) 0%, var(--bordo) 55%, var(--bordo-oscuro) 100%);
+  border-radius: 3px;
+  box-shadow: 0 5px 10px rgba(92,15,26,0.25);
+}
+
+.estante-libro {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  width: 100px;
+  transition: var(--transicion);
+}
+
+.estante-libro--clickeable {
+  cursor: pointer;
+}
+
+.estante-libro--clickeable:hover {
+  transform: translateY(-5px);
+}
+
+.estante-libro-portada {
+  width: 100px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 3px 7px 7px 3px;
+  box-shadow: 3px 6px 14px rgba(74,16,32,0.22), 0 1px 4px rgba(0,0,0,0.12);
+  display: block;
+  background: var(--rosa-claro);
+}
+
+.estante-libro-portada-placeholder {
+  width: 100px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  border-radius: 3px 7px 7px 3px;
+  background: var(--rosa-claro);
+  box-shadow: 3px 6px 14px rgba(74,16,32,0.22);
+}
+
+.estante-libro-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bordo-oscuro);
+  margin-top: 7px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.estante-vacio {
+  font-size: 13px;
+  color: var(--gris-suave);
+  font-style: italic;
+  padding: 20px 4px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESEÑA INTERNA — Paso 1/2 y modal de solo lectura (Partes B y C)
+   ════════════════════════════════════════════════════════════ */
+
+.resena-paso-indicador {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--bordo);
+  background: var(--rosa-claro);
+  border-radius: var(--radio-pill);
+  padding: 6px 14px;
+  width: fit-content;
+  margin: 0 auto 18px;
+}
+
+.resena-paso1-cabecera {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.resena-paso1-portada {
+  width: 64px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: var(--rosa-claro);
+}
+
+.resena-paso1-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bordo);
+  font-style: italic;
+  margin: 0;
+}
+
+.resena-paso1-autor {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin: 2px 0 0;
+}
+
+.resena-fechas-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--gris-medio);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.resena-fechas-flecha { color: var(--gris-borde); }
+
+.mood-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.mood-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid var(--gris-borde);
+  border-radius: var(--radio-pill);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gris-medio);
+  cursor: pointer;
+  transition: var(--transicion);
+  background: var(--blanco);
+}
+
+.mood-chip:hover { border-color: var(--rosa); }
+
+.mood-chip.activo {
+  background: var(--bordo);
+  border-color: var(--bordo);
+  color: var(--blanco);
+}
+
+.mood-chip input { display: none; }
+
+.mood-chip-solo-lectura {
+  display: inline-flex;
+  align-items: center;
+  background: var(--rosa-claro);
+  color: var(--bordo);
+  border: 1px solid var(--rosa);
+  border-radius: var(--radio-pill);
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rating-decorativo-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.rating-decorativo-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gris-medio);
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.rating-decorativo-container {
+  display: flex;
+  gap: 4px;
+}
+
+.rating-decorativo-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: var(--transicion);
+  padding: 0 1px;
+  line-height: 1;
+}
+
+.rating-decorativo-btn:hover,
+.rating-decorativo-btn.activo { opacity: 1; }
+
+.frase-favorita-grupo { margin-bottom: 10px; }
+
+.resena-interna-frase {
+  border-left: 3px solid var(--bordo);
+  background: var(--rosa-claro);
+  padding: 10px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--gris-texto);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.resena-interna-estrellas {
+  font-size: 20px;
+  color: #C9A84C;
+  margin-bottom: 4px;
+}
