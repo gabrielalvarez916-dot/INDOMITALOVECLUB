@@ -334,21 +334,29 @@
         <p class="estado-vacio-texto">No se pudo cargar la biblioteca.</p>
       </div>
 
-      <div id="bib-contenido" style="display:none;">
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">📖 Leyendo actualmente</p>
-          <div id="bib-leyendo-actualmente" class="pp-libros-goodreads-grid"></div>
+  <div id="bib-contenido" style="display:none;">
+        <div class="estante-seccion">
+          <p class="estante-titulo">TBR</p>
+          <div class="estante-fila-wrap">
+            <div id="bib-leyendo-actualmente" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
         </div>
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">DNF (sin terminar)</p>
-          <div id="bib-dnf" class="pp-libros-goodreads-grid"></div>
+        <div class="estante-seccion">
+          <p class="estante-titulo">Leídos</p>
+          <div class="estante-fila-wrap">
+            <div id="bib-libros-leidos" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
         </div>
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">Libros leídos</p>
-          <div id="bib-libros-leidos" class="pp-libros-goodreads-grid"></div>
+        <div class="estante-seccion">
+          <p class="estante-titulo">DNF</p>
+          <div class="estante-fila-wrap">
+            <div id="bib-dnf" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
         </div>
       </div>
-    </div>
   </section>
 
   <!-- SECCIÓN: PERFIL -->
@@ -644,58 +652,239 @@
     </div>
   </div>
 
-<!-- Modal: cargar reseña -->
-  <div id="modal-cargar-resena" class="modal">
+<!-- Modal: cargar reseña (2 pasos: Reseña interna + Reseña pública) -->
+  <div id="modal-cargar-resena" class="modal modal-grande">
     <div class="modal-header">
-      <h3 class="modal-titulo">Cargar reseña</h3>
+      <h3 class="modal-titulo" id="resena-modal-titulo">Entregar reseña</h3>
       <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
     </div>
     <div class="modal-body">
+      <p class="resena-paso-indicador" id="resena-paso-indicador">Paso 1/2</p>
+
       <form id="form-cargar-resena" onsubmit="enviarResena(event)">
         <input type="hidden" id="resena-id-campana" />
-        <p class="form-info">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
-        <div class="form-grupo">
-          <label class="form-label">Instagram</label>
-          <input type="text" id="resena-instagram" class="form-input" placeholder="https://instagram.com/p/..." />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">TikTok</label>
-          <input type="text" id="resena-tiktok" class="form-input" placeholder="https://tiktok.com/@..." />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">Amazon</label>
-          <input type="text" id="resena-amazon" class="form-input" placeholder="https://amazon.com/review/..." />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">Goodreads</label>
-          <input type="text" id="resena-goodreads" class="form-input" placeholder="https://goodreads.com/review/..." />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">Comentarios (opcional)</label>
-          <textarea id="resena-comentarios" class="form-textarea" rows="3" placeholder="Algo que quieras comentarle al autor..."></textarea>
-        </div>
-        <div class="form-grupo" style="margin-top:16px;">
-          <label class="form-label">¿Cuántas estrellas le das al libro? <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
-          <div class="estrellas-container" id="resena-estrellas-container">
-            <button type="button" class="estrella" data-valor="1" onclick="seleccionarEstrellaLibro(1)">★</button>
-            <button type="button" class="estrella" data-valor="2" onclick="seleccionarEstrellaLibro(2)">★</button>
-            <button type="button" class="estrella" data-valor="3" onclick="seleccionarEstrellaLibro(3)">★</button>
-            <button type="button" class="estrella" data-valor="4" onclick="seleccionarEstrellaLibro(4)">★</button>
-            <button type="button" class="estrella" data-valor="5" onclick="seleccionarEstrellaLibro(5)">★</button>
+
+        <!-- ══════════ PASO 1/2 — RESEÑA INTERNA ══════════ -->
+        <div id="resena-paso1">
+
+          <div class="resena-paso1-cabecera">
+            <img id="paso1-portada" src="" alt="" class="resena-paso1-portada" onerror="this.style.display='none'" />
+            <div>
+              <p class="resena-paso1-titulo" id="paso1-titulo"></p>
+              <p class="resena-paso1-autor" id="paso1-autor"></p>
+            </div>
           </div>
-          <p class="estrellas-label" id="resena-estrellas-label">Sin calificar</p>
-          <input type="hidden" id="resena-puntuacion-libro" value="" />
+
+          <div class="resena-fechas-fila">
+            <span>📅 Postulado: <strong id="paso1-fecha-postulacion">—</strong></span>
+            <span class="resena-fechas-flecha">→</span>
+            <span>Entregado: <strong id="paso1-fecha-entrega">—</strong></span>
+          </div>
+
+          <div class="form-grupo">
+            <label class="form-label">¿Cuántas estrellas le das al libro? <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <div class="estrellas-container" id="resena-estrellas-container">
+              <button type="button" class="estrella" data-valor="1" onclick="seleccionarEstrellaLibro(1)">★</button>
+              <button type="button" class="estrella" data-valor="2" onclick="seleccionarEstrellaLibro(2)">★</button>
+              <button type="button" class="estrella" data-valor="3" onclick="seleccionarEstrellaLibro(3)">★</button>
+              <button type="button" class="estrella" data-valor="4" onclick="seleccionarEstrellaLibro(4)">★</button>
+              <button type="button" class="estrella" data-valor="5" onclick="seleccionarEstrellaLibro(5)">★</button>
+            </div>
+            <p class="estrellas-label" id="resena-estrellas-label">Sin calificar</p>
+            <input type="hidden" id="resena-puntuacion-libro" value="" />
+          </div>
+
+          <div class="form-grupo">
+            <label class="form-label">Moods</label>
+            <div class="mood-chips-container">
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="divertido" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>😄 Divertido</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="nostalgico" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🕰️ Nostálgico</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="adictivo" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🔥 Adictivo</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="reconfortante" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🤍 Reconfortante</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="intenso" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>⚡ Intenso</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-grupo frase-favorita-grupo">
+            <label class="form-label">Frase favorita *</label>
+            <input type="text" id="resena-frase-1" class="form-input" placeholder="La frase que más te marcó..." />
+          </div>
+          <div class="form-grupo frase-favorita-grupo">
+            <label class="form-label">Frase favorita 2 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <input type="text" id="resena-frase-2" class="form-input" />
+          </div>
+          <div class="form-grupo frase-favorita-grupo">
+            <label class="form-label">Frase favorita 3 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <input type="text" id="resena-frase-3" class="form-input" />
+          </div>
+
+          <div class="form-grupo" style="margin-top:8px;">
+            <label class="form-label" style="margin-bottom:6px; display:block;">Extra ratings <span style="color:var(--gris-suave); font-weight:400;">(no afectan el ranking)</span></label>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Romance</span>
+              <div class="rating-decorativo-container" data-categoria="romance">
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="1" onclick="seleccionarRatingDecorativo('romance',1)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="2" onclick="seleccionarRatingDecorativo('romance',2)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="3" onclick="seleccionarRatingDecorativo('romance',3)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="4" onclick="seleccionarRatingDecorativo('romance',4)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="5" onclick="seleccionarRatingDecorativo('romance',5)">♥</button>
+              </div>
+              <input type="hidden" id="resena-rating-romance" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Spice</span>
+              <div class="rating-decorativo-container" data-categoria="spice">
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="1" onclick="seleccionarRatingDecorativo('spice',1)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="2" onclick="seleccionarRatingDecorativo('spice',2)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="3" onclick="seleccionarRatingDecorativo('spice',3)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="4" onclick="seleccionarRatingDecorativo('spice',4)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="5" onclick="seleccionarRatingDecorativo('spice',5)">🌶️</button>
+              </div>
+              <input type="hidden" id="resena-rating-spice" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Drama</span>
+              <div class="rating-decorativo-container" data-categoria="drama">
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="1" onclick="seleccionarRatingDecorativo('drama',1)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="2" onclick="seleccionarRatingDecorativo('drama',2)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="3" onclick="seleccionarRatingDecorativo('drama',3)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="4" onclick="seleccionarRatingDecorativo('drama',4)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="5" onclick="seleccionarRatingDecorativo('drama',5)">🎭</button>
+              </div>
+              <input type="hidden" id="resena-rating-drama" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Estilo de escritura</span>
+              <div class="rating-decorativo-container" data-categoria="estilo">
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="1" onclick="seleccionarRatingDecorativo('estilo',1)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="2" onclick="seleccionarRatingDecorativo('estilo',2)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="3" onclick="seleccionarRatingDecorativo('estilo',3)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="4" onclick="seleccionarRatingDecorativo('estilo',4)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="5" onclick="seleccionarRatingDecorativo('estilo',5)">✒️</button>
+              </div>
+              <input type="hidden" id="resena-rating-estilo" value="" />
+            </div>
+          </div>
+
+          <div id="paso1-error" class="mensaje-error" style="display:none;"></div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+            <button type="button" class="btn-primario" onclick="irAPasoResena2()">Siguiente →</button>
+          </div>
         </div>
-        <div id="resena-error" class="mensaje-error" style="display:none;"></div>
-        <div id="resena-ok" class="mensaje-ok" style="display:none;"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
-          <button type="submit" class="btn-primario">Enviar reseña</button>
+
+        <!-- ══════════ PASO 2/2 — RESEÑA PÚBLICA ══════════ -->
+        <div id="resena-paso2" style="display:none;">
+          <p class="form-info">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
+          <div class="form-grupo">
+            <label class="form-label">Instagram</label>
+            <input type="text" id="resena-instagram" class="form-input" placeholder="https://instagram.com/p/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">TikTok</label>
+            <input type="text" id="resena-tiktok" class="form-input" placeholder="https://tiktok.com/@..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Amazon</label>
+            <input type="text" id="resena-amazon" class="form-input" placeholder="https://amazon.com/review/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Goodreads</label>
+            <input type="text" id="resena-goodreads" class="form-input" placeholder="https://goodreads.com/review/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Comentarios (opcional)</label>
+            <textarea id="resena-comentarios" class="form-textarea" rows="3" placeholder="Algo que quieras comentarle al autor..."></textarea>
+          </div>
+
+          <div id="resena-error" class="mensaje-error" style="display:none;"></div>
+          <div id="resena-ok" class="mensaje-ok" style="display:none;"></div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secundario" onclick="volverAPasoResena1()">← Atrás</button>
+            <button type="submit" class="btn-primario">Enviar reseña</button>
+          </div>
         </div>
+
       </form>
     </div>
   </div>
 
+  <!-- Modal: Reseña interna (solo lectura, Parte C) -->
+  <div id="modal-resena-interna" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Reseña interna</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="resena-paso1-cabecera">
+        <img id="ri-portada" src="" alt="" class="resena-paso1-portada" onerror="this.style.display='none'" />
+        <div>
+          <p class="resena-paso1-titulo" id="ri-titulo"></p>
+          <p class="resena-paso1-autor" id="ri-autor"></p>
+        </div>
+      </div>
+
+      <p class="resena-interna-estrellas" id="ri-estrellas"></p>
+
+      <div class="resena-fechas-fila">
+        <span>📅 Postulado: <strong id="ri-fecha-postulacion">—</strong></span>
+        <span class="resena-fechas-flecha">→</span>
+        <span>Entregado: <strong id="ri-fecha-entrega">—</strong></span>
+      </div>
+
+      <div class="form-grupo" id="ri-moods-grupo">
+        <label class="form-label">Moods</label>
+        <div class="mood-chips-container" id="ri-moods"></div>
+      </div>
+
+      <div class="form-grupo" id="ri-frases-grupo">
+        <label class="form-label">Frases favoritas</label>
+        <div id="ri-frases"></div>
+      </div>
+
+      <div class="form-grupo" id="ri-ratings-grupo">
+        <label class="form-label" style="margin-bottom:6px; display:block;">Extra ratings</label>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Romance</span>
+          <div class="rating-decorativo-container" id="ri-rating-romance"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Spice</span>
+          <div class="rating-decorativo-container" id="ri-rating-spice"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Drama</span>
+          <div class="rating-decorativo-container" id="ri-rating-drama"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Estilo de escritura</span>
+          <div class="rating-decorativo-container" id="ri-rating-estilo"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <!-- Modal: abandonar campaña (DNF) -->
   <div id="modal-dnf" class="modal">
     <div class="modal-header">
