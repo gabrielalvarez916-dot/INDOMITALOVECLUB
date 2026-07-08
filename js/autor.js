@@ -689,20 +689,23 @@ async function cargarHistorialAutor(idUsuario) {
   }
 
   contenedor.innerHTML = _historialAutor.map(c => `
-    <div class="campana-card-panel campana-card-historial">
-      <div class="campana-card-panel-header">
-        <div>
-          <h3 class="campana-titulo">${c.nombreLibro}</h3>
-          <p class="campana-autor">por ${c.nombreAutor}</p>
-        </div>
-        ${badgeEstado(c.estado)}
+  <div class="campana-card-panel campana-card-historial">
+    <div class="campana-card-panel-header">
+      <div>
+        <h3 class="campana-titulo">${c.nombreLibro}</h3>
+        <p class="campana-autor">por ${c.nombreAutor}</p>
       </div>
-      <div class="campana-card-panel-stats">
-        <span>${c.reseñasEntregadas ?? '—'} reseñas entregadas</span>
-        <span>Finalizó ${formatearFechaAmigable(c.fechaLimite)}</span>
-      </div>
+      ${badgeEstado(c.estado)}
     </div>
-  `).join('');
+    <div class="campana-card-panel-stats">
+      <span>${c.reseñasEntregadas ?? '—'} reseñas entregadas</span>
+      <span>Finalizó ${formatearFechaAmigable(c.fechaLimite)}</span>
+    </div>
+    <div class="campana-panel-acciones">
+      <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+    </div>
+  </div>
+`).join('');
 }
 
 
