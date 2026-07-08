@@ -560,19 +560,10 @@ function _pintarEncabezadoHistorico(encabezado) {
     `;
   }
 
-  const insigniasCont = document.getElementById('pp-r-insignias');
+const insigniasCont = document.getElementById('pp-r-insignias');
   if (insigniasCont) {
-    const insignias = encabezado.insignias || [];
-    if (insignias.length === 0) {
-      insigniasCont.innerHTML = '<p class="pp-vacio">Todavía sin insignias.</p>';
-    } else {
-      insigniasCont.innerHTML = insignias.map(i => `
-        <div class="pp-insignia-item" title="${_esc(i.codigo)}">
-          <span class="pp-insignia-icono">${_iconoPorTipoInsignia(i.tipo)}</span>
-          <span class="pp-insignia-label">${_esc(_labelInsignia(i))}</span>
-        </div>
-      `).join('');
-    }
+    insigniasCont.innerHTML = _renderInsigniasAgrupadas(encabezado.insigniasAgrupadas);
+  }
   }
 }
 
