@@ -968,6 +968,12 @@ async function cargarPlanAutor(idUsuario) {
   `;
 }
 async function iniciarPago(plan) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    mostrarToast('Tu sesión expiró. Volvé a iniciar sesión e intentá de nuevo.', 'error');
+    return;
+  }
+
   const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Mercado Pago (ARS)\nCancelar = PayPal (USD)')
     ? 'ARS'
     : 'USD';
@@ -975,11 +981,19 @@ async function iniciarPago(plan) {
   const funcion = moneda === 'ARS' ? 'crear-suscripcion' : 'crear-suscripcion-paypal';
 
   const { data, error } = await supabaseClient.functions.invoke(funcion, {
-    body: { plan }
+    body: { plan },
+    headers: { Authorization: `Bearer ${session.access_token}` }
   });
 
   if (error || !data?.ok) {
-    mostrarToast(data?.error || error?.message || 'Error al iniciar el pago.', 'error');
+    let mensaje = data?.error || error?.message || 'Error al iniciar el pago.';
+    if (error?.context && typeof error.context.json === 'function') {
+      try {
+        const bodyReal = await error.context.json();
+        mensaje = `${bodyReal.error || mensaje} | DETALLE: ${JSON.stringify(bodyReal.detalle || bodyReal)}`;
+      } catch (e) {}
+    }
+    alert('ERROR DE PAGO (copiá este texto completo):\n\n' + mensaje);
     return;
   }
 
