@@ -245,14 +245,7 @@ function _renderCardLibroAutor(libro) {
 // ═══ HELPERS GAMIFICACIÓN (AUTOR) ═══
 
 function _renderGamificacionAutor(gamif) {
-  const insigniasHtml = gamif.insignias && gamif.insignias.length > 0
-    ? gamif.insignias.map(i => `
-        <div class="pp-insignia-item" title="${_esc(i.codigo)}">
-          <span class="pp-insignia-icono">${_iconoInsignia(i.tipo)}</span>
-          <span class="pp-insignia-label">${_esc(_labelInsigniaAutor(i))}</span>
-        </div>
-      `).join('')
-    : '<p class="pp-vacio">Sin insignias aún</p>';
+  const insigniasHtml = _renderInsigniasAgrupadas(gamif.insigniasAgrupadas);
 
   return `
     <div class="pp-bloque pp-encabezado-historico">
@@ -264,7 +257,7 @@ function _renderGamificacionAutor(gamif) {
 
     <div class="pp-bloque">
       <p class="pp-bloque-titulo">Insignias</p>
-      <div class="pp-insignias-grid">${insigniasHtml}</div>
+      ${insigniasHtml}
     </div>
   `;
 }
@@ -289,6 +282,46 @@ function _labelSello(codigo) {
   return labels[codigo] || '';
 }
 
+const _LABELS_CATEGORIA_INSIGNIA = {
+  HITOS: 'Hitos',
+  NIVEL: 'Nivel',
+  RANKING: 'Ranking',
+  ESPECIALES: 'Especiales'
+};
+
+/**
+ * Renderiza las insignias agrupadas por categoría, cada una como
+ * un carrusel horizontal (scroll lateral), no como grilla que crece para abajo.
+ * @param {object} insigniasAgrupadas — viene de perfil.insigniasAgrupadas (RPC)
+ */
+function _renderInsigniasAgrupadas(insigniasAgrupadas) {
+  if (!insigniasAgrupadas) return '<p class="pp-vacio">Todavía sin insignias.</p>';
+
+  const categorias = ['HITOS', 'NIVEL', 'RANKING', 'ESPECIALES'];
+  const bloques = categorias
+    .filter(cat => (insigniasAgrupadas[cat] || []).length > 0)
+    .map(cat => {
+      const items = insigniasAgrupadas[cat].map(i => `
+        <div class="pp-insignia-item" title="${_esc(i.label || i.codigo)}">
+          ${i.imagenUrl
+            ? `<img src="${_esc(i.imagenUrl)}" alt="${_esc(i.label || i.codigo)}" class="pp-insignia-imagen" />`
+            : `<span class="pp-insignia-icono">🏅</span>`}
+          <span class="pp-insignia-label">${_esc(i.label || i.codigo)}</span>
+        </div>
+      `).join('');
+
+      return `
+        <div class="pp-insignias-categoria">
+          <p class="pp-insignias-categoria-titulo">${_LABELS_CATEGORIA_INSIGNIA[cat] || cat}</p>
+          <div class="pp-insignias-carrusel">${items}</div>
+        </div>
+      `;
+    });
+
+  return bloques.length > 0
+    ? bloques.join('')
+    : '<p class="pp-vacio">Todavía sin insignias.</p>';
+}
 function _iconoInsignia(tipo) {
   const iconos = {
     nivel_autor:      '📚',
