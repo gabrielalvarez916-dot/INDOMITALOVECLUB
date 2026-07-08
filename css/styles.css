@@ -3933,8 +3933,11 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
   opacity: 0.3;
   transition: var(--transicion);
-  padding: 0 1px;
+  padding: 0;
   line-height: 1;
+  width: 24px;
+  flex-shrink: 0;
+  text-align: center;
 }
 
 .rating-decorativo-btn:hover,
