@@ -367,9 +367,17 @@ console.log('enviando resena - datos:', JSON.stringify(datos));
   });
   
   if (error) {
-  mostrarMensajeError('resena-error', 'Debés cargar al menos un link de reseña.');
-  return;
-}
+    if (error.code === '23505') {
+      mostrarMensajeError('resena-error', 'Ya habías cargado una reseña para este libro.');
+      return;
+    }
+    if (error.code === '23514') {
+      mostrarMensajeError('resena-error', 'Debés cargar al menos un link de reseña.');
+      return;
+    }
+    mostrarMensajeError('resena-error', 'Ocurrió un error al enviar la reseña. Intentá de nuevo.');
+    return;
+  }
 
   mostrarMensajeOk('resena-ok', '¡Reseña cargada correctamente!');
 
