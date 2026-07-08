@@ -67,6 +67,7 @@ async function _cargarPerfilAutor(idAutor) {
 
 let _idReseñadorPerfilActual = null;
 let _bibliotecaEsPropia = false;
+let _bibliotecaLibrosLeidosCache = [];
 
 async function _cargarPerfilReseñador(idReseñador) {
   _idReseñadorPerfilActual = idReseñador;
@@ -697,28 +698,135 @@ function _estadoBiblioteca(estado) {
 function _pintarBiblioteca(datos) {
   const { leyendoActualmente = [], dnf = [], librosLeidos = [] } = datos;
 
-  const leyendoCont = document.getElementById('bib-leyendo-actualmente');
-  if (leyendoCont) {
-    leyendoCont.innerHTML = leyendoActualmente.length === 0
-      ? '<p class="pp-vacio">Sin lecturas en curso.</p>'
-      : leyendoActualmente.map(item => _renderCardLibroSimple(item, 'leyendo')).join('');
-  }
+  _bibliotecaLibrosLeidosCache = librosLeidos;
 
-  const dnfCont = document.getElementById('bib-dnf');
-  const dnfBloque = dnfCont ? dnfCont.closest('.pp-bloque') : null;
-  if (dnfCont) {
-    if (dnf.length === 0) {
-      if (dnfBloque) dnfBloque.style.display = 'none';
-    } else {
-      if (dnfBloque) dnfBloque.style.display = '';
-      dnfCont.innerHTML = dnf.map(item => _renderCardLibroSimple(item, 'dnf')).join('');
-    }
+  const tbrCont = document.getElementById('bib-leyendo-actualmente');
+  if (tbrCont) {
+    tbrCont.innerHTML = leyendoActualmente.length === 0
+      ? '<p class="estante-vacio">Sin lecturas en curso.</p>'
+      : leyendoActualmente.map(item => _renderLibroEstante(item, false)).join('');
   }
 
   const leidosCont = document.getElementById('bib-libros-leidos');
   if (leidosCont) {
     leidosCont.innerHTML = librosLeidos.length === 0
-      ? '<p class="pp-vacio">Todavía no reseñó ningún libro.</p>'
-      : librosLeidos.map(l => _renderCardLibroGoodreads(l)).join('');
+      ? '<p class="estante-vacio">Todavía no reseñó ningún libro.</p>'
+      : librosLeidos.map(l => _renderLibroEstante(l, true, l.idResena)).join('');
   }
+
+  const dnfCont = document.getElementById('bib-dnf');
+  if (dnfCont) {
+    dnfCont.innerHTML = dnf.length === 0
+      ? '<p class="estante-vacio">Sin abandonos.</p>'
+      : dnf.map(item => _renderLibroEstante(item, false)).join('');
+  }
+}
+
+/**
+ * Card de libro para la estantería (Parte A). Si esClickeable=true (libros
+ * leídos), abre el modal de Reseña interna (Parte C) al tocarlo.
+ */
+function _renderLibroEstante(item, esClickeable, idResena) {
+  const portadaUrl = item.linkPortada
+    ? (item.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + item.linkPortada : item.linkPortada)
+    : '';
+
+  const clase = esClickeable ? 'estante-libro estante-libro--clickeable' : 'estante-libro';
+  const onclick = esClickeable ? ` onclick="abrirResenaInterna('${_esc(idResena)}')"` : '';
+
+  return `
+    <div class="${clase}"${onclick}>
+      ${portadaUrl
+        ? `<img src="${_esc(portadaUrl)}" alt="${_esc(item.nombreLibro)}" class="estante-libro-portada" onerror="this.style.display='none'" />`
+        : '<div class="estante-libro-portada-placeholder">📖</div>'}
+      <p class="estante-libro-titulo">${_esc(item.nombreLibro || '—')}</p>
+    </div>
+  `;
+}
+// ────────────────────────────────────────────────────────────
+// MODAL: RESEÑA INTERNA (solo lectura, Parte C)
+// ────────────────────────────────────────────────────────────
+
+const _LABELS_MOODS = {
+  divertido: '😄 Divertido',
+  nostalgico: '🕰️ Nostálgico',
+  adictivo: '🔥 Adictivo',
+  reconfortante: '🤍 Reconfortante',
+  intenso: '⚡ Intenso'
+};
+
+const _ICONOS_RATING_DECORATIVO = {
+  romance: '♥',
+  spice: '🌶️',
+  drama: '🎭',
+  estilo: '✒️'
+};
+
+/**
+ * Abre el modal de solo lectura con el detalle de la Reseña interna
+ * de un libro ya leído. Se llama al tocar un libro en "Leídos".
+ * @param {string} idResena
+ */
+function abrirResenaInterna(idResena) {
+  const r = _bibliotecaLibrosLeidosCache.find(l => l.idResena === idResena);
+  if (!r) return;
+
+  const portadaUrl = r.linkPortada
+    ? (r.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + r.linkPortada : r.linkPortada)
+    : '';
+
+  const portadaEl = document.getElementById('ri-portada');
+  portadaEl.style.display = '';
+  portadaEl.src = portadaUrl;
+  document.getElementById('ri-titulo').textContent = r.nombreLibro || '';
+  document.getElementById('ri-autor').textContent = 'por ' + (r.nombreAutor || '');
+
+  const puntuacion = r.puntuacionLibro || 0;
+  document.getElementById('ri-estrellas').textContent = puntuacion
+    ? '★'.repeat(puntuacion) + '☆'.repeat(5 - puntuacion)
+    : 'Sin calificar';
+
+  document.getElementById('ri-fecha-postulacion').textContent = r.fechaPostulacion ? formatearFechaAmigable(r.fechaPostulacion) : '—';
+  document.getElementById('ri-fecha-entrega').textContent = r.fechaEntrega ? formatearFechaAmigable(r.fechaEntrega) : '—';
+
+  const moodsCont = document.getElementById('ri-moods');
+  const moods = r.moods || [];
+  if (moods.length === 0) {
+    document.getElementById('ri-moods-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-moods-grupo').style.display = '';
+    moodsCont.innerHTML = moods.map(m => `<span class="mood-chip-solo-lectura">${_esc(_LABELS_MOODS[m] || m)}</span>`).join('');
+  }
+
+  const frasesCont = document.getElementById('ri-frases');
+  const frases = [r.fraseFavorita1, r.fraseFavorita2, r.fraseFavorita3].filter(Boolean);
+  if (frases.length === 0) {
+    document.getElementById('ri-frases-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-frases-grupo').style.display = '';
+    frasesCont.innerHTML = frases.map(f => `<p class="resena-interna-frase">"${_esc(f)}"</p>`).join('');
+  }
+
+  const ratings = {
+    romance: r.ratingRomance,
+    spice: r.ratingSpice,
+    drama: r.ratingDrama,
+    estilo: r.ratingEstilo
+  };
+  const hayRatings = Object.values(ratings).some(v => v);
+  if (!hayRatings) {
+    document.getElementById('ri-ratings-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-ratings-grupo').style.display = '';
+    Object.entries(ratings).forEach(([cat, valor]) => {
+      const cont = document.getElementById('ri-rating-' + cat);
+      const icono = _ICONOS_RATING_DECORATIVO[cat];
+      const v = valor || 0;
+      cont.innerHTML = Array.from({ length: 5 }, (_, i) =>
+        `<span class="rating-decorativo-btn${i < v ? ' activo' : ''}">${icono}</span>`
+      ).join('');
+    });
+  }
+
+  mostrarModal('modal-resena-interna');
 }
