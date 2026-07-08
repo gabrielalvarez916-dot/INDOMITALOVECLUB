@@ -432,7 +432,7 @@ const avatarHtml = r?.fotoPerfil
         ${avatarHtml}
         <div class="postulacion-info">
           <div class="postulacion-info-header">
-            <p class="postulacion-alias" ${r?.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r?.alias || p.email}</p>
+            <p class="postulacion-alias" ${r?.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r?.alias || 'Usuario no disponible'}</p>
             ${badgeEstado(p.estado)}
           </div>
           <p class="postulacion-meta">${r?.pais || ''}${r?.ciudad ? `, ${r.ciudad}` : ''} · Nivel: ${r?.labelNivel || '—'}</p>
