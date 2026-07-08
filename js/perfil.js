@@ -56,7 +56,7 @@ async function cargarPerfil() {
 
   if (rol === 'autor') {
     toggleElemento('seccion-biblioteca', true);
-    await cargarBibliotecaPanel(usuario.email);
+    await cargarBibliotecaPanel(usuario.id);
   } else {
     toggleElemento('seccion-biblioteca', false);
   }
