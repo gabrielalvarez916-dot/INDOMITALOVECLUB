@@ -565,7 +565,7 @@ const insigniasCont = document.getElementById('pp-r-insignias');
     insigniasCont.innerHTML = _renderInsigniasAgrupadas(encabezado.insigniasAgrupadas);
   }
   }
-}
+
 
 function _iconoPorTipoInsignia(tipo) {
   const iconos = {
