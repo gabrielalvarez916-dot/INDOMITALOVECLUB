@@ -95,7 +95,7 @@ async function inicializarEpub(url) {
     if (cargando) cargando.style.display = 'flex';
     epubDiv.style.display = 'none';
 
-    _visorEpub = ePub(url);
+    _visorEpub = ePub(url, { openAs: 'epub' });
 
     const rendicion = _visorEpub.renderTo(epubDiv, {
       width:  '100%',
