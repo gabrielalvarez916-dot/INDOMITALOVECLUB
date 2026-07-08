@@ -736,10 +736,10 @@ function _renderLibroEstante(item, esClickeable, idResena) {
 
   return `
     <div class="${clase}"${onclick}>
+      <p class="estante-libro-titulo">${_esc(item.nombreLibro || '—')}</p>
       ${portadaUrl
         ? `<img src="${_esc(portadaUrl)}" alt="${_esc(item.nombreLibro)}" class="estante-libro-portada" onerror="this.style.display='none'" />`
         : '<div class="estante-libro-portada-placeholder">📖</div>'}
-      <p class="estante-libro-titulo">${_esc(item.nombreLibro || '—')}</p>
     </div>
   `;
 }
