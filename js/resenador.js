@@ -837,55 +837,98 @@ async function cargarRankingLibros(mesAño) {
   if (!contenedor) return;
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
   const mesActual = mesAño || new Date().toISOString().slice(0, 7);
-const mes = new Date(mesActual + '-01').toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+  const mes = new Date(mesActual + '-01').toLocaleString('es-AR', { month: 'long', year: 'numeric' });
 
-const [{ data: recD }, { data: masD }, { data: topD }] = await Promise.all([
-  supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).not('pos_recomendado', 'is', null).order('pos_recomendado').limit(5),
-  supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).not('pos_mas_leido', 'is', null).order('pos_mas_leido').limit(5),
-  supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).eq('es_top5', true).order('pos_top')
-]);
+  const [{ data: recD }, { data: topD }] = await Promise.all([
+    supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).not('pos_recomendado', 'is', null).order('pos_recomendado').limit(5),
+    supabaseClient.from('ranking_libros').select('*').eq('mes_año', mesActual).not('pos_top', 'is', null).order('pos_top')
+  ]);
 
-const adaptar = l => ({
-  nombreLibro: l.nombre_libro, nombreAutor: l.nombre_autor, linkPortada: l.link_portada,
-  promedio: l.promedio_puntuacion, totalReseñas: l.total_resenas, posicion: l.pos_top
-});
+  const adaptar = l => ({
+    nombreLibro: l.nombre_libro, nombreAutor: l.nombre_autor, linkPortada: l.link_portada,
+    promedio: l.promedio_puntuacion, totalReseñas: l.total_resenas, posicion: l.pos_top
+  });
 
-const recomendados = (recD || []).map(adaptar);
-const masLeidos     = (masD || []).map(adaptar);
-const top5          = (topD || []).map(adaptar);
-  contenedor.innerHTML = `
-    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); margin-bottom:24px;">Ranking — ${mes}</h3>
+  const recomendados = (recD || []).map(adaptar);
+  const listaTop      = (topD || []).map(adaptar);
+  const top5          = listaTop.slice(0, 5);
+  const resto         = listaTop.slice(5);
 
+  // Podio Top 5 (mismo estilo que reseñadores, con portadas)
+  const ORDEN_PODIO_LIBROS = [3, 1, 0, 2, 4]; // índices de top5 → orden visual 4,2,1,3,5
+  const ALTURA_POR_INDICE_LIBROS = { 0: 'alto-1', 1: 'alto-2', 2: 'alto-2', 3: 'alto-3', 4: 'alto-3' };
+
+  const top5Html = `
     <div style="margin-bottom:28px;">
+      <h4 class="ranking-seccion-titulo">🏆 Top 5</h4>
+      ${top5.length === 0
+        ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
+        : `<div class="ranking-podio-wrap">
+            ${ORDEN_PODIO_LIBROS.filter(i => top5[i]).map(i => {
+              const l = top5[i];
+              const altura = ALTURA_POR_INDICE_LIBROS[i];
+              const esOro = i === 0;
+              return `
+                <div class="ranking-podio-columna">
+                  <p class="ranking-podio-alias">${l.nombreLibro}</p>
+                  ${l.linkPortada
+                    ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" class="ranking-podio-portada ${esOro ? 'ranking-podio-portada--oro' : ''}" onerror="this.style.display='none'" />`
+                    : `<div class="ranking-podio-portada ${esOro ? 'ranking-podio-portada--oro' : ''}" style="display:flex; align-items:center; justify-content:center; font-size:22px;">📖</div>`}
+                  <p class="ranking-podio-puntos">★ ${l.promedio?.toFixed(1) ?? '—'}</p>
+                  <div class="ranking-podio-bloque ranking-podio-${altura}">
+                    <span class="ranking-podio-bloque-numero">${l.posicion}</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>`}
+    </div>
+  `;
+
+  // Recomendados por lectores (carrusel)
+  const recomendadosHtml = `
+    <div style="margin-bottom:32px;">
       <h4 class="ranking-seccion-titulo">⭐ Recomendados por lectores</h4>
       <div class="ranking-slider">
         ${recomendados.length === 0
           ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
-          : recomendados.slice(0, 5).map(l => construirSliderCard(l, 'recomendado')).join('')}
+          : recomendados.map(l => construirSliderCard(l, 'recomendado')).join('')}
       </div>
     </div>
+  `;
 
-    <div style="margin-bottom:32px;">
-      <h4 class="ranking-seccion-titulo">📚 Más leídos</h4>
-      <div class="ranking-slider">
-        ${masLeidos.length === 0
-          ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
-          : masLeidos.slice(0, 5).map(l => construirSliderCard(l, 'masLeido')).join('')}
-      </div>
-    </div>
-
+  // Del puesto 6 en adelante (carrusel con número arriba de cada portada)
+  const restoHtml = resto.length > 0 ? `
     <div>
-      <h4 class="ranking-seccion-titulo">🏆 Top 5</h4>
-      <div class="ranking-top-lista">
-        ${top5.length === 0
-          ? '<p class="estado-vacio-sub">No hay libros con 5 reseñas todavía.</p>'
-          : top5.map(l => construirTopItem(l)).join('')}
+      <h4 class="ranking-seccion-titulo">📖 Resto del ranking</h4>
+      <div class="ranking-slider">
+        ${resto.map(l => construirSliderCardConNumero(l)).join('')}
       </div>
     </div>
+  ` : '';
+
+  contenedor.innerHTML = `
+    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); margin-bottom:24px;">Ranking — ${mes}</h3>
+    ${top5Html}
+    ${recomendadosHtml}
+    ${restoHtml}
   `;
   setTimeout(() => activarDragSliders(), 100);
 }
 
+function construirSliderCardConNumero(libro) {
+  return `
+    <div class="ranking-slider-card">
+      <p class="ranking-slider-card-numero">#${libro.posicion}</p>
+      ${libro.linkPortada
+        ? `<img src="${libro.linkPortada}" alt="${libro.nombreLibro}" onerror="this.style.display='none'" />`
+        : `<div style="width:100px; height:140px; background:var(--rosa-claro); border-radius:var(--radio); display:flex; align-items:center; justify-content:center; font-size:32px;">📖</div>`}
+      <p class="ranking-slider-card-titulo">${libro.nombreLibro}</p>
+      <p class="ranking-slider-card-autor">por ${libro.nombreAutor}</p>
+      <p style="font-size:11px; color:var(--bordo); font-weight:700;">★ ${libro.promedio?.toFixed(1) ?? '—'}</p>
+    </div>
+  `;
+}
 
 function construirSliderCard(libro, categoria) {
   const metrica = categoria === 'masLeido'
