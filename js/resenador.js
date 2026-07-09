@@ -105,16 +105,14 @@ const [{ data: gamificacion }, { data: ranking }] = await Promise.all([
   supabaseClient.from('ranking').select('posicion, puntos_mensuales, porcentaje_completion, categoria').eq('id_usuario_resenador', user.id).eq('mes_año', mesActual).maybeSingle()
 ]);
 
-const badgeHistorico  = gamificacion?.badge_historico || '—';
-const puntosMensuales = ranking?.puntos_mensuales ?? '—';
-const categoria       = ranking?.categoria || '';
-  const labelCategoria  = {
+const labelCategoria  = {
     top5:     '🏆 Top 5',
     top20:    '🥈 Top 20',
     diamante: '💎 Liga Diamante',
     oro:      '🥇 Liga Oro',
     plata:    '🥈 Liga Plata',
-    bronce:   '🥉 Liga Bronce'
+    bronce:   '🥉 Liga Bronce',
+    nuevo:    '🌱 Nuevo en el ranking'
   }[categoria] || '—';
 
  contenedor.innerHTML = `
@@ -650,7 +648,7 @@ if (error) {
   return;
 }
 
-const { mes, destacados, top5, top20 } = data;
+const { mes, destacados, top5, top20, ligas, lista_completa } = data;
   // Estado vacío: sin participantes
   if (!destacados || destacados.length === 0) {
     contenedor.innerHTML = `
@@ -898,6 +896,13 @@ function moverCarruselResenadores(dir) {
   const carrusel = document.getElementById('carrusel-resenadores');
   if (!carrusel) return;
   carrusel.scrollBy({ left: dir * 110, behavior: 'smooth' });
+}
+function _toggleVerMasLiga(idResto, boton, cantidadResto) {
+  const contenedor = document.getElementById(idResto);
+  if (!contenedor) return;
+  const estaOculto = contenedor.style.display === 'none';
+  contenedor.style.display = estaOculto ? '' : 'none';
+  boton.textContent = estaOculto ? 'Ver menos' : `Ver ${cantidadResto} más`;
 }
 // ────────────────────────────────────────────────────────────
 // ABANDONAR CAMPAÑA (DNF)
