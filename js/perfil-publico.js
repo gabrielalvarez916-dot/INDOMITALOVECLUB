@@ -300,10 +300,63 @@ function _renderLibroEstanteAutorPropio(libro) {
         ? `<img src="${_esc(portadaUrl)}" alt="${_esc(libro.titulo)}" class="estante-libro-portada" style="cursor:pointer;" onclick="abrirDetalleLibroAutor('${_esc(libro.id)}')" onerror="this.style.display='none'" />`
         : `<div class="estante-libro-portada-placeholder" style="cursor:pointer;" onclick="abrirDetalleLibroAutor('${_esc(libro.id)}')">📖</div>`}
       <div class="estante-libro-acciones">
-        <button class="btn-secundario btn-sm" onclick="abrirEditarLibro('${_esc(libro.id)}')">Editar</button>
+        <button class="btn-secundario btn-sm" onclick="abrirEditarLibroPropio('${_esc(libro.id)}')">Editar</button>
         <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarLibroAutor('${_esc(libro.id)}', '${_esc(libro.titulo)}')">Eliminar</button>
       </div>
     </div>
+  `;
+}
+
+/**
+ * Abre el modal de edición de un libro desde "Mis libros" (vista propia).
+ * A diferencia de abrirEditarLibro (autor.js), lee de _librosAutorPerfilCache
+ * en vez de _librosAutor, para no depender de que el panel de autor haya
+ * cargado antes. El guardado sigue siendo guardarEditarLibro, sin tocar.
+ */
+function abrirEditarLibroPropio(idLibro) {
+  const libro = _librosAutorPerfilCache.find(l => l.id === idLibro);
+  if (!libro) return;
+
+  mostrarModal('modal-detalle-campana');
+
+  const tituloEl = document.getElementById('modal-detalle-titulo');
+  const body     = document.getElementById('modal-detalle-body');
+  const footer   = document.getElementById('modal-detalle-footer');
+
+  if (tituloEl) tituloEl.textContent = `Editar libro — ${libro.titulo}`;
+  if (footer)   footer.innerHTML = '';
+
+  const portadaUrl = libro.portada
+    ? (libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada)
+    : '';
+
+  if (body) body.innerHTML = `
+    <form id="form-editar-libro">
+      <div class="form-grupo">
+        <label class="form-label">Título</label>
+        <input type="text" class="form-input" value="${_esc(libro.titulo)}" disabled />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Sinopsis</label>
+        <textarea id="el-sinopsis" class="form-textarea" rows="4">${_esc(libro.sinopsisBreve || '')}</textarea>
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Género</label>
+        <input type="text" id="el-genero" class="form-input" value="${_esc(libro.genero || '')}" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Portada</label>
+        ${portadaUrl ? `<img src="${_esc(portadaUrl)}" alt="Portada actual" style="max-width:120px; display:block; margin-bottom:8px; border-radius:6px;" />` : ''}
+        <input type="file" id="el-link-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
+        <p class="form-hint">Dejá vacío para no cambiar la portada actual.</p>
+      </div>
+      <div id="el-error" class="mensaje-error" style="display:none;"></div>
+      <div id="el-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-primario" onclick="guardarEditarLibro('${_esc(idLibro)}')">Guardar cambios</button>
+      </div>
+    </form>
   `;
 }
 
