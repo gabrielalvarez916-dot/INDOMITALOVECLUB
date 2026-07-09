@@ -56,6 +56,8 @@ async function _cargarPerfilAutor(idAutor) {
   }
 
   perfil.miembroDesde = perfil.fechaRegistro;
+  _librosAutorPerfilCache = libros || [];
+  _aliasAutorPerfilActual = perfil.alias;
 
   _pintarPerfilAutor(perfil, libros || [], campañas || [], perfil);
   _estadoPerfilPublico('autor');
@@ -70,6 +72,8 @@ let _idReseñadorPerfilActual = null;
 let _bibliotecaEsPropia = false;
 let _bibliotecaLibrosLeidosCache = [];
 let _idAutorPerfilActual = null;
+let _librosAutorPerfilCache = [];
+let _aliasAutorPerfilActual = null;
 
 async function _cargarPerfilReseñador(idReseñador) {
   _idReseñadorPerfilActual = idReseñador;
@@ -256,7 +260,7 @@ function _renderLibroEstanteAutor(libro) {
     : '';
 
   return `
-    <div class="estante-libro">
+    <div class="estante-libro estante-libro--clickeable" onclick="abrirDetalleLibroAutor('${_esc(libro.id)}')">
       <p class="estante-libro-titulo">${_esc(libro.titulo || '—')}</p>
       ${portadaUrl
         ? `<img src="${_esc(portadaUrl)}" alt="${_esc(libro.titulo)}" class="estante-libro-portada" onerror="this.style.display='none'" />`
@@ -264,6 +268,48 @@ function _renderLibroEstanteAutor(libro) {
     </div>
   `;
 }
+
+/**
+ * Abre el modal de detalle de un libro (solo datos del libro,
+ * sin nada de campaña) desde la estantería "Mis libros" del autor.
+ * Reutiliza el mismo modal que ya usa el panel de autor.
+ * @param {string} idLibro
+ */
+function abrirDetalleLibroAutor(idLibro) {
+  const libro = _librosAutorPerfilCache.find(l => l.id === idLibro);
+  if (!libro) return;
+
+  const portadaUrl = libro.portada
+    ? (libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada)
+    : '';
+
+  const tropesArr = typeof tropesTextoAArray === 'function'
+    ? tropesTextoAArray(libro.tropes || '')
+    : (libro.tropes || '').split(',').map(t => t.trim()).filter(Boolean);
+
+  mostrarModal('modal-detalle-campana');
+
+  const tituloEl = document.getElementById('modal-detalle-titulo');
+  const body     = document.getElementById('modal-detalle-body');
+  const footer   = document.getElementById('modal-detalle-footer');
+
+  if (tituloEl) tituloEl.textContent = libro.titulo || 'Libro';
+  if (footer)   footer.innerHTML = '';
+
+  if (body) body.innerHTML = `
+    <div style="text-align:center; margin-bottom:16px;">
+      ${portadaUrl
+        ? `<img src="${_esc(portadaUrl)}" alt="${_esc(libro.titulo)}" style="width:160px; height:224px; object-fit:cover; border-radius:8px; box-shadow:var(--sombra-card); margin:0 auto 12px; display:block;" onerror="this.style.display='none'" />`
+        : ''}
+      <p style="font-family:var(--fuente-titulo); font-size:20px; font-weight:700; color:var(--bordo-oscuro); font-style:italic; margin-bottom:4px;">${_esc(libro.titulo || '')}</p>
+      ${_aliasAutorPerfilActual ? `<p style="font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--gris-suave); margin-bottom:8px;">por ${_esc(_aliasAutorPerfilActual)}</p>` : ''}
+      ${libro.genero ? `<span class="slide-genero">${_esc(libro.genero)}</span>` : ''}
+    </div>
+    ${libro.sinopsisBreve ? `<p style="font-size:14px; color:var(--gris-texto); line-height:1.6; margin-bottom:16px;">${_esc(libro.sinopsisBreve)}</p>` : ''}
+    ${tropesArr.length > 0 ? `<div class="campana-tropes">${tropesArr.map(t => `<span class="campana-trope">${_esc(t)}</span>`).join('')}</div>` : ''}
+  `;
+}
+
 // ═══ HELPERS GAMIFICACIÓN (AUTOR) ═══
 
 function _renderGamificacionAutor(gamif) {
@@ -749,9 +795,14 @@ async function cargarBibliotecaAutorSeccion() {
     _idAutorPerfilActual = idAut.id;
   }
 
-  _estadoBibliotecaAutorSeccion('cargando');
+ _estadoBibliotecaAutorSeccion('cargando');
 
   try {
+    const { data: encabezado } = await supabaseClient.rpc('obtener_encabezado_perfil_publico', { p_id_usuario: _idAutorPerfilActual });
+    if (encabezado && !encabezado.error) {
+      _aliasAutorPerfilActual = encabezado.alias;
+    }
+
     const { data: libros, error: errLibros } = await supabaseClient.rpc('listar_libros_perfil_publico', {
       p_id_autor: _idAutorPerfilActual
     });
@@ -761,6 +812,7 @@ async function cargarBibliotecaAutorSeccion() {
       return;
     }
 
+    _librosAutorPerfilCache = libros || [];
     const cont = document.getElementById('bib-autor-libros');
     if (cont) {
       cont.innerHTML = (libros || []).length === 0
