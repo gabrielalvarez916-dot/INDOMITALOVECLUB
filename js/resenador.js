@@ -105,6 +105,10 @@ const [{ data: gamificacion }, { data: ranking }] = await Promise.all([
   supabaseClient.from('ranking').select('posicion, puntos_mensuales, porcentaje_completion, categoria').eq('id_usuario_resenador', user.id).eq('mes_año', mesActual).maybeSingle()
 ]);
 
+const badgeHistorico  = gamificacion?.badge_historico || '—';
+const puntosMensuales = ranking?.puntos_mensuales ?? '—';
+const categoria       = ranking?.categoria || '';
+
 const labelCategoria  = {
     top5:     '🏆 Top 5',
     top20:    '🥈 Top 20',
@@ -650,7 +654,7 @@ if (error) {
 
 const { mes, destacados, top5, top20, ligas, lista_completa } = data;
   // Estado vacío: sin participantes
-  if (!destacados || destacados.length === 0) {
+ if (!lista_completa || lista_completa.length === 0) {
     contenedor.innerHTML = `
       <div class="ranking-vacio">
         <div class="ranking-vacio-medalla">
@@ -756,11 +760,60 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
     </div>
   ` : '';
 
+  const nombresLiga = {
+    diamante: '💎 Liga Diamante',
+    oro:      '🥇 Liga Oro',
+    plata:    '🥈 Liga Plata',
+    bronce:   '🥉 Liga Bronce',
+    nuevo:    '🌱 Nuevo en el ranking'
+  };
+
+  const _renderItemLiga = r => `
+    <div class="ranking-resenador-top-item">
+      <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
+      <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+      <div class="ranking-top-item-info">
+        <p class="ranking-top-item-titulo"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+  ${r.alias}
+</p>
+      </div>
+      <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? 0} pts</span>
+    </div>
+  `;
+
+  const LIMITE_LIGA = 10;
+
+  const ligasHtml = ['diamante', 'oro', 'plata', 'bronce', 'nuevo'].map(codigo => {
+    const lista = ligas?.[codigo] || [];
+    if (lista.length === 0) return '';
+
+    const primeros = lista.slice(0, LIMITE_LIGA);
+    const resto     = lista.slice(LIMITE_LIGA);
+    const idResto   = `ranking-liga-resto-${codigo}`;
+
+    return `
+      <div class="ranking-resenadores-seccion">
+        <h4 class="ranking-seccion-titulo">${nombresLiga[codigo]} (${lista.length})</h4>
+        <div class="ranking-top-lista">
+          ${primeros.map(_renderItemLiga).join('')}
+        </div>
+        ${resto.length > 0 ? `
+          <div id="${idResto}" class="ranking-top-lista" style="display:none; margin-top:10px;">
+            ${resto.map(_renderItemLiga).join('')}
+          </div>
+          <button class="btn-secundario btn-sm" style="margin-top:10px;" onclick="_toggleVerMasLiga('${idResto}', this, ${resto.length})">Ver ${resto.length} más</button>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
   contenedor.innerHTML = `
     <h3 style="font-family:var(--fuente-titulo); font-size:22px; font-weight:700; color:var(--bordo); margin-bottom:20px; font-style:italic;">Ranking — ${mes}</h3>
     ${destacadosHtml}
     ${top5Html}
     ${top20Html}
+    ${ligasHtml}
   `;
 }
 
