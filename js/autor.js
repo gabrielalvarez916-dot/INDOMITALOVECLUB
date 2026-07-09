@@ -1140,6 +1140,7 @@ async function agregarLibro(event) {
   cerrarModales();
   mostrarToast('Libro agregado a tu biblioteca.', 'ok');
   await cargarBibliotecaPanel(user.id);
+  if (typeof cargarBibliotecaAutorSeccion === 'function') await cargarBibliotecaAutorSeccion();
 }
 
 /**
@@ -1164,9 +1165,11 @@ async function eliminarLibroAutor(idLibro, titulo) {
     return;
   }
 
-  mostrarToast('Libro eliminado.', 'ok');
+mostrarToast('Libro eliminado.', 'ok');
   await cargarBibliotecaPanel(user.id);
+  if (typeof cargarBibliotecaAutorSeccion === 'function') await cargarBibliotecaAutorSeccion();
 }
+
 // ────────────────────────────────────────────────────────────
 // SELECTOR DE LIBRO EN NUEVA CAMPAÑA
 // ────────────────────────────────────────────────────────────
@@ -1502,8 +1505,10 @@ async function guardarEditarLibro(idLibro) {
   setTimeout(async () => {
     cerrarModales();
     await cargarBibliotecaPanel(user.id);
+    if (typeof cargarBibliotecaAutorSeccion === 'function') await cargarBibliotecaAutorSeccion();
   }, 1500);
 }
+
 /**
  * Carga y muestra el ranking de libros con sellos de campaña.
  */
