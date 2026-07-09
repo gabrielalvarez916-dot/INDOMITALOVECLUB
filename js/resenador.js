@@ -835,6 +835,14 @@ function moverCarruselResenadores(dir) {
   if (!carrusel) return;
   carrusel.scrollBy({ left: dir * 110, behavior: 'smooth' });
 }
+
+function _toggleVerMasLiga(idResto, boton, cantidadResto) {
+  const contenedor = document.getElementById(idResto);
+  if (!contenedor) return;
+  const estaOculto = contenedor.style.display === 'none';
+  contenedor.style.display = estaOculto ? '' : 'none';
+  boton.textContent = estaOculto ? 'Ver menos' : `Ver ${cantidadResto} más`;
+}
 // ────────────────────────────────────────────────────────────
 // ABANDONAR CAMPAÑA (DNF)
 // ────────────────────────────────────────────────────────────
