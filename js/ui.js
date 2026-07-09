@@ -61,6 +61,7 @@ function mostrarSeccion(nombre) {
     'faq-autor',
     'admin',
     'biblioteca-resenador',
+    'biblioteca-autor',
     'evento'
   ];
 
@@ -105,6 +106,9 @@ function mostrarSeccion(nombre) {
       break;
   case 'biblioteca-resenador':
       if (typeof cargarBibliotecaSeccion === 'function') cargarBibliotecaSeccion();
+      break;
+    case 'biblioteca-autor':
+      if (typeof cargarBibliotecaAutorSeccion === 'function') cargarBibliotecaAutorSeccion();
       break;
     case 'evento':
       if (typeof renderPaginaEvento === 'function') renderPaginaEvento();
