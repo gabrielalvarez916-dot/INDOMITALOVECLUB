@@ -44,6 +44,7 @@ async function abrirPerfilPublico(id, rol) {
 
 async function _cargarPerfilAutor(idAutor) {
   const [{ data: perfil, error: errPerfil }, { data: libros }, { data: campañas }] = await Promise.all([
+    _idAutorPerfilActual = idAutor;
     supabaseClient.rpc('obtener_perfil_publico_autor', { p_id_autor: idAutor }),
     supabaseClient.rpc('listar_libros_perfil_publico',  { p_id_autor: idAutor }),
     supabaseClient.rpc('listar_campanas_activas_por_autor', { p_id_autor: idAutor })
@@ -68,6 +69,7 @@ async function _cargarPerfilAutor(idAutor) {
 let _idReseñadorPerfilActual = null;
 let _bibliotecaEsPropia = false;
 let _bibliotecaLibrosLeidosCache = [];
+let _idAutorPerfilActual = null;
 
 async function _cargarPerfilReseñador(idReseñador) {
   _idReseñadorPerfilActual = idReseñador;
@@ -165,13 +167,13 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif) {
     }
   }
 
-  // Libros — cards estilo Goodreads, igual que en reseñador
+ // Libros — vista de estantería (misma estética que biblioteca de reseñador), preview de hasta 8
   const librosCont = document.getElementById('pp-autor-libros');
   if (librosCont) {
     if (libros.length === 0) {
-      librosCont.innerHTML = '<p class="pp-vacio">Sin libros cargados aún.</p>';
+      librosCont.innerHTML = '<p class="estante-vacio">Sin libros cargados aún.</p>';
     } else {
-      librosCont.innerHTML = libros.map(libro => _renderCardLibroAutor(libro)).join('');
+      librosCont.innerHTML = libros.slice(0, 8).map(libro => _renderLibroEstanteAutor(libro)).join('');
     }
   }
 
@@ -239,8 +241,28 @@ function _renderCardLibroAutor(libro) {
         ${libro.genero ? `<p class="pp-libro-goodreads-autor">${_esc(libro.genero)}</p>` : ''}
         ${puntuacionHtml}
         ${libro.amazon ? `<a href="${_esc(libro.amazon)}" target="_blank" class="pp-link-externo">Ver en Amazon →</a>` : ''}
-      </div>
+     </div>
     </div>`;
+}
+
+/**
+ * Card de libro en formato "estantería" (misma estética que la
+ * biblioteca del reseñador), usada en el preview del perfil público
+ * y en la sección completa "Mis libros" del autor.
+ */
+function _renderLibroEstanteAutor(libro) {
+  const portadaUrl = libro.portada
+    ? (libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada)
+    : '';
+
+  return `
+    <div class="estante-libro">
+      <p class="estante-libro-titulo">${_esc(libro.titulo || '—')}</p>
+      ${portadaUrl
+        ? `<img src="${_esc(portadaUrl)}" alt="${_esc(libro.titulo)}" class="estante-libro-portada" onerror="this.style.display='none'" />`
+        : '<div class="estante-libro-portada-placeholder">📖</div>'}
+    </div>
+  `;
 }
 // ═══ HELPERS GAMIFICACIÓN (AUTOR) ═══
 
@@ -642,6 +664,22 @@ function _renderCardLibroSimple(item, tipo) {
   `;
 }
 
+/**
+ * Navega a "Mis libros" del autor (propio, o de otro autor visto
+ * desde su perfil público).
+ * @param {string} [idAutorOverride]
+ */
+async function abrirBibliotecaAutor(idAutorOverride) {
+  const idAutor = idAutorOverride || _idAutorPerfilActual;
+  if (!idAutor) return;
+
+  _idAutorPerfilActual = idAutor;
+  cerrarModales();
+  mostrarSeccion('biblioteca-autor');
+}
+
+// Reemplaza la función abrirBiblioteca() existente
+async function abrirBiblioteca(idReseñadorOverride) {
 // Reemplaza la función abrirBiblioteca() existente
 async function abrirBiblioteca(idReseñadorOverride) {
   const idReseñador = idReseñadorOverride || _idReseñadorPerfilActual;
@@ -694,6 +732,58 @@ async function cargarBibliotecaSeccion() {
   } catch (e) {
     _estadoBibliotecaSeccion('error');
   }
+}
+
+/**
+ * Se llama desde ui.js cuando se navega a 'biblioteca-autor'.
+ * Carga y pinta "Mis libros" (propio, o de un autor visto desde su perfil público).
+ */
+async function cargarBibliotecaAutorSeccion() {
+  if (!_idAutorPerfilActual) {
+    const email = Sesion.email();
+    if (!email) return;
+
+    const { data: idAut, error: errId } = await supabaseClient.rpc('obtener_id_autor_por_email', { p_email: email });
+    if (errId || !idAut || idAut.error) {
+      _estadoBibliotecaAutorSeccion('error');
+      return;
+    }
+    _idAutorPerfilActual = idAut.id;
+  }
+
+  _estadoBibliotecaAutorSeccion('cargando');
+
+  try {
+    const { data: libros, error: errLibros } = await supabaseClient.rpc('listar_libros_perfil_publico', {
+      p_id_autor: _idAutorPerfilActual
+    });
+
+    if (errLibros) {
+      _estadoBibliotecaAutorSeccion('error');
+      return;
+    }
+
+    const cont = document.getElementById('bib-autor-libros');
+    if (cont) {
+      cont.innerHTML = (libros || []).length === 0
+        ? '<p class="estante-vacio">Sin libros cargados aún.</p>'
+        : (libros || []).map(l => _renderLibroEstanteAutor(l)).join('');
+    }
+
+    _estadoBibliotecaAutorSeccion('contenido');
+  } catch (e) {
+    _estadoBibliotecaAutorSeccion('error');
+  }
+}
+
+function _estadoBibliotecaAutorSeccion(estado) {
+  const mapa = {
+    cargando: 'bib-autor-cargando',
+    error:    'bib-autor-error',
+    contenido:'bib-autor-contenido'
+  };
+  ['bib-autor-cargando', 'bib-autor-error', 'bib-autor-contenido'].forEach(id => toggleElemento(id, false));
+  if (mapa[estado]) toggleElemento(mapa[estado], true);
 }
 
 // Control de estados para la sección (no modal)
