@@ -391,67 +391,123 @@
   <section id="seccion-perfil" class="seccion" style="display:none;">
     <div class="seccion-inner seccion-angosta">
 
-      <h2 class="panel-titulo">Mi perfil</h2>
+      <div class="panel-header">
+        <h2 class="panel-titulo">Mi perfil</h2>
+        <button class="btn-primario" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
+      </div>
 
-      <div class="perfil-foto-container">
-  <img id="perfil-foto" src="/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK" alt="Avatar de perfil" class="perfil-foto" />
-  <button class="btn-secundario btn-sm" onclick="abrirSelectorAvatar()">Cambiar avatar</button>
-</div>
+      <!-- ESTADO: cargando (vista propia embebida) -->
+      <div id="pp-cargando-propio" class="cargando-container">
+        <div class="spinner"></div>
+        <p>Cargando perfil...</p>
+      </div>
 
-      <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">
+      <!-- ESTADO: error (vista propia embebida) -->
+      <div id="pp-error-propio" class="estado-vacio" style="display:none;">
+        <p class="estado-vacio-icono">😕</p>
+        <p class="estado-vacio-texto">No se pudo cargar el perfil.</p>
+      </div>
 
-        <div class="form-grupo">
-          <label class="form-label">Alias público</label>
-          <input type="text" id="perfil-alias" class="form-input" placeholder="Tu nombre en la comunidad" />
-        </div>
+      <!-- BLOQUE AUTOR (propio) — copia de #pp-bloque-autor con sufijo -propio -->
+      <div id="pp-bloque-autor-propio" style="display:none;">
 
-        <div class="form-fila">
-          <div class="form-grupo">
-            <label class="form-label">País</label>
-            <input type="text" id="perfil-pais" class="form-input" placeholder="Argentina" />
+        <!-- Cabecera -->
+        <div class="pp-cabecera">
+          <img id="pp-avatar-propio" src="" alt="Avatar" class="pp-avatar" />
+          <div class="pp-cabecera-info">
+            <p id="pp-alias-propio" class="pp-alias"></p>
+            <p id="pp-ubicacion-propio" class="pp-ubicacion"></p>
+            <p id="pp-autor-miembro-desde-propio" class="pp-miembro-desde"></p>
+            <div id="pp-redes-propio" class="pp-redes"></div>
           </div>
-          <div class="form-grupo">
-            <label class="form-label">Ciudad</label>
-            <input type="text" id="perfil-ciudad" class="form-input" placeholder="Buenos Aires" />
+        </div>
+
+        <!-- Gamificación del autor -->
+        <div class="pp-bloque" id="pp-autor-gamificacion-cont-propio" style="display:none;">
+          <div id="pp-autor-gamificacion-propio"></div>
+        </div>
+
+        <!-- Libros -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Mis libros</p>
+          <div id="pp-autor-libros-propio" class="estante-fila"></div>
+          <button class="btn-secundario btn-full" id="pp-btn-ver-libros-autor-propio" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+            Ver todos mis libros →
+          </button>
+        </div>
+
+        <!-- Campañas activas -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Campañas activas</p>
+          <div id="pp-autor-campanas-propio" class="pp-libros-goodreads-grid"></div>
+        </div>
+
+      </div>
+      <!-- /BLOQUE AUTOR (propio) -->
+
+      <!-- BLOQUE RESEÑADOR (propio) — copia de #pp-bloque-reseñador con sufijo -propio -->
+      <div id="pp-bloque-reseñador-propio" style="display:none;">
+
+        <!-- Cabecera -->
+        <div class="pp-cabecera">
+          <img id="pp-avatar-r-propio" src="" alt="Avatar" class="pp-avatar" />
+          <div class="pp-cabecera-info">
+            <p id="pp-alias-r-propio" class="pp-alias"></p>
+            <p id="pp-ubicacion-r-propio" class="pp-ubicacion"></p>
+            <div id="pp-redes-r-propio" class="pp-redes"></div>
           </div>
         </div>
 
-    <div class="form-grupo" id="grupo-generos" style="display:none;">
-  <label class="form-label">Géneros favoritos</label>
-          <input type="text" id="perfil-generos" class="form-input" placeholder="Romance, Dark Romance, Fantasía..." />
+        <!-- Badge histórico + miembro desde -->
+        <div class="pp-bloque pp-encabezado-historico">
+          <div id="pp-r-badge-historico-propio" class="pp-badges-fila"></div>
+          <p id="pp-r-miembro-desde-propio" class="pp-miembro-desde"></p>
         </div>
 
-     <div class="form-grupo" id="grupo-descripcion" style="display:none;">
-  <label class="form-label">Descripción lectora</label>
-          <textarea id="perfil-descripcion" class="form-textarea" placeholder="Contanos quién sos como lect@r..." rows="3"></textarea>
-        </div>
-<div class="form-grupo" id="grupo-tropes-perfil" style="display:none;">
-          <label class="form-label">Tropes favoritos</label>
-          <div id="perfil-tropes-contenedor"></div>
-        </div>
-        
-        <div class="form-separador">Redes sociales</div>
-
-        <div class="form-grupo">
-          <label class="form-label">Instagram</label>
-          <input type="url" id="perfil-instagram" class="form-input" placeholder="https://instagram.com/tu_usuario" />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">TikTok</label>
-          <input type="url" id="perfil-tiktok" class="form-input" placeholder="https://tiktok.com/@tu_usuario" />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">Amazon</label>
-          <input type="url" id="perfil-amazon" class="form-input" placeholder="https://amazon.com/profile/..." />
+        <!-- Estadísticas históricas como reseñador -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Estadísticas como reseñad@r</p>
+          <div id="pp-r-stats-propio" class="pp-stats-grid"></div>
         </div>
 
-        <div id="perfil-error" class="mensaje-error" style="display:none;"></div>
-        <div id="perfil-ok" class="mensaje-ok" style="display:none;"></div>
+        <!-- Insignias -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Insignias</p>
+          <div id="pp-r-insignias-propio" class="pp-insignias-grid"></div>
+        </div>
 
-        <button type="submit" class="btn-primario btn-full">Guardar cambios</button>
-      </form>
+        <!-- Géneros favoritos -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Géneros favoritos</p>
+          <div id="pp-reseñador-generos-propio"></div>
+        </div>
 
-      <!-- Biblioteca (solo autores) -->
+        <div class="pp-bloque" id="pp-bloque-descripcion-propio">
+          <p class="pp-bloque-titulo">Sobre mí</p>
+          <p id="pp-reseñador-descripcion-propio" class="pp-texto-truncado"></p>
+          <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion-propio" onclick="_toggleVerMas('descripcion','-propio')" style="display:none;">Ver más</button>
+        </div>
+
+        <!-- Tropes favoritos -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Tropes favoritos</p>
+          <div id="pp-reseñador-tropes-propio" class="pp-tropes-lista pp-tropes-truncado"></div>
+          <button class="pp-btn-vermas" id="pp-btn-vermas-tropes-propio" onclick="_toggleVerMas('tropes','-propio')" style="display:none;">Ver más</button>
+        </div>
+
+        <!-- Últimos libros reseñados -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Últimos libros reseñados</p>
+          <div id="pp-r-ultimos-libros-propio" class="pp-libros-goodreads-grid"></div>
+          <button class="btn-secundario btn-full" id="pp-btn-ver-biblioteca-propio" style="margin-top:12px;" onclick="abrirBiblioteca()">
+            Ver biblioteca completa →
+          </button>
+        </div>
+
+      </div>
+      <!-- /BLOQUE RESEÑADOR (propio) -->
+
+      <!-- Biblioteca (solo autores) — PROVISORIAMENTE HUÉRFANA: se muda a "Mis libros" en la Parte 2 -->
       <div id="seccion-biblioteca" style="display:none;">
         <div class="form-separador">Mi biblioteca</div>
         <button class="btn-secundario" onclick="mostrarModal('modal-nuevo-libro')">+ Agregar libro</button>
@@ -1124,6 +1180,77 @@
     </form>
   </div>
 </div>
+
+<!-- Modal: EDITAR PERFIL (nuevo — contiene el form-perfil movido tal cual desde #seccion-perfil) -->
+<div id="modal-editar-perfil" class="modal modal-grande">
+  <div class="modal-header">
+    <h3 class="modal-titulo">Editar perfil</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="perfil-foto-container">
+      <img id="perfil-foto" src="/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK" alt="Avatar de perfil" class="perfil-foto" />
+      <button class="btn-secundario btn-sm" onclick="abrirSelectorAvatar()">Cambiar avatar</button>
+    </div>
+
+    <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">
+
+      <div class="form-grupo">
+        <label class="form-label">Alias público</label>
+        <input type="text" id="perfil-alias" class="form-input" placeholder="Tu nombre en la comunidad" />
+      </div>
+
+      <div class="form-fila">
+        <div class="form-grupo">
+          <label class="form-label">País</label>
+          <input type="text" id="perfil-pais" class="form-input" placeholder="Argentina" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Ciudad</label>
+          <input type="text" id="perfil-ciudad" class="form-input" placeholder="Buenos Aires" />
+        </div>
+      </div>
+
+  <div class="form-grupo" id="grupo-generos" style="display:none;">
+<label class="form-label">Géneros favoritos</label>
+        <input type="text" id="perfil-generos" class="form-input" placeholder="Romance, Dark Romance, Fantasía..." />
+      </div>
+
+   <div class="form-grupo" id="grupo-descripcion" style="display:none;">
+<label class="form-label">Descripción lectora</label>
+        <textarea id="perfil-descripcion" class="form-textarea" placeholder="Contanos quién sos como lect@r..." rows="3"></textarea>
+      </div>
+<div class="form-grupo" id="grupo-tropes-perfil" style="display:none;">
+        <label class="form-label">Tropes favoritos</label>
+        <div id="perfil-tropes-contenedor"></div>
+      </div>
+      
+      <div class="form-separador">Redes sociales</div>
+
+      <div class="form-grupo">
+        <label class="form-label">Instagram</label>
+        <input type="url" id="perfil-instagram" class="form-input" placeholder="https://instagram.com/tu_usuario" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">TikTok</label>
+        <input type="url" id="perfil-tiktok" class="form-input" placeholder="https://tiktok.com/@tu_usuario" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Amazon</label>
+        <input type="url" id="perfil-amazon" class="form-input" placeholder="https://amazon.com/profile/..." />
+      </div>
+
+      <div id="perfil-error" class="mensaje-error" style="display:none;"></div>
+      <div id="perfil-ok" class="mensaje-ok" style="display:none;"></div>
+
+      <button type="submit" class="btn-primario btn-full">Guardar cambios</button>
+    </form>
+
+  </div>
+</div>
+<!-- /modal-editar-perfil -->
+
 <div id="modal-perfil-publico" class="modal modal-grande">
   <div class="modal-header">
     <h3 class="modal-titulo" id="pp-modal-titulo">Perfil</h3>
@@ -1288,4 +1415,5 @@
 <script src="js/perfil-publico.js"></script>
 
 </body>
+</html>
 </html>
