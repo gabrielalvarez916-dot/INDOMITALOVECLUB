@@ -6,15 +6,57 @@
 
 
 // ────────────────────────────────────────────────────────────
-// CARGAR PERFIL
+// CARGAR PERFIL (vista fija embebida en la pestaña "Perfil")
 // ────────────────────────────────────────────────────────────
 
 /**
- * Carga el perfil del usuario logueado y rellena el formulario.
+ * Carga el perfil PÚBLICO propio y lo pinta embebido en la pestaña "Perfil"
+ * (mismo diseño que el modal de perfil público, con sufijo '-propio').
  * Se llama automáticamente desde ui.js cuando se muestra la sección 'perfil'.
- * Muestra u oculta campos según el rol del usuario.
+ * También se vuelve a llamar después de guardar cambios en el modal de edición.
  */
 async function cargarPerfil() {
+  const usuario = Sesion.obtener();
+  const rol     = Sesion.rol();
+  if (!usuario) return;
+
+  if (rol === 'autor') {
+    if (!_idAutorPerfilActual) {
+      const { data: idAut, error: errId } = await supabaseClient.rpc('obtener_id_autor_por_email', { p_email: Sesion.email() });
+      if (errId || !idAut || idAut.error) {
+        _estadoPerfilPublico('error', '-propio');
+        return;
+      }
+      _idAutorPerfilActual = idAut.id;
+    }
+    await _cargarPerfilAutor(_idAutorPerfilActual, '-propio');
+
+  } else if (rol === 'reseñador') {
+    if (!_idReseñadorPerfilActual) {
+      const { data: idRes, error: errId } = await supabaseClient.rpc('obtener_id_resenador_por_email', { p_email: Sesion.email() });
+      if (errId || !idRes || idRes.error) {
+        _estadoPerfilPublico('error', '-propio');
+        return;
+      }
+      _idReseñadorPerfilActual = idRes.id;
+      _bibliotecaEsPropia = true;
+    }
+    await _cargarPerfilReseñador(_idReseñadorPerfilActual, '-propio');
+  }
+}
+
+
+// ────────────────────────────────────────────────────────────
+// CARGAR FORMULARIO DE EDICIÓN (modal "Editar perfil")
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Carga los datos del usuario logueado y rellena el formulario de EDICIÓN
+ * (el que vive ahora en #modal-editar-perfil). Se llama al abrir ese modal
+ * desde el botón "✏️ Editar perfil".
+ * Muestra u oculta campos del form según el rol del usuario.
+ */
+async function cargarFormularioEdicionPerfil() {
   const usuario = Sesion.obtener();
   const rol     = Sesion.rol();
   if (!usuario) return;
@@ -131,7 +173,9 @@ function rellenarFormularioPerfil(perfil) {
 
 /**
  * Guarda los cambios del perfil en el backend.
- * Se llama desde el submit del form-perfil.
+ * Se llama desde el submit del form-perfil (ahora dentro de #modal-editar-perfil).
+ * Al guardar con éxito: cierra el modal de edición y repinta la vista fija
+ * de la pestaña "Perfil" con los datos actualizados, sin recargar nada.
  *
  * @param {Event} event
  */
@@ -187,7 +231,14 @@ async function guardarPerfil(event) {
   if (aliasEl) aliasEl.textContent = datos.alias;
 
   mostrarMensajeOk('perfil-ok', '¡Perfil guardado correctamente!');
-  setTimeout(() => ocultarMensajes('perfil-ok'), 3000);
+
+  // Cierra el modal de edición y repinta la vista fija de la pestaña "Perfil"
+  // con los datos ya actualizados, sin pantallas en blanco ni recargar nada.
+  setTimeout(() => {
+    cerrarModales();
+    ocultarMensajes('perfil-ok');
+    cargarPerfil();
+  }, 900);
 }
 
 
