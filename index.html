@@ -360,10 +360,11 @@
 
   <!-- SECCIÓN: BIBLIOTECA AUTOR (libros publicados) -->
   <section id="seccion-biblioteca-autor" class="seccion" style="display:none;">
-    <div class="seccion-inner">
-      <div class="panel-header">
-        <h2 class="panel-titulo">Mis libros</h2>
-      </div>
+  <div class="seccion-inner">
+    <div class="panel-header">
+      <h2 class="panel-titulo">Mis libros</h2>
+      <button id="btn-agregar-libro-biblioteca-autor" class="btn-primario" style="display:none;" onclick="mostrarModal('modal-nuevo-libro')">+ Agregar libro</button>
+    </div>
 
       <div id="bib-autor-cargando" class="cargando-container">
         <div class="spinner"></div>
@@ -505,13 +506,6 @@
 
       </div>
       <!-- /BLOQUE RESEÑADOR (propio) -->
-
-      <!-- Biblioteca (solo autores) — PROVISORIAMENTE HUÉRFANA: se muda a "Mis libros" en la Parte 2 -->
-      <div id="seccion-biblioteca" style="display:none;">
-        <div class="form-separador">Mi biblioteca</div>
-        <button class="btn-secundario" onclick="mostrarModal('modal-nuevo-libro')">+ Agregar libro</button>
-        <div id="biblioteca-lista" class="biblioteca-lista"></div>
-      </div>
 
     </div>
   </section>
