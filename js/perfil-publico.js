@@ -43,8 +43,8 @@ async function abrirPerfilPublico(id, rol) {
 // ────────────────────────────────────────────────────────────
 
 async function _cargarPerfilAutor(idAutor) {
+  _idAutorPerfilActual = idAutor;
   const [{ data: perfil, error: errPerfil }, { data: libros }, { data: campañas }] = await Promise.all([
-    _idAutorPerfilActual = idAutor;
     supabaseClient.rpc('obtener_perfil_publico_autor', { p_id_autor: idAutor }),
     supabaseClient.rpc('listar_libros_perfil_publico',  { p_id_autor: idAutor }),
     supabaseClient.rpc('listar_campanas_activas_por_autor', { p_id_autor: idAutor })
@@ -678,8 +678,6 @@ async function abrirBibliotecaAutor(idAutorOverride) {
   mostrarSeccion('biblioteca-autor');
 }
 
-// Reemplaza la función abrirBiblioteca() existente
-async function abrirBiblioteca(idReseñadorOverride) {
 // Reemplaza la función abrirBiblioteca() existente
 async function abrirBiblioteca(idReseñadorOverride) {
   const idReseñador = idReseñadorOverride || _idReseñadorPerfilActual;
