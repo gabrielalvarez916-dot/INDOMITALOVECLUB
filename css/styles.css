@@ -1983,6 +1983,36 @@ img { max-width: 100%; display: block; }
   object-fit: cover;
   border-radius: 5px;
 }
+
+/* ── Podio Top 5 de libros (mismo estilo que reseñadores, con portadas) ── */
+.ranking-podio-portada {
+  width: 50px;
+  height: 70px;
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: var(--sombra-card);
+  border: 2px solid var(--rosa);
+  background: var(--rosa-claro);
+}
+
+.ranking-podio-portada--oro {
+  width: 64px;
+  height: 90px;
+  border-color: var(--bordo);
+  box-shadow: 0 0 0 3px var(--crema-oscura), var(--sombra-fuerte);
+}
+
+/* ── Número de posición sobre las portadas del carrusel (6° en adelante) ── */
+.ranking-slider-card-numero {
+  align-self: center;
+  background: var(--bordo);
+  color: var(--crema-suave);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: var(--radio-pill);
+}
+
 /* ── Panel reseñador — Stats con corazón ─────────────────── */
 .stat-card {
   display: flex;
