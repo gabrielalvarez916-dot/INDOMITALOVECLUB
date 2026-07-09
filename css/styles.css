@@ -4012,3 +4012,14 @@ img { max-width: 100%; display: block; }
   object-fit: contain;
   margin-bottom: 6px;
 }
+/* ── Botones editar/eliminar arriba de la portada (biblioteca autor) ── */
+.estante-libro {
+  display: flex;
+  flex-direction: column;
+}
+
+.estante-libro-acciones {
+  order: -1;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
