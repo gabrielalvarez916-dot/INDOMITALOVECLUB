@@ -191,11 +191,13 @@ function construirCardPostulacionReseñador(p) {
   const c = p.campaña;
   if (!c) return '';
 
+  const campañaCancelada = c.estado === 'cancelada';
+
   const portadaHtml = c.linkPortada
     ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />`
     : '';
 
-  const linksLibro = p.estado === 'aprobada' && (c.linkEpub || c.linkPdf) ? `
+  const linksLibro = !campañaCancelada && p.estado === 'aprobada' && (c.linkEpub || c.linkPdf) ? `
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
       ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.linkEpub}', '${c.nombreLibro}')">📖 Leer EPUB</button>` : ''}
       ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.linkPdf}', '${c.nombreLibro}')">📄 Leer PDF</button>`   : ''}
@@ -208,13 +210,15 @@ function construirCardPostulacionReseñador(p) {
       <div class="postulacion-resena-info">
         <div class="postulacion-resena-header">
           <p class="postulacion-resena-titulo">${c.nombreLibro}</p>
-          ${badgeEstado(p.estado)}
+          ${campañaCancelada ? '<span class="badge-cancelada">Cancelada por el autor</span>' : badgeEstado(p.estado)}
         </div>
         <p class="postulacion-resena-autor"
    ${c.idAutor ? `onclick="abrirPerfilPublico('${c.idAutor}', 'autor')" style="cursor:pointer;"` : ''}>
   por ${c.nombreAutor}
 </p>
-        ${p.estado === 'aprobada' ? `<p class="postulacion-resena-fecha">📅 Fecha límite para entregar: ${formatearFechaAmigable(p.fechaLimiteEntrega || c.fechaLimite)}</p>` : ''}
+        ${campañaCancelada
+          ? '<p class="postulacion-resena-fecha" style="color:var(--error);">Esta campaña fue cancelada por el autor. No hace falta que la reseñes.</p>'
+          : (p.estado === 'aprobada' ? `<p class="postulacion-resena-fecha">📅 Fecha límite para entregar: ${formatearFechaAmigable(p.fechaLimiteEntrega || c.fechaLimite)}</p>` : '')}
         ${linksLibro}
       </div>
     </div>
@@ -242,13 +246,14 @@ async function cargarArcsActivos(email) {
   const ahora = new Date();
   // Un ARC está activo mientras la postulación siga aprobada y no haya vencido
   // el plazo PERSONAL de entrega del reseñador (no el estado global de la campaña).
-  _arcsActivosReseñador = postulaciones.filter(p =>
+ _arcsActivosReseñador = postulaciones.filter(p =>
     p.estado === 'aprobada' &&
     p.campaña &&
+    p.campaña.estado !== 'cancelada' &&
     p.fechaLimiteEntrega &&
     ahora <= new Date(p.fechaLimiteEntrega)
   );
-
+  
   if (_arcsActivosReseñador.length === 0) {
     contenedor.innerHTML = `
       <div class="estado-vacio">
