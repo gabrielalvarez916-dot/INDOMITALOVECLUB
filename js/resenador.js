@@ -712,28 +712,33 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
     </div>
   `;
 
-  // Top 5
+ // Podio Top 5
+  const ORDEN_PODIO = [3, 1, 0, 2, 4]; // índices de top5 (ordenado por posición 1..5) → orden visual: 4,2,1,3,5
+  const ALTURA_POR_INDICE = { 0: 'alto-1', 1: 'alto-2', 2: 'alto-2', 3: 'alto-3', 4: 'alto-3' };
+
   const top5Html = top5 && top5.length > 0 ? `
     <div class="ranking-resenadores-seccion">
-      <h4 class="ranking-seccion-titulo">Top 5</h4>
-      <div class="ranking-top-lista">
-        ${top5.map(r => `
-          <div class="ranking-resenador-top-item ranking-resenador-top-item--destacado">
-            <p class="ranking-top-item-pos">#${r.posicion}</p>
-            <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
-            <div class="ranking-top-item-info">
-              <p class="ranking-top-item-titulo"
-   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
-  ${r.alias}
-</p>
-              <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? '—'} pts · ${r.completion ?? '—'}%</span>
+      <h4 class="ranking-seccion-titulo">🏆 Podio del mes</h4>
+      <div class="ranking-podio-wrap">
+        ${ORDEN_PODIO.filter(i => top5[i]).map(i => {
+          const r = top5[i];
+          const altura = ALTURA_POR_INDICE[i];
+          return `
+            <div class="ranking-podio-columna">
+              <p class="ranking-podio-alias"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.alias}</p>
+              <div class="ranking-podio-avatar-wrap">
+                ${i === 0 ? '<span class="ranking-podio-corona">👑</span>' : ''}
+                <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-podio-avatar ${i === 0 ? 'ranking-podio-avatar--oro' : ''}" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+              </div>
+              <p class="ranking-podio-puntos">♥ ${r.puntosMensuales ?? '—'} pts</p>
+              <div class="ranking-podio-bloque ranking-podio-${altura}">
+                <span class="ranking-podio-bloque-numero">${r.posicion}</span>
+                <span class="ranking-podio-bloque-icono">${r.completion ?? '—'}%</span>
+              </div>
             </div>
-            <div style="text-align:right;">
-              <p class="ranking-top-item-puntaje">${r.puntosMensuales ?? '—'} pts</p>
-              <p style="font-size:11px; color:var(--gris-suave);">${r.completion ?? '—'}%</p>
-            </div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     </div>
   ` : '';
@@ -808,10 +813,10 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
     `;
   }).join('');
 
-  contenedor.innerHTML = `
+ contenedor.innerHTML = `
     <h3 style="font-family:var(--fuente-titulo); font-size:22px; font-weight:700; color:var(--bordo); margin-bottom:20px; font-style:italic;">Ranking — ${mes}</h3>
-    ${destacadosHtml}
     ${top5Html}
+    ${destacadosHtml}
     ${top20Html}
     ${ligasHtml}
   `;
