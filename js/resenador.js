@@ -63,7 +63,8 @@ const badgeHistorico  = u.badgeHistorico  || '—';
     diamante: '💎 Liga Diamante',
     oro:      '🥇 Liga Oro',
     plata:    '🥈 Liga Plata',
-    bronce:   '🥉 Liga Bronce'
+    bronce:   '🥉 Liga Bronce',
+    nuevo:    '🌱 Nuevo en el ranking'
   }[categoria] || '—';
 
  contenedor.innerHTML = `
@@ -475,8 +476,10 @@ async function cargarRankingReseñador(email) {
 
   const { mes, destacados, top5, top20, miPosicion } = resultado.datos;
 
-  // Estado vacío: sin participantes
-  if (!destacados || destacados.length === 0) {
+  // Estado vacío: sin participantes (chequeamos contra la lista completa,
+  // porque "destacados" puede estar vacío aunque sí haya gente en el ranking
+  // -- por ejemplo, si todavía nadie ganó puntos este mes)
+  if (!lista_completa || lista_completa.length === 0) {
     contenedor.innerHTML = `
       <div class="ranking-vacio">
         <div class="ranking-vacio-medalla">
@@ -582,11 +585,129 @@ async function cargarRankingReseñador(email) {
     </div>
   ` : '';
 
+  // Listas por liga (incluye "nuevo" para quienes todavía no ganaron puntos este mes)
+  const nombresLiga = {
+    diamante: '💎 Liga Diamante',
+    oro:      '🥇 Liga Oro',
+    plata:    '🥈 Liga Plata',
+    bronce:   '🥉 Liga Bronce',
+    nuevo:    '🌱 Nuevo en el ranking'
+  };
+
+  const _renderItemLiga = r => `
+    <div class="ranking-resenador-top-item">
+      <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
+      <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+      <div class="ranking-top-item-info">
+        <p class="ranking-top-item-titulo"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+  ${r.alias}
+</p>
+      </div>
+      <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? 0} pts</span>
+    </div>
+  `;
+
+  const LIMITE_LIGA = 10;
+
+  const ligasHtml = ['diamante', 'oro', 'plata', 'bronce', 'nuevo'].map(codigo => {
+    const lista = ligas?.[codigo] || [];
+    if (lista.length === 0) return '';
+
+    const primeros = lista.slice(0, LIMITE_LIGA);
+    const resto     = lista.slice(LIMITE_LIGA);
+    const idResto   = `ranking-liga-resto-${codigo}`;
+
+    return `
+      <div class="ranking-resenadores-seccion">
+        <h4 class="ranking-seccion-titulo">${nombresLiga[codigo]} (${lista.length})</h4>
+        <div class="ranking-top-lista">
+          ${primeros.map(_renderItemLiga).join('')}
+        </div>
+        ${resto.length > 0 ? `
+          <div id="${idResto}" class="ranking-top-lista" style="display:none; margin-top:10px;">
+            ${resto.map(_renderItemLiga).join('')}
+          </div>
+          <button class="btn-secundario btn-sm" style="margin-top:10px;" onclick="_toggleVerMasLiga('${idResto}', this, ${resto.length})">Ver ${resto.length} más</button>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+  
+ // Listas por liga (incluye "nuevo" para quienes todavía no ganaron puntos este mes)
+  const nombresLiga = {
+    diamante: '💎 Liga Diamante',
+    oro:      '🥇 Liga Oro',
+    plata:    '🥈 Liga Plata',
+    bronce:   '🥉 Liga Bronce',
+    nuevo:    '🌱 Nuevo en el ranking'
+  };
+
+  const ligasHtml = ['diamante', 'oro', 'plata', 'bronce', 'nuevo'].map(codigo => {
+    const lista = ligas?.[codigo] || [];
+    if (lista.length === 0) return '';
+    return `
+      <div class="ranking-resenadores-seccion">
+        <h4 class="ranking-seccion-titulo">${nombresLiga[codigo]} (${lista.length})</h4>
+        <div class="ranking-top-lista">
+          ${lista.map(r => `
+            <div class="ranking-resenador-top-item">
+              <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
+              <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+              <div class="ranking-top-item-info">
+                <p class="ranking-top-item-titulo"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+  ${r.alias}
+</p>
+              </div>
+              <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? 0} pts</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+// Listas por liga (incluye "nuevo" para quienes todavía no ganaron puntos este mes)
+  const nombresLiga = {
+    diamante: '💎 Liga Diamante',
+    oro:      '🥇 Liga Oro',
+    plata:    '🥈 Liga Plata',
+    bronce:   '🥉 Liga Bronce',
+    nuevo:    '🌱 Nuevo en el ranking'
+  };
+
+  const ligasHtml = ['diamante', 'oro', 'plata', 'bronce', 'nuevo'].map(codigo => {
+    const lista = ligas?.[codigo] || [];
+    if (lista.length === 0) return '';
+    return `
+      <div class="ranking-resenadores-seccion">
+        <h4 class="ranking-seccion-titulo">${nombresLiga[codigo]} (${lista.length})</h4>
+        <div class="ranking-top-lista">
+          ${lista.map(r => `
+            <div class="ranking-resenador-top-item">
+              <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
+              <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
+              <div class="ranking-top-item-info">
+                <p class="ranking-top-item-titulo"
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+  ${r.alias}
+</p>
+              </div>
+              <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? 0} pts</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
   contenedor.innerHTML = `
     <h3 style="font-family:var(--fuente-titulo); font-size:22px; font-weight:700; color:var(--bordo); margin-bottom:20px; font-style:italic;">Ranking — ${mes}</h3>
     ${destacadosHtml}
     ${top5Html}
     ${top20Html}
+    ${ligasHtml}
   `;
 }
 
