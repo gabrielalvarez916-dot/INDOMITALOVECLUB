@@ -42,7 +42,12 @@ async function abrirPerfilPublico(id, rol) {
 // CARGA DE PERFIL AUTOR
 // ────────────────────────────────────────────────────────────
 
-async function _cargarPerfilAutor(idAutor) {
+/**
+ * Carga el perfil público de un autor y lo pinta.
+ * @param {string} idAutor
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+async function _cargarPerfilAutor(idAutor, sufijo = '') {
   _idAutorPerfilActual = idAutor;
   const [{ data: perfil, error: errPerfil }, { data: libros }, { data: campañas }] = await Promise.all([
     supabaseClient.rpc('obtener_perfil_publico_autor', { p_id_autor: idAutor }),
@@ -51,7 +56,7 @@ async function _cargarPerfilAutor(idAutor) {
   ]);
 
   if (errPerfil || !perfil || perfil.error) {
-    _estadoPerfilPublico('error');
+    _estadoPerfilPublico('error', sufijo);
     return;
   }
 
@@ -59,8 +64,8 @@ async function _cargarPerfilAutor(idAutor) {
   _librosAutorPerfilCache = libros || [];
   _aliasAutorPerfilActual = perfil.alias;
 
-  _pintarPerfilAutor(perfil, libros || [], campañas || [], perfil);
-  _estadoPerfilPublico('autor');
+  _pintarPerfilAutor(perfil, libros || [], campañas || [], perfil, sufijo);
+  _estadoPerfilPublico('autor', sufijo);
 }
 
 
@@ -75,25 +80,30 @@ let _idAutorPerfilActual = null;
 let _librosAutorPerfilCache = [];
 let _aliasAutorPerfilActual = null;
 
-async function _cargarPerfilReseñador(idReseñador) {
+/**
+ * Carga el perfil público de un reseñador y lo pinta.
+ * @param {string} idReseñador
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+async function _cargarPerfilReseñador(idReseñador, sufijo = '') {
   _idReseñadorPerfilActual = idReseñador;
   const [{ data: perfil, error: errPerfil }, { data: ultimosLibros }] = await Promise.all([
     supabaseClient.rpc('obtener_perfil_resenador', { p_id_resenador: idReseñador }),
     supabaseClient.rpc('obtener_ultimos_libros_leidos', { p_id_resenador: idReseñador })
   ]);
   if (errPerfil || !perfil || perfil.error) {
-    _estadoPerfilPublico('error');
+    _estadoPerfilPublico('error', sufijo);
     return;
   }
-  _pintarPerfilReseñador(perfil, []);
+  _pintarPerfilReseñador(perfil, [], sufijo);
   _pintarEncabezadoHistorico({
     ...perfil,
     miembroDesde: perfil.fechaRegistro,
     reseñasEntregadas: perfil.totalLibrosLeidos
-  });
-  _pintarUltimosLibros(ultimosLibros || []);
-  _estadoPerfilPublico('reseñador');
-  _evaluarBotonesVerMas();
+  }, sufijo);
+  _pintarUltimosLibros(ultimosLibros || [], sufijo);
+  _estadoPerfilPublico('reseñador', sufijo);
+  _evaluarBotonesVerMas(sufijo);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -104,18 +114,19 @@ async function _cargarPerfilReseñador(idReseñador) {
  * Revisa si la descripción o los tropes están recortados visualmente
  * (overflow), y si es así, muestra el botón "Ver más" correspondiente.
  * Se llama después de pintar el perfil del reseñador.
+ * @param {string} [sufijo='']
  */
-function _evaluarBotonesVerMas() {
+function _evaluarBotonesVerMas(sufijo = '') {
   requestAnimationFrame(() => {
-    const descripcionEl = document.getElementById('pp-reseñador-descripcion');
-    const btnDescripcion = document.getElementById('pp-btn-vermas-descripcion');
+    const descripcionEl = document.getElementById('pp-reseñador-descripcion' + sufijo);
+    const btnDescripcion = document.getElementById('pp-btn-vermas-descripcion' + sufijo);
     if (descripcionEl && btnDescripcion) {
       const estaTruncado = descripcionEl.scrollHeight > descripcionEl.clientHeight + 1;
       btnDescripcion.style.display = estaTruncado ? 'inline-block' : 'none';
     }
 
-    const tropesEl = document.getElementById('pp-reseñador-tropes');
-    const btnTropes = document.getElementById('pp-btn-vermas-tropes');
+    const tropesEl = document.getElementById('pp-reseñador-tropes' + sufijo);
+    const btnTropes = document.getElementById('pp-btn-vermas-tropes' + sufijo);
     if (tropesEl && btnTropes) {
       const estaTruncado = tropesEl.scrollHeight > tropesEl.clientHeight + 1;
       btnTropes.style.display = estaTruncado ? 'inline-block' : 'none';
@@ -126,8 +137,9 @@ function _evaluarBotonesVerMas() {
  * Expande o contrae el bloque de descripción o tropes al hacer
  * clic en "Ver más" / "Ver menos".
  * @param {'descripcion'|'tropes'} bloque
+ * @param {string} [sufijo='']
  */
-function _toggleVerMas(bloque) {
+function _toggleVerMas(bloque, sufijo = '') {
   const mapaElementos = {
     descripcion: { contenido: 'pp-reseñador-descripcion', boton: 'pp-btn-vermas-descripcion' },
     tropes:      { contenido: 'pp-reseñador-tropes',      boton: 'pp-btn-vermas-tropes' }
@@ -136,8 +148,8 @@ function _toggleVerMas(bloque) {
   const config = mapaElementos[bloque];
   if (!config) return;
 
-  const contenidoEl = document.getElementById(config.contenido);
-  const botonEl = document.getElementById(config.boton);
+  const contenidoEl = document.getElementById(config.contenido + sufijo);
+  const botonEl = document.getElementById(config.boton + sufijo);
   if (!contenidoEl || !botonEl) return;
 
   // pp-texto-truncado / pp-tropes-truncado quedan SIEMPRE puestas;
@@ -150,12 +162,15 @@ function _toggleVerMas(bloque) {
 // PINTAR: PERFIL AUTOR
 // ────────────────────────────────────────────────────────────
 
-function _pintarPerfilAutor(perfil, libros, campañas, gamif) {
+/**
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+function _pintarPerfilAutor(perfil, libros, campañas, gamif, sufijo = '') {
   // Cabecera común
-  _pintarCabeceraComun(perfil, '');
+  _pintarCabeceraComun(perfil, sufijo);
 
   // Miembro desde
-  const miembroDesdeEl = document.getElementById('pp-autor-miembro-desde');
+  const miembroDesdeEl = document.getElementById('pp-autor-miembro-desde' + sufijo);
   if (miembroDesdeEl) {
     miembroDesdeEl.textContent = perfil.miembroDesde
       ? `Miembro desde ${formatearFechaAmigable(perfil.miembroDesde)}`
@@ -164,7 +179,7 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif) {
 
   // ═══ GAMIFICACIÓN ═══
   if (gamif) {
-    const gamifCont = document.getElementById('pp-autor-gamificacion');
+    const gamifCont = document.getElementById('pp-autor-gamificacion' + sufijo);
     if (gamifCont) {
       gamifCont.innerHTML = _renderGamificacionAutor(gamif);
       gamifCont.parentElement.style.display = '';
@@ -172,7 +187,7 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif) {
   }
 
  // Libros — vista de estantería (misma estética que biblioteca de reseñador), preview de hasta 8
-  const librosCont = document.getElementById('pp-autor-libros');
+  const librosCont = document.getElementById('pp-autor-libros' + sufijo);
   if (librosCont) {
     if (libros.length === 0) {
       librosCont.innerHTML = '<p class="estante-vacio">Sin libros cargados aún.</p>';
@@ -182,7 +197,7 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif) {
   }
 
   // Campañas activas — cards con portada
-  const campañasCont = document.getElementById('pp-autor-campanas');
+  const campañasCont = document.getElementById('pp-autor-campanas' + sufijo);
   if (campañasCont) {
     if (campañas.length === 0) {
       campañasCont.innerHTML = '<p class="pp-vacio">Sin campañas activas en este momento.</p>';
@@ -409,18 +424,21 @@ function _labelInsigniaAutor(insignia) {
 // PINTAR: PERFIL RESEÑADOR
 // ────────────────────────────────────────────────────────────
 
-function _pintarPerfilReseñador(perfil, postulaciones) {
+/**
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+function _pintarPerfilReseñador(perfil, postulaciones, sufijo = '') {
   // Cabecera común
-  _pintarCabeceraComun(perfil, '-r');
+  _pintarCabeceraComun(perfil, '-r' + sufijo);
 
   // Badge de nivel (siempre visible)
-  const nivelCont = document.getElementById('pp-reseñador-nivel');
+  const nivelCont = document.getElementById('pp-reseñador-nivel' + sufijo);
   if (nivelCont) {
     const nivel = perfil.nivel || perfil.nivelActual || '—';
     nivelCont.innerHTML = `<span class="pp-badge pp-badge-nivel">📚 ${_esc(String(nivel))}</span>`;
   }
 
-  const rankingCont = document.getElementById('pp-reseñador-ranking');
+  const rankingCont = document.getElementById('pp-reseñador-ranking' + sufijo);
   if (rankingCont) {
     const badges = [];
     if (perfil.posicionRanking)  badges.push(`<span class="pp-badge pp-badge-ranking">🏆 #${_esc(String(perfil.posicionRanking))}</span>`);
@@ -445,7 +463,7 @@ function _pintarPerfilReseñador(perfil, postulaciones) {
 
 
   // Géneros y tropes favoritos
-  const generosCont = document.getElementById('pp-reseñador-generos');
+  const generosCont = document.getElementById('pp-reseñador-generos' + sufijo);
   if (generosCont) {
     if (perfil.generos) {
       generosCont.innerHTML = `<p class="pp-etiquetas">${_esc(perfil.generos)}</p>`;
@@ -456,9 +474,9 @@ function _pintarPerfilReseñador(perfil, postulaciones) {
   }
 
   // Descripción lectora
-const descripcionEl = document.getElementById('pp-reseñador-descripcion');
+const descripcionEl = document.getElementById('pp-reseñador-descripcion' + sufijo);
 if (descripcionEl) {
-  const bloqueDescripcion = document.getElementById('pp-bloque-descripcion');
+  const bloqueDescripcion = document.getElementById('pp-bloque-descripcion' + sufijo);
 if (perfil.descripcionLector) {
     descripcionEl.textContent = perfil.descripcionLector;
     if (bloqueDescripcion) bloqueDescripcion.style.display = '';
@@ -467,7 +485,7 @@ if (perfil.descripcionLector) {
   }
 }
   
-  const tropesCont = document.getElementById('pp-reseñador-tropes');
+  const tropesCont = document.getElementById('pp-reseñador-tropes' + sufijo);
   if (tropesCont) {
     if (perfil.tropesFavoritos) {
       const tropesArr = perfil.tropesFavoritos.split(',').map(t => t.trim()).filter(Boolean);
@@ -479,7 +497,7 @@ if (perfil.descripcionLector) {
   }
 
   // Postulaciones últimos 6 meses
-  const postCont = document.getElementById('pp-reseñador-postulaciones');
+  const postCont = document.getElementById('pp-reseñador-postulaciones' + sufijo);
   if (postCont) {
     if (postulaciones.length === 0) {
       postCont.innerHTML = '<p class="pp-vacio">Sin actividad reciente.</p>';
@@ -551,18 +569,19 @@ function cerrarModalPerfilPublico() {
 }
 
 /**
- * Controla qué sub-bloque se muestra dentro del modal.
+ * Controla qué sub-bloque se muestra.
  * @param {'cargando'|'error'|'autor'|'reseñador'} estado
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
  */
-function _estadoPerfilPublico(estado) {
-  const bloques = ['pp-cargando', 'pp-error', 'pp-bloque-autor', 'pp-bloque-reseñador'];
+function _estadoPerfilPublico(estado, sufijo = '') {
+  const bloques = ['pp-cargando' + sufijo, 'pp-error' + sufijo, 'pp-bloque-autor' + sufijo, 'pp-bloque-reseñador' + sufijo];
   bloques.forEach(id => toggleElemento(id, false));
 
   const mapa = {
-    cargando:  'pp-cargando',
-    error:     'pp-error',
-    autor:     'pp-bloque-autor',
-    reseñador: 'pp-bloque-reseñador',
+    cargando:  'pp-cargando' + sufijo,
+    error:     'pp-error' + sufijo,
+    autor:     'pp-bloque-autor' + sufijo,
+    reseñador: 'pp-bloque-reseñador' + sufijo,
   };
 
   if (mapa[estado]) toggleElemento(mapa[estado], true);
@@ -584,24 +603,27 @@ function _esc(str) {
     .replace(/'/g, '&#39;');
 }
 
-function _pintarEncabezadoHistorico(encabezado) {
+/**
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+function _pintarEncabezadoHistorico(encabezado, sufijo = '') {
   if (!encabezado) return;
 
-  const badgeCont = document.getElementById('pp-r-badge-historico');
+  const badgeCont = document.getElementById('pp-r-badge-historico' + sufijo);
   if (badgeCont) {
     badgeCont.innerHTML = encabezado.labelBadgeHistorico
       ? `<span class="pp-badge pp-badge-nivel">🏅 ${_esc(encabezado.labelBadgeHistorico)}</span>`
       : '';
   }
 
-  const miembroDesdeEl = document.getElementById('pp-r-miembro-desde');
+  const miembroDesdeEl = document.getElementById('pp-r-miembro-desde' + sufijo);
   if (miembroDesdeEl) {
     miembroDesdeEl.textContent = encabezado.miembroDesde
       ? `Miembro desde ${formatearFechaAmigable(encabezado.miembroDesde)}`
       : '';
   }
 
-  const statsCont = document.getElementById('pp-r-stats');
+  const statsCont = document.getElementById('pp-r-stats' + sufijo);
   if (statsCont) {
     const completionRedondeado = Math.round(encabezado.completionHistorico || 0);
     const calificacionRedondeada = encabezado.calificacionPromedio
@@ -628,7 +650,7 @@ function _pintarEncabezadoHistorico(encabezado) {
     `;
   }
 
-const insigniasCont = document.getElementById('pp-r-insignias');
+const insigniasCont = document.getElementById('pp-r-insignias' + sufijo);
   if (insigniasCont) {
     insigniasCont.innerHTML = _renderInsigniasAgrupadas(encabezado.insigniasAgrupadas);
   }
@@ -654,8 +676,11 @@ function _labelInsignia(insignia) {
   return partes.charAt(0).toUpperCase() + partes.slice(1);
 }
 
-function _pintarUltimosLibros(libros) {
-  const cont = document.getElementById('pp-r-ultimos-libros');
+/**
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+function _pintarUltimosLibros(libros, sufijo = '') {
+  const cont = document.getElementById('pp-r-ultimos-libros' + sufijo);
   if (!cont) return;
 
   if (libros.length === 0) {
