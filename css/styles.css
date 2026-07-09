@@ -3991,12 +3991,12 @@ img { max-width: 100%; display: block; }
 .pp-insignias-carrusel .pp-insignia-item {
   flex-shrink: 0;
   scroll-snap-align: start;
-  width: 78px;
+  width: 90px;
 }
 
 .pp-insignia-imagen {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
   margin-bottom: 6px;
 }
