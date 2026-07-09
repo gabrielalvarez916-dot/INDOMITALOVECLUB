@@ -285,6 +285,29 @@ function _renderLibroEstanteAutor(libro) {
 }
 
 /**
+ * Card de libro en "Mis libros" cuando es tu propia biblioteca:
+ * mismo look que _renderLibroEstanteAutor, pero con Editar/Eliminar.
+ */
+function _renderLibroEstanteAutorPropio(libro) {
+  const portadaUrl = libro.portada
+    ? (libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada)
+    : '';
+
+  return `
+    <div class="estante-libro">
+      <p class="estante-libro-titulo" style="cursor:pointer;" onclick="abrirDetalleLibroAutor('${_esc(libro.id)}')">${_esc(libro.titulo || '—')}</p>
+      ${portadaUrl
+        ? `<img src="${_esc(portadaUrl)}" alt="${_esc(libro.titulo)}" class="estante-libro-portada" style="cursor:pointer;" onclick="abrirDetalleLibroAutor('${_esc(libro.id)}')" onerror="this.style.display='none'" />`
+        : `<div class="estante-libro-portada-placeholder" style="cursor:pointer;" onclick="abrirDetalleLibroAutor('${_esc(libro.id)}')">📖</div>`}
+      <div class="estante-libro-acciones">
+        <button class="btn-secundario btn-sm" onclick="abrirEditarLibro('${_esc(libro.id)}')">Editar</button>
+        <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarLibroAutor('${_esc(libro.id)}', '${_esc(libro.titulo)}')">Eliminar</button>
+      </div>
+    </div>
+  `;
+}
+
+/**
  * Abre el modal de detalle de un libro (solo datos del libro,
  * sin nada de campaña) desde la estantería "Mis libros" del autor.
  * Reutiliza el mismo modal que ya usa el panel de autor.
@@ -808,6 +831,8 @@ async function cargarBibliotecaSeccion() {
  * Carga y pinta "Mis libros" (propio, o de un autor visto desde su perfil público).
  */
 async function cargarBibliotecaAutorSeccion() {
+  let esPropia = false;
+
   if (!_idAutorPerfilActual) {
     const email = Sesion.email();
     if (!email) return;
@@ -818,9 +843,16 @@ async function cargarBibliotecaAutorSeccion() {
       return;
     }
     _idAutorPerfilActual = idAut.id;
+    esPropia = true;
+  } else {
+    const sesion = Sesion.obtener();
+    esPropia = !!sesion && sesion.id === _idAutorPerfilActual;
   }
 
- _estadoBibliotecaAutorSeccion('cargando');
+  const btnAgregar = document.getElementById('btn-agregar-libro-biblioteca-autor');
+  if (btnAgregar) btnAgregar.style.display = esPropia ? '' : 'none';
+
+  _estadoBibliotecaAutorSeccion('cargando');
 
   try {
     const { data: encabezado } = await supabaseClient.rpc('obtener_encabezado_perfil_publico', { p_id_usuario: _idAutorPerfilActual });
@@ -842,7 +874,7 @@ async function cargarBibliotecaAutorSeccion() {
     if (cont) {
       cont.innerHTML = (libros || []).length === 0
         ? '<p class="estante-vacio">Sin libros cargados aún.</p>'
-        : (libros || []).map(l => _renderLibroEstanteAutor(l)).join('');
+        : (libros || []).map(l => esPropia ? _renderLibroEstanteAutorPropio(l) : _renderLibroEstanteAutor(l)).join('');
     }
 
     _estadoBibliotecaAutorSeccion('contenido');
@@ -932,6 +964,8 @@ function _renderLibroEstante(item, esClickeable, idResena) {
     </div>
   `;
 }
+
+
 // ────────────────────────────────────────────────────────────
 // MODAL: RESEÑA INTERNA (solo lectura, Parte C)
 // ────────────────────────────────────────────────────────────
