@@ -855,6 +855,10 @@ async function cargarBibliotecaAutorSeccion() {
   _estadoBibliotecaAutorSeccion('cargando');
 
   try {
+    if (esPropia && typeof cargarBibliotecaPanel === 'function') {
+      await cargarBibliotecaPanel(_idAutorPerfilActual);
+    }
+
     const { data: encabezado } = await supabaseClient.rpc('obtener_encabezado_perfil_publico', { p_id_usuario: _idAutorPerfilActual });
     if (encabezado && !encabezado.error) {
       _aliasAutorPerfilActual = encabezado.alias;
