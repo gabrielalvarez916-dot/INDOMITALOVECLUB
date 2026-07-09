@@ -3801,6 +3801,18 @@ img { max-width: 100%; display: block; }
   padding: 20px 4px;
 }
 
+.estante-libro-acciones {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.estante-libro-acciones .btn-sm {
+  flex: 1;
+  padding: 5px 6px;
+  font-size: 11px;
+}
+
 /* ════════════════════════════════════════════════════════════
    RESEÑA INTERNA — Paso 1/2 y modal de solo lectura (Partes B y C)
    ════════════════════════════════════════════════════════════ */
