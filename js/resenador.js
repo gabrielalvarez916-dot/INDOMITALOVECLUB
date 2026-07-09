@@ -244,6 +244,7 @@ async function cargarArcsActivos(email) {
   // el plazo PERSONAL de entrega del reseñador (no el estado global de la campaña).
   _arcsActivosReseñador = postulaciones.filter(p =>
     p.estado === 'aprobada' &&
+    p.campaña &&
     p.fechaLimiteEntrega &&
     ahora <= new Date(p.fechaLimiteEntrega)
   );
