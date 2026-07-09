@@ -359,6 +359,34 @@
       </div>
   </section>
 
+  <!-- SECCIÓN: BIBLIOTECA AUTOR (libros publicados) -->
+  <section id="seccion-biblioteca-autor" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <div class="panel-header">
+        <h2 class="panel-titulo">Mis libros</h2>
+      </div>
+
+      <div id="bib-autor-cargando" class="cargando-container">
+        <div class="spinner"></div>
+        <p>Cargando libros...</p>
+      </div>
+
+      <div id="bib-autor-error" class="estado-vacio" style="display:none;">
+        <p class="estado-vacio-icono">😕</p>
+        <p class="estado-vacio-texto">No se pudieron cargar los libros.</p>
+      </div>
+
+      <div id="bib-autor-contenido" style="display:none;">
+        <div class="estante-seccion">
+          <div class="estante-fila-wrap">
+            <div id="bib-autor-libros" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- SECCIÓN: PERFIL -->
   <section id="seccion-perfil" class="seccion" style="display:none;">
     <div class="seccion-inner seccion-angosta">
@@ -1141,8 +1169,11 @@
  
       <!-- Libros -->
       <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Libros</p>
-        <div id="pp-autor-libros" class="pp-libros-goodreads-grid"></div>
+        <p class="pp-bloque-titulo">Mis libros</p>
+        <div id="pp-autor-libros" class="estante-fila"></div>
+        <button class="btn-secundario btn-full" id="pp-btn-ver-libros-autor" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+          Ver todos mis libros →
+        </button>
       </div>
  
       <!-- Campañas activas -->
