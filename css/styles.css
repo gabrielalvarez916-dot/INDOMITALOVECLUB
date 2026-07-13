@@ -1758,17 +1758,23 @@ img { max-width: 100%; display: block; }
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: var(--bordo-oscuro);
-  color: var(--blanco);
-  padding: 12px 24px;
-  border-radius: var(--radio-pill);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--rosa-claro);
+  color: var(--gris-texto);
+  padding: 12px 14px 12px 12px;
+  border-radius: var(--radio-grande);
   font-size: 14px;
   font-weight: 600;
   z-index: 999;
   opacity: 0;
   transition: all 0.3s ease;
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 420px;
+  width: calc(100% - 32px);
   box-shadow: var(--sombra-fuerte);
+  border: 1px solid var(--rosa);
 }
 
 .toast.visible {
@@ -1776,8 +1782,57 @@ img { max-width: 100%; display: block; }
   transform: translateX(-50%) translateY(0);
 }
 
-.toast.ok { background: #2E7D32; }
-.toast.error { background: #C62828; }
+.toast-icono {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radio);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--blanco);
+  background: var(--bordo);
+}
+
+.toast-texto {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.toast-cerrar {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radio);
+  border: none;
+  background: var(--blanco);
+  color: var(--gris-medio);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transicion);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.toast-cerrar:hover {
+  background: var(--bordo);
+  color: var(--blanco);
+}
+
+.toast.ok           { background: #E8F5E9; border-color: #C8E6C9; }
+.toast.ok .toast-icono         { background: var(--ok); }
+
+.toast.error        { background: #FFEBEE; border-color: #FFCDD2; }
+.toast.error .toast-icono      { background: var(--error); }
+
+.toast.advertencia  { background: #FFF8E1; border-color: #FFECB3; }
+.toast.advertencia .toast-icono { background: #C9A84C; }
+
+.toast.info         { background: var(--rosa-claro); border-color: var(--rosa); }
+.toast.info .toast-icono       { background: var(--bordo); }
 
 /* ── Footer ───────────────────────────────────────────────── */
 #footer {
