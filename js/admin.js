@@ -573,8 +573,7 @@ async function enviarRespuestaModalTicket(idTicket) {
 async function cerrarTicketAdmin(idTicket) {
   if (!confirm('¿Cerrar este ticket?')) return;
 
-  const { data: sesion } = await supabaseClient.auth.getSession();
-  const token = sesion?.session?.access_token;
+   const token = await obtenerTokenFresco();
   if (!token) {
     mostrarToast('No se pudo autenticar la sesión de admin.', 'error');
     return;
