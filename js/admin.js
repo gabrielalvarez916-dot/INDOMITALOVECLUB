@@ -580,5 +580,4 @@ async function cerrarTicketAdmin(idTicket) {
   cerrarModalTicketAdmin();
   await cargarTicketsAdmin();
 }
-  await cargarTicketsAdmin();
-}
+ 
