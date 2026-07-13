@@ -525,6 +525,21 @@ function cerrarModalTicketAdmin() {
   document.getElementById('modal-ticket-soporte')?.remove();
 }
 
+async function obtenerTokenFresco() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return null;
+
+  const vencePronto = session.expires_at && (session.expires_at * 1000 - Date.now() < 60_000);
+
+  if (vencePronto) {
+    const { data, error } = await supabaseClient.auth.refreshSession();
+    if (error || !data?.session) return null;
+    return data.session.access_token;
+  }
+
+  return session.access_token;
+}
+
 async function enviarRespuestaModalTicket(idTicket) {
   const textarea = document.getElementById('modal-ticket-mensaje');
   const mensaje = textarea?.value?.trim();
@@ -533,8 +548,7 @@ async function enviarRespuestaModalTicket(idTicket) {
     return;
   }
 
-  const { data: sesion } = await supabaseClient.auth.getSession();
-  const token = sesion?.session?.access_token;
+  const token = await obtenerTokenFresco();
   if (!token) {
     mostrarToast('No se pudo autenticar la sesión de admin.', 'error');
     return;
