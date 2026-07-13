@@ -368,54 +368,32 @@ function seleccionarEstrella(valor) {
 // UTILIDADES VISUALES
 // ────────────────────────────────────────────────────────────
 
-/**
- * Muestra un toast (notificación temporal) en la pantalla.
- * Desaparece solo después de 3 segundos.
- *
- * @param {string} mensaje
- * @param {string} tipo — 'ok' | 'error'
- */
 function mostrarToast(mensaje, tipo = 'ok') {
   // Elimina toast anterior si existe
   const toastExistente = document.getElementById('toast-global');
   if (toastExistente) toastExistente.remove();
 
+  const iconos = {
+    ok: '✓',
+    error: '✕',
+    advertencia: '⚠',
+    info: 'i'
+  };
+
   const toast = document.createElement('div');
   toast.id = 'toast-global';
-  toast.textContent = mensaje;
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 32px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: ${tipo === 'ok' ? '#27AE60' : '#C0392B'};
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-family: Lato, sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 9999;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    max-width: 400px;
-    text-align: center;
-    animation: fadeInToast 0.3s ease;
+  toast.className = `toast ${tipo}`;
+  toast.innerHTML = `
+    <div class="toast-icono">${iconos[tipo] || iconos.ok}</div>
+    <div class="toast-texto"></div>
+    <button class="toast-cerrar" aria-label="Cerrar" onclick="document.getElementById('toast-global')?.remove()">✕</button>
   `;
-
-  // Agrega animación
-  if (!document.getElementById('toast-style')) {
-    const style = document.createElement('style');
-    style.id = 'toast-style';
-    style.textContent = `
-      @keyframes fadeInToast {
-        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
+  toast.querySelector('.toast-texto').textContent = mensaje;
 
   document.body.appendChild(toast);
+
+  // Fuerza el reflow para que dispare la animación de entrada
+  requestAnimationFrame(() => toast.classList.add('visible'));
 
   // Desaparece después de 3 segundos
   setTimeout(() => {
