@@ -399,6 +399,7 @@ async function cargarTicketsAdmin() {
   }
 
   const tickets = resultado.tickets || [];
+  window._ticketsAdmin = tickets; // guardamos para poder usar asunto/email en el modal
 
   if (tickets.length === 0) {
     contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay tickets de soporte.</p></div>`;
@@ -432,9 +433,9 @@ function construirFilaTicketAdmin(t) {
     ? '<span class="badge badge-aprobada">Respondido</span>'
     : '<span class="badge badge-pendiente">Pendiente</span>';
 
-  const botones = t.estado === 'cerrado' ? '' : `
-    ${t.estado !== 'respondido' ? `<button class="btn-secundario btn-sm" onclick="accionTicketAdmin('${t.idTicket}', 'respondido')">Respondido</button>` : ''}
-    <button class="btn-secundario btn-sm btn-peligro" onclick="accionTicketAdmin('${t.idTicket}', 'cerrado')">Cerrar</button>
+  const botones = `
+    <button class="btn-secundario btn-sm" onclick="abrirModalTicketAdmin('${t.idTicket}')">Ver / Responder</button>
+    ${t.estado !== 'cerrado' ? `<button class="btn-secundario btn-sm btn-peligro" onclick="cerrarTicketAdmin('${t.idTicket}')">Cerrar</button>` : ''}
   `;
 
   return `
@@ -450,20 +451,134 @@ function construirFilaTicketAdmin(t) {
   `;
 }
 
-async function accionTicketAdmin(idTicket, nuevoEstado) {
-  const confirmText = nuevoEstado === 'cerrado' ? '¿Cerrar este ticket?' : '¿Marcar como respondido?';
-  if (!confirm(confirmText)) return;
+// ────────────────────────────────────────────────────────────
+// MODAL: historial de conversación + responder
+// ────────────────────────────────────────────────────────────
 
-  const { data: resultado, error } = await supabaseClient.rpc('admin_actualizar_estado_ticket', {
-    p_id_ticket: idTicket,
-    p_nuevo_estado: nuevoEstado
-  });
+async function abrirModalTicketAdmin(idTicket) {
+  const ticket = (window._ticketsAdmin || []).find(t => t.idTicket === idTicket);
 
-  if (error || !resultado || resultado.error) {
-    mostrarToast(resultado?.error || 'Error al actualizar el ticket.', 'error');
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-ticket-soporte';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;';
+  overlay.innerHTML = `
+    <div style="background:#fff; border-radius:12px; padding:20px; max-width:520px; width:90%; max-height:80vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h3 style="margin:0; font-size:16px;">${ticket?.asunto || 'Ticket de soporte'}</h3>
+        <button onclick="cerrarModalTicketAdmin()" style="background:none; border:none; font-size:20px; cursor:pointer; line-height:1;">×</button>
+      </div>
+      <p style="font-size:12px; color:#888; margin:0 0 12px;">${ticket?.email || ''}</p>
+      <div id="modal-ticket-historial" style="flex:1; overflow-y:auto; margin-bottom:12px; min-height:80px;">
+        <div class="cargando-container"><div class="spinner"></div></div>
+      </div>
+      <textarea id="modal-ticket-mensaje" rows="3" placeholder="Escribí tu respuesta..." style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+        <button class="btn-secundario btn-sm" onclick="cerrarModalTicketAdmin()">Cancelar</button>
+        <button class="btn-secundario btn-sm" onclick="enviarRespuestaModalTicket('${idTicket}')">Enviar respuesta</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  await cargarHistorialModalTicket(idTicket);
+}
+
+async function cargarHistorialModalTicket(idTicket) {
+  const contenedor = document.getElementById('modal-ticket-historial');
+  if (!contenedor) return;
+
+  const { data: mensajes, error } = await supabaseClient
+    .from('soporte_mensajes')
+    .select('autor, cuerpo, creado_en')
+    .eq('id_ticket', idTicket)
+    .order('creado_en', { ascending: true });
+
+  if (error) {
+    contenedor.innerHTML = '<p class="mensaje-error">No se pudo cargar la conversación.</p>';
     return;
   }
 
-  mostrarToast('Ticket actualizado.', 'ok');
+  if (!mensajes || mensajes.length === 0) {
+    contenedor.innerHTML = '<p style="font-size:13px; color:#888;">Todavía no hay mensajes en esta conversación.</p>';
+    return;
+  }
+
+  contenedor.innerHTML = mensajes.map(m => `
+    <div style="margin-bottom:10px; padding:10px; border-radius:8px; background:${m.autor === 'admin' ? '#eef3ff' : '#f4f4f4'};">
+      <div style="font-size:11px; color:#888; margin-bottom:4px;">
+        ${m.autor === 'admin' ? 'Admin' : 'Usuario'} — ${m.creado_en ? new Date(m.creado_en).toLocaleString() : ''}
+      </div>
+      <div style="font-size:13px; white-space:pre-wrap;">${escaparHtmlSoporte(m.cuerpo)}</div>
+    </div>
+  `).join('');
+
+  contenedor.scrollTop = contenedor.scrollHeight;
+}
+
+function escaparHtmlSoporte(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto || '';
+  return div.innerHTML;
+}
+
+function cerrarModalTicketAdmin() {
+  document.getElementById('modal-ticket-soporte')?.remove();
+}
+
+async function enviarRespuestaModalTicket(idTicket) {
+  const textarea = document.getElementById('modal-ticket-mensaje');
+  const mensaje = textarea?.value?.trim();
+  if (!mensaje) {
+    mostrarToast('Escribí un mensaje antes de enviar.', 'error');
+    return;
+  }
+
+  const { data: sesion } = await supabaseClient.auth.getSession();
+  const token = sesion?.session?.access_token;
+  if (!token) {
+    mostrarToast('No se pudo autenticar la sesión de admin.', 'error');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.functions.invoke('soporte-responder', {
+    body: { id_ticket: idTicket, mensaje },
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (error || data?.error) {
+    mostrarToast(data?.error || error?.message || 'No se pudo enviar la respuesta.', 'error');
+    return;
+  }
+
+  mostrarToast('Respuesta enviada.', 'ok');
+  textarea.value = '';
+  await cargarHistorialModalTicket(idTicket);
+  await cargarTicketsAdmin();
+}
+
+async function cerrarTicketAdmin(idTicket) {
+  if (!confirm('¿Cerrar este ticket?')) return;
+
+  const { data: sesion } = await supabaseClient.auth.getSession();
+  const token = sesion?.session?.access_token;
+  if (!token) {
+    mostrarToast('No se pudo autenticar la sesión de admin.', 'error');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.functions.invoke('soporte-cerrar-ticket', {
+    body: { id_ticket: idTicket },
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (error || data?.error) {
+    mostrarToast(data?.error || error?.message || 'No se pudo cerrar el ticket.', 'error');
+    return;
+  }
+
+  mostrarToast('Ticket cerrado.', 'ok');
+  cerrarModalTicketAdmin();
+  await cargarTicketsAdmin();
+}
   await cargarTicketsAdmin();
 }
