@@ -1022,9 +1022,6 @@ async function iniciarPago(plan) {
  * @param {string} email
  */
 async function cargarBibliotecaPanel(idUsuario) {
-  const contenedor = document.getElementById('biblioteca-lista');
-  if (!contenedor) return;
-
   const { data, error } = await supabaseClient
     .from('libros')
     .select('*')
@@ -1044,7 +1041,9 @@ async function cargarBibliotecaPanel(idUsuario) {
     linkPortada: l.link_portada,
     linkAmazon: l.link_amazon
   }));
-  renderizarBiblioteca(_librosAutor);
+
+  const contenedor = document.getElementById('biblioteca-lista');
+  if (contenedor) renderizarBiblioteca(_librosAutor);
 }
 
 /**
