@@ -673,26 +673,33 @@ async function cargarHistorialAutor(idUsuario) {
     return;
   }
 
-  contenedor.innerHTML = _historialAutor.map(c => `
-  <div class="campana-card-panel campana-card-historial">
-    <div class="campana-card-panel-header">
-      <div>
-        <h3 class="campana-titulo">${c.nombreLibro}</h3>
-        <p class="campana-autor">por ${c.nombreAutor}</p>
+  contenedor.innerHTML = _historialAutor.map(c => {
+    const variante = c.estado === 'cancelada' ? 'cancelada' : 'finalizada';
+    const icono = c.estado === 'cancelada' ? '✕' : '✓';
+    return `
+    <div class="campana-card-historial campana-card-historial--${variante}">
+      <div class="campana-card-panel-header">
+        <div class="campana-card-historial-titulo-wrap">
+          <div class="campana-card-historial-icono">${icono}</div>
+          <div class="campana-card-historial-textos">
+            <h3 class="campana-titulo">${c.nombreLibro}</h3>
+            <p class="campana-autor">por ${c.nombreAutor}</p>
+          </div>
+        </div>
+        ${badgeEstado(c.estado)}
       </div>
-      ${badgeEstado(c.estado)}
+      <div class="campana-card-panel-body">
+        <div class="campana-card-panel-stats">
+          <span>${c.reseñasEntregadas ?? '—'} reseñas entregadas</span>
+          <span>Finalizó ${formatearFechaAmigable(c.fechaLimite)}</span>
+        </div>
+        <div class="campana-panel-acciones">
+          <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+        </div>
+      </div>
     </div>
-    <div class="campana-card-panel-stats">
-      <span>${c.reseñasEntregadas ?? '—'} reseñas entregadas</span>
-      <span>Finalizó ${formatearFechaAmigable(c.fechaLimite)}</span>
-    </div>
-    <div class="campana-panel-acciones">
-      <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
-    </div>
-  </div>
-`).join('');
-}
-
+  `;
+  }).join('');
 
 // ────────────────────────────────────────────────────────────
 // CANCELAR CAMPAÑA
