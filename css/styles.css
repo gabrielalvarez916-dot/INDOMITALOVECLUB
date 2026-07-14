@@ -4494,3 +4494,223 @@ img { max-width: 100%; display: block; }
 }
 
 .resena-carpeta-estrella-btn:hover { color: #C9A84C; }
+
+/* ════════════════════════════════════════════════════════════
+   CALENDARIO — Indómita Love Club
+   Agregar al final de css/styles.css
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Navegación de mes ───────────────────────────────────── */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cal-nav-flecha {
+  background: var(--rosa-claro);
+  color: var(--bordo);
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transicion);
+}
+
+.cal-nav-flecha:hover:not(:disabled) {
+  background: var(--bordo);
+  color: var(--blanco);
+}
+
+.cal-nav-flecha:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cal-nav-mes {
+  font-family: var(--fuente-titulo);
+  font-size: 17px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--bordo);
+  text-transform: capitalize;
+  margin: 0;
+}
+
+/* ── Grid del calendario ──────────────────────────────────── */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-dia-header {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--gris-suave);
+  padding-bottom: 6px;
+}
+
+.cal-celda {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--crema-suave);
+  border: 1px solid transparent;
+  transition: var(--transicion);
+  overflow: hidden;
+}
+
+.cal-celda-vacia {
+  background: none;
+}
+
+.cal-celda-con-eventos {
+  cursor: pointer;
+  border-color: var(--gris-borde);
+}
+
+.cal-celda-con-eventos:hover {
+  background: var(--rosa-claro);
+  border-color: var(--rosa);
+  transform: translateY(-1px);
+}
+
+.cal-numero {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gris-medio);
+  line-height: 1;
+}
+
+.cal-celda-con-eventos .cal-numero {
+  color: var(--bordo-oscuro);
+}
+
+.cal-eventos {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+/* Íconos de evento dentro de la celda */
+.cal-evento-avatar,
+.cal-evento-portada {
+  width: 16px;
+  height: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.cal-evento-avatar {
+  border-radius: 50%;
+  border: 1px solid var(--blanco);
+}
+
+.cal-evento-portada {
+  border-radius: 2px;
+}
+
+.cal-evento-avatar--vacia,
+.cal-evento-portada--vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  background: var(--rosa-claro);
+  color: var(--bordo);
+}
+
+/* Entregada: opacidad reducida + check en la esquina */
+.cal-evento-entregada {
+  opacity: 0.55;
+  position: relative;
+}
+
+.cal-evento-entregada::after {
+  content: '✓';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: var(--ok);
+  color: var(--blanco);
+  border-radius: 50%;
+  font-size: 7px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.cal-evento-extra {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gris-suave);
+  padding-left: 1px;
+}
+
+/* ── Cards de detalle (al hacer click en un día) ──────────── */
+.cal-detalle-card {
+  background: var(--crema-suave);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.cal-detalle-card:last-child {
+  margin-bottom: 0;
+}
+
+.cal-detalle-texto {
+  font-size: 14px;
+  color: var(--gris-texto);
+  margin-bottom: 4px;
+}
+
+.cal-detalle-libro {
+  font-family: var(--fuente-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--bordo);
+  margin-bottom: 2px;
+}
+
+.cal-detalle-meta {
+  font-size: 12px;
+  color: var(--gris-suave);
+  margin-bottom: 2px;
+}
+
+.cal-detalle-fecha {
+  font-size: 12px;
+  color: var(--gris-medio);
+  margin-top: 6px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .cal-celda { padding: 3px; border-radius: 6px; }
+  .cal-numero { font-size: 10px; }
+  .cal-evento-avatar, .cal-evento-portada { width: 13px; height: 13px; }
+  .cal-nav-mes { font-size: 15px; }
+}
