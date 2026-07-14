@@ -128,11 +128,11 @@ const ICONOS_SVG = {
   }[categoria] || '—';
 
   const stats = [
-    { icono: ICONOS_SVG.medalla,  valor: badgeHistorico, label: 'Badge histórico', variante: 'bordo' },
-    { icono: ICONOS_SVG.grafico,  valor: ranking ? '#' + ranking.posicion : '—', label: 'Posición ranking', variante: 'dorado' },
-    { icono: ICONOS_SVG.estrella, valor: puntosMensuales, label: 'Puntos este mes', variante: 'rosa' },
-    { icono: ICONOS_SVG.reloj,    valor: ranking ? ranking.porcentaje_completion + '%' : '—', label: 'Completion este mes', variante: 'crema' },
-    { icono: categoria === 'top5' ? ICONOS_SVG.copa : ICONOS_SVG.estrella, valor: labelCategoria, label: 'Categoría del mes', variante: 'dorado' }
+    { icono: '🎖️', valor: badgeHistorico, label: 'Badge histórico', variante: 'bordo' },
+    { icono: '📊', valor: ranking ? '#' + ranking.posicion : '—', label: 'Posición ranking', variante: 'dorado' },
+    { icono: '⭐', valor: puntosMensuales, label: 'Puntos este mes', variante: 'rosa' },
+    { icono: '⏱️', valor: ranking ? ranking.porcentaje_completion + '%' : '—', label: 'Completion este mes', variante: 'crema' },
+    { icono: categoria === 'top5' ? '🏆' : '🎗️', valor: labelCategoria, label: 'Categoría del mes', variante: 'dorado' }
   ];
 
   contenedor.innerHTML = stats.map(s => `
