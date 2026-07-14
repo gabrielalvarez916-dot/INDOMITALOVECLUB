@@ -700,6 +700,7 @@ async function cargarHistorialAutor(idUsuario) {
     </div>
   `;
   }).join('');
+  }
 
 // ────────────────────────────────────────────────────────────
 // CANCELAR CAMPAÑA
