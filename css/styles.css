@@ -4610,8 +4610,8 @@ img { max-width: 100%; display: block; }
 /* Íconos de evento dentro de la celda */
 .cal-evento-avatar,
 .cal-evento-portada {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   object-fit: cover;
   flex-shrink: 0;
   box-shadow: 0 1px 2px rgba(0,0,0,0.2);
@@ -4711,6 +4711,6 @@ img { max-width: 100%; display: block; }
 @media (max-width: 480px) {
   .cal-celda { padding: 3px; border-radius: 6px; }
   .cal-numero { font-size: 10px; }
-  .cal-evento-avatar, .cal-evento-portada { width: 13px; height: 13px; }
+  .cal-evento-avatar, .cal-evento-portada { width: 18px; height: 18px; }
   .cal-nav-mes { font-size: 15px; }
 }
