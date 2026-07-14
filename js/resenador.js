@@ -110,44 +110,67 @@ const puntosMensuales = ranking?.puntos_mensuales ?? '—';
 const categoria       = ranking?.categoria || '';
 
 const labelCategoria  = {
-    top5:     '🏆 Top 5',
-    top20:    '🥈 Top 20',
-    diamante: '💎 Liga Diamante',
-    oro:      '🥇 Liga Oro',
-    plata:    '🥈 Liga Plata',
-    bronce:   '🥉 Liga Bronce',
-    nuevo:    '🌱 Nuevo en el ranking'
+    top5:     'Top 5',
+    top20:    'Top 20',
+    diamante: 'Liga Diamante',
+    oro:      'Liga Oro',
+    plata:    'Liga Plata',
+    bronce:   'Liga Bronce',
+    nuevo:    'Nuevo en el ranking'
   }[categoria] || '—';
 
- contenedor.innerHTML = `
-    <div class="stat-card">
-      <span class="stat-icono-corazon">♥</span>
-      <span class="stat-badge-nivel">${badgeHistorico}</span>
-      <span class="stat-label">Badge histórico</span>
+  const esTop5 = categoria === 'top5';
+
+  contenedor.innerHTML = `
+    <div class="stat-card-v2 stat-card-v2--bordo">
+      <div class="stat-card-v2-header">Badge histórico</div>
+      <div class="stat-card-v2-body">
+        <span class="stat-card-v2-icono">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9 13.5L7 22l5-3 5 3-2-8.5"/></svg>
+        </span>
+        <span class="stat-card-v2-numero" style="font-size:15px;">${badgeHistorico}</span>
+      </div>
     </div>
-    <div class="stat-card">
-      <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${ranking ? '#' + ranking.posicion : '—'}</span>
-      <span class="stat-label">Posición ranking</span>
+    <div class="stat-card-v2 stat-card-v2--dorado">
+      <div class="stat-card-v2-header">Posición ranking</div>
+      <div class="stat-card-v2-body">
+        <span class="stat-card-v2-icono">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 16l4-6 3 3 5-8"/></svg>
+        </span>
+        <span class="stat-card-v2-numero">${ranking ? '#' + ranking.posicion : '—'}</span>
+      </div>
     </div>
-    <div class="stat-card">
-      <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${puntosMensuales}</span>
-      <span class="stat-label">Puntos este mes</span>
+    <div class="stat-card-v2 stat-card-v2--rosa">
+      <div class="stat-card-v2-header">Puntos este mes</div>
+      <div class="stat-card-v2-body">
+        <span class="stat-card-v2-icono">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3L22 9.3l-5 4.9 1.2 7L12 17.8 5.8 21.2 7 14.2 2 9.3l7.1-1z"/></svg>
+        </span>
+        <span class="stat-card-v2-numero">${puntosMensuales}</span>
+      </div>
     </div>
-    <div class="stat-card">
-      <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero">${ranking ? ranking.porcentaje_completion + '%' : '—'}</span>
-      <span class="stat-label">Completion este mes</span>
+    <div class="stat-card-v2 stat-card-v2--crema">
+      <div class="stat-card-v2-header">Completion este mes</div>
+      <div class="stat-card-v2-body">
+        <span class="stat-card-v2-icono">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </span>
+        <span class="stat-card-v2-numero">${ranking ? ranking.porcentaje_completion + '%' : '—'}</span>
+      </div>
     </div>
-    <div class="stat-card">
-      <span class="stat-icono-corazon">♥</span>
-      <span class="stat-numero" style="font-size:14px;">${labelCategoria}</span>
-      <span class="stat-label">Categoría del mes</span>
+    <div class="stat-card-v2 stat-card-v2--dorado">
+      <div class="stat-card-v2-header">Categoría del mes</div>
+      <div class="stat-card-v2-body">
+        <span class="stat-card-v2-icono">
+          ${esTop5
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 5H3v2a4 4 0 0 0 4 4M17 5h4v2a4 4 0 0 1-4 4"/></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L4 9l6-1z"/></svg>'}
+        </span>
+        <span class="stat-card-v2-numero" style="font-size:15px;">${labelCategoria}</span>
+      </div>
     </div>
   `;
   }
-
 
 // ────────────────────────────────────────────────────────────
 // POSTULACIONES
