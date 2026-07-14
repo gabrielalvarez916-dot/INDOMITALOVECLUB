@@ -13,6 +13,7 @@ let _postulacionesAutor = [];
 let _historialAutor     = [];
 let _librosAutor        = [];
 let _portadaPrecargadaCampana = null; // URL de portada existente cuando se precarga un libro de la biblioteca
+let _reseñasCampanaActual = []; // cache de reseñas mostradas en el modal "Ver reseñas"
 
 function convertirLinkDrive(url) {
   if (!url) return url;
@@ -521,7 +522,10 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     .from('resenas')
     .select(`
       id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios, puntuacion_autor,
-      usuarios!resenas_id_usuario_resenador_fkey ( id, alias )
+      usuarios!resenas_id_usuario_resenador_fkey (
+        id, alias,
+        avatares ( imagen_url )
+      )
     `)
     .eq('id_campana', idCampana)
     .order('fecha_entrega', { ascending: false });
@@ -531,7 +535,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     return;
   }
 
-  const reseñas = (data || []).map(r => ({
+  _reseñasCampanaActual = (data || []).map(r => ({
     idReseña: r.id,
     fechaEntrega: r.fecha_entrega,
     linkInstagram: r.link_instagram,
@@ -540,10 +544,14 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     linkGoodreads: r.link_goodreads,
     comentarios: r.comentarios,
     puntuacion: r.puntuacion_autor,
-    reseñador: r.usuarios ? { id: r.usuarios.id, alias: r.usuarios.alias } : null
+    reseñador: r.usuarios ? {
+      id: r.usuarios.id,
+      alias: r.usuarios.alias,
+      fotoPerfil: r.usuarios.avatares?.imagen_url || null
+    } : null
   }));
 
-  if (reseñas.length === 0) {
+  if (_reseñasCampanaActual.length === 0) {
     if (body) body.innerHTML = `
       <div class="estado-vacio">
         <p class="estado-vacio-texto">Todavía no hay reseñas entregadas.</p>
@@ -552,37 +560,93 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     return;
   }
 
+  const campanaRef = _campañasAutor.find(c => c.id === idCampana) || _historialAutor.find(c => c.id === idCampana);
+  const linkPortada = campanaRef?.linkPortada || null;
+
   if (body) {
-   body.innerHTML = reseñas.map(r => `
-  <div class="resena-card" style="border-bottom:1px solid var(--crema-oscura); padding:16px 0;">
-    <p style="font-weight:600; ${r.reseñador?.id ? 'cursor:pointer; color:var(--bordo);' : ''}"
-   ${r.reseñador?.id ? `onclick="abrirPerfilPublico('${r.reseñador.id}', 'reseñador')"` : ''}>
-  ${r.reseñador?.alias || 'Reseñador'}
-</p>
-    <p style="font-size:12px; color:var(--gris-suave);">Entregada: ${formatearFechaAmigable(r.fechaEntrega)}</p>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0;">
-      ${r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link">Instagram</a>` : ''}
-      ${r.linkTikTok    ? `<a href="${r.linkTikTok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
-      ${r.linkAmazon    ? `<a href="${r.linkAmazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
-      ${r.linkGoodreads ? `<a href="${r.linkGoodreads}" target="_blank" class="red-link">Goodreads</a>` : ''}
-    </div>
-    ${r.comentarios ? `<p style="font-size:13px; color:var(--gris-suave);">"${r.comentarios}"</p>` : ''}
-   ${r.puntuacion
-  ? `<p style="font-size:13px;">Tu calificación: ${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)}</p>`
-  : `<div style="margin-top:8px;">
-      <p style="font-size:13px; margin-bottom:6px;">Calificá esta reseña:</p>
-      <div style="display:flex; gap:6px;">
-     ${[1,2,3,4,5].map(n => `
-  <button 
-    onclick="calificarDirecto('${r.idReseña}', ${n}, this)" 
-    style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--gris-borde);">★</button>
-`).join('')}
+    body.innerHTML = `
+      <div class="resenas-carpetas-grid">
+        ${_reseñasCampanaActual.map(r => construirCardResenaCarpeta(r, linkPortada)).join('')}
       </div>
-    </div>`
-}
-  </div>
-`).join('');
+    `;
   }
+}
+
+/**
+ * Construye una card de reseña con formato "carpeta": portada de fondo,
+ * pestaña con avatar + alias del reseñador, y body con fecha, estrellas y botón.
+ *
+ * @param {Object} r — reseña normalizada
+ * @param {string|null} linkPortada — portada del libro de la campaña
+ * @returns {string} HTML de la card
+ */
+function construirCardResenaCarpeta(r, linkPortada) {
+  const iniciales = r.reseñador?.alias
+    ? r.reseñador.alias.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
+
+  const avatarHtml = r.reseñador?.fotoPerfil
+    ? `<img src="${r.reseñador.fotoPerfil}" class="resena-carpeta-tab-avatar" onerror="this.style.display='none'" />`
+    : `<div class="resena-carpeta-tab-avatar-fallback">${iniciales}</div>`;
+
+  const ratingHtml = r.puntuacion
+    ? `<div class="resena-carpeta-estrellas" id="resena-rating-${r.idReseña}">${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)}</div>`
+    : `<div class="resena-carpeta-estrellas-interactivas" id="resena-rating-${r.idReseña}">
+        ${[1,2,3,4,5].map(n => `<button class="resena-carpeta-estrella-btn" onclick="calificarDirecto('${r.idReseña}', ${n}, this)">★</button>`).join('')}
+      </div>`;
+
+  return `
+    <div class="resena-carpeta">
+      <div class="resena-carpeta-portada-wrap">
+        ${linkPortada
+          ? `<img src="${linkPortada}" class="resena-carpeta-portada" onerror="this.style.display='none'" />`
+          : `<div class="resena-carpeta-portada-placeholder">📖</div>`}
+        <div class="resena-carpeta-tab">
+          ${avatarHtml}
+          <span class="resena-carpeta-tab-alias" ${r.reseñador?.id ? `onclick="abrirPerfilPublico('${r.reseñador.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.reseñador?.alias || 'Reseñador'}</span>
+        </div>
+      </div>
+      <div class="resena-carpeta-body">
+        <p class="resena-carpeta-fecha">Entregada: ${formatearFechaAmigable(r.fechaEntrega)}</p>
+        ${ratingHtml}
+        <button class="btn-secundario btn-sm btn-full resena-carpeta-btn-comentarios" onclick="verComentarioResena('${r.idReseña}')">Ver comentarios</button>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Abre un modal simple mostrando el comentario y los links de una reseña puntual.
+ *
+ * @param {string} idResena
+ */
+function verComentarioResena(idResena) {
+  const r = (_reseñasCampanaActual || []).find(x => x.idReseña === idResena);
+  if (!r) return;
+
+  mostrarModal('modal-detalle-campana');
+
+  const titulo = document.getElementById('modal-detalle-titulo');
+  const body   = document.getElementById('modal-detalle-body');
+  const footer = document.getElementById('modal-detalle-footer');
+
+  if (titulo) titulo.textContent = `Comentario de ${r.reseñador?.alias || 'Reseñador'}`;
+  if (footer) footer.innerHTML = '';
+
+  const enlaces = [
+    r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link">Instagram</a>` : '',
+    r.linkTikTok    ? `<a href="${r.linkTikTok}" target="_blank" class="red-link">TikTok</a>` : '',
+    r.linkAmazon    ? `<a href="${r.linkAmazon}" target="_blank" class="red-link">Amazon</a>` : '',
+    r.linkGoodreads ? `<a href="${r.linkGoodreads}" target="_blank" class="red-link">Goodreads</a>` : ''
+  ].filter(Boolean).join('');
+
+  if (body) body.innerHTML = `
+    <p style="font-size:12px; color:var(--gris-suave); margin-bottom:12px;">Entregada: ${formatearFechaAmigable(r.fechaEntrega)}</p>
+    ${enlaces ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">${enlaces}</div>` : ''}
+    ${r.comentarios
+      ? `<p style="font-size:14px; color:var(--gris-texto); line-height:1.6; font-style:italic;">"${r.comentarios}"</p>`
+      : `<p style="font-size:13px; color:var(--gris-suave); font-style:italic;">Sin comentarios.</p>`}
+  `;
 }
 
 async function calificarDirecto(idResena, puntuacion, boton) {
@@ -596,14 +660,17 @@ async function calificarDirecto(idResena, puntuacion, boton) {
     return;
   }
 
-  // Reemplaza las estrellas por la calificación guardada
-  const contenedor = boton.parentElement;
-  contenedor.parentElement.innerHTML = `
-    <p style="font-size:13px;">Tu calificación: ${'★'.repeat(puntuacion)}${'☆'.repeat(5 - puntuacion)}</p>
-  `;
+  const contenedor = document.getElementById(`resena-rating-${idResena}`);
+  if (contenedor) {
+    contenedor.outerHTML = `<div class="resena-carpeta-estrellas" id="resena-rating-${idResena}">${'★'.repeat(puntuacion)}${'☆'.repeat(5 - puntuacion)}</div>`;
+  }
+
+  const r = (_reseñasCampanaActual || []).find(x => x.idReseña === idResena);
+  if (r) r.puntuacion = puntuacion;
 
   mostrarToast('¡Reseña calificada!', 'ok');
 }
+
 async function enviarCalificacion() {
   const idResena    = document.getElementById('calificar-id-resena')?.value;
   const puntuacion  = document.getElementById('calificar-puntuacion')?.value;
