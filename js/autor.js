@@ -179,6 +179,7 @@ async function cargarEstadisticasAutor(idUsuario) {
       </div>
     </div>
   `).join('');
+  }
 
 
 // ────────────────────────────────────────────────────────────
