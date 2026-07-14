@@ -269,3 +269,31 @@ function _construirCardDetalleEvento(ev) {
     </div>
   `;
 }
+
+// ────────────────────────────────────────────────────────────
+// INYECCIÓN DEL BOTÓN "CALENDARIO" EN LOS PANELES
+// ────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', _inyectarBotonesCalendario);
+
+function _inyectarBotonesCalendario() {
+  const headerAutor = document.querySelector('#seccion-panel-autor .panel-header');
+  if (headerAutor && !document.getElementById('btn-calendario-autor')) {
+    const btn = document.createElement('button');
+    btn.id = 'btn-calendario-autor';
+    btn.className = 'btn-secundario';
+    btn.textContent = '📅 Calendario';
+    btn.onclick = () => abrirCalendario('autor');
+    headerAutor.appendChild(btn);
+  }
+
+  const headerResenador = document.querySelector('#seccion-panel-resenador .panel-header');
+  if (headerResenador && !document.getElementById('btn-calendario-resenador')) {
+    const btn = document.createElement('button');
+    btn.id = 'btn-calendario-resenador';
+    btn.className = 'btn-secundario';
+    btn.textContent = '📅 Calendario';
+    btn.onclick = () => abrirCalendario('reseñador');
+    headerResenador.appendChild(btn);
+  }
+}
