@@ -4389,8 +4389,6 @@ img { max-width: 100%; display: block; }
   position: relative;
   width: 100%;
   height: 150px;
-  border-radius: var(--radio-grande) var(--radio-grande) 0 0;
-  overflow: hidden;
 }
 
 .resena-carpeta-portada {
@@ -4399,6 +4397,7 @@ img { max-width: 100%; display: block; }
   object-fit: cover;
   object-position: center top;
   display: block;
+  border-radius: var(--radio-grande) var(--radio-grande) 0 0;
 }
 
 .resena-carpeta-portada-placeholder {
@@ -4409,6 +4408,7 @@ img { max-width: 100%; display: block; }
   justify-content: center;
   font-size: 40px;
   background: linear-gradient(135deg, var(--crema) 0%, var(--crema-oscura) 100%);
+  border-radius: var(--radio-grande) var(--radio-grande) 0 0;
 }
 
 .resena-carpeta-tab {
