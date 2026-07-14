@@ -4288,3 +4288,36 @@ img { max-width: 100%; display: block; }
   word-break: break-word;
   letter-spacing: normal;
 }
+/* ── Historial de campañas (autor) ───────────────────────── */
+.campana-card-historial {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 18px 20px;
+  box-shadow: var(--sombra-card);
+  transition: var(--transicion);
+  margin-bottom: 14px;
+}
+
+.campana-card-historial:hover {
+  box-shadow: var(--sombra);
+}
+
+.campana-card-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.campana-card-panel-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--gris-medio);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--gris-borde);
+}
