@@ -4280,7 +4280,7 @@ img { max-width: 100%; display: block; }
 /* ── Stats del reseñador con estilo caja igual a autor (solo CSS) ── */
 #resenador-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
   margin-bottom: 28px;
 }
@@ -4292,7 +4292,6 @@ img { max-width: 100%; display: block; }
   overflow: hidden;
   padding: 0;
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   gap: 0;
@@ -4319,7 +4318,7 @@ img { max-width: 100%; display: block; }
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin: 20px 0 20px 16px;
+  margin: 18px 0 18px 16px;
 }
 
 #resenador-stats .stat-icono-corazon::before {
@@ -4327,24 +4326,27 @@ img { max-width: 100%; display: block; }
   line-height: 1;
 }
 
+/* Reset total: anula el estilo de píldora que tenía .stat-badge-nivel */
 #resenador-stats .stat-numero,
 #resenador-stats .stat-badge-nivel {
-  font-family: var(--fuente-titulo);
-  font-weight: 700;
-  color: var(--bordo);
-  line-height: 1.15;
-  margin: 0;
-  padding: 0 16px;
+  display: block;
+  background: none !important;
+  border: none !important;
+  padding: 0 16px !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  font-family: var(--fuente-titulo) !important;
+  font-weight: 700 !important;
+  color: var(--bordo) !important;
+  font-size: 22px !important;
+  line-height: 1.2 !important;
   text-align: left;
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-/* tamaños fijos según el tipo de dato, para que no se vean parches distintos */
-#resenador-stats .stat-card:nth-child(1) .stat-badge-nivel { font-size: 16px !important; }
-#resenador-stats .stat-card:nth-child(2) .stat-numero      { font-size: 30px !important; }
-#resenador-stats .stat-card:nth-child(3) .stat-numero      { font-size: 30px !important; }
-#resenador-stats .stat-card:nth-child(4) .stat-numero      { font-size: 26px !important; }
-#resenador-stats .stat-card:nth-child(5) .stat-numero      { font-size: 16px !important; }
 
 /* colores + ícono por tarjeta */
 #resenador-stats .stat-card:nth-child(1) .stat-label,
@@ -4363,6 +4365,5 @@ img { max-width: 100%; display: block; }
 #resenador-stats .stat-card:nth-child(4) .stat-icono-corazon { background: var(--crema); color: var(--bordo-oscuro); }
 #resenador-stats .stat-card:nth-child(4) .stat-icono-corazon::before { content: '📈'; }
 
-/* La card 5 (categoría) ya trae su propio ícono en el texto (🏆, 💎, 🥇...), por eso NO le ponemos otro encima */
 #resenador-stats .stat-card:nth-child(5) .stat-label { background: var(--rosa-claro); color: var(--bordo); }
 #resenador-stats .stat-card:nth-child(5) .stat-icono-corazon { display: none; }
