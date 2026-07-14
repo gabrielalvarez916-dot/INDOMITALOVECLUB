@@ -4291,25 +4291,28 @@ img { max-width: 100%; display: block; }
   box-shadow: var(--sombra-card);
   overflow: hidden;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "label label"
+    "icono valor";
   align-items: center;
-  gap: 0;
 }
 
 #resenador-stats .stat-label {
-  order: -1;
-  flex: 0 0 100%;
+  grid-area: label;
   padding: 10px 16px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   border-bottom: 1px solid var(--gris-borde);
-  text-align: left;
+  box-sizing: border-box;
 }
 
 #resenador-stats .stat-icono-corazon {
+  grid-area: icono;
   font-size: 0;
   width: 48px;
   height: 48px;
@@ -4317,8 +4320,7 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  margin: 18px 0 18px 16px;
+  margin: 14px 0 14px 16px;
 }
 
 #resenador-stats .stat-icono-corazon::before {
@@ -4326,23 +4328,20 @@ img { max-width: 100%; display: block; }
   line-height: 1;
 }
 
-/* Reset total: anula el estilo de píldora que tenía .stat-badge-nivel */
 #resenador-stats .stat-numero,
 #resenador-stats .stat-badge-nivel {
-  display: block;
+  grid-area: valor;
+  font-family: var(--fuente-texto) !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
+  color: var(--bordo) !important;
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
   background: none !important;
   border: none !important;
-  padding: 0 16px !important;
   border-radius: 0 !important;
-  margin: 0 !important;
-  font-family: var(--fuente-titulo) !important;
-  font-weight: 700 !important;
-  color: var(--bordo) !important;
-  font-size: 22px !important;
-  line-height: 1.2 !important;
-  text-align: left;
-  flex: 1;
-  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
