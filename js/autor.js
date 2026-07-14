@@ -164,37 +164,21 @@ async function cargarEstadisticasAutor(idUsuario) {
   const s = { campañasActivas, reseñasRecibidas, reseñadoresAprobados, promedioCalificaciones };
 
   const stats = [
-    { icono: '📣', valor: s.campañasActivas ?? 0, label: 'Campañas activas' },
-    { icono: '⭐', valor: s.reseñasRecibidas ?? 0, label: 'Reseñas recibidas' },
-    { icono: '👥', valor: s.reseñadoresAprobados ?? 0, label: 'Reseñadores aprobados' },
-    { icono: '📊', valor: s.promedioCalificaciones ? s.promedioCalificaciones.toFixed(1) : '—', label: 'Promedio de calificaciones' }
+    { icono: '📣', valor: s.campañasActivas ?? 0, label: 'Campañas activas', variante: 'bordo' },
+    { icono: '⭐', valor: s.reseñasRecibidas ?? 0, label: 'Reseñas recibidas', variante: 'dorado' },
+    { icono: '👥', valor: s.reseñadoresAprobados ?? 0, label: 'Reseñadores aprobados', variante: 'rosa' },
+    { icono: '📊', valor: s.promedioCalificaciones ? s.promedioCalificaciones.toFixed(1) : '—', label: 'Promedio de calificaciones', variante: 'crema' }
   ];
 
   contenedor.innerHTML = stats.map(s => `
-    <div style="
-      background: var(--blanco);
-      border: 1px solid var(--gris-borde);
-      border-radius: var(--radio-grande);
-      padding: 24px 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      box-shadow: var(--sombra-card);
-    ">
-      <div style="
-        width: 52px; height: 52px;
-        background: var(--rosa-claro);
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 22px; flex-shrink: 0;
-      ">${s.icono}</div>
-      <div>
-        <p style="font-family:var(--fuente-titulo); font-size:32px; font-weight:700; color:var(--bordo); line-height:1; margin-bottom:4px;">${s.valor}</p>
-        <p style="font-size:12px; color:var(--gris-suave); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin:0;">${s.label}</p>
+    <div class="stat-card-v2 stat-card-v2--${s.variante}">
+      <div class="stat-card-v2-header">${s.label}</div>
+      <div class="stat-card-v2-body">
+        <div class="stat-card-v2-icono">${s.icono}</div>
+        <p class="stat-card-v2-numero">${s.valor}</p>
       </div>
     </div>
   `).join('');
-}
 
 
 // ────────────────────────────────────────────────────────────
