@@ -4277,10 +4277,10 @@ img { max-width: 100%; display: block; }
 .stat-card-v2--crema .stat-card-v2-header { background: var(--crema); color: var(--bordo-oscuro); }
 .stat-card-v2--crema .stat-card-v2-icono   { background: var(--crema); color: var(--bordo-oscuro); }
 
-/* ── Stats del reseñador con estilo caja/header (solo CSS, sin tocar JS) ── */
+/* ── Stats del reseñador con estilo caja igual a autor (solo CSS) ── */
 #resenador-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 14px;
   margin-bottom: 28px;
 }
@@ -4291,22 +4291,25 @@ img { max-width: 100%; display: block; }
   box-shadow: var(--sombra-card);
   overflow: hidden;
   padding: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0;
 }
 
 #resenador-stats .stat-label {
   order: -1;
-  width: 100%;
+  flex: 0 0 100%;
   padding: 10px 16px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   border-bottom: 1px solid var(--gris-borde);
-  text-align: center;
+  text-align: left;
 }
 
-/* Oculta el corazón de texto y lo reemplaza por un ícono en círculo */
 #resenador-stats .stat-icono-corazon {
   font-size: 0;
   width: 48px;
@@ -4315,7 +4318,8 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 16px auto 4px;
+  flex-shrink: 0;
+  margin: 20px 0 20px 16px;
 }
 
 #resenador-stats .stat-icono-corazon::before {
@@ -4323,27 +4327,29 @@ img { max-width: 100%; display: block; }
   line-height: 1;
 }
 
-/* Números con la misma tipografía que el panel de autor */
 #resenador-stats .stat-numero,
 #resenador-stats .stat-badge-nivel {
   font-family: var(--fuente-titulo);
-  font-size: 32px;
   font-weight: 700;
   color: var(--bordo);
-  line-height: 1;
-  margin: 0 0 16px;
-  text-align: center;
-  display: block;
+  line-height: 1.15;
+  margin: 0;
+  padding: 0 16px;
+  text-align: left;
+  flex: 1;
 }
 
-#resenador-stats .stat-badge-nivel {
-  font-size: 15px;
-}
+/* tamaños fijos según el tipo de dato, para que no se vean parches distintos */
+#resenador-stats .stat-card:nth-child(1) .stat-badge-nivel { font-size: 16px !important; }
+#resenador-stats .stat-card:nth-child(2) .stat-numero      { font-size: 30px !important; }
+#resenador-stats .stat-card:nth-child(3) .stat-numero      { font-size: 30px !important; }
+#resenador-stats .stat-card:nth-child(4) .stat-numero      { font-size: 26px !important; }
+#resenador-stats .stat-card:nth-child(5) .stat-numero      { font-size: 16px !important; }
 
-/* Colores + ícono por tarjeta, en el mismo orden que ya generás en el JS */
+/* colores + ícono por tarjeta */
 #resenador-stats .stat-card:nth-child(1) .stat-label,
 #resenador-stats .stat-card:nth-child(1) .stat-icono-corazon { background: var(--rosa-claro); color: var(--bordo); }
-#resenador-stats .stat-card:nth-child(1) .stat-icono-corazon::before { content: '🏅'; }
+#resenador-stats .stat-card:nth-child(1) .stat-icono-corazon::before { content: '🎖️'; }
 
 #resenador-stats .stat-card:nth-child(2) .stat-label,
 #resenador-stats .stat-card:nth-child(2) .stat-icono-corazon { background: var(--bordo-suave); color: var(--bordo); }
@@ -4357,6 +4363,6 @@ img { max-width: 100%; display: block; }
 #resenador-stats .stat-card:nth-child(4) .stat-icono-corazon { background: var(--crema); color: var(--bordo-oscuro); }
 #resenador-stats .stat-card:nth-child(4) .stat-icono-corazon::before { content: '📈'; }
 
-#resenador-stats .stat-card:nth-child(5) .stat-label,
-#resenador-stats .stat-card:nth-child(5) .stat-icono-corazon { background: var(--rosa-claro); color: var(--bordo); }
-#resenador-stats .stat-card:nth-child(5) .stat-icono-corazon::before { content: '🏷️'; }
+/* La card 5 (categoría) ya trae su propio ícono en el texto (🏆, 💎, 🥇...), por eso NO le ponemos otro encima */
+#resenador-stats .stat-card:nth-child(5) .stat-label { background: var(--rosa-claro); color: var(--bordo); }
+#resenador-stats .stat-card:nth-child(5) .stat-icono-corazon { display: none; }
