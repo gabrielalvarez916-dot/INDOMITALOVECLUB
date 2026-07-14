@@ -127,26 +127,23 @@ const ICONOS_SVG = {
     nuevo:    'Nuevo en el ranking'
   }[categoria] || '—';
 
-  const stats = [
-    { icono: '🎖️', valor: badgeHistorico, label: 'Badge histórico', variante: 'bordo' },
+const stats = [
+    { icono: '🎖️', valor: badgeHistorico, label: 'Badge histórico', variante: 'bordo', texto: true },
     { icono: '📊', valor: ranking ? '#' + ranking.posicion : '—', label: 'Posición ranking', variante: 'dorado' },
     { icono: '⭐', valor: puntosMensuales, label: 'Puntos este mes', variante: 'rosa' },
     { icono: '⏱️', valor: ranking ? ranking.porcentaje_completion + '%' : '—', label: 'Completion este mes', variante: 'crema' },
-    { icono: categoria === 'top5' ? '🏆' : '🎗️', valor: labelCategoria, label: 'Categoría del mes', variante: 'dorado' }
+    { icono: categoria === 'top5' ? '🏆' : '🎗️', valor: labelCategoria, label: 'Categoría del mes', variante: 'dorado', texto: true }
   ];
 
-  contenedor.innerHTML = stats.map(s => {
-    const esTexto = isNaN(parseFloat(s.valor)) && s.valor !== '—';
-    return `
+  contenedor.innerHTML = stats.map(s => `
     <div class="stat-card-v2 stat-card-v2--${s.variante}">
       <div class="stat-card-v2-header">${s.label}</div>
       <div class="stat-card-v2-body">
         <div class="stat-card-v2-icono">${s.icono}</div>
-        <p class="stat-card-v2-numero" style="${esTexto ? 'font-size:15px; line-height:1.3; word-break:break-word;' : ''}">${s.valor}</p>
+        <p class="stat-card-v2-numero${s.texto ? ' stat-card-v2-numero--texto' : ''}">${s.valor}</p>
       </div>
     </div>
-  `;
-  }).join('');
+  `).join('');
   }
 // ────────────────────────────────────────────────────────────
 // POSTULACIONES
