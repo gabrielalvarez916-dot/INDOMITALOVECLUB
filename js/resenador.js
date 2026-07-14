@@ -135,17 +135,19 @@ const ICONOS_SVG = {
     { icono: categoria === 'top5' ? '🏆' : '🎗️', valor: labelCategoria, label: 'Categoría del mes', variante: 'dorado' }
   ];
 
-  contenedor.innerHTML = stats.map(s => `
+  contenedor.innerHTML = stats.map(s => {
+    const esTexto = isNaN(parseFloat(s.valor)) && s.valor !== '—';
+    return `
     <div class="stat-card-v2 stat-card-v2--${s.variante}">
       <div class="stat-card-v2-header">${s.label}</div>
       <div class="stat-card-v2-body">
         <div class="stat-card-v2-icono">${s.icono}</div>
-        <p class="stat-card-v2-numero">${s.valor}</p>
+        <p class="stat-card-v2-numero" style="${esTexto ? 'font-size:15px; line-height:1.3; word-break:break-word;' : ''}">${s.valor}</p>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
   }
-
 // ────────────────────────────────────────────────────────────
 // POSTULACIONES
 // ────────────────────────────────────────────────────────────
