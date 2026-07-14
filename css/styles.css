@@ -4279,4 +4279,12 @@ img { max-width: 100%; display: block; }
 .stat-card-v2--crema .stat-card-v2-header { background: var(--crema); color: var(--bordo-oscuro); }
 .stat-card-v2--crema .stat-card-v2-icono   { background: var(--crema); color: var(--bordo-oscuro); }
 
-
+.stat-card-v2-numero.stat-card-v2-numero--texto {
+  font-family: var(--fuente-texto);
+  font-size: 16px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1.3;
+  word-break: break-word;
+  letter-spacing: normal;
+}
