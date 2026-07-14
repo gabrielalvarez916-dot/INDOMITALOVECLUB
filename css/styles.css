@@ -4277,7 +4277,6 @@ img { max-width: 100%; display: block; }
 .stat-card-v2--crema .stat-card-v2-header { background: var(--crema); color: var(--bordo-oscuro); }
 .stat-card-v2--crema .stat-card-v2-icono   { background: var(--crema); color: var(--bordo-oscuro); }
 
-/* ── Stats del reseñador con estilo caja/header (solo CSS, sin tocar JS) ── */
 #resenador-stats {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -4290,23 +4289,26 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radio-grande);
   box-shadow: var(--sombra-card);
   overflow: hidden;
-  padding: 0;
-  gap: 0;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  align-items: center !important;
+  gap: 0 !important;
 }
 
 #resenador-stats .stat-label {
   order: -1;
-  width: 100%;
+  flex-basis: 100%;
   padding: 10px 16px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   border-bottom: 1px solid var(--gris-borde);
-  text-align: center;
+  box-sizing: border-box;
+  text-align: left;
 }
 
-/* Oculta el corazón de texto y lo reemplaza por un ícono en círculo */
 #resenador-stats .stat-icono-corazon {
   font-size: 0;
   width: 48px;
@@ -4315,7 +4317,8 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 16px auto 4px;
+  flex-shrink: 0;
+  margin: 20px 0 20px 16px;
 }
 
 #resenador-stats .stat-icono-corazon::before {
@@ -4323,27 +4326,28 @@ img { max-width: 100%; display: block; }
   line-height: 1;
 }
 
-/* Números con la misma tipografía que el panel de autor */
 #resenador-stats .stat-numero,
 #resenador-stats .stat-badge-nivel {
-  font-family: var(--fuente-titulo);
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--bordo);
-  line-height: 1;
-  margin: 0 0 16px;
-  text-align: center;
-  display: block;
+  font-family: var(--fuente-titulo) !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: var(--bordo) !important;
+  line-height: 1.2 !important;
+  margin: 0 16px !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  display: block !important;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-#resenador-stats .stat-badge-nivel {
-  font-size: 15px;
-}
-
-/* Colores + ícono por tarjeta, en el mismo orden que ya generás en el JS */
 #resenador-stats .stat-card:nth-child(1) .stat-label,
 #resenador-stats .stat-card:nth-child(1) .stat-icono-corazon { background: var(--rosa-claro); color: var(--bordo); }
-#resenador-stats .stat-card:nth-child(1) .stat-icono-corazon::before { content: '🏅'; }
+#resenador-stats .stat-card:nth-child(1) .stat-icono-corazon::before { content: '🎖️'; }
 
 #resenador-stats .stat-card:nth-child(2) .stat-label,
 #resenador-stats .stat-card:nth-child(2) .stat-icono-corazon { background: var(--bordo-suave); color: var(--bordo); }
@@ -4359,4 +4363,4 @@ img { max-width: 100%; display: block; }
 
 #resenador-stats .stat-card:nth-child(5) .stat-label,
 #resenador-stats .stat-card:nth-child(5) .stat-icono-corazon { background: var(--rosa-claro); color: var(--bordo); }
-#resenador-stats .stat-card:nth-child(5) .stat-icono-corazon::before { content: '🏷️'; }
+#resenador-stats .stat-card:nth-child(5) .stat-icono-corazon::before { content: '🏆'; }
