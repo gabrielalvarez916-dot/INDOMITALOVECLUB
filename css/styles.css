@@ -4217,3 +4217,62 @@ img { max-width: 100%; display: block; }
   margin-top: 0;
   margin-bottom: 8px;
 }
+
+/* ── Panel autor — Stats con header (estilo card/dialog) ─── */
+.stat-card-v2 {
+  background: var(--blanco);
+  border-radius: var(--radio-grande);
+  box-shadow: var(--sombra-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card-v2-header {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.stat-card-v2-body {
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stat-card-v2-icono {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.stat-card-v2-numero {
+  font-family: var(--fuente-titulo);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--bordo);
+  line-height: 1;
+  margin: 0;
+}
+
+/* variantes de color, una por cada stat */
+.stat-card-v2--rosa .stat-card-v2-header { background: var(--rosa-claro); color: var(--bordo); }
+.stat-card-v2--rosa .stat-card-v2-icono   { background: var(--rosa-claro); color: var(--bordo); }
+
+.stat-card-v2--dorado .stat-card-v2-header { background: #FBF3DD; color: #8A6D1E; }
+.stat-card-v2--dorado .stat-card-v2-icono   { background: #FBF3DD; color: #C9A84C; }
+
+.stat-card-v2--bordo .stat-card-v2-header { background: var(--bordo-suave); color: var(--bordo); }
+.stat-card-v2--bordo .stat-card-v2-icono   { background: var(--bordo-suave); color: var(--bordo); }
+
+.stat-card-v2--crema .stat-card-v2-header { background: var(--crema); color: var(--bordo-oscuro); }
+.stat-card-v2--crema .stat-card-v2-icono   { background: var(--crema); color: var(--bordo-oscuro); }
