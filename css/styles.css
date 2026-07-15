@@ -4750,3 +4750,35 @@ img { max-width: 100%; display: block; }
   0%, 100% { box-shadow: 0 0 0 0 rgba(224,90,138,.5); }
   50% { box-shadow: 0 0 0 10px rgba(224,90,138,0); }
 }
+
+.evento-progreso-wrap { margin: 14px 0; }
+.evento-barra-progreso {
+  position: relative;
+  width: 100%; height: 22px;
+  background: #f0e0dc; border-radius: 11px; overflow: hidden;
+}
+.evento-barra-progreso-relleno {
+  height: 100%; background: #e05a8a; transition: width .4s ease;
+}
+.evento-barra-progreso-texto {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: #4a2e2e;
+}
+.evento-tiempo-restante { font-size: 15px; font-weight: 600; color: #e05a8a; margin-top: 6px; }
+
+#evento-widget-flotante {
+  position: fixed; bottom: 18px; right: 18px; z-index: 500;
+  background: #fff; border-radius: 14px; padding: 10px 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; font-size: 13px;
+}
+.evento-widget-boton {
+  background: #e05a8a; color: #fff; border: none; border-radius: 8px;
+  padding: 5px 10px; font-size: 12px; cursor: pointer;
+}
+
+.perfil-evento-resumen { margin: 16px 0; padding: 12px; border-radius: 10px; background: #fdf6f4; }
+.perfil-evento-resumen-titulo { font-weight: 700; margin-bottom: 6px; }
+.perfil-evento-resumen-datos { font-size: 13px; color: #6b4e4e; margin-top: 6px; }
