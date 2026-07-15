@@ -349,7 +349,7 @@ function _construirSeccionTema() {
       </div>
     </div>
     <p class="form-label" style="margin-top:8px;">Mensajes de la mascota</p>
-    <p class="form-hint">Usá el mismo texto que pusiste en "Acción" en algún sub-reto (pestaña Retos) para que la mascota hable justo cuando el usuario haga eso. Ej: acción <code>postular_campana</code> → mensaje "¡Te postulaste a una campaña!".</p>
+    <p class="form-hint">En "Acción" poné el <strong>ID del reto</strong> (el mismo que cargaste en la pestaña Retos, ej: <code>RETO_AUT_1</code>) para que la mascota hable justo cuando el usuario complete ese reto entero. Ej: acción <code>RETO_AUT_1</code> → mensaje "¡Completaste el primer reto!".</p>
     <div id="ev-tema-mascota-mensajes">${_construirBloqueMensajesMascota()}</div>
     <button type="button" class="btn-secundario btn-sm" onclick="agregarMensajeMascotaAdmin()">+ Agregar mensaje</button>
 
