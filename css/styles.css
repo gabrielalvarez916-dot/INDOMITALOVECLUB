@@ -4838,3 +4838,23 @@ img { max-width: 100%; display: block; }
   color: #999;
   align-self: flex-start;
 }
+
+.evento-secreto-flotante {
+  position: fixed;
+  z-index: 500;
+  width: 56px;
+  height: 56px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  animation: evento-secreto-flotar 2s ease-in-out infinite;
+}
+.evento-secreto-flotante-imagen {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+@keyframes evento-secreto-flotar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
