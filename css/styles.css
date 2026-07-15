@@ -4791,6 +4791,12 @@ img { max-width: 100%; display: block; }
   z-index: 1;
 }
 
+.evento-particula-cayendo--img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
 @keyframes evento-particula-caida {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(300px) rotate(90deg); opacity: 0; }
