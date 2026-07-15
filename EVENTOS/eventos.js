@@ -245,7 +245,7 @@ async function renderPaginaEvento() {
       const retoAnterior = progresoAnterior.retos[i];
       if (reto.completo && retoAnterior && !retoAnterior.completo) {
         window.dispatchEvent(new CustomEvent('evento:retoCompletado', {
-          detail: { reto, indice: i, evento, tipo: evento.tema?.particula }
+          detail: { reto, indice: i, evento, imagen: evento.tema?.particula?.imagen }
         }));
       }
     });
@@ -418,7 +418,7 @@ function _mostrarAnimacionEventoCompletado(evento, progreso) {
   `;
 
   mostrarModal('modal-evento-completado'); // patrón real de ui.js
-  _dispararParticulaEvento(evento.tema?.particula, 'evento-completado-animacion');
+  _dispararParticulaEvento(evento.tema?.particula?.imagen, 'evento-completado-animacion');
 
   document.getElementById('btn-cerrar-evento-completado').onclick = () => {
     cerrarModales();
@@ -491,35 +491,32 @@ function _escaparHtml(str) {
   return div.innerHTML;
 }
 
-const _EVENTO_PARTICULAS_VALIDAS = ['confeti', 'corazones', 'nieve', 'chocolate'];
+const _CONFETI_GENERICO = ['🎉', '✨', '🎊'];
 
-function _dispararParticulaEvento(tipo, idContenedor) {
+function _dispararParticulaEvento(imagenUrl, idContenedor) {
   const contenedor = document.getElementById(idContenedor);
   if (!contenedor) return;
 
-  const particula = _EVENTO_PARTICULAS_VALIDAS.includes(tipo) ? tipo : 'confeti';
-  const emojis = {
-    confeti: ['🎉', '✨', '🎊'],
-    corazones: ['💕', '💖', '💗'],
-    nieve: ['❄️', '❅', '❆'],
-    chocolate: ['🍫', '🍬']
-  };
-  const set = emojis[particula];
-
   for (let i = 0; i < 18; i++) {
     setTimeout(() => {
-      const el = document.createElement('span');
-      el.textContent = set[Math.floor(Math.random() * set.length)];
-      el.className = 'evento-particula-cayendo';
+      let el;
+      if (imagenUrl) {
+        el = document.createElement('img');
+        el.src = imagenUrl;
+        el.className = 'evento-particula-cayendo evento-particula-cayendo--img';
+      } else {
+        el = document.createElement('span');
+        el.textContent = _CONFETI_GENERICO[Math.floor(Math.random() * _CONFETI_GENERICO.length)];
+        el.className = 'evento-particula-cayendo';
+        el.style.fontSize = `${14 + Math.random() * 10}px`;
+      }
       el.style.left = `${Math.random() * 100}%`;
       el.style.animationDuration = `${1.5 + Math.random() * 1.5}s`;
-      el.style.fontSize = `${14 + Math.random() * 10}px`;
       contenedor.appendChild(el);
       setTimeout(() => el.remove(), 3200);
     }, i * 60);
   }
 }
-
 
 /**
  * Única fuente de verdad para las 4 piezas de la Fase 4 (barra de
@@ -604,5 +601,5 @@ function _actualizarWidgetFlotanteEvento() {
 // ────────────────────────────────────────────────────────────
 
 window.addEventListener('evento:retoCompletado', (e) => {
-  _dispararParticulaEvento(e.detail.tipo, 'header-animacion-global');
+  _dispararParticulaEvento(e.detail.imagen, 'header-animacion-global');
 });
