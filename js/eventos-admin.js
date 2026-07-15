@@ -24,8 +24,6 @@ const _CAMPOS_IMAGENES_EVENTO = [
   { campo: 'decoracionModal', label: 'Decoración del modal' }
 ];
 
-const _PARTICULAS_DISPONIBLES = ['confeti', 'corazones', 'nieve', 'chocolate'];
-
 // Estado en memoria del formulario de alta/edición (fuente de verdad para retos anidados)
 let _eventoFormState = null;
 
@@ -49,7 +47,9 @@ function _eventoFormVacio() {
         imagenActual: '',
         mensajes: [] // [{ accion: '', texto: '' }]
       },
-      particula: 'confeti',
+      particula: {
+        imagenActual: ''
+      },
       mapa: {
         fondoActual: '',
         veloActual: '',
@@ -332,13 +332,14 @@ function _construirSeccionTema() {
 
   return `
     <h4 class="panel-titulo" style="font-size:16px;">Partícula de celebración</h4>
-    <div class="form-grupo">
-      <select id="ev-tema-particula" class="form-input" onchange="_eventoFormState.tema.particula = this.value">
-        ${_PARTICULAS_DISPONIBLES.map(p => `<option value="${p}" ${t.particula === p ? 'selected' : ''}>${_capitalizarAdmin(p)}</option>`).join('')}
-      </select>
-      <p class="form-hint">Se dispara en pantalla cada vez que el usuario completa un reto.</p>
+    <div class="form-fila" style="flex-wrap:wrap;">
+      <div class="form-grupo" style="min-width:220px;">
+        <label class="form-label">Imagen de la partícula</label>
+        ${t.particula.imagenActual ? `<img src="${t.particula.imagenActual}" alt="Partícula" style="max-width:80px; display:block; margin-bottom:6px; border-radius:6px;" onerror="this.style.display='none'" />` : ''}
+        <input type="file" id="ev-tema-particula-img" class="form-input" accept="image/jpeg,image/png,image/webp,image/gif" />
+      </div>
     </div>
-
+    <p class="form-hint">Cae en pantalla cada vez que el usuario completa un reto. Si no cargás ninguna imagen, se usa un confeti genérico por defecto.</p>
     <h4 class="panel-titulo" style="font-size:16px; margin-top:22px;">Mascota</h4>
     <div class="form-fila" style="flex-wrap:wrap;">
       <div class="form-grupo" style="min-width:220px;">
@@ -475,7 +476,11 @@ function _normalizarTemaCargado(temaCrudo) {
       imagenActual: temaCrudo.mascota?.imagen || '',
       mensajes: Object.entries(temaCrudo.mascota?.mensajes || {}).map(([accion, texto]) => ({ accion, texto }))
     },
-    particula: temaCrudo.particula || base.particula,
+    particula: {
+      imagenActual: (temaCrudo.particula && typeof temaCrudo.particula === 'object')
+        ? (temaCrudo.particula.imagen || '')
+        : ''
+    },
     mapa: {
       fondoActual: temaCrudo.mapa?.fondo || '',
       veloActual: temaCrudo.mapa?.velo || '',
@@ -528,12 +533,13 @@ async function guardarEventoAdmin(event) {
   let imagenMascota = s.tema.mascota.imagenActual;
   let imagenMapaFondo = s.tema.mapa.fondoActual;
   let imagenMapaVelo = s.tema.mapa.veloActual;
-  let imagenSecreto = s.tema.secreto.imagenActual;
+  let imagenParticula = s.tema.particula.imagenActual;
 
   const subidasTema = [
     { inputId: 'ev-tema-mascota-img', path: 'tema/mascota', asignar: (url) => (imagenMascota = url) },
     { inputId: 'ev-tema-mapa-fondo', path: 'tema/mapaFondo', asignar: (url) => (imagenMapaFondo = url) },
     { inputId: 'ev-tema-mapa-velo', path: 'tema/mapaVelo', asignar: (url) => (imagenMapaVelo = url) },
+    { inputId: 'ev-tema-particula-img', path: 'tema/particula', asignar: (url) => (imagenParticula = url) },
     { inputId: 'ev-tema-secreto-img', path: 'tema/secreto', asignar: (url) => (imagenSecreto = url) }
   ];
 
@@ -557,7 +563,9 @@ async function guardarEventoAdmin(event) {
         .filter(m => m.accion && m.accion.trim())
         .reduce((acc, m) => { acc[m.accion.trim()] = m.texto || ''; return acc; }, {})
     },
-    particula: s.tema.particula || 'confeti',
+particula: {
+      imagen: imagenParticula || ''
+    },
     mapa: {
       fondo: imagenMapaFondo || '',
       velo: imagenMapaVelo || '',
