@@ -4782,3 +4782,16 @@ img { max-width: 100%; display: block; }
 .perfil-evento-resumen { margin: 16px 0; padding: 12px; border-radius: 10px; background: #fdf6f4; }
 .perfil-evento-resumen-titulo { font-weight: 700; margin-bottom: 6px; }
 .perfil-evento-resumen-datos { font-size: 13px; color: #6b4e4e; margin-top: 6px; }
+
+/* ── Partícula de celebración (Fase 5) ────────────────────── */
+.evento-particula-cayendo {
+  position: absolute;
+  top: -30px;
+  animation: evento-particula-caida linear forwards;
+  z-index: 1;
+}
+
+@keyframes evento-particula-caida {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(300px) rotate(90deg); opacity: 0; }
+}
