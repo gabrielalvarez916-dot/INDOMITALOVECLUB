@@ -238,6 +238,19 @@ async function renderPaginaEvento() {
   const yaEstabaCompleto = progresoAnterior && progresoAnterior.eventoCompleto;
   const recienCompletado = progreso.eventoCompleto && !yaEstabaCompleto;
 
+  // Fase 5: detecta reto por reto (no solo el evento entero) comparando
+  // contra el progreso anterior, y dispara el evento global desacoplado.
+  if (progresoAnterior) {
+    progreso.retos.forEach((reto, i) => {
+      const retoAnterior = progresoAnterior.retos[i];
+      if (reto.completo && retoAnterior && !retoAnterior.completo) {
+        window.dispatchEvent(new CustomEvent('evento:retoCompletado', {
+          detail: { reto, indice: i, evento, tipo: evento.tema?.particula }
+        }));
+      }
+    });
+  }
+
   contenedor.innerHTML = `
     <div class="evento-banner" style="background-image:url('${evento.imagenes.banner}')">
       <h1>${evento.nombre}</h1>
@@ -477,6 +490,7 @@ function _escaparHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
 
 /**
  * Única fuente de verdad para las 4 piezas de la Fase 4 (barra de
