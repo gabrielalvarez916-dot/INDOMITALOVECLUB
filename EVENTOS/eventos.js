@@ -418,12 +418,12 @@ function _mostrarAnimacionEventoCompletado(evento, progreso) {
   `;
 
   mostrarModal('modal-evento-completado'); // patrón real de ui.js
+  _dispararParticulaEvento(evento.tema?.particula, 'evento-completado-animacion');
 
   document.getElementById('btn-cerrar-evento-completado').onclick = () => {
     cerrarModales();
   };
 }
-
 
 // ────────────────────────────────────────────────────────────
 // 6. REGISTRO DE ACCIONES DIRECTAS
@@ -489,6 +489,35 @@ function _escaparHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+const _EVENTO_PARTICULAS_VALIDAS = ['confeti', 'corazones', 'nieve', 'chocolate'];
+
+function _dispararParticulaEvento(tipo, idContenedor) {
+  const contenedor = document.getElementById(idContenedor);
+  if (!contenedor) return;
+
+  const particula = _EVENTO_PARTICULAS_VALIDAS.includes(tipo) ? tipo : 'confeti';
+  const emojis = {
+    confeti: ['🎉', '✨', '🎊'],
+    corazones: ['💕', '💖', '💗'],
+    nieve: ['❄️', '❅', '❆'],
+    chocolate: ['🍫', '🍬']
+  };
+  const set = emojis[particula];
+
+  for (let i = 0; i < 18; i++) {
+    setTimeout(() => {
+      const el = document.createElement('span');
+      el.textContent = set[Math.floor(Math.random() * set.length)];
+      el.className = 'evento-particula-cayendo';
+      el.style.left = `${Math.random() * 100}%`;
+      el.style.animationDuration = `${1.5 + Math.random() * 1.5}s`;
+      el.style.fontSize = `${14 + Math.random() * 10}px`;
+      contenedor.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }, i * 60);
+  }
 }
 
 
@@ -568,3 +597,12 @@ function _actualizarWidgetFlotanteEvento() {
     <button type="button" class="evento-widget-boton" onclick="event.stopPropagation(); mostrarSeccion('evento');">Ver evento</button>
   `;
 }
+
+// ────────────────────────────────────────────────────────────
+// 7. ANIMACIÓN GLOBAL (Fase 5) — se ve sin importar la sección,
+// porque #header-animacion-global está siempre en el DOM.
+// ────────────────────────────────────────────────────────────
+
+window.addEventListener('evento:retoCompletado', (e) => {
+  _dispararParticulaEvento(e.detail.tipo, 'header-animacion-global');
+});
