@@ -16,7 +16,8 @@
 <body>
 
   <!-- HEADER -->
-  <header id="header">
+ <header id="header" style="position:relative; overflow:hidden;">
+    <div id="header-animacion-global" style="position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:999;"></div>
     <div class="header-inner">
       <div class="logo">
         <img src="Logo.png" alt="Indómita Love Club" id="logo-img" />
@@ -610,7 +611,10 @@
     <h3 class="modal-titulo">🎉 ¡Insignia ganada!</h3>
     <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
   </div>
-  <div class="modal-body" id="modal-evento-completado-contenido" style="text-align:center;"></div>
+  <div class="modal-body" style="position:relative; overflow:hidden; text-align:center;">
+      <div id="evento-completado-animacion" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;"></div>
+      <div id="modal-evento-completado-contenido" style="position:relative;"></div>
+    </div>
 </div>
   
   <!-- Modal: detalle de campaña -->
