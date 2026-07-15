@@ -75,9 +75,10 @@ async function inicializarEventos() {
       p_rol: usuario.rol
     });
 
-    if (error || !resultado || !resultado.activo) {
+   if (error || !resultado || !resultado.activo) {
       _ocultarBotonNavEvento();
       _actualizarWidgetFlotanteEvento();
+      _detenerTimerSecretoEvento();
       return;
     }
 
@@ -86,6 +87,7 @@ async function inicializarEventos() {
 
     _mostrarBotonNavEvento(resultado.evento);
     _actualizarWidgetFlotanteEvento();
+    _iniciarTimerSecretoEvento(resultado.evento);
 
     if (!resultado.modalVisto) {
       _mostrarModalInicioEvento(resultado.evento);
@@ -639,3 +641,92 @@ function _actualizarWidgetFlotanteEvento() {
 window.addEventListener('evento:retoCompletado', (e) => {
   _dispararParticulaEvento(e.detail.imagen, 'header-animacion-global');
 });
+
+// ────────────────────────────────────────────────────────────
+// 8. SECRETO FLOTANTE (Fase 7)
+// Objeto (ej. chocolate) que aparece cada tanto en pantalla mientras
+// el usuario tiene un evento activo, según tema.secreto.frecuenciaMin.
+// Al clickearlo, suma tema.secreto.puntos y se reprograma la próxima
+// aparición. Si el evento no tiene tema.secreto.imagen cargada, no
+// hace nada (evento sin secreto configurado).
+// ────────────────────────────────────────────────────────────
+
+function _detenerTimerSecretoEvento() {
+  if (_EventosState.timerSecreto) {
+    clearTimeout(_EventosState.timerSecreto);
+    _EventosState.timerSecreto = null;
+  }
+  _ocultarSecretoFlotante();
+}
+
+function _iniciarTimerSecretoEvento(evento) {
+  _detenerTimerSecretoEvento();
+
+  const imagenSecreto = evento.tema?.secreto?.imagen;
+  if (!imagenSecreto) return; // este evento no tiene secreto configurado
+
+  const frecuenciaMin = evento.tema.secreto.frecuenciaMin || 30;
+  // Variación aleatoria (mitad a una vez y media de la frecuencia) para
+  // que no sea siempre exacto y predecible.
+  const minMs = frecuenciaMin * 60 * 1000 * 0.5;
+  const maxMs = frecuenciaMin * 60 * 1000 * 1.5;
+  const espera = minMs + Math.random() * (maxMs - minMs);
+
+  _EventosState.timerSecreto = setTimeout(() => {
+    _mostrarSecretoFlotante(evento);
+  }, espera);
+}
+
+function _asegurarWidgetSecretoEvento() {
+  if (document.getElementById('evento-secreto-flotante')) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'evento-secreto-flotante';
+  btn.className = 'evento-secreto-flotante';
+  btn.style.display = 'none';
+  btn.onclick = _clickSecretoEvento;
+  document.body.appendChild(btn);
+}
+
+function _mostrarSecretoFlotante(evento) {
+  _asegurarWidgetSecretoEvento();
+  const btn = document.getElementById('evento-secreto-flotante');
+  btn.innerHTML = `<img src="${evento.tema.secreto.imagen}" alt="" class="evento-secreto-flotante-imagen" />`;
+  btn.style.left = `${5 + Math.random() * 80}%`;
+  btn.style.top = `${15 + Math.random() * 60}%`;
+  btn.style.display = 'block';
+}
+
+function _ocultarSecretoFlotante() {
+  const btn = document.getElementById('evento-secreto-flotante');
+  if (btn) btn.style.display = 'none';
+}
+
+async function _clickSecretoEvento() {
+  const evento = _EventosState.eventoActivo;
+  if (!evento) return;
+
+  _ocultarSecretoFlotante();
+
+  try {
+    await supabaseClient.rpc('registrar_accion_directa_evento', {
+      p_usuario: _EventosState.idUsuario,
+      p_id_evento: evento.id,
+      p_accion: 'secreto_encontrado'
+    });
+
+    mostrarToast(`¡Encontraste el secreto! +${evento.tema.secreto.puntos} puntos`, 'ok');
+
+    const seccionEvento = document.getElementById('seccion-evento');
+    if (seccionEvento && seccionEvento.style.display !== 'none') {
+      renderPaginaEvento();
+    } else {
+      _actualizarWidgetFlotanteEvento();
+    }
+  } catch (e) {
+    console.error('Error registrando secreto encontrado:', e);
+  }
+
+  // Programa la próxima aparición del secreto.
+  _iniciarTimerSecretoEvento(evento);
+}
