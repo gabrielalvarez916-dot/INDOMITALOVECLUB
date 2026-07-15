@@ -247,6 +247,7 @@ async function renderPaginaEvento() {
         window.dispatchEvent(new CustomEvent('evento:retoCompletado', {
           detail: { reto, indice: i, evento, imagen: evento.tema?.particula?.imagen }
         }));
+         _mostrarMensajeMascotaSiCorresponde(evento, reto);
       }
     });
   }
@@ -577,6 +578,40 @@ function _asegurarWidgetFlotanteEvento() {
   div.style.display = 'none';
   div.onclick = () => mostrarSeccion('evento');
   document.body.appendChild(div);
+}
+
+function _asegurarWidgetMascotaEvento() {
+  if (document.getElementById('evento-widget-mascota')) return;
+  const div = document.createElement('div');
+  div.id = 'evento-widget-mascota';
+  div.style.display = 'none';
+  document.body.appendChild(div);
+}
+
+function _mostrarMensajeMascota(evento, texto) {
+  _asegurarWidgetMascotaEvento();
+  const widget = document.getElementById('evento-widget-mascota');
+  const imagen = evento.tema?.mascota?.imagen || '';
+
+  widget.innerHTML = `
+    ${imagen ? `<img src="${imagen}" alt="" class="evento-mascota-imagen" />` : ''}
+    <p class="evento-mascota-texto">${_escaparHtml(texto)}</p>
+    <button type="button" class="evento-mascota-cerrar" onclick="_cerrarMensajeMascota()">✕</button>
+  `;
+  widget.style.display = 'flex';
+}
+
+function _cerrarMensajeMascota() {
+  const widget = document.getElementById('evento-widget-mascota');
+  if (widget) widget.style.display = 'none';
+}
+
+function _mostrarMensajeMascotaSiCorresponde(evento, reto) {
+  const mensajes = evento.tema?.mascota?.mensajes;
+  if (!mensajes) return;
+  const texto = mensajes[reto.id];
+  if (!texto) return;
+  _mostrarMensajeMascota(evento, texto);
 }
 
 function _actualizarWidgetFlotanteEvento() {
