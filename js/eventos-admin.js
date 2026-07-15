@@ -534,6 +534,7 @@ async function guardarEventoAdmin(event) {
   let imagenMapaFondo = s.tema.mapa.fondoActual;
   let imagenMapaVelo = s.tema.mapa.veloActual;
   let imagenParticula = s.tema.particula.imagenActual;
+  let imagenSecreto = s.tema.secreto.imagenActual;
 
   const subidasTema = [
     { inputId: 'ev-tema-mascota-img', path: 'tema/mascota', asignar: (url) => (imagenMascota = url) },
