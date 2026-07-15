@@ -45,7 +45,8 @@ const _EventosState = {
   eventoActivo: null,     // objeto de datos del evento activo (si hay uno)
   progreso: null,         // datos de progreso devueltos por el backend
   rol: null,              // rol del usuario actual ('autor' | 'reseñador')
-  idUsuario: null         // ID_Usuario actual (Sesion.obtener().id)
+  idUsuario: null,        // ID_Usuario actual (Sesion.obtener().id)
+  timerSecreto: null      // Fase 7: id del setTimeout del secreto flotante
 };
 
 
