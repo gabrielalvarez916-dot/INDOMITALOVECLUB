@@ -240,10 +240,12 @@ async function renderPaginaEvento() {
       <p>${progreso.eventoCompleto ? '¡Insignia conseguida!' : `Puntos acumulados: ${progreso.puntosAcumulados}`}</p>
     </div>
 
-    <div class="evento-retos-lista">
-      ${progreso.retos.map(reto => _renderCardReto(reto)).join('')}
-    </div>
+    ${_renderMapaOListaRetos(evento, progreso)}
+<div id="evento-mapa-detalle"></div>
   `;
+
+  document.getElementById('evento-mapa-detalle').innerHTML =
+  _renderDetalleNodoMapa(progreso, _indicePrimerRetoActivo(progreso));
 
   if (recienCompletado) {
     _mostrarAnimacionEventoCompletado(evento, progreso);
@@ -275,6 +277,89 @@ function _renderCardReto(reto) {
       </ul>
     </div>
   `;
+}
+
+/**
+ * Decide si mostrar el mapa nuevo (Fase 3) o la lista vieja, según si
+ * el evento tiene tema.mapa cargado. Eventos viejos (sin tema) siguen
+ * viendo la lista de tarjetas de siempre.
+ */
+function _renderMapaOListaRetos(evento, progreso) {
+  const nodos = evento.tema?.mapa?.nodos;
+  const tieneMapa = evento.tema?.mapa?.fondo && Array.isArray(nodos) && nodos.length === 4;
+
+  if (!tieneMapa) {
+    return `<div class="evento-retos-lista">${progreso.retos.map(reto => _renderCardReto(reto)).join('')}</div>`;
+  }
+  return _renderMapaRetos(evento, progreso, nodos);
+}
+
+// Radio de revelado del velo alrededor de cada nodo desbloqueado (0 a 1, fracción del mapa)
+const _EVENTO_MAPA_RADIO_VELO = 0.16;
+
+function _renderMapaRetos(evento, progreso, nodos) {
+  const maskId = `evento-velo-mask-${evento.id}`;
+
+  const circulosRevelados = progreso.retos.map((reto, i) => {
+    if (!reto.desbloqueado || !nodos[i]) return '';
+    const n = nodos[i];
+    return `<circle cx="${n.x / 100}" cy="${n.y / 100}" r="${_EVENTO_MAPA_RADIO_VELO}" fill="black" />`;
+  }).join('');
+
+  const marcadores = progreso.retos.map((reto, i) => {
+    const n = nodos[i];
+    if (!n) return '';
+    const estado = reto.completo ? 'completo' : reto.desbloqueado ? 'activo' : 'bloqueado';
+    const contenido = reto.completo ? '✓' : (reto.desbloqueado ? (i + 1) : '🔒');
+    return `
+      <button type="button"
+        class="evento-mapa-nodo evento-mapa-nodo--${estado}"
+        style="left:${n.x}%; top:${n.y}%;"
+        onclick="_seleccionarNodoMapaEvento(${i})"
+        ${!reto.desbloqueado ? 'disabled' : ''}
+        aria-label="${_escaparHtml(reto.nombre)}">
+        <span class="evento-mapa-nodo-contenido">${contenido}</span>
+      </button>
+    `;
+  }).join('');
+
+  return `
+    <div class="evento-mapa-contenedor">
+      <img class="evento-mapa-fondo" src="${evento.tema.mapa.fondo}" alt="" />
+      ${evento.tema.mapa.velo ? `
+        <svg width="0" height="0" style="position:absolute;">
+          <defs>
+            <mask id="${maskId}" maskContentUnits="objectBoundingBox">
+              <rect x="0" y="0" width="1" height="1" fill="white" />
+              ${circulosRevelados}
+            </mask>
+          </defs>
+        </svg>
+        <img class="evento-mapa-velo" src="${evento.tema.mapa.velo}" alt=""
+          style="mask:url(#${maskId}); -webkit-mask:url(#${maskId});" />
+      ` : ''}
+      <div class="evento-mapa-nodos">${marcadores}</div>
+    </div>
+  `;
+}
+
+function _indicePrimerRetoActivo(progreso) {
+  const idx = progreso.retos.findIndex(r => r.desbloqueado && !r.completo);
+  if (idx !== -1) return idx;
+  for (let i = progreso.retos.length - 1; i >= 0; i--) {
+    if (progreso.retos[i].desbloqueado) return i;
+  }
+  return 0;
+}
+
+function _seleccionarNodoMapaEvento(idx) {
+  const contenedor = document.getElementById('evento-mapa-detalle');
+  if (contenedor) contenedor.innerHTML = _renderDetalleNodoMapa(_EventosState.progreso, idx);
+}
+
+function _renderDetalleNodoMapa(progreso, idx) {
+  const reto = progreso.retos[idx];
+  return reto ? _renderCardReto(reto) : '';
 }
 
 
