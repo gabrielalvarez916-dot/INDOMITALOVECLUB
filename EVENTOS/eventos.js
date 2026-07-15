@@ -15,6 +15,16 @@
 //     el anterior esté en false, hay un índice único en la tabla que
 //     solo permite un evento activo a la vez).
 //   - No hace falta tocar ni un archivo de código para esto.
+//
+// FIX (Fase 4, auditoría):
+//   - _renderBarraProgresoEvento() y _renderTiempoRestanteEvento()
+//     estaban declaradas ADENTRO del template literal de
+//     renderPaginaEvento(), es decir, eran texto, no código. Se
+//     movieron a la sección HELPERS.
+//   - _asegurarWidgetFlotanteEvento() y _actualizarWidgetFlotanteEvento()
+//     estaban pegadas 3 veces, cada una anidada dentro de otra función
+//     (con alcance local, nunca invocadas). Se dejó una sola copia,
+//     a nivel de módulo, y se agregaron los 3 llamados que faltaban.
 // ============================================================
 
 
@@ -66,45 +76,16 @@ async function inicializarEventos() {
 
     if (error || !resultado || !resultado.activo) {
       _ocultarBotonNavEvento();
+      _actualizarWidgetFlotanteEvento();
       return;
     }
-
-    document.getElementById('evento-widget-flotante')?.style.setProperty('display', 'none');
 
     _EventosState.eventoActivo = resultado.evento;
     _EventosState.progreso = resultado.progreso;
 
     _mostrarBotonNavEvento(resultado.evento);
-    
-/**
- * Crea el contenedor del widget si todavía no existe en el DOM.
- * No requiere que agregues nada al HTML: se cuelga solo de <body>.
- */
-function _asegurarWidgetFlotanteEvento() {
-  if (document.getElementById('evento-widget-flotante')) return;
-  const div = document.createElement('div');
-  div.id = 'evento-widget-flotante';
-  div.style.display = 'none';
-  div.onclick = () => mostrarSeccion('evento');
-  document.body.appendChild(div);
-}
+    _actualizarWidgetFlotanteEvento();
 
-function _actualizarWidgetFlotanteEvento() {
-  _asegurarWidgetFlotanteEvento();
-  const widget = document.getElementById('evento-widget-flotante');
-  const r = _resumenEvento();
-
-  if (!r) { widget.style.display = 'none'; return; }
-
-  widget.style.display = 'flex';
-  widget.innerHTML = `
-    <span class="evento-widget-nombre">💋 ${r.nombre}</span>
-    <span class="evento-widget-dato">${r.diasRestantes ?? '?'}d</span>
-    <span class="evento-widget-dato">${r.retosRestantes} retos</span>
-    <button type="button" class="evento-widget-boton" onclick="event.stopPropagation(); mostrarSeccion('evento');">Ver evento</button>
-  `;
-}
-    
     if (!resultado.modalVisto) {
       _mostrarModalInicioEvento(resultado.evento);
     }
@@ -243,6 +224,7 @@ async function renderPaginaEvento() {
 
   if (error || !resultado || !resultado.activo) {
     contenedor.innerHTML = `<p class="evento-vacio">Este evento ya finalizó.</p>`;
+    _actualizarWidgetFlotanteEvento();
     return;
   }
 
@@ -252,35 +234,6 @@ async function renderPaginaEvento() {
   const progresoAnterior = _EventosState.progreso;
   _EventosState.progreso = resultado.progreso;
   const progreso = _EventosState.progreso;
-
-  /**
- * Crea el contenedor del widget si todavía no existe en el DOM.
- * No requiere que agregues nada al HTML: se cuelga solo de <body>.
- */
-function _asegurarWidgetFlotanteEvento() {
-  if (document.getElementById('evento-widget-flotante')) return;
-  const div = document.createElement('div');
-  div.id = 'evento-widget-flotante';
-  div.style.display = 'none';
-  div.onclick = () => mostrarSeccion('evento');
-  document.body.appendChild(div);
-}
-
-function _actualizarWidgetFlotanteEvento() {
-  _asegurarWidgetFlotanteEvento();
-  const widget = document.getElementById('evento-widget-flotante');
-  const r = _resumenEvento();
-
-  if (!r) { widget.style.display = 'none'; return; }
-
-  widget.style.display = 'flex';
-  widget.innerHTML = `
-    <span class="evento-widget-nombre">💋 ${r.nombre}</span>
-    <span class="evento-widget-dato">${r.diasRestantes ?? '?'}d</span>
-    <span class="evento-widget-dato">${r.retosRestantes} retos</span>
-    <button type="button" class="evento-widget-boton" onclick="event.stopPropagation(); mostrarSeccion('evento');">Ver evento</button>
-  `;
-}
 
   const yaEstabaCompleto = progresoAnterior && progresoAnterior.eventoCompleto;
   const recienCompletado = progreso.eventoCompleto && !yaEstabaCompleto;
@@ -301,34 +254,18 @@ function _actualizarWidgetFlotanteEvento() {
     </div>
 
     <div class="evento-progreso-wrap">
-  ${_renderBarraProgresoEvento()}
-  ${_renderTiempoRestanteEvento()}
-</div>
-
-function _renderBarraProgresoEvento() {
-  const r = _resumenEvento();
-  if (!r) return '';
-  return `
-    <div class="evento-barra-progreso">
-      <div class="evento-barra-progreso-relleno" style="width:${r.porcentaje}%;"></div>
-      <span class="evento-barra-progreso-texto">${r.retosCompletados}/${r.retosTotales} retos · ${r.porcentaje}%</span>
+      ${_renderBarraProgresoEvento()}
+      ${_renderTiempoRestanteEvento()}
     </div>
-  `;
-}
-
-function _renderTiempoRestanteEvento() {
-  const r = _resumenEvento();
-  if (!r || r.diasRestantes === null) return '';
-  const texto = r.diasRestantes === 0 ? '¡Último día!' : r.diasRestantes === 1 ? '1 día restante' : `${r.diasRestantes} días restantes`;
-  return `<p class="evento-tiempo-restante">${texto}</p>`;
-}
 
     ${_renderMapaOListaRetos(evento, progreso)}
-<div id="evento-mapa-detalle"></div>
+    <div id="evento-mapa-detalle"></div>
   `;
 
   document.getElementById('evento-mapa-detalle').innerHTML =
   _renderDetalleNodoMapa(progreso, _indicePrimerRetoActivo(progreso));
+
+  _actualizarWidgetFlotanteEvento();
 
   if (recienCompletado) {
     _mostrarAnimacionEventoCompletado(evento, progreso);
@@ -496,40 +433,13 @@ async function registrarAccionEventoSiCorresponde(accion) {
       p_accion: accion
     });
 
-    /**
- * Crea el contenedor del widget si todavía no existe en el DOM.
- * No requiere que agregues nada al HTML: se cuelga solo de <body>.
- */
-function _asegurarWidgetFlotanteEvento() {
-  if (document.getElementById('evento-widget-flotante')) return;
-  const div = document.createElement('div');
-  div.id = 'evento-widget-flotante';
-  div.style.display = 'none';
-  div.onclick = () => mostrarSeccion('evento');
-  document.body.appendChild(div);
-}
-
-function _actualizarWidgetFlotanteEvento() {
-  _asegurarWidgetFlotanteEvento();
-  const widget = document.getElementById('evento-widget-flotante');
-  const r = _resumenEvento();
-
-  if (!r) { widget.style.display = 'none'; return; }
-
-  widget.style.display = 'flex';
-  widget.innerHTML = `
-    <span class="evento-widget-nombre">💋 ${r.nombre}</span>
-    <span class="evento-widget-dato">${r.diasRestantes ?? '?'}d</span>
-    <span class="evento-widget-dato">${r.retosRestantes} retos</span>
-    <button type="button" class="evento-widget-boton" onclick="event.stopPropagation(); mostrarSeccion('evento');">Ver evento</button>
-  `;
-}
-
     // Refresca el progreso local en silencio (no repinta la UI a menos
     // que el usuario esté parado en la página del evento)
     const seccionEvento = document.getElementById('seccion-evento');
     if (seccionEvento && seccionEvento.style.display !== 'none') {
       renderPaginaEvento();
+    } else {
+      _actualizarWidgetFlotanteEvento();
     }
 
   } catch (e) {
@@ -593,4 +503,54 @@ function _resumenEvento() {
     puntosAcumulados: progreso.puntosAcumulados,
     eventoCompleto: progreso.eventoCompleto
   };
+}
+
+// FIX: barra de progreso y tiempo restante — antes quedaban declaradas
+// adentro del template literal de renderPaginaEvento() y nunca existían
+// como funciones reales (ReferenceError al llamarlas).
+function _renderBarraProgresoEvento() {
+  const r = _resumenEvento();
+  if (!r) return '';
+  return `
+    <div class="evento-barra-progreso">
+      <div class="evento-barra-progreso-relleno" style="width:${r.porcentaje}%;"></div>
+      <span class="evento-barra-progreso-texto">${r.retosCompletados}/${r.retosTotales} retos · ${r.porcentaje}%</span>
+    </div>
+  `;
+}
+
+function _renderTiempoRestanteEvento() {
+  const r = _resumenEvento();
+  if (!r || r.diasRestantes === null) return '';
+  const texto = r.diasRestantes === 0 ? '¡Último día!' : r.diasRestantes === 1 ? '1 día restante' : `${r.diasRestantes} días restantes`;
+  return `<p class="evento-tiempo-restante">${texto}</p>`;
+}
+
+// FIX: widget flotante — antes estaba pegado 3 veces, cada copia anidada
+// dentro de otra función (alcance local, nunca invocada). Ahora es una
+// sola función de módulo, llamada desde inicializarEventos(),
+// renderPaginaEvento() y registrarAccionEventoSiCorresponde().
+function _asegurarWidgetFlotanteEvento() {
+  if (document.getElementById('evento-widget-flotante')) return;
+  const div = document.createElement('div');
+  div.id = 'evento-widget-flotante';
+  div.style.display = 'none';
+  div.onclick = () => mostrarSeccion('evento');
+  document.body.appendChild(div);
+}
+
+function _actualizarWidgetFlotanteEvento() {
+  _asegurarWidgetFlotanteEvento();
+  const widget = document.getElementById('evento-widget-flotante');
+  const r = _resumenEvento();
+
+  if (!r) { widget.style.display = 'none'; return; }
+
+  widget.style.display = 'flex';
+  widget.innerHTML = `
+    <span class="evento-widget-nombre">💋 ${r.nombre}</span>
+    <span class="evento-widget-dato">${r.diasRestantes ?? '?'}d</span>
+    <span class="evento-widget-dato">${r.retosRestantes} retos</span>
+    <button type="button" class="evento-widget-boton" onclick="event.stopPropagation(); mostrarSeccion('evento');">Ver evento</button>
+  `;
 }
