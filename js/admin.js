@@ -431,14 +431,7 @@ function construirFilaTicketAdmin(t) {
     ? `<span class="badge badge-rechazada">🚩 Denuncia${t.categoria ? ' · ' + t.categoria : ''}</span>`
     : '';
   const estadoBadge = t.estado === 'cerrado'
-
-function construirFilaTicketAdmin(t) {
-  const estadoBadge = t.estado === 'cerrado'
     ? '<span class="badge badge-cancelada">Cerrado</span>'
-    : t.estado === 'respondido'
-    ? '<span class="badge badge-aprobada">Respondido</span>'
-    : '<span class="badge badge-pendiente">Pendiente</span>';
-
   const botones = `
     <button class="btn-secundario btn-sm" onclick="abrirModalTicketAdmin('${t.idTicket}')">Ver / Responder</button>
     ${t.estado !== 'cerrado' ? `<button class="btn-secundario btn-sm btn-peligro" onclick="cerrarTicketAdmin('${t.idTicket}')">Cerrar</button>` : ''}
