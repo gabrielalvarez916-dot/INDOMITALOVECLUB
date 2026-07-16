@@ -355,75 +355,56 @@ async function verificarModalActualizacion() {
   const usuario = Sesion.obtener();
   if (!usuario) return;
 
-  const tipoActualizacion = 'actualizacion_junio_2026';
+  // Busca el modal marcado como activo (si hay alguno)
+  const { data: modal, error } = await supabaseClient
+    .from('modales_actualizacion')
+    .select('*')
+    .eq('activo', true)
+    .maybeSingle();
 
-  const { data, error } = await supabaseClient
+  if (error || !modal) return; // no hay ningún modal activo, no mostramos nada
+
+  // ¿Este usuario ya vio ESTE modal en particular? (usamos su id como "tipo")
+  const { data: yaVisto, error: errorVisto } = await supabaseClient
     .from('modal_actualizaciones')
     .select('id')
     .eq('id_usuario', usuario.id)
-    .eq('tipo_actualizacion', tipoActualizacion)
+    .eq('tipo_actualizacion', modal.id)
     .maybeSingle();
 
-  if (error) {
-    console.error('Error verificando modal:', error);
+  if (errorVisto) {
+    console.error('Error verificando modal:', errorVisto);
     return;
   }
 
-  if (!data) {
-    mostrarModalActualizaciones(tipoActualizacion);
+  if (!yaVisto) {
+    mostrarModalActualizaciones(modal);
   }
 }
 
-function mostrarModalActualizaciones(tipoActualizacion) {
-  const modal = document.getElementById('modal-actualizaciones');
+function mostrarModalActualizaciones(modal) {
+  const modalEl = document.getElementById('modal-actualizaciones');
   const overlay = document.getElementById('modal-overlay');
   const contenedor = document.getElementById('modal-actualizaciones-contenido');
   const btnEntendido = document.getElementById('btn-modal-actualizaciones-entendido');
 
-  if (!modal || !overlay || !contenedor || !btnEntendido) {
-    return;
-  }
+  if (!modalEl || !overlay || !contenedor || !btnEntendido) return;
 
- contenedor.innerHTML = `
-<p>Estamos emocionad@s de compartirte todas las mejoras que integramos en estos últimos días. Acá está el resumen de lo nuevo:</p>
+  contenedor.innerHTML = `
+    ${modal.imagen_url ? `<img src="${modal.imagen_url}" alt="" style="max-width:100%; border-radius:12px; margin-bottom:16px; display:block;" />` : ''}
+    <div>${_escaparHtmlModal(modal.texto).replace(/\n/g, '<br>')}</div>
+  `;
 
-<p style="margin-top:16px;"><strong>📱 PERFILES PÚBLICOS DE RESEÑADOR Y AUTOR</strong></p>
-<p>Ahora cada reseñador y aut@r tiene un perfil público que muestra su trayectoria, reseñas entregadas, calificaciones y redes sociales.</p>
-<p>✓ Los puedes encontrar:
-  <br>• Desde las tarjetas de campañas (clickeá en el aut@r)
-  <br>• En el perfil de cualquier reseñador desde las reseñas</p>
-<p>Mostrá tu trabajo y conectá con la comunidad 💜</p>
-
-<p style="margin-top:16px;"><strong>📅 FECHAS LÍMITE: CLARIFICAMOS LA DIFERENCIA</strong></p>
-<p><strong>PARA RESEÑADORES:</strong>
-  <br>• Fecha de Postulación: hasta cuándo pueden postularse a la campaña
-  <br>• Fecha de Entrega: 30 días desde que el aut@r aprueba tu postulación</p>
-<p><strong>PARA AUTORES:</strong>
-  <br>• Ven ambas fechas en el panel para cada reseñador aprobado
-  <br>• La fecha de entrega es fija: 30 días desde la aprobación</p>
-
-<p style="margin-top:16px;"><strong>🔗 COMPARTIR CAMPAÑA (Aut@res)</strong></p>
-<p>Ahora cada campaña activa tiene un botón COMPARTIR para difundir tu campaña fácilmente en redes.</p>
-
-<p style="margin-top:16px;"><strong>✏️ EDITAR CAMPAÑAS Y LIBROS (Aut@res)</strong></p>
-<p>Mientras tu campaña está activa, podés actualizar los datos de tu libro sin perder postulaciones. Cuando la campaña venza, necesitarás crear una nueva.</p>
-
-<p style="margin-top:16px;"><strong>🐛 BUGS CORREGIDOS</strong></p>
-<p>✓ Portadas que no se mostraban correctamente<br>✓ Errores en la carga de reseñas<br>✓ Problemas en dispositivos móviles<br>✓ Mejoras de velocidad</p>
-
-<p style="margin-top:16px; color:#888; font-size:13px;">¿Dudas? Respondé el mail o usá el botón de soporte 💬</p>
-`;
-  
   overlay.style.display = 'block';
-  modal.style.display = 'block';
+  modalEl.style.display = 'block';
   document.body.style.overflow = 'hidden';
 
   btnEntendido.onclick = () => {
-    registrarModalVisto(tipoActualizacion);
+    registrarModalVisto(modal.id);
   };
 }
 
-async function registrarModalVisto(tipoActualizacion) {
+async function registrarModalVisto(idModal) {
   const usuario = Sesion.obtener();
   if (!usuario) return;
 
@@ -431,7 +412,7 @@ async function registrarModalVisto(tipoActualizacion) {
     .from('modal_actualizaciones')
     .insert({
       id_usuario: usuario.id,
-      tipo_actualizacion: tipoActualizacion
+      tipo_actualizacion: idModal
     });
 
   if (!error) {
@@ -443,5 +424,11 @@ async function registrarModalVisto(tipoActualizacion) {
   } else {
     console.error('Error registrando modal visto:', error);
   }
+}
+
+function _escaparHtmlModal(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
 }
 
