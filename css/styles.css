@@ -20,8 +20,13 @@
   --gris-medio:    #666666;
   --gris-suave:    #999999;
   --gris-borde:    #E5E0D8;
-  --error:         #C0392B;
+ --error:         #C0392B;
   --ok:            #27AE60;
+
+  /* Color configurable por evento (default: rosa actual). Se pisa por
+     JS con setProperty() cuando el evento activo tiene un color propio. */
+  --evento-color:      #e05a8a;
+  --evento-color-rgb:  224, 90, 138;
 
   --fuente-titulo: 'Playfair Display', Georgia, serif;
   --fuente-texto:  'Lato', sans-serif;
@@ -4741,12 +4746,13 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
+
 .evento-mapa-nodo--bloqueado { background: #b0a29d; color: #fff; cursor: not-allowed; opacity: .75; }
-.evento-mapa-nodo--activo { background: #e05a8a; color: #fff; animation: evento-nodo-pulso 1.6s infinite; }
+.evento-mapa-nodo--activo { background: var(--evento-color); color: #fff; animation: evento-nodo-pulso 1.6s infinite; }
 .evento-mapa-nodo--completo { background: #2fa36a; color: #fff; }
 @keyframes evento-nodo-pulso {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(224,90,138,.5); }
-  50% { box-shadow: 0 0 0 10px rgba(224,90,138,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--evento-color-rgb), .5); }
+  50% { box-shadow: 0 0 0 10px rgba(var(--evento-color-rgb), 0); }
 }
 
 .evento-progreso-wrap { margin: 14px 0; }
@@ -4756,14 +4762,14 @@ img { max-width: 100%; display: block; }
   background: #f0e0dc; border-radius: 11px; overflow: hidden;
 }
 .evento-barra-progreso-relleno {
-  height: 100%; background: #e05a8a; transition: width .4s ease;
+  height: 100%; background: var(--evento-color); transition: width .4s ease;
 }
 .evento-barra-progreso-texto {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 600; color: #4a2e2e;
 }
-.evento-tiempo-restante { font-size: 15px; font-weight: 600; color: #e05a8a; margin-top: 6px; }
+.evento-tiempo-restante { font-size: 15px; font-weight: 600; color: var(--evento-color); margin-top: 6px; }
 
 #evento-widget-flotante {
   position: fixed; bottom: 18px; right: 18px; z-index: 500;
@@ -4773,7 +4779,7 @@ img { max-width: 100%; display: block; }
   cursor: pointer; font-size: 13px;
 }
 .evento-widget-boton {
-  background: #e05a8a; color: #fff; border: none; border-radius: 8px;
+  background: var(--evento-color); color: #fff; border: none; border-radius: 8px;
   padding: 5px 10px; font-size: 12px; cursor: pointer;
 }
 
@@ -4880,8 +4886,8 @@ img { max-width: 100%; display: block; }
 }
 
 .evento-mapa-hud .evento-insignia-preview img {
-  width: 84px;
-  height: 84px;
+  width: 120px;
+  height: 120px;
 }
 
 .evento-mapa-hud .evento-insignia-preview p {
