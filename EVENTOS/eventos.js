@@ -46,9 +46,9 @@ const _EventosState = {
   progreso: null,         // datos de progreso devueltos por el backend
   rol: null,              // rol del usuario actual ('autor' | 'reseñador')
   idUsuario: null,        // ID_Usuario actual (Sesion.obtener().id)
-  timerSecreto: null      // Fase 7: id del setTimeout del secreto flotante
+  timerSecreto: null,     // Fase 7: id del setTimeout del secreto flotante
+  timerCountdown: null    // id del setInterval del contador días/horas/minutos
 };
-
 
 // ────────────────────────────────────────────────────────────
 // 1. DETECCIÓN AL CARGAR LA APP
@@ -79,6 +79,7 @@ async function inicializarEventos() {
       _ocultarBotonNavEvento();
       _actualizarWidgetFlotanteEvento();
       _detenerTimerSecretoEvento();
+      _detenerTimerCountdownEvento();
       return;
     }
 
@@ -88,6 +89,7 @@ async function inicializarEventos() {
     _mostrarBotonNavEvento(resultado.evento);
     _actualizarWidgetFlotanteEvento();
     _iniciarTimerSecretoEvento(resultado.evento);
+    _iniciarTimerCountdownEvento();
 
     if (!resultado.modalVisto) {
       _mostrarModalInicioEvento(resultado.evento);
@@ -255,6 +257,22 @@ async function renderPaginaEvento() {
     });
   }
 
+  const tieneMapaVisual = !!(evento.tema?.mapa?.fondo && Array.isArray(evento.tema?.mapa?.nodos) && evento.tema.mapa.nodos.length === 4);
+
+  const bloqueInsignia = `
+    <div class="evento-insignia-preview">
+      <img src="${progreso.eventoCompleto ? evento.imagenes.insigniaColor : evento.imagenes.insigniaGris}" alt="Insignia ${evento.nombre}" />
+      <p>${progreso.eventoCompleto ? '¡Insignia conseguida!' : `Puntos acumulados: ${progreso.puntosAcumulados}`}</p>
+    </div>
+  `;
+
+  const bloqueProgreso = `
+    <div class="evento-progreso-wrap">
+      ${_renderBarraProgresoEvento()}
+      ${_renderTiempoRestanteEvento()}
+    </div>
+  `;
+
   contenedor.innerHTML = `
     <div class="evento-banner" style="background-image:url('${evento.imagenes.banner}')">
       <h1>${evento.nombre}</h1>
@@ -265,25 +283,18 @@ async function renderPaginaEvento() {
       <p>${evento.historia}</p>
     </div>
 
-    <div class="evento-insignia-preview">
-      <img src="${progreso.eventoCompleto ? evento.imagenes.insigniaColor : evento.imagenes.insigniaGris}" alt="Insignia ${evento.nombre}" />
-      <p>${progreso.eventoCompleto ? '¡Insignia conseguida!' : `Puntos acumulados: ${progreso.puntosAcumulados}`}</p>
-    </div>
+    ${!tieneMapaVisual ? bloqueInsignia : ''}
+    ${!tieneMapaVisual ? bloqueProgreso : ''}
 
-    <div class="evento-progreso-wrap">
-      ${_renderBarraProgresoEvento()}
-      ${_renderTiempoRestanteEvento()}
-    </div>
-
-    ${_renderMapaOListaRetos(evento, progreso)}
-    <div id="evento-mapa-detalle"></div>
+    ${_renderMapaOListaRetos(evento, progreso, bloqueInsignia, bloqueProgreso)}
   `;
 
-  document.getElementById('evento-mapa-detalle').innerHTML =
-  _renderDetalleNodoMapa(progreso, _indicePrimerRetoActivo(progreso));
+  if (tieneMapaVisual) {
+    document.getElementById('evento-mapa-detalle').innerHTML =
+      _renderDetalleNodoMapa(progreso, _indicePrimerRetoActivo(progreso), evento.tema.mapa.nodos);
+  }
 
   _actualizarWidgetFlotanteEvento();
-
   if (recienCompletado) {
     _mostrarAnimacionEventoCompletado(evento, progreso);
   }
@@ -321,14 +332,14 @@ function _renderCardReto(reto) {
  * el evento tiene tema.mapa cargado. Eventos viejos (sin tema) siguen
  * viendo la lista de tarjetas de siempre.
  */
-function _renderMapaOListaRetos(evento, progreso) {
+function _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgreso) {
   const nodos = evento.tema?.mapa?.nodos;
   const tieneMapa = evento.tema?.mapa?.fondo && Array.isArray(nodos) && nodos.length === 4;
 
   if (!tieneMapa) {
     return `<div class="evento-retos-lista">${progreso.retos.map(reto => _renderCardReto(reto)).join('')}</div>`;
   }
-  return _renderMapaRetos(evento, progreso, nodos);
+  return _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgreso);
 }
 
 // Radio de revelado del velo alrededor de cada nodo desbloqueado (0 a 1, fracción del mapa)
@@ -375,7 +386,12 @@ function _renderMapaRetos(evento, progreso, nodos) {
         <img class="evento-mapa-velo" src="${evento.tema.mapa.velo}" alt=""
           style="mask:url(#${maskId}); -webkit-mask:url(#${maskId});" />
       ` : ''}
+      <div class="evento-mapa-hud">
+        ${bloqueInsignia}
+        ${bloqueProgreso}
+      </div>
       <div class="evento-mapa-nodos">${marcadores}</div>
+      <div id="evento-mapa-detalle"></div>
     </div>
   `;
 }
@@ -391,12 +407,20 @@ function _indicePrimerRetoActivo(progreso) {
 
 function _seleccionarNodoMapaEvento(idx) {
   const contenedor = document.getElementById('evento-mapa-detalle');
-  if (contenedor) contenedor.innerHTML = _renderDetalleNodoMapa(_EventosState.progreso, idx);
+  const nodos = _EventosState.eventoActivo?.tema?.mapa?.nodos;
+  if (contenedor) contenedor.innerHTML = _renderDetalleNodoMapa(_EventosState.progreso, idx, nodos);
 }
 
-function _renderDetalleNodoMapa(progreso, idx) {
+function _renderDetalleNodoMapa(progreso, idx, nodos) {
   const reto = progreso.retos[idx];
-  return reto ? _renderCardReto(reto) : '';
+  if (!reto || !nodos || !nodos[idx]) return '';
+  const n = nodos[idx];
+  const abrirHaciaIzquierda = n.x > 50;
+  return `
+    <div class="evento-mapa-popover" style="left:${n.x}%; top:${n.y}%; transform: translate(${abrirHaciaIzquierda ? '-100%' : '0'}, -50%);">
+      ${_renderCardReto(reto)}
+    </div>
+  `;
 }
 
 
@@ -539,6 +563,7 @@ function _resumenEvento() {
   return {
     id: evento.id,
     nombre: evento.nombre,
+    fechaFin: evento.fechaFin ?? null,
     diasRestantes: evento.diasRestantes ?? null,
     retosCompletados,
     retosTotales,
@@ -563,11 +588,50 @@ function _renderBarraProgresoEvento() {
   `;
 }
 
+// El evento vale todo el día de `fechaFin` y corta a las 00:00 hora
+// Argentina (UTC-3 fijo) del día siguiente. fechaFin llega como 'YYYY-MM-DD'.
+function _finEventoTimestamp(fechaFin) {
+  const [y, m, d] = fechaFin.split('-').map(Number);
+  return Date.UTC(y, m - 1, d + 1, 3, 0, 0);
+}
+
 function _renderTiempoRestanteEvento() {
   const r = _resumenEvento();
-  if (!r || r.diasRestantes === null) return '';
-  const texto = r.diasRestantes === 0 ? '¡Último día!' : r.diasRestantes === 1 ? '1 día restante' : `${r.diasRestantes} días restantes`;
-  return `<p class="evento-tiempo-restante">${texto}</p>`;
+  if (!r || !r.fechaFin) return '';
+
+  const restanteMs = _finEventoTimestamp(r.fechaFin) - Date.now();
+  if (restanteMs <= 0) {
+    return `<p class="evento-tiempo-restante" id="evento-tiempo-restante-texto">¡Último momento!</p>`;
+  }
+
+  const totalMinutos = Math.floor(restanteMs / 60000);
+  const dias = Math.floor(totalMinutos / (60 * 24));
+  const horas = Math.floor((totalMinutos % (60 * 24)) / 60);
+  const minutos = totalMinutos % 60;
+
+  return `<p class="evento-tiempo-restante" id="evento-tiempo-restante-texto">${dias}d ${horas}h ${minutos}m restantes</p>`;
+}
+
+// Actualiza solo el texto del contador cada 1 minuto, sin re-renderizar
+// toda la página del evento (evita perder scroll, inputs, etc.)
+function _actualizarTextoCountdownEvento() {
+  const el = document.getElementById('evento-tiempo-restante-texto');
+  if (!el) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = _renderTiempoRestanteEvento();
+  el.textContent = tmp.firstElementChild?.textContent || '';
+}
+
+function _iniciarTimerCountdownEvento() {
+  _detenerTimerCountdownEvento();
+  _EventosState.timerCountdown = setInterval(_actualizarTextoCountdownEvento, 60000);
+}
+
+function _detenerTimerCountdownEvento() {
+  if (_EventosState.timerCountdown) {
+    clearInterval(_EventosState.timerCountdown);
+    _EventosState.timerCountdown = null;
+  }
 }
 
 // FIX: widget flotante — antes estaba pegado 3 veces, cada copia anidada
