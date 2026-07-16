@@ -243,7 +243,8 @@ async function verificarSesionActiva() {
     return;
   }
 
-  mostrarHeaderLogueado(perfil);
+ mostrarHeaderLogueado(perfil);
+  iniciarNotificaciones();
   if (typeof inicializarEventos === 'function') inicializarEventos();
 }
 
