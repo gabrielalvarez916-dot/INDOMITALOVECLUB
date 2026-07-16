@@ -17,11 +17,9 @@ let _eventosAdmin = [];
 // Campos de imagen que puede tener un evento (bucket EVENTOS, path {id_evento}/{campo})
 const _CAMPOS_IMAGENES_EVENTO = [
   { campo: 'banner',          label: 'Banner' },
-  { campo: 'fondo',           label: 'Fondo' },
   { campo: 'iconoBeso',       label: 'Ícono' },
   { campo: 'insigniaGris',    label: 'Insignia (gris — no conseguida)' },
   { campo: 'insigniaColor',   label: 'Insignia (color — conseguida)' },
-  { campo: 'decoracionModal', label: 'Decoración del modal' }
 ];
 
 // Estado en memoria del formulario de alta/edición (fuente de verdad para retos anidados)
