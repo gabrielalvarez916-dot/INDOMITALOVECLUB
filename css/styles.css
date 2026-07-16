@@ -4726,6 +4726,19 @@ img { max-width: 100%; display: block; }
   overflow: hidden;
   margin-bottom: 16px;
 }
+
+@media (max-width: 768px) {
+  .evento-mapa-contenedor {
+    aspect-ratio: auto;
+    min-height: 640px;
+  }
+}
+
+@media (max-width: 480px) {
+  .evento-mapa-contenedor {
+    min-height: 560px;
+  }
+}
 .evento-mapa-fondo,
 .evento-mapa-velo {
   position: absolute;
