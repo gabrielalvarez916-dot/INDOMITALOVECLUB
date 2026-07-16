@@ -324,14 +324,16 @@ async function guardarAvatar() {
   const avatarElegido = _avataresDisponibles.find(a => a.id === _avatarSeleccionado);
   const fotoEl = document.getElementById('perfil-foto');
   if (fotoEl && avatarElegido) fotoEl.src = avatarElegido.imagen_url;
-
   Sesion.guardar({ ...usuario, fotoPerfil: avatarElegido?.imagen_url });
-
   cerrarModales();
   mostrarToast('¡Avatar actualizado!', 'ok');
+
+  if (typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('cambiar_avatar');
+  }
+
   _avatarSeleccionado = null;
 }
-
 
 // ────────────────────────────────────────────────────────────
 // GUARDAR PERFIL Y POSTULARSE (primera vez)
