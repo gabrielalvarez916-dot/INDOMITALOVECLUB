@@ -4858,3 +4858,54 @@ img { max-width: 100%; display: block; }
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
+/* ── Overlay de insignia/barra/tiempo SOBRE el mapa ───────── */
+.evento-mapa-hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.88);
+  border-radius: var(--radio-grande);
+  padding: 10px 14px;
+  backdrop-filter: blur(2px);
+}
+
+.evento-mapa-hud .evento-insignia-preview {
+  margin-bottom: 0;
+  gap: 4px;
+}
+
+.evento-mapa-hud .evento-insignia-preview img {
+  width: 56px;
+  height: 56px;
+}
+
+.evento-mapa-hud .evento-insignia-preview p {
+  font-size: 12px;
+}
+
+.evento-mapa-hud .evento-progreso-wrap {
+  width: 100%;
+  margin: 0;
+}
+
+.evento-tiempo-restante {
+  text-align: center;
+}
+
+/* ── Popover del reto, anclado sobre el nodo del mapa ─────── */
+.evento-mapa-popover {
+  position: absolute;
+  z-index: 4;
+  width: min(280px, 80%);
+  margin: 0 12px;
+}
+
+.evento-mapa-popover .evento-reto {
+  box-shadow: var(--sombra-fuerte);
+}
