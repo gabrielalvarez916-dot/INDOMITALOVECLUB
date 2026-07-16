@@ -415,16 +415,59 @@ function _seleccionarNodoMapaEvento(idx) {
   if (contenedor) contenedor.innerHTML = _renderDetalleNodoMapa(_EventosState.progreso, idx, nodos);
 }
 
+// DESPUÉS:
 function _renderDetalleNodoMapa(progreso, idx, nodos) {
   const reto = progreso.retos[idx];
   if (!reto || !nodos || !nodos[idx]) return '';
   const n = nodos[idx];
   const abrirHaciaIzquierda = n.x > 50;
+  const abrirHaciaArriba = n.y > 50;
+  const tx = abrirHaciaIzquierda ? '-100%' : '0';
+  const ty = abrirHaciaArriba ? 'calc(-100% - 14px)' : '14px';
   return `
-    <div class="evento-mapa-popover" style="left:${n.x}%; top:${n.y}%; transform: translate(${abrirHaciaIzquierda ? '-100%' : '0'}, -50%);">
+    <div class="evento-mapa-popover" style="left:${n.x}%; top:${n.y}%; transform: translate(${tx}, ${ty});">
       ${_renderCardReto(reto)}
     </div>
   `;
+}
+
+/**
+ * Corrige la posición del popover del reto si, después de insertarlo en
+ * el DOM, se sale del contenedor del mapa (por ejemplo un nodo muy
+ * pegado al borde izquierdo/derecho o arriba/abajo del todo). Se corre
+ * DESPUÉS de insertar el HTML porque necesita medir el tamaño real ya
+ * renderizado (que cambia según el ancho de pantalla).
+ */
+function _ajustarPopoverDentroDelMapa() {
+  const contenedor = document.querySelector('.evento-mapa-contenedor');
+  const popover = document.querySelector('.evento-mapa-popover');
+  if (!contenedor || !popover) return;
+
+  // Reseteamos cualquier corrección previa antes de medir de nuevo
+  popover.style.marginLeft = '0px';
+  popover.style.marginTop = '0px';
+
+  const rectContenedor = contenedor.getBoundingClientRect();
+  const rectPopover = popover.getBoundingClientRect();
+
+  const margen = 8; // separación mínima respecto al borde del mapa
+  let corrimientoX = 0;
+  let corrimientoY = 0;
+
+  if (rectPopover.left < rectContenedor.left + margen) {
+    corrimientoX = (rectContenedor.left + margen) - rectPopover.left;
+  } else if (rectPopover.right > rectContenedor.right - margen) {
+    corrimientoX = (rectContenedor.right - margen) - rectPopover.right;
+  }
+
+  if (rectPopover.top < rectContenedor.top + margen) {
+    corrimientoY = (rectContenedor.top + margen) - rectPopover.top;
+  } else if (rectPopover.bottom > rectContenedor.bottom - margen) {
+    corrimientoY = (rectContenedor.bottom - margen) - rectPopover.bottom;
+  }
+
+  if (corrimientoX !== 0) popover.style.marginLeft = `${corrimientoX}px`;
+  if (corrimientoY !== 0) popover.style.marginTop = `${corrimientoY}px`;
 }
 
 
