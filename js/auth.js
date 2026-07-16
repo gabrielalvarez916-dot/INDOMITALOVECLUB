@@ -132,7 +132,7 @@ async function manejarRespuestaGoogle(respuesta) {
   if (!perfil || !perfil.rol) {
     mostrarPasoEleccionRol(); // usuario nuevo o incompleto, falta elegir rol
   } else {
-    completarLogin(perfil);
+    await completarLogin(perfil);
   }
 }
 
@@ -174,11 +174,17 @@ async function seleccionarRol(rol) {
     return;
   }
 
-  completarLogin(nuevoPerfil);
+  await completarLogin(nuevoPerfil);
 }
 
-function completarLogin(usuario) {
+async function completarLogin(usuario) {
   Sesion.guardar(usuario);
+
+  if (await _sitioEnMantenimiento(usuario.email)) {
+    _mostrarPantallaMantenimiento();
+    return;
+  }
+
   mostrarHeaderLogueado(usuario);
   iniciarNotificaciones();
   verificarModalActualizacion();
@@ -231,10 +237,48 @@ async function verificarSesionActiva() {
   }
 
   Sesion.guardar(perfil);
+
+  if (await _sitioEnMantenimiento(perfil.email)) {
+    _mostrarPantallaMantenimiento();
+    return;
+  }
+
   mostrarHeaderLogueado(perfil);
   if (typeof inicializarEventos === 'function') inicializarEventos();
 }
 
+// ────────────────────────────────────────────────────────────
+// MODO MANTENIMIENTO
+// ────────────────────────────────────────────────────────────
+
+async function _sitioEnMantenimiento(emailUsuario) {
+  const { data: configRows, error } = await supabaseClient
+    .from('configuracion')
+    .select('clave, valor')
+    .in('clave', ['mantenimiento_activo', 'mantenimiento_usuarios_excluidos']);
+
+  if (error || !configRows) return false;
+
+  const activo = configRows.find(r => r.clave === 'mantenimiento_activo')?.valor === 'true';
+  if (!activo) return false;
+
+  const excluidos = (configRows.find(r => r.clave === 'mantenimiento_usuarios_excluidos')?.valor || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  return !excluidos.includes((emailUsuario || '').toLowerCase());
+}
+
+function _mostrarPantallaMantenimiento() {
+  document.body.innerHTML = `
+    <div style="display:flex;height:100vh;align-items:center;justify-content:center;text-align:center;font-family:sans-serif;padding:20px;">
+      <div>
+        <h1>Estamos actualizando el sistema</h1>
+        <p>Volvé en unos minutos, ya casi terminamos.</p>
+      </div>
+    </div>`;
+}
 
 // ────────────────────────────────────────────────────────────
 // HELPERS
