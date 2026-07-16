@@ -258,10 +258,6 @@ async function renderPaginaEvento(datosFrescos) {
   const contenedor = document.getElementById('seccion-evento');
   if (!contenedor) return;
 
-async function renderPaginaEvento() {
-  const contenedor = document.getElementById('seccion-evento');
-  if (!contenedor) return;
-
   if (!_EventosState.eventoActivo) {
     contenedor.innerHTML = `<p class="evento-vacio">No hay ningún evento activo en este momento.</p>`;
     return;
