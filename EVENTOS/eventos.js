@@ -80,12 +80,14 @@ async function inicializarEventos() {
       _actualizarWidgetFlotanteEvento();
       _detenerTimerSecretoEvento();
       _detenerTimerCountdownEvento();
+      _restablecerColorTemaEvento();
       return;
     }
 
     _EventosState.eventoActivo = resultado.evento;
     _EventosState.progreso = resultado.progreso;
 
+    _aplicarColorTemaEvento(resultado.evento);
     _mostrarBotonNavEvento(resultado.evento);
     _actualizarWidgetFlotanteEvento();
     _iniciarTimerSecretoEvento(resultado.evento);
@@ -230,11 +232,13 @@ async function renderPaginaEvento() {
   if (error || !resultado || !resultado.activo) {
     contenedor.innerHTML = `<p class="evento-vacio">Este evento ya finalizó.</p>`;
     _actualizarWidgetFlotanteEvento();
+    _restablecerColorTemaEvento();
     return;
   }
 
   _EventosState.eventoActivo = resultado.evento;
   const evento = _EventosState.eventoActivo;
+  _aplicarColorTemaEvento(evento);
 
   const progresoAnterior = _EventosState.progreso;
   _EventosState.progreso = resultado.progreso;
@@ -517,6 +521,33 @@ function _escaparHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ── Color personalizado por evento (tema.colorPrincipal) ─────
+// Se aplica como variables CSS en <html> para que lo usen tanto los
+// elementos dentro de #seccion-evento (nodos, barra, contador) como
+// los widgets flotantes que viven fuera de esa sección (agregados
+// directo a document.body, como el widget flotante y el secreto).
+const _EVENTO_COLOR_DEFAULT = '#e05a8a';
+
+function _hexARgbString(hex) {
+  const limpio = (hex || '').replace('#', '');
+  const valido = /^[0-9a-fA-F]{6}$/.test(limpio) ? limpio : 'e05a8a';
+  const r = parseInt(valido.substring(0, 2), 16);
+  const g = parseInt(valido.substring(2, 4), 16);
+  const b = parseInt(valido.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
+function _aplicarColorTemaEvento(evento) {
+  const color = evento?.tema?.colorPrincipal || _EVENTO_COLOR_DEFAULT;
+  document.documentElement.style.setProperty('--evento-color', color);
+  document.documentElement.style.setProperty('--evento-color-rgb', _hexARgbString(color));
+}
+
+function _restablecerColorTemaEvento() {
+  document.documentElement.style.setProperty('--evento-color', _EVENTO_COLOR_DEFAULT);
+  document.documentElement.style.setProperty('--evento-color-rgb', _hexARgbString(_EVENTO_COLOR_DEFAULT));
 }
 
 const _CONFETI_GENERICO = ['🎉', '✨', '🎊'];
