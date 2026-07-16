@@ -1187,6 +1187,42 @@
   </div>
 </div>
 
+  <!-- Modal: denuncia -->
+<div id="modal-denuncia" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">Denunciar</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <form id="form-denuncia" onsubmit="enviarDenuncia(event)">
+      <input type="hidden" id="denuncia-referencia-tipo" />
+      <input type="hidden" id="denuncia-referencia-id" />
+      <div class="form-grupo">
+        <label class="form-label">Motivo *</label>
+        <select id="denuncia-categoria" class="form-input" required>
+          <option value="">— Seleccionar —</option>
+          <option value="plagio">Plagio</option>
+          <option value="perfil_falso">Perfil falso</option>
+          <option value="contenido_no_etiquetado">Contenido no etiquetado</option>
+          <option value="acoso">Acoso</option>
+          <option value="spam">Spam</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Detalles (opcional)</label>
+        <textarea id="denuncia-mensaje" class="form-textarea" rows="4" placeholder="Contanos más si querés..."></textarea>
+      </div>
+      <div id="denuncia-error" class="mensaje-error" style="display:none;"></div>
+      <div id="denuncia-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="submit" class="btn-primario">Enviar denuncia</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: EDITAR PERFIL (nuevo — contiene el form-perfil movido tal cual desde #seccion-perfil) -->
 <div id="modal-editar-perfil" class="modal modal-grande">
   <div class="modal-header">
