@@ -2939,7 +2939,7 @@ img { max-width: 100%; display: block; }
   .faq-item-pregunta { font-size: 14px; }
 }
 /* ── Banner publicitario ──────────────────────────────────── */
-.banner-publicitario-wrapper {
+#banner-publicitario-wrapper {
   background: var(--blanco);
   border-bottom: 1px solid var(--gris-borde);
 }
@@ -2964,8 +2964,7 @@ img { max-width: 100%; display: block; }
 .banner-publicitario-slide img {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 220px;
+  aspect-ratio: 4 / 1;
   object-fit: cover;
 }
 
@@ -2993,12 +2992,6 @@ img { max-width: 100%; display: block; }
   border-radius: 4px;
 }
 
-@media (max-width: 768px) {
-  .banner-publicitario-slide a,
-  .banner-publicitario-slide img {
-    max-height: 140px;
-  }
-}
 /* ════════════════════════════════════════════════════════════
    AGREGAR al final de css/styles.css
    ════════════════════════════════════════════════════════════ */
