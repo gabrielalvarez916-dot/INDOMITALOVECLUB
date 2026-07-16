@@ -332,7 +332,7 @@ function _renderCardReto(reto) {
  * el evento tiene tema.mapa cargado. Eventos viejos (sin tema) siguen
  * viendo la lista de tarjetas de siempre.
  */
-function _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgreso) {
+function _renderMapaOListaRetos(evento, progreso, bloqueInsignia, bloqueProgreso) {
   const nodos = evento.tema?.mapa?.nodos;
   const tieneMapa = evento.tema?.mapa?.fondo && Array.isArray(nodos) && nodos.length === 4;
 
@@ -345,7 +345,7 @@ function _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgres
 // Radio de revelado del velo alrededor de cada nodo desbloqueado (0 a 1, fracción del mapa)
 const _EVENTO_MAPA_RADIO_VELO = 0.16;
 
-function _renderMapaRetos(evento, progreso, nodos) {
+function _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgreso) {
   const maskId = `evento-velo-mask-${evento.id}`;
 
   const circulosRevelados = progreso.retos.map((reto, i) => {
