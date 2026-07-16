@@ -49,6 +49,7 @@ async function cargarFeed() {
   toggleElemento('feed-ticker', false);
 
   cargarBannerPublicitario();
+  cargarTickerEvento();
 
   const { data: campanas, error } = await supabaseClient
     .from('campanas')
@@ -676,6 +677,24 @@ const BannerPublicitario = (() => {
 
   return { cargar };
 })();
+
+async function cargarTickerEvento() {
+  const track = document.getElementById('feed-ticker-track');
+  if (!track) return;
+
+  const { data: evento } = await supabaseClient
+    .from('eventos')
+    .select('nombre, emoji')
+    .eq('activo', true)
+    .maybeSingle();
+
+  const texto = evento
+    ? `${evento.emoji || '✨'} Nuevo evento: ${evento.nombre}`
+    : 'Nueva campaña';
+
+  const itemHtml = `<span class="feed-ticker-item">${texto}</span><span class="feed-ticker-sep">✦</span>`;
+  track.innerHTML = itemHtml.repeat(8);
+}
 
 function cargarBannerPublicitario() {
   BannerPublicitario.cargar();
