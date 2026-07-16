@@ -26,10 +26,9 @@ const NOTIF_TEXTOS = {
   resena_calificada: (d) => `El autor calificó tu reseña de "${d.nombreLibro || ''}" con ${d.puntuacion || '?'} estrellas.`,
   campaña_cancelada_autor: (d) => `La campaña "${d.nombreLibro || ''}" en la que participabas fue cancelada.`,
   recordatorio_resena: (d) => `Te quedan pocos días para entregar tu reseña de "${d.nombreLibro || ''}".`,
-  ticket_actualizado: (d) => `Tu ticket de soporte "${d.asunto || ''}" cambió de estado.`
-};
+  ticket_actualizado: (d) => `Tu ticket de soporte "${d.asunto || ''}" cambió de estado.`,
 
-// Para EVENTOS
+  // Para EVENTOS
   evento_reto_completado: (d) => `¡Completaste el reto "${d.nombreReto || ''}" de "${d.nombreEvento || ''}"! +${d.puntosGanados || 0} puntos.`,
   evento_completado: (d) => `¡Completaste el evento "${d.nombreEvento || ''}"! Ganaste +${d.puntosGanados || 0} puntos en total.`,
 
