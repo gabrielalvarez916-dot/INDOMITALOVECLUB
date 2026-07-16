@@ -427,6 +427,12 @@ async function cargarTicketsAdmin() {
 }
 
 function construirFilaTicketAdmin(t) {
+  const tipoBadge = t.tipo === 'denuncia'
+    ? `<span class="badge badge-rechazada">🚩 Denuncia${t.categoria ? ' · ' + t.categoria : ''}</span>`
+    : '';
+  const estadoBadge = t.estado === 'cerrado'
+
+function construirFilaTicketAdmin(t) {
   const estadoBadge = t.estado === 'cerrado'
     ? '<span class="badge badge-cancelada">Cerrado</span>'
     : t.estado === 'respondido'
@@ -442,7 +448,7 @@ function construirFilaTicketAdmin(t) {
     <tr>
       <td style="font-size:12px;">${t.email}</td>
       <td><span class="badge badge-nivel">${t.rol || '—'}</span></td>
-      <td>${t.asunto}</td>
+      <td>${tipoBadge || t.asunto || ''}</td>
       <td style="max-width:280px; font-size:12px;">${t.mensaje}</td>
       <td style="font-size:12px;">${t.fecha ? String(t.fecha).split('T')[0] : '—'}</td>
       <td>${estadoBadge}</td>
@@ -468,6 +474,13 @@ async function abrirModalTicketAdmin(idTicket) {
         <button onclick="cerrarModalTicketAdmin()" style="background:none; border:none; font-size:20px; cursor:pointer; line-height:1;">×</button>
       </div>
       <p style="font-size:12px; color:#888; margin:0 0 12px;">${ticket?.email || ''}</p>
+      ${ticket?.tipo === 'denuncia' ? `
+        <p style="font-size:12px; margin:0 0 12px;">
+          <a href="#" onclick="event.preventDefault(); cerrarModalTicketAdmin(); ${ticket.referenciaTipo === 'campana' ? `verDetalleCampaña('${ticket.referenciaId}')` : `abrirPerfilPublico('${ticket.referenciaId}', 'reseñador')`}">
+            ${ticket.referenciaTipo === 'campana' ? 'Ver campaña denunciada →' : 'Ver perfil denunciado →'}
+          </a>
+        </p>
+      ` : ''}
       <div id="modal-ticket-historial" style="flex:1; overflow-y:auto; margin-bottom:12px; min-height:80px;">
         <div class="cargando-container"><div class="spinner"></div></div>
       </div>
