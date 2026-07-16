@@ -74,9 +74,9 @@ async function cargarFeed() {
   const idsLibros = [...new Set((campanas || []).map(c => c.id_libro).filter(Boolean))];
   let rankingsPorLibro = {};
 
-  if (idsLibros.length > 0 && Sesion.activa()) {
+  if (idsLibros.length > 0) {
     const { data: rankings } = await supabaseClient
-      .from('ranking_libros')
+      .from('ranking_libros_historico')
       .select('*')
       .in('id_libro', idsLibros);
 
@@ -246,7 +246,7 @@ const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
        <div class="campana-tropes">
       ${tropesHtml}</div>
 ${requisitosHtml}
-        ${c.rankingLibro ? `
+        ${c.rankingLibro && c.rankingLibro.totalReseñas > 0 ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0;">
             ${c.rankingLibro.esTop5  ? `<span class="badge badge-top5">🏆 Top 5</span>` : ''}
             ${c.rankingLibro.esTop20 && !c.rankingLibro.esTop5 ? `<span class="badge badge-top20">⭐ Top 20</span>` : ''}
