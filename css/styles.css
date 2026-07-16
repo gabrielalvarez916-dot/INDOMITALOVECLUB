@@ -4859,32 +4859,34 @@ img { max-width: 100%; display: block; }
 /* ── Overlay de insignia/barra/tiempo SOBRE el mapa ───────── */
 .evento-mapa-hud {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  top: 14px;
+  left: 14px;
+  right: 14px;
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  background: rgba(255,255,255,0.88);
+  gap: 10px;
+  background: rgba(255,255,255,0.55);
   border-radius: var(--radio-grande);
-  padding: 10px 14px;
-  backdrop-filter: blur(2px);
+  padding: 16px 20px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 
 .evento-mapa-hud .evento-insignia-preview {
   margin-bottom: 0;
-  gap: 4px;
+  gap: 6px;
 }
 
 .evento-mapa-hud .evento-insignia-preview img {
-  width: 56px;
-  height: 56px;
+  width: 84px;
+  height: 84px;
 }
 
 .evento-mapa-hud .evento-insignia-preview p {
-  font-size: 12px;
+  font-size: 16px;
+  font-weight: 800;
 }
 
 .evento-mapa-hud .evento-progreso-wrap {
@@ -4892,10 +4894,23 @@ img { max-width: 100%; display: block; }
   margin: 0;
 }
 
+.evento-mapa-hud .evento-barra-progreso {
+  height: 28px;
+}
+
+.evento-mapa-hud .evento-barra-progreso-texto {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.evento-mapa-hud .evento-tiempo-restante {
+  font-size: 19px;
+  font-weight: 800;
+}
+
 .evento-tiempo-restante {
   text-align: center;
 }
-
 /* ── Popover del reto, anclado sobre el nodo del mapa ─────── */
 .evento-mapa-popover {
   position: absolute;
