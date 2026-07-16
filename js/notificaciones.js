@@ -29,6 +29,22 @@ const NOTIF_TEXTOS = {
   ticket_actualizado: (d) => `Tu ticket de soporte "${d.asunto || ''}" cambió de estado.`
 };
 
+// Para EVENTOS
+  evento_reto_completado: (d) => `¡Completaste el reto "${d.nombreReto || ''}" de "${d.nombreEvento || ''}"! +${d.puntosGanados || 0} puntos.`,
+  evento_completado: (d) => `¡Completaste el evento "${d.nombreEvento || ''}"! Ganaste +${d.puntosGanados || 0} puntos en total.`,
+
+  // Para INSIGNIAS (varía el mensaje según datosExtra.tipo)
+  insignia_obtenida: (d) => {
+    const mensajes = {
+      liga: '¡Subiste de liga! 🏆',
+      completion: '¡Lograste 100% de completion este mes! ✅',
+      top5: '¡Entraste al Top 5 del ranking! 🥇',
+      top20: '¡Entraste al Top 20 del ranking! 🎖️'
+    };
+    return mensajes[d.tipo] || 'Ganaste una nueva insignia.';
+  }
+};
+
 function _textoNotificacion(notif) {
   const fn = NOTIF_TEXTOS[notif.tipo];
   if (!fn) return 'Tenés una notificación nueva.';
