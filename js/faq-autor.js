@@ -79,6 +79,10 @@ function cargarFaqAutor() {
       </div>
     </div>
   `).join('');
+
+  if (typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('revisar_faq_autores');
+  }
 }
 
 /**
