@@ -143,21 +143,22 @@ function _escNotif(str) {
 // INTERACCIÓN
 // ────────────────────────────────────────────────────────────
 
+let _notifPanelAbierto = false;
+
 function toggleNotificaciones() {
   const panel = document.getElementById('notif-panel');
   if (!panel) return;
+  _notifPanelAbierto = false;
 
-  const abierto = panel.style.display !== 'none';
+  _notifPanelAbierto = !_notifPanelAbierto;
 
-  if (abierto) {
-    panel.style.display = 'none';
-  } else {
+  if (_notifPanelAbierto) {
     panel.style.display = '';
-    // Al abrir el panel, marca todas como leídas
     marcarTodasComoLeidas();
+  } else {
+    panel.style.display = 'none';
   }
 }
-
 async function marcarTodasComoLeidas() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
@@ -245,8 +246,9 @@ document.addEventListener('click', (e) => {
   const cont = document.getElementById('notif-campana-cont');
   const panel = document.getElementById('notif-panel');
   if (!cont || !panel) return;
-  if (panel.style.display === 'none') return;
+  if (!_notifPanelAbierto) return;
   if (!cont.contains(e.target)) {
     panel.style.display = 'none';
+    _notifPanelAbierto = false;
   }
 });
