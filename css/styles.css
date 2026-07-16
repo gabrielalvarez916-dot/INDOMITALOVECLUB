@@ -3589,15 +3589,13 @@ img { max-width: 100%; display: block; }
 
 /* ── Botón "Evento" en el nav ─────────────────────────────── */
 #nav-evento {
-  background: linear-gradient(135deg, var(--bordo) 0%, var(--bordo-claro) 100%);
-  color: var(--blanco) !important;
-  padding: 6px 16px;
+  color: var(--bordo) !important;
   font-weight: 700;
 }
 
 #nav-evento:hover {
-  background: linear-gradient(135deg, var(--bordo-oscuro) 0%, var(--bordo) 100%);
-  color: var(--blanco) !important;
+  color: var(--bordo) !important;
+  background: var(--bordo-suave);
 }
 
 /* ── Modal de inicio / completado: fondo decorativo ───────── */
