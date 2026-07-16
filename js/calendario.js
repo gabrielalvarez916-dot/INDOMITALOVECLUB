@@ -21,6 +21,10 @@ async function abrirCalendario(rol) {
   _calEventosPorDia = {}; // siempre datos frescos al abrir
   mostrarModal('modal-detalle-campana');
   await _renderizarCalendario();
+
+  if (typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('revisar_calendario');
+  }
 }
 
 function _mesVisible() {
