@@ -593,4 +593,195 @@ async function cerrarTicketAdmin(idTicket) {
   cerrarModalTicketAdmin();
   await cargarTicketsAdmin();
 }
+
+// ────────────────────────────────────────────────────────────
+// MODALES DE ACTUALIZACIÓN
+// ────────────────────────────────────────────────────────────
+
+async function cargarModalesAdmin() {
+  const formCont = document.getElementById('admin-modales-form-contenedor');
+  const listaCont = document.getElementById('admin-modales-lista');
+  if (!formCont || !listaCont) return;
+
+  formCont.innerHTML = `
+    <div class="plan-info" style="margin-bottom:24px;">
+      <p class="plan-nombre" style="font-size:18px;">Nuevo modal de actualización</p>
+      <form id="form-nuevo-modal-actualizacion" onsubmit="crearModalActualizacionAdmin(event)">
+        <div class="form-grupo">
+          <label class="form-label">Título *</label>
+          <input type="text" id="modal-act-titulo" class="form-input" required />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Texto *</label>
+          <textarea id="modal-act-texto" class="form-textarea" rows="6" required placeholder="Contenido del modal. Podés usar saltos de línea."></textarea>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Imagen decorativa (opcional)</label>
+          <input type="url" id="modal-act-imagen" class="form-input" placeholder="https://..." />
+        </div>
+        <div id="modal-act-error" class="mensaje-error" style="display:none;"></div>
+        <button type="submit" class="btn-primario">Crear modal</button>
+      </form>
+    </div>
+  `;
+
+  listaCont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: modales, error } = await supabaseClient
+    .from('modales_actualizacion')
+    .select('*')
+    .order('creado_en', { ascending: false });
+
+  if (error) {
+    listaCont.innerHTML = `<p class="mensaje-error">Error al cargar los modales: ${error.message}</p>`;
+    return;
+  }
+
+  if (!modales || modales.length === 0) {
+    listaCont.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no creaste ningún modal.</p></div>`;
+    return;
+  }
+
+  listaCont.innerHTML = `
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Texto</th>
+          <th>Imagen</th>
+          <th>Estado</th>
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${modales.map(m => construirFilaModalActualizacionAdmin(m)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function construirFilaModalActualizacionAdmin(m) {
+  const estadoBadge = m.activo
+    ? '<span class="badge badge-aprobada">Activo</span>'
+    : '<span class="badge badge-cancelada">Inactivo</span>';
+
+  const textoCorto = (m.texto || '').length > 80 ? m.texto.slice(0, 80) + '…' : (m.texto || '');
+
+  const botonToggle = m.activo
+    ? `<button class="btn-secundario btn-sm" onclick="desactivarModalActualizacionAdmin('${m.id}')">Desactivar</button>`
+    : `<button class="btn-primario btn-sm" onclick="activarModalActualizacionAdmin('${m.id}')">Activar</button>`;
+
+  return `
+    <tr>
+      <td style="font-weight:700;">${escaparHtmlModalAdmin(m.titulo)}</td>
+      <td style="max-width:260px; font-size:12px;">${escaparHtmlModalAdmin(textoCorto)}</td>
+      <td>${m.imagen_url ? `<img src="${m.imagen_url}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:6px;" />` : '—'}</td>
+      <td>${estadoBadge}</td>
+      <td style="font-size:12px;">${m.creado_en ? String(m.creado_en).split('T')[0] : '—'}</td>
+      <td style="display:flex; gap:6px;">
+        ${botonToggle}
+        <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarModalActualizacionAdmin('${m.id}')">Eliminar</button>
+      </td>
+    </tr>
+  `;
+}
+
+function escaparHtmlModalAdmin(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto || '';
+  return div.innerHTML;
+}
+
+async function crearModalActualizacionAdmin(event) {
+  event.preventDefault();
+
+  const titulo = document.getElementById('modal-act-titulo')?.value.trim();
+  const texto = document.getElementById('modal-act-texto')?.value.trim();
+  const imagenUrl = document.getElementById('modal-act-imagen')?.value.trim() || null;
+  const errorEl = document.getElementById('modal-act-error');
+
+  if (errorEl) errorEl.style.display = 'none';
+
+  if (!titulo || !texto) {
+    if (errorEl) { errorEl.textContent = 'Completá título y texto.'; errorEl.style.display = 'block'; }
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from('modales_actualizacion')
+    .insert({ titulo, texto, imagen_url: imagenUrl, activo: false });
+
+  if (error) {
+    if (errorEl) { errorEl.textContent = error.message; errorEl.style.display = 'block'; }
+    return;
+  }
+
+  mostrarToast('Modal creado. Activalo cuando quieras desde la lista.', 'ok');
+  await cargarModalesAdmin();
+}
+
+async function activarModalActualizacionAdmin(idModal) {
+  if (!confirm('¿Activar este modal? Se mostrará a los usuarios que no lo hayan visto, y se desactivará el que esté activo ahora (si hay uno).')) return;
+
+  // 1. Desactiva el que esté activo (si hay alguno) — necesario porque
+  //    solo puede haber UN modal activo a la vez (restricción en la BD).
+  const { error: errorDesactivar } = await supabaseClient
+    .from('modales_actualizacion')
+    .update({ activo: false })
+    .eq('activo', true);
+
+  if (errorDesactivar) {
+    mostrarToast('Error al desactivar el modal anterior: ' + errorDesactivar.message, 'error');
+    return;
+  }
+
+  // 2. Activa el nuevo
+  const { error: errorActivar } = await supabaseClient
+    .from('modales_actualizacion')
+    .update({ activo: true })
+    .eq('id', idModal);
+
+  if (errorActivar) {
+    mostrarToast('Error al activar el modal: ' + errorActivar.message, 'error');
+    return;
+  }
+
+  mostrarToast('Modal activado.', 'ok');
+  await cargarModalesAdmin();
+}
+
+async function desactivarModalActualizacionAdmin(idModal) {
+  if (!confirm('¿Desactivar este modal? Dejará de mostrarse a los usuarios.')) return;
+
+  const { error } = await supabaseClient
+    .from('modales_actualizacion')
+    .update({ activo: false })
+    .eq('id', idModal);
+
+  if (error) {
+    mostrarToast('Error al desactivar: ' + error.message, 'error');
+    return;
+  }
+
+  mostrarToast('Modal desactivado.', 'ok');
+  await cargarModalesAdmin();
+}
+
+async function eliminarModalActualizacionAdmin(idModal) {
+  if (!confirm('¿Eliminar este modal definitivamente? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await supabaseClient
+    .from('modales_actualizacion')
+    .delete()
+    .eq('id', idModal);
+
+  if (error) {
+    mostrarToast('Error al eliminar: ' + error.message, 'error');
+    return;
+  }
+
+  mostrarToast('Modal eliminado.', 'ok');
+  await cargarModalesAdmin();
+}
  
