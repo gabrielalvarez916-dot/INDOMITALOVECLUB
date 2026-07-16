@@ -353,7 +353,30 @@ const _EVENTO_MAPA_RADIO_VELO = 0.16;
 
 function _renderMapaRetos(evento, progreso, nodos) {
   const maskId = `evento-velo-mask-${evento.id}`;
-  ...
+
+  const circulosRevelados = progreso.retos.map((reto, i) => {
+    if (!reto.desbloqueado || !nodos[i]) return '';
+    const n = nodos[i];
+    return `<circle cx="${n.x / 100}" cy="${n.y / 100}" r="${_EVENTO_MAPA_RADIO_VELO}" fill="black" />`;
+  }).join('');
+
+  const marcadores = progreso.retos.map((reto, i) => {
+    const n = nodos[i];
+    if (!n) return '';
+    const estado = reto.completo ? 'completo' : reto.desbloqueado ? 'activo' : 'bloqueado';
+    const contenido = reto.completo ? '✓' : (reto.desbloqueado ? (i + 1) : '🔒');
+    return `
+      <button type="button"
+        class="evento-mapa-nodo evento-mapa-nodo--${estado}"
+        style="left:${n.x}%; top:${n.y}%;"
+        onclick="_seleccionarNodoMapaEvento(${i})"
+        ${!reto.desbloqueado ? 'disabled' : ''}
+        aria-label="${_escaparHtml(reto.nombre)}">
+        <span class="evento-mapa-nodo-contenido">${contenido}</span>
+      </button>
+    `;
+  }).join('');
+
   return `
     <div class="evento-mapa-contenedor">
       <img class="evento-mapa-fondo" src="${evento.tema.mapa.fondo}" alt="" />
