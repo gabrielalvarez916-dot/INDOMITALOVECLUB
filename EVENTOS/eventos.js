@@ -747,6 +747,13 @@ function _asegurarWidgetFlotanteEvento() {
 }
 
 function _asegurarWidgetMascotaEvento() {
+  if (!document.getElementById('evento-mascota-backdrop')) {
+    const backdrop = document.createElement('div');
+    backdrop.id = 'evento-mascota-backdrop';
+    backdrop.style.display = 'none';
+    backdrop.onclick = _cerrarMensajeMascota;
+    document.body.appendChild(backdrop);
+  }
   if (document.getElementById('evento-widget-mascota')) return;
   const div = document.createElement('div');
   div.id = 'evento-widget-mascota';
@@ -757,6 +764,7 @@ function _asegurarWidgetMascotaEvento() {
 function _mostrarMensajeMascota(evento, texto) {
   _asegurarWidgetMascotaEvento();
   const widget = document.getElementById('evento-widget-mascota');
+  const backdrop = document.getElementById('evento-mascota-backdrop');
   const imagen = evento.tema?.mascota?.imagen || '';
 
   widget.innerHTML = `
@@ -765,11 +773,14 @@ function _mostrarMensajeMascota(evento, texto) {
     <button type="button" class="evento-mascota-cerrar" onclick="_cerrarMensajeMascota()">✕</button>
   `;
   widget.style.display = 'flex';
+  backdrop.style.display = 'block';
 }
 
 function _cerrarMensajeMascota() {
   const widget = document.getElementById('evento-widget-mascota');
+  const backdrop = document.getElementById('evento-mascota-backdrop');
   if (widget) widget.style.display = 'none';
+  if (backdrop) backdrop.style.display = 'none';
 }
 
 function _mostrarMensajeMascotaSiCorresponde(evento, reto) {
@@ -802,7 +813,7 @@ function _actualizarWidgetFlotanteEvento() {
 // ────────────────────────────────────────────────────────────
 
 window.addEventListener('evento:retoCompletado', (e) => {
-  _dispararParticulaEvento(e.detail.imagen, 'header-animacion-global');
+  _dispararParticulaEvento(e.detail.imagen, 'evento-particula-pantalla-completa');
 });
 
 // ────────────────────────────────────────────────────────────
