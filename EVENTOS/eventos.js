@@ -293,10 +293,12 @@ async function renderPaginaEvento() {
     ${_renderMapaOListaRetos(evento, progreso, bloqueInsignia, bloqueProgreso)}
   `;
 
-  if (tieneMapaVisual) {
-    document.getElementById('evento-mapa-detalle').innerHTML =
-      _renderDetalleNodoMapa(progreso, _indicePrimerRetoActivo(progreso), evento.tema.mapa.nodos);
-  }
+  // En renderPaginaEvento(), donde dice:
+if (tieneMapaVisual) {
+  document.getElementById('evento-mapa-detalle').innerHTML =
+    _renderDetalleNodoMapa(progreso, _indicePrimerRetoActivo(progreso), evento.tema.mapa.nodos);
+  _ajustarPopoverDentroDelMapa(); // ← AGREGAR esta línea
+}
 
   _actualizarWidgetFlotanteEvento();
   if (recienCompletado) {
@@ -409,12 +411,15 @@ function _indicePrimerRetoActivo(progreso) {
   return 0;
 }
 
+// En _seleccionarNodoMapaEvento():
 function _seleccionarNodoMapaEvento(idx) {
   const contenedor = document.getElementById('evento-mapa-detalle');
   const nodos = _EventosState.eventoActivo?.tema?.mapa?.nodos;
-  if (contenedor) contenedor.innerHTML = _renderDetalleNodoMapa(_EventosState.progreso, idx, nodos);
+  if (contenedor) {
+    contenedor.innerHTML = _renderDetalleNodoMapa(_EventosState.progreso, idx, nodos);
+    _ajustarPopoverDentroDelMapa(); // ← AGREGAR esta línea
+  }
 }
-
 // DESPUÉS:
 function _renderDetalleNodoMapa(progreso, idx, nodos) {
   const reto = progreso.retos[idx];
