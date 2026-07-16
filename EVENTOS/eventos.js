@@ -541,15 +541,16 @@ async function registrarAccionEventoSiCorresponde(accion) {
       p_accion: accion
     });
 
-    // Refresca progreso SIEMPRE (esto ya dispara mascota/partícula si
-    // corresponde, sin importar la pantalla). Solo repinta el HTML
-    // completo si el usuario está parado en la página del evento.
-    const datosFrescos = await _refrescarProgresoEventoGlobal();
-
-    const seccionEvento = document.getElementById('seccion-evento');
-    if (seccionEvento && seccionEvento.style.display !== 'none') {
-      renderPaginaEvento(datosFrescos);
-    }
+   // Refresca progreso SIEMPRE (esto ya dispara mascota/partícula si
+    // corresponde, sin importar la pantalla) — sin bloquear la UI:
+    // no se espera (no await), así la acción del usuario no queda
+    // colgada esperando la respuesta de Supabase.
+    _refrescarProgresoEventoGlobal().then((datosFrescos) => {
+      const seccionEvento = document.getElementById('seccion-evento');
+      if (seccionEvento && seccionEvento.style.display !== 'none') {
+        renderPaginaEvento(datosFrescos);
+      }
+    });
     
   } catch (e) {
     console.error('Error registrando acción de evento:', e);
