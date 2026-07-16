@@ -41,6 +41,7 @@ function _eventoFormVacio() {
     imagenesActuales: {}, // URLs ya subidas (al editar)
     retos: { autor: [], reseñador: [] },
     tema: {
+      colorPrincipal: '#e05a8a',
       mascota: {
         imagenActual: '',
         mensajes: [] // [{ accion: '', texto: '' }]
@@ -329,7 +330,18 @@ function _construirSeccionTema() {
   const t = _eventoFormState.tema;
 
   return `
-    <h4 class="panel-titulo" style="font-size:16px;">Partícula de celebración</h4>
+    <h4 class="panel-titulo" style="font-size:16px;">Color principal</h4>
+    <div class="form-fila" style="flex-wrap:wrap; align-items:flex-end;">
+      <div class="form-grupo" style="min-width:160px;">
+        <label class="form-label">Color del evento</label>
+        <input type="color" id="ev-tema-color" class="form-input" style="height:44px; padding:4px;"
+          value="${t.colorPrincipal || '#e05a8a'}"
+          oninput="_eventoFormState.tema.colorPrincipal = this.value" />
+      </div>
+    </div>
+    <p class="form-hint">Se usa en los nodos del mapa, la barra de progreso, el contador de tiempo y el botón del widget flotante.</p>
+
+    <h4 class="panel-titulo" style="font-size:16px; margin-top:22px;">Partícula de celebración</h4>
     <div class="form-fila" style="flex-wrap:wrap;">
       <div class="form-grupo" style="min-width:220px;">
         <label class="form-label">Imagen de la partícula</label>
@@ -469,7 +481,8 @@ function _normalizarTemaCargado(temaCrudo) {
     ? nodosCrudos.map(n => ({ x: n.x ?? 0, y: n.y ?? 0 }))
     : base.mapa.nodos;
 
-  return {
+ return {
+    colorPrincipal: temaCrudo.colorPrincipal || base.colorPrincipal,
     mascota: {
       imagenActual: temaCrudo.mascota?.imagen || '',
       mensajes: Object.entries(temaCrudo.mascota?.mensajes || {}).map(([accion, texto]) => ({ accion, texto }))
@@ -556,6 +569,7 @@ async function guardarEventoAdmin(event) {
   }
 
   const tema = {
+    colorPrincipal: s.tema.colorPrincipal || '#e05a8a',
     mascota: {
       imagen: imagenMascota || '',
       mensajes: (s.tema.mascota.mensajes || [])
