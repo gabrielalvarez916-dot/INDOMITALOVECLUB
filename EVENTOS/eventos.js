@@ -112,7 +112,7 @@ function _mostrarBotonNavEvento(evento) {
   const btn = document.getElementById('nav-evento'); // sigue convención de nav-panel/nav-perfil/nav-admin
   if (!btn) return;
   btn.style.display = 'inline-block';
-  btn.textContent = `💋 ${evento.nombre}`;
+  btn.textContent = '💋 Evento';
   btn.onclick = () => mostrarSeccion('evento'); // requiere case 'evento' en mostrarSeccion() (ui.js)
 }
 
