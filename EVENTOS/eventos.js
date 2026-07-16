@@ -287,12 +287,12 @@ async function renderPaginaEvento() {
       <p>${evento.historia}</p>
     </div>
 
-    ${!tieneMapaVisual ? bloqueInsignia : ''}
-    ${!tieneMapaVisual ? bloqueProgreso : ''}
+    ${bloqueInsignia}
+    ${bloqueProgreso}
 
-    ${_renderMapaOListaRetos(evento, progreso, bloqueInsignia, bloqueProgreso)}
+    ${_renderMapaOListaRetos(evento, progreso)}
   `;
-
+  
   // En renderPaginaEvento(), donde dice:
 if (tieneMapaVisual) {
   document.getElementById('evento-mapa-detalle').innerHTML =
@@ -338,45 +338,22 @@ function _renderCardReto(reto) {
  * el evento tiene tema.mapa cargado. Eventos viejos (sin tema) siguen
  * viendo la lista de tarjetas de siempre.
  */
-function _renderMapaOListaRetos(evento, progreso, bloqueInsignia, bloqueProgreso) {
+function _renderMapaOListaRetos(evento, progreso) {
   const nodos = evento.tema?.mapa?.nodos;
   const tieneMapa = evento.tema?.mapa?.fondo && Array.isArray(nodos) && nodos.length === 4;
 
   if (!tieneMapa) {
     return `<div class="evento-retos-lista">${progreso.retos.map(reto => _renderCardReto(reto)).join('')}</div>`;
   }
-  return _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgreso);
+  return _renderMapaRetos(evento, progreso, nodos);
 }
 
 // Radio de revelado del velo alrededor de cada nodo desbloqueado (0 a 1, fracción del mapa)
 const _EVENTO_MAPA_RADIO_VELO = 0.16;
 
-function _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgreso) {
+function _renderMapaRetos(evento, progreso, nodos) {
   const maskId = `evento-velo-mask-${evento.id}`;
-
-  const circulosRevelados = progreso.retos.map((reto, i) => {
-    if (!reto.desbloqueado || !nodos[i]) return '';
-    const n = nodos[i];
-    return `<circle cx="${n.x / 100}" cy="${n.y / 100}" r="${_EVENTO_MAPA_RADIO_VELO}" fill="black" />`;
-  }).join('');
-
-  const marcadores = progreso.retos.map((reto, i) => {
-    const n = nodos[i];
-    if (!n) return '';
-    const estado = reto.completo ? 'completo' : reto.desbloqueado ? 'activo' : 'bloqueado';
-    const contenido = reto.completo ? '✓' : (reto.desbloqueado ? (i + 1) : '🔒');
-    return `
-      <button type="button"
-        class="evento-mapa-nodo evento-mapa-nodo--${estado}"
-        style="left:${n.x}%; top:${n.y}%;"
-        onclick="_seleccionarNodoMapaEvento(${i})"
-        ${!reto.desbloqueado ? 'disabled' : ''}
-        aria-label="${_escaparHtml(reto.nombre)}">
-        <span class="evento-mapa-nodo-contenido">${contenido}</span>
-      </button>
-    `;
-  }).join('');
-
+  ...
   return `
     <div class="evento-mapa-contenedor">
       <img class="evento-mapa-fondo" src="${evento.tema.mapa.fondo}" alt="" />
@@ -392,10 +369,6 @@ function _renderMapaRetos(evento, progreso, nodos, bloqueInsignia, bloqueProgres
         <img class="evento-mapa-velo" src="${evento.tema.mapa.velo}" alt=""
           style="mask:url(#${maskId}); -webkit-mask:url(#${maskId});" />
       ` : ''}
-      <div class="evento-mapa-hud">
-        ${bloqueInsignia}
-        ${bloqueProgreso}
-      </div>
       <div class="evento-mapa-nodos">${marcadores}</div>
       <div id="evento-mapa-detalle"></div>
     </div>
