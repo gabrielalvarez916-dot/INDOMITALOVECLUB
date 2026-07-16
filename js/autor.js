@@ -1338,7 +1338,7 @@ async function compartirCampana(idCampana, nombreLibro) {
   const url = `${CONFIG.FRONTEND_URL}/?campana=${idCampana}`;
   const texto = `¡Postulate para reseñar "${nombreLibro}"! 📖✨`;
 
-  // Si el dispositivo soporta compartir nativo (celular)
+ // Si el dispositivo soporta compartir nativo (celular)
   if (navigator.share) {
     try {
       await navigator.share({
@@ -1346,20 +1346,26 @@ async function compartirCampana(idCampana, nombreLibro) {
         text: texto,
         url: url
       });
+      if (typeof registrarAccionEventoSiCorresponde === 'function') {
+        registrarAccionEventoSiCorresponde('compartir_campana');
+      }
     } catch (e) {
       // El usuario cerró el menú de compartir sin elegir nada, no es un error real
     }
     return;
   }
-
   // En computadora: copia al portapapeles
   try {
     await navigator.clipboard.writeText(`${texto} ${url}`);
     mostrarToast('¡Link copiado! Pegalo donde quieras.', 'ok');
+    if (typeof registrarAccionEventoSiCorresponde === 'function') {
+      registrarAccionEventoSiCorresponde('compartir_campana');
+    }
   } catch (e) {
     mostrarToast('No se pudo copiar el link. Copialo manualmente: ' + url, 'error');
   }
 }
+
 async function abrirEditarCampana(idCampana) {
   const campana = _campañasAutor.find(c => c.id === idCampana);
   if (!campana) return;
