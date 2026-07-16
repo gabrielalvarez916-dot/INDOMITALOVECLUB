@@ -346,6 +346,10 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
       footer.innerHTML = `<button class="btn-primario" onclick="cerrarModales(); mostrarSeccion('login')">Ingresá para postularte</button>`;
     }
   }
+
+  if (typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('revisar_modal_info_campana_feed');
+  }
 }
 
 
@@ -457,6 +461,9 @@ async function confirmarPostulacion(idCampaña) {
   }
 
   mostrarToast('¡Te postulaste exitosamente! El autor revisará tu perfil.', 'ok');
+if (campaña?.coincidenciaTropes >= 70 && typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('postular_alta_coincidencia');
+  }
 }
 
 // ────────────────────────────────────────────────────────────
