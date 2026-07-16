@@ -204,6 +204,60 @@ function _detenerAnimacionBesosCayendo() {
 // Asumo '#seccion-evento' siguiendo el patrón de otras secciones.
 // ────────────────────────────────────────────────────────────
 
+/**
+ * Única fuente de verdad para refrescar el progreso del evento activo
+ * contra el backend, sin importar en qué pantalla esté el usuario.
+ * Antes, la detección de "reto recién completado" (partícula global +
+ * mensaje de mascota) vivía SOLO adentro de renderPaginaEvento(), así
+ * que si el usuario completaba un reto desde otra pantalla, nunca se
+ * enteraba. Ahora esta función corre siempre, la llame quien la llame.
+ */
+async function _refrescarProgresoEventoGlobal() {
+  const { data: resultado, error } = await supabaseClient.rpc('inicializar_evento_usuario', {
+    p_usuario: _EventosState.idUsuario,
+    p_rol: _EventosState.rol
+  });
+
+  if (error || !resultado || !resultado.activo) {
+    _EventosState.eventoActivo = null;
+    _EventosState.progreso = null;
+    _actualizarWidgetFlotanteEvento();
+    _restablecerColorTemaEvento();
+    return { resultado, recienCompletado: false };
+  }
+
+  _EventosState.eventoActivo = resultado.evento;
+  const evento = _EventosState.eventoActivo;
+  _aplicarColorTemaEvento(evento);
+
+  const progresoAnterior = _EventosState.progreso;
+  _EventosState.progreso = resultado.progreso;
+  const progreso = _EventosState.progreso;
+
+  const yaEstabaCompleto = progresoAnterior && progresoAnterior.eventoCompleto;
+  const recienCompletado = progreso.eventoCompleto && !yaEstabaCompleto;
+
+  if (progresoAnterior) {
+    progreso.retos.forEach((reto, i) => {
+      const retoAnterior = progresoAnterior.retos[i];
+      if (reto.completo && retoAnterior && !retoAnterior.completo) {
+        window.dispatchEvent(new CustomEvent('evento:retoCompletado', {
+          detail: { reto, indice: i, evento, imagen: evento.tema?.particula?.imagen }
+        }));
+        _mostrarMensajeMascotaSiCorresponde(evento, reto);
+      }
+    });
+  }
+
+  _actualizarWidgetFlotanteEvento();
+
+  return { resultado, recienCompletado };
+}
+
+async function renderPaginaEvento(datosFrescos) {
+  const contenedor = document.getElementById('seccion-evento');
+  if (!contenedor) return;
+
 async function renderPaginaEvento() {
   const contenedor = document.getElementById('seccion-evento');
   if (!contenedor) return;
@@ -221,48 +275,17 @@ async function renderPaginaEvento() {
     </div>
   `;
 
-  // Refresca el evento y el progreso al entrar a la página (puede haber
-  // cambiado desde que se cargó la app: otro admin activó un evento
-  // nuevo, o el usuario aprobó un reseñador, etc.)
-  const { data: resultado, error } = await supabaseClient.rpc('inicializar_evento_usuario', {
-    p_usuario: _EventosState.idUsuario,
-    p_rol: _EventosState.rol
-  });
+  const { resultado, recienCompletado } = datosFrescos || await _refrescarProgresoEventoGlobal();
 
-  if (error || !resultado || !resultado.activo) {
+  if (!resultado || !resultado.activo) {
     contenedor.innerHTML = `<p class="evento-vacio">Este evento ya finalizó.</p>`;
-    _actualizarWidgetFlotanteEvento();
-    _restablecerColorTemaEvento();
     return;
   }
 
-  _EventosState.eventoActivo = resultado.evento;
   const evento = _EventosState.eventoActivo;
-  _aplicarColorTemaEvento(evento);
-
-  const progresoAnterior = _EventosState.progreso;
-  _EventosState.progreso = resultado.progreso;
   const progreso = _EventosState.progreso;
 
-  const yaEstabaCompleto = progresoAnterior && progresoAnterior.eventoCompleto;
-  const recienCompletado = progreso.eventoCompleto && !yaEstabaCompleto;
-
-  // Fase 5: detecta reto por reto (no solo el evento entero) comparando
-  // contra el progreso anterior, y dispara el evento global desacoplado.
-  if (progresoAnterior) {
-    progreso.retos.forEach((reto, i) => {
-      const retoAnterior = progresoAnterior.retos[i];
-      if (reto.completo && retoAnterior && !retoAnterior.completo) {
-        window.dispatchEvent(new CustomEvent('evento:retoCompletado', {
-          detail: { reto, indice: i, evento, imagen: evento.tema?.particula?.imagen }
-        }));
-         _mostrarMensajeMascotaSiCorresponde(evento, reto);
-      }
-    });
-  }
-
   const tieneMapaVisual = !!(evento.tema?.mapa?.fondo && Array.isArray(evento.tema?.mapa?.nodos) && evento.tema.mapa.nodos.length === 4);
-
   const bloqueInsignia = `
     <div class="evento-insignia-preview">
       <img src="${progreso.eventoCompleto ? evento.imagenes.insigniaColor : evento.imagenes.insigniaGris}" alt="Insignia ${evento.nombre}" />
@@ -522,15 +545,16 @@ async function registrarAccionEventoSiCorresponde(accion) {
       p_accion: accion
     });
 
-    // Refresca el progreso local en silencio (no repinta la UI a menos
-    // que el usuario esté parado en la página del evento)
+    // Refresca progreso SIEMPRE (esto ya dispara mascota/partícula si
+    // corresponde, sin importar la pantalla). Solo repinta el HTML
+    // completo si el usuario está parado en la página del evento.
+    const datosFrescos = await _refrescarProgresoEventoGlobal();
+
     const seccionEvento = document.getElementById('seccion-evento');
     if (seccionEvento && seccionEvento.style.display !== 'none') {
-      renderPaginaEvento();
-    } else {
-      _actualizarWidgetFlotanteEvento();
+      renderPaginaEvento(datosFrescos);
     }
-
+    
   } catch (e) {
     console.error('Error registrando acción de evento:', e);
   }
