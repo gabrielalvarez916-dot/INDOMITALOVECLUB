@@ -125,7 +125,7 @@ function _pintarListaNotificaciones(notificaciones) {
   cont.innerHTML = notificaciones.map(n => `
     <button class="notif-item ${n.leida ? '' : 'no-leida'}" onclick="_clickNotificacion('${n.idNotificacion}')">
       <span class="notif-item-texto">${_escNotif(_textoNotificacion(n))}</span>
-      <span class="notif-item-fecha">${_escNotif(n.fecha || '')}</span>
+      <span class="notif-item-fecha">${_escNotif(_formatearFechaNotif(n.fecha))}</span>
     </button>
   `).join('');
 }
@@ -138,6 +138,25 @@ function _escNotif(str) {
     .replace(/>/g, '&gt;');
 }
 
+function _formatearFechaNotif(fechaISO) {
+  if (!fechaISO) return '';
+  const fecha = new Date(fechaISO);
+  if (isNaN(fecha.getTime())) return '';
+
+  const ahora = new Date();
+  const diffMs = ahora - fecha;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHoras = Math.floor(diffMin / 60);
+  const diffDias = Math.floor(diffHoras / 24);
+
+  if (diffMin < 1) return 'Ahora';
+  if (diffMin < 60) return `Hace ${diffMin} min`;
+  if (diffHoras < 24) return `Hace ${diffHoras} h`;
+  if (diffDias === 1) return 'Ayer';
+  if (diffDias < 7) return `Hace ${diffDias} días`;
+
+  return fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 // ────────────────────────────────────────────────────────────
 // INTERACCIÓN
