@@ -461,6 +461,21 @@ function construirFilaTicketAdmin(t) {
 // MODAL: historial de conversación + responder
 // ────────────────────────────────────────────────────────────
 
+function _renderLinkDenunciaAdmin(ticket) {
+  const mapa = {
+    campana:          { label: 'Ver campaña denunciada →',  accion: `verDetalleCampaña('${ticket.referenciaId}')` },
+    usuario_autor:    { label: 'Ver perfil denunciado →',   accion: `abrirPerfilPublico('${ticket.referenciaId}', 'autor')` },
+    usuario_resenador:{ label: 'Ver perfil denunciado →',   accion: `abrirPerfilPublico('${ticket.referenciaId}', 'reseñador')` }
+  };
+  const info = mapa[ticket.referenciaTipo];
+  if (!info) return '';
+  return `
+    <p style="font-size:12px; margin:0 0 12px;">
+      <a href="#" onclick="event.preventDefault(); cerrarModalTicketAdmin(); ${info.accion}">${info.label}</a>
+    </p>
+  `;
+}
+  
 async function abrirModalTicketAdmin(idTicket) {
   const ticket = (window._ticketsAdmin || []).find(t => t.idTicket === idTicket);
 
@@ -474,13 +489,7 @@ async function abrirModalTicketAdmin(idTicket) {
         <button onclick="cerrarModalTicketAdmin()" style="background:none; border:none; font-size:20px; cursor:pointer; line-height:1;">×</button>
       </div>
       <p style="font-size:12px; color:#888; margin:0 0 12px;">${ticket?.email || ''}</p>
-      ${ticket?.tipo === 'denuncia' ? `
-        <p style="font-size:12px; margin:0 0 12px;">
-          <a href="#" onclick="event.preventDefault(); cerrarModalTicketAdmin(); ${ticket.referenciaTipo === 'campana' ? `verDetalleCampaña('${ticket.referenciaId}')` : `abrirPerfilPublico('${ticket.referenciaId}', 'reseñador')`}">
-            ${ticket.referenciaTipo === 'campana' ? 'Ver campaña denunciada →' : 'Ver perfil denunciado →'}
-          </a>
-        </p>
-      ` : ''}
+      ${ticket?.tipo === 'denuncia' ? _renderLinkDenunciaAdmin(ticket) : ''}
       <div id="modal-ticket-historial" style="flex:1; overflow-y:auto; margin-bottom:12px; min-height:80px;">
         <div class="cargando-container"><div class="spinner"></div></div>
       </div>
