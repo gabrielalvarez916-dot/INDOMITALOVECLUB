@@ -684,12 +684,18 @@ async function cargarTickerEvento() {
 
   const { data: evento } = await supabaseClient
     .from('eventos')
-    .select('nombre, emoji')
+    .select('nombre, tema')
     .eq('activo', true)
     .maybeSingle();
 
+  const imgParticula = evento?.tema?.particula?.imagen;
+
+  const iconoHtml = imgParticula
+    ? `<img src="${imgParticula}" alt="" class="feed-ticker-particula" />`
+    : '✨';
+
   const texto = evento
-    ? `${evento.emoji || '✨'} Nuevo evento: ${evento.nombre}`
+    ? `${iconoHtml} Nuevo evento: ${evento.nombre}`
     : 'Nueva campaña';
 
   const itemHtml = `<span class="feed-ticker-item">${texto}</span><span class="feed-ticker-sep">✦</span>`;
