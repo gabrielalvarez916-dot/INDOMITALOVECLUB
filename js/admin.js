@@ -450,6 +450,34 @@ async function cargarEstadisticasAdmin() {
         <p style="font-size:11px; color:#888; margin:2px 0 0;">Cantidad de asignaciones cuyo deadline ya pasó (es la base sobre la que se calculan completion y abandono).</p>
       </div>
     </div>
+    
+    <div class="form-separador">Retención</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p class="stat-label">Autores con 2+ campañas</p>
+        <p class="stat-valor">${resultado.retencion.autoresConDosMasCampañas ?? '—'}%</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De los autores que publicaron alguna vez, qué % publicó más de una campaña (histórico).</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Reseñadores con 2+ campañas</p>
+        <p class="stat-valor">${resultado.retencion.reseñadoresConDosMasCampañas ?? '—'}%</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De los reseñadores que participaron alguna vez, qué % lo hizo en más de una campaña (histórico).</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Tiempo de aprobación</p>
+        <p class="stat-valor">${resultado.retencion.tiempoAprobacionPromedioHoras ?? '—'} hs</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Promedio de horas entre que un reseñador se postula y el autor responde. Mediana: ${resultado.retencion.tiempoAprobacionMedianaHoras ?? '—'} hs.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Tiempo hasta agotar cupos</p>
+        <p class="stat-valor">${resultado.retencion.tiempoCompletarCuposPromedioDias ?? '—'}${resultado.retencion.tiempoCompletarCuposPromedioDias != null ? ' días' : ''}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">
+          ${resultado.retencion.tiempoCompletarCuposMuestra > 0
+            ? `Promedio de días entre la creación de la campaña y que se agotan los cupos. Mediana: ${resultado.retencion.tiempoCompletarCuposMedianaDias} días (n=${resultado.retencion.tiempoCompletarCuposMuestra}).`
+            : 'Todavía ninguna campaña agotó sus cupos antes del vencimiento — sin datos suficientes.'}
+        </p>
+      </div>
+    </div>
 
     <div class="form-separador">Ratio de entrega por campaña</div>
     <p style="font-size:12px; color:#888; margin:0 0 12px;">
