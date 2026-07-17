@@ -352,31 +352,146 @@ async function cargarEstadisticasAdmin() {
   }
 
   const { usuarios, campañas, reseñas } = resultado;
+  const ratioPorCampaña = resultado.ratioPorCampaña || [];
 
   contenedor.innerHTML = `
     <div class="stats-grid">
-      <div class="stat-card"><p class="stat-label">Autores</p><p class="stat-valor">${usuarios.totalAutores}</p></div>
-      <div class="stat-card"><p class="stat-label">Reseñadores</p><p class="stat-valor">${usuarios.totalReseñadores}</p></div>
-      <div class="stat-card"><p class="stat-label">Nuevos este mes</p><p class="stat-valor">${usuarios.nuevosEsteMes}</p></div>
-      <div class="stat-card"><p class="stat-label">Autores sin actividad</p><p class="stat-valor">${usuarios.autoresSinActividad}</p></div>
-      <div class="stat-card"><p class="stat-label">Reseñadores sin actividad</p><p class="stat-valor">${usuarios.reseñadoresSinActividad}</p></div>
+      <div class="stat-card">
+        <p class="stat-label">Autores</p>
+        <p class="stat-valor">${usuarios.totalAutores}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Total de autores registrados en la plataforma.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Reseñadores</p>
+        <p class="stat-valor">${usuarios.totalReseñadores}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Total de reseñadores registrados en la plataforma.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Nuevos este mes</p>
+        <p class="stat-valor">${usuarios.nuevosEsteMes}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Usuarios (cualquier rol) registrados en lo que va del mes calendario.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Autores sin actividad</p>
+        <p class="stat-valor">${usuarios.autoresSinActividad}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Autores activos que no crearon ninguna campaña en los últimos 30 días.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Reseñadores sin actividad</p>
+        <p class="stat-valor">${usuarios.reseñadoresSinActividad}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñadores activos sin postulaciones respondidas ni reseñas entregadas en los últimos 30 días.</p>
+      </div>
     </div>
 
     <div class="form-separador">Campañas</div>
     <div class="stats-grid">
-      <div class="stat-card"><p class="stat-label">Total</p><p class="stat-valor">${campañas.total}</p></div>
-      <div class="stat-card"><p class="stat-label">Activas</p><p class="stat-valor">${campañas.activas}</p></div>
-      <div class="stat-card"><p class="stat-label">Finalizadas</p><p class="stat-valor">${campañas.finalizadas}</p></div>
-      <div class="stat-card"><p class="stat-label">Canceladas</p><p class="stat-valor">${campañas.canceladas}</p></div>
+      <div class="stat-card">
+        <p class="stat-label">Total</p>
+        <p class="stat-valor">${campañas.total}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Todas las campañas creadas históricamente.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Activas</p>
+        <p class="stat-valor">${campañas.activas}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Campañas abiertas actualmente.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Finalizadas</p>
+        <p class="stat-valor">${campañas.finalizadas}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Campañas que llegaron a su fin de forma normal.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Canceladas</p>
+        <p class="stat-valor">${campañas.canceladas}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Campañas dadas de baja manualmente por vos o por el autor.</p>
+      </div>
     </div>
 
     <div class="form-separador">Reseñas</div>
     <div class="stats-grid">
-      <div class="stat-card"><p class="stat-label">Total entregadas</p><p class="stat-valor">${reseñas.totalEntregadas}</p></div>
-      <div class="stat-card"><p class="stat-label">Este mes</p><p class="stat-valor">${reseñas.entregadasEsteMes}</p></div>
-      <div class="stat-card"><p class="stat-label">Completion global</p><p class="stat-valor">${reseñas.completionGlobal}%</p></div>
-      <div class="stat-card"><p class="stat-label">Completion del mes</p><p class="stat-valor">${reseñas.completionMes}%</p></div>
+      <div class="stat-card">
+        <p class="stat-label">Total entregadas</p>
+        <p class="stat-valor">${reseñas.totalEntregadas}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Todas las reseñas cargadas históricamente en la plataforma.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Últimos 30 días</p>
+        <p class="stat-valor">${reseñas.ultimos30Dias}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñas entregadas en la última ventana móvil de 30 días (no "este mes calendario").</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Conversión</p>
+        <p class="stat-valor">${reseñas.conversion}%</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De todo lo que alguna vez se aprobó (histórico), qué % terminó en una reseña entregada.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Completion total</p>
+        <p class="stat-valor">${reseñas.completionTotal}%</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones cuyo plazo ya venció, qué % se entregó (tarde o en término).</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Completion a tiempo</p>
+        <p class="stat-valor">${reseñas.completionATiempo}%</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas, qué % se entregó antes del deadline.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Tasa de abandono</p>
+        <p class="stat-valor">${reseñas.tasaAbandono}%</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas, qué % nunca se entregó. Es el complemento exacto de completion total.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Tiempo promedio de entrega</p>
+        <p class="stat-valor">${reseñas.tiempoPromedioEntregaDias ?? '—'} días</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Promedio de días entre la aprobación de la postulación y la entrega efectiva de la reseña.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Asignaciones vencidas</p>
+        <p class="stat-valor">${reseñas.asignacionesVencidas}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Cantidad de asignaciones cuyo deadline ya pasó (es la base sobre la que se calculan completion y abandono).</p>
+      </div>
     </div>
+
+    <div class="form-separador">Ratio de entrega por campaña</div>
+    <p style="font-size:12px; color:#888; margin:0 0 12px;">
+      Por cada campaña: cuántas postulaciones aprobadas (incluye abandonadas) terminaron en una reseña entregada. Ordenado de menor a mayor ratio, para detectar rápido las campañas con peor cumplimiento.
+    </p>
+    ${ratioPorCampaña.length === 0
+      ? `<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay campañas con postulaciones aprobadas.</p></div>`
+      : `
+        <table class="admin-tabla">
+          <thead>
+            <tr>
+              <th>Libro</th>
+              <th>Autor</th>
+              <th>Aprobadas</th>
+              <th>Entregadas</th>
+              <th>Ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ratioPorCampaña.map(c => construirFilaRatioCampañaAdmin(c)).join('')}
+          </tbody>
+        </table>
+      `
+    }
+  `;
+}
+
+/**
+ * Construye la fila de una campaña para la tabla de ratio de entrega.
+ *
+ * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, entregadas, ratio }
+ * @returns {string} HTML de la fila
+ */
+function construirFilaRatioCampañaAdmin(c) {
+  return `
+    <tr>
+      <td>${c.nombre_libro}</td>
+      <td style="font-size:12px;">${c.nombre_autor}</td>
+      <td>${c.aprobadas}</td>
+      <td>${c.entregadas}</td>
+      <td>${c.ratio}%</td>
+    </tr>
   `;
 }
 
