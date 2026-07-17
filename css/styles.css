@@ -4943,3 +4943,9 @@ img { max-width: 100%; display: block; }
 #modal-denuncia {
   z-index: 350;
 }
+.feed-ticker-particula {
+  height: 16px;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 2px;
+}
