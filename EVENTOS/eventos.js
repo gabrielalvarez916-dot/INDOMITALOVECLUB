@@ -705,7 +705,7 @@ function _renderBarraProgresoComunitario() {
         <span class="evento-barra-progreso-texto">${pc.puntosAcumulados}/${pc.metaComunitaria} pts · ${pc.porcentaje}%</span>
       </div>
       <p class="evento-progreso-comunitario-sub">
-        ${metaAlcanzada ? '¡Meta alcanzada! Insignia comunitaria desbloqueada 🏅' : 'Puntos sumados entre tod@s l@s autores y reseñador@s'}
+        ${metaAlcanzada ? '¡Meta comunitaria alcanzada! 🎉' : 'Puntos sumados entre tod@s l@s autores y reseñador@s'}
       </p>
     </div>
   `;
