@@ -1329,6 +1329,10 @@ img { max-width: 100%; display: block; }
   overflow-y: auto;
 }
 
+.modal--anidado {
+  z-index: 320;
+}
+
 .modal.activo { display: block; }
 .modal-grande { max-width: 680px; }
 
