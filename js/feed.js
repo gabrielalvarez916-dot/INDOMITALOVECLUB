@@ -448,13 +448,9 @@ async function confirmarPostulacion(idCampaña) {
     }
   }
 
-  const { error } = await supabaseClient
-    .from('postulaciones')
-    .insert({
-      id_campana: idCampaña,
-      id_usuario_resenador: usuario.id,
-      acepta_confidencialidad: true
-    });
+  const { error } = await supabaseClient.rpc('crear_postulacion', {
+    p_campana: idCampaña
+  });
 
   if (error) {
     mostrarToast(error.message || 'Error al postularse.', 'error');
