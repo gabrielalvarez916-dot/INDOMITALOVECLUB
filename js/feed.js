@@ -34,6 +34,14 @@ function renderizarFeed(campañas) {
 
 let _campañasTodas = [];
 
+function mezclarArray(arr) {
+  const copia = [...arr];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
 
 // ────────────────────────────────────────────────────────────
 // CARGAR FEED
@@ -84,12 +92,14 @@ async function cargarFeed() {
     (rankings || []).forEach(r => { rankingsPorLibro[r.id_libro] = r; });
   }
 
-  _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro]));
+ _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro]));
 
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
     return;
   }
+
+  _campañasTodas = mezclarArray(_campañasTodas);
 
   renderizarFeed(_campañasTodas);
   Slider.init();
