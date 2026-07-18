@@ -4778,6 +4778,37 @@ img { max-width: 100%; display: block; }
 }
 .evento-tiempo-restante { font-size: 15px; font-weight: 600; color: var(--evento-color); margin-top: 6px; }
 
+/* ── Contador comunitario (SOLO evento "La Gran Maratón") ─── */
+.evento-progreso-comunitario {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  background: #FBF3DD;
+  border: 1.5px solid #C9A84C;
+  border-radius: var(--radio-grande);
+}
+
+.evento-progreso-comunitario-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 14px;
+  font-weight: 700;
+  font-style: italic;
+  color: #8A6D1E;
+  margin-bottom: 8px;
+}
+
+.evento-barra-progreso--comunitario {
+  background: #F2E4BC;
+}
+
+.evento-barra-progreso--comunitario .evento-barra-progreso-relleno {
+  background: linear-gradient(90deg, #C9A84C, #8A6D1E);
+}
+
+.evento-progreso-comunitario-sub {
+  font-size: 12px;
+  color: #8A6D1E;
+  margin-top: 6px;
+}
 #evento-widget-flotante {
   position: fixed; bottom: 18px; right: 18px; z-index: 500;
   background: #fff; border-radius: 14px; padding: 10px 14px;
