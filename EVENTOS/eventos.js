@@ -44,6 +44,7 @@ const _EVENTOS_TITULO_HISTORIA = '¿De qué trata?';
 const _EventosState = {
   eventoActivo: null,     // objeto de datos del evento activo (si hay uno)
   progreso: null,         // datos de progreso devueltos por el backend
+  progresoComunitario: null, // progreso de la meta comunitaria (solo evento GranMaraton)
   rol: null,              // rol del usuario actual ('autor' | 'reseñador')
   idUsuario: null,        // ID_Usuario actual (Sesion.obtener().id)
   timerSecreto: null,     // Fase 7: id del setTimeout del secreto flotante
@@ -221,6 +222,7 @@ async function _refrescarProgresoEventoGlobal() {
   if (error || !resultado || !resultado.activo) {
     _EventosState.eventoActivo = null;
     _EventosState.progreso = null;
+    _EventosState.progresoComunitario = null;
     _actualizarWidgetFlotanteEvento();
     _restablecerColorTemaEvento();
     return { resultado, recienCompletado: false };
@@ -229,6 +231,18 @@ async function _refrescarProgresoEventoGlobal() {
   _EventosState.eventoActivo = resultado.evento;
   const evento = _EventosState.eventoActivo;
   _aplicarColorTemaEvento(evento);
+
+  // Meta comunitaria: SOLO existe para el evento "La Gran Maratón".
+  // En cualquier otro evento, progresoComunitario queda en null y el
+  // contador comunitario no se renderiza (ver _renderBarraProgresoComunitario).
+  if (evento.id === 'GranMaraton') {
+    const { data: comunitario } = await supabaseClient.rpc('obtener_progreso_comunitario', {
+      p_id_evento: evento.id
+    });
+    _EventosState.progresoComunitario = comunitario || null;
+  } else {
+    _EventosState.progresoComunitario = null;
+  }
 
   const progresoAnterior = _EventosState.progreso;
   _EventosState.progreso = resultado.progreso;
@@ -291,6 +305,7 @@ async function renderPaginaEvento(datosFrescos) {
 
   const bloqueProgreso = `
     <div class="evento-progreso-wrap">
+      ${_renderBarraProgresoComunitario()}
       ${_renderBarraProgresoEvento()}
       ${_renderTiempoRestanteEvento()}
     </div>
@@ -668,6 +683,43 @@ function _resumenEvento() {
     puntosAcumulados: progreso.puntosAcumulados,
     eventoCompleto: progreso.eventoCompleto
   };
+}
+
+// Contador comunitario: SOLO se muestra si el evento activo es
+// "La Gran Maratón" (id === 'GranMaraton'). En cualquier otro evento
+// (o si no hay progresoComunitario cargado) devuelve '' y no se ve nada.
+function _renderBarraProgresoComunitario() {
+  const evento = _EventosState.eventoActivo;
+  const pc = _EventosState.progresoComunitario;
+
+  if (!evento || evento.id !== 'GranMaraton') return '';
+  if (!pc || !pc.esComunitario) return '';
+
+  const metaAlcanzada = pc.porcentaje >= 100;
+
+  return `
+    <div class="evento-progreso-comunitario">
+      <p class="evento-progreso-comunitario-titulo">🌍 Meta comunitaria</p>
+      <div class="evento-barra-progreso evento-barra-progreso--comunitario">
+        <div class="evento-barra-progreso-relleno" style="width:${pc.porcentaje}%;"></div>
+        <span class="evento-barra-progreso-texto">${pc.puntosAcumulados}/${pc.metaComunitaria} pts · ${pc.porcentaje}%</span>
+      </div>
+      <p class="evento-progreso-comunitario-sub">
+        ${metaAlcanzada ? '¡Meta alcanzada! Insignia comunitaria desbloqueada 🏅' : 'Puntos sumados entre tod@s l@s autores y reseñador@s'}
+      </p>
+    </div>
+  `;
+}
+
+function _renderBarraProgresoEvento() {
+  const r = _resumenEvento();
+  if (!r) return '';
+  return `
+    <div class="evento-barra-progreso">
+      <div class="evento-barra-progreso-relleno" style="width:${r.porcentaje}%;"></div>
+      <span class="evento-barra-progreso-texto">${r.retosCompletados}/${r.retosTotales} retos · ${r.porcentaje}%</span>
+    </div>
+  `;
 }
 
 // FIX: barra de progreso y tiempo restante — antes quedaban declaradas
