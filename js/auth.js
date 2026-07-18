@@ -187,26 +187,18 @@ async function completarLogin(usuario) {
 
   mostrarHeaderLogueado(usuario);
   iniciarNotificaciones();
-  verificarModalActualizacion();
- if (typeof inicializarEventos === 'function') inicializarEventos();
+  if (typeof inicializarEventos === 'function') inicializarEventos();
 
   _tokenGooglePendiente = null;
   _emailGooglePendiente = null;
 
-  switch (usuario.rol) {
-    case 'autor':
-      mostrarSeccion('panel-autor');
-      break;
-    case 'reseñador':
-      mostrarSeccion('feed');
-      break;
-    case 'admin':
-      mostrarSeccion('admin');
-      break;
-    default:
-      mostrarSeccion('feed');
+  if (usuario.rol !== 'admin' && !perfilEstaCompleto(usuario)) {
+    mostrarGatePerfilObligatorio(usuario);
+    return;
   }
 
+  verificarModalActualizacion();
+  redirigirSegunRol(usuario);
   mostrarToast(`¡Bienvenida, ${usuario.alias || usuario.nombre}!`, 'ok');
 }
 
@@ -243,9 +235,13 @@ async function verificarSesionActiva() {
     return;
   }
 
- mostrarHeaderLogueado(perfil);
+  mostrarHeaderLogueado(perfil);
   iniciarNotificaciones();
   if (typeof inicializarEventos === 'function') inicializarEventos();
+
+  if (perfil.rol !== 'admin' && !perfilEstaCompleto(perfil)) {
+    mostrarGatePerfilObligatorio(perfil);
+  }
 }
 
 // ────────────────────────────────────────────────────────────
@@ -327,6 +323,107 @@ function decodificarJWT(token) {
   }
 }
 
+// ────────────────────────────────────────────────────────────
+// GATE OBLIGATORIO DE PERFIL COMPLETO
+// ────────────────────────────────────────────────────────────
+
+function perfilEstaCompleto(usuario) {
+  if (!usuario) return false;
+  return !!(usuario.alias && usuario.pais && usuario.ciudad);
+}
+
+function redirigirSegunRol(usuario) {
+  switch (usuario.rol) {
+    case 'autor':
+      mostrarSeccion('panel-autor');
+      break;
+    case 'reseñador':
+      mostrarSeccion('feed');
+      break;
+    case 'admin':
+      mostrarSeccion('admin');
+      break;
+    default:
+      mostrarSeccion('feed');
+  }
+}
+
+function mostrarGatePerfilObligatorio(usuario) {
+  let overlay = document.getElementById('gate-perfil-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'gate-perfil-overlay';
+    overlay.style.cssText = `
+      position:fixed; inset:0; background:rgba(0,0,0,0.6);
+      display:flex; align-items:center; justify-content:center;
+      z-index:99999; padding:20px;
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div style="background:#fff; border-radius:12px; padding:28px; max-width:420px; width:100%; max-height:90vh; overflow-y:auto;">
+      <h2 style="margin-bottom:8px;">Completá tu perfil</h2>
+      <p style="font-size:13px; color:#777; margin-bottom:16px;">Necesitamos estos datos antes de que puedas seguir usando la plataforma.</p>
+      <form id="form-gate-perfil">
+        <div class="form-grupo">
+          <label class="form-label">Alias</label>
+          <input type="text" id="gate-alias" class="form-input" required />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">País</label>
+          <input type="text" id="gate-pais" class="form-input" required />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Ciudad</label>
+          <input type="text" id="gate-ciudad" class="form-input" required />
+        </div>
+        <div id="gate-perfil-error" class="mensaje-error" style="display:none;"></div>
+        <button type="submit" class="btn-primario btn-full" style="margin-top:12px;">Guardar y continuar</button>
+      </form>
+    </div>
+  `;
+
+  document.body.style.overflow = 'hidden';
+
+  const form = document.getElementById('form-gate-perfil');
+  form.onsubmit = (e) => guardarPerfilObligatorio(e, usuario);
+}
+
+async function guardarPerfilObligatorio(event, usuario) {
+  event.preventDefault();
+  _ocultarMensajes('gate-perfil-error');
+
+  const alias  = document.getElementById('gate-alias')?.value.trim();
+  const pais   = document.getElementById('gate-pais')?.value.trim();
+  const ciudad = document.getElementById('gate-ciudad')?.value.trim();
+
+  if (!alias || !pais || !ciudad) {
+    _mostrarMensajeError('gate-perfil-error', 'Todos los campos son obligatorios.');
+    return;
+  }
+
+  const { data: perfilActualizado, error } = await supabaseClient
+    .from('usuarios')
+    .update({ alias, pais, ciudad })
+    .eq('id', usuario.id)
+    .select()
+    .single();
+
+  if (error) {
+    _mostrarMensajeError('gate-perfil-error', error.message);
+    return;
+  }
+
+  const overlay = document.getElementById('gate-perfil-overlay');
+  if (overlay) overlay.remove();
+  document.body.style.overflow = '';
+
+  Sesion.guardar(perfilActualizado);
+  verificarModalActualizacion();
+  redirigirSegunRol(perfilActualizado);
+  mostrarToast(`¡Bienvenida, ${perfilActualizado.alias}!`, 'ok');
+}
 
 // ────────────────────────────────────────────────────────────
 // CONECTAR BOTÓN DE LOGIN AL HTML
