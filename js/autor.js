@@ -995,9 +995,7 @@ async function cargarPlanAutor(idUsuario) {
           campanasPlus === '-1' ? 'Campañas ilimitadas' : `${campanasPlus} campañas por mes`,
           resenadoresPlus === '-1' ? 'Reseñadores ilimitados' : `Hasta ${resenadoresPlus} reseñadores`
         ],
-        esPremium: true,
-        // El upgrade real se conecta en Fase 6 (Edge Functions todavía rechazan rol editorial)
-        proximamente: true
+        esPremium: true
       }
     ];
   } else {
