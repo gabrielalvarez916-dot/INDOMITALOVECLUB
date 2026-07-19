@@ -948,40 +948,94 @@ async function cargarPlanAutor(idUsuario) {
   if (error || !u) return;
   const plan = u.plan || 'free';
   const fechaVenc = u.fecha_vencimiento_plan || '';
-  
-  const planes = [
-    {
-      id: 'free',
-      nombre: 'Free',
-      precio: '$0',
-      subprecio: 'Para empezar',
-      beneficios: ['1 campaña por mes', 'Hasta 10 reseñadores'],
-      esPremium: false
-    },
-    {
-      id: 'basic',
-      nombre: 'Basic',
-      precio: '$20.000',
-      subprecio: '$190.000/año',
-      beneficios: ['3 campañas por mes', 'Hasta 50 reseñadores'],
-      esPremium: false
-    },
-    {
-      id: 'premium',
-      nombre: 'Premium',
-      precio: '$40.000',
-      subprecio: '$380.000/año',
-      beneficios: ['5 campañas por mes', 'Hasta 100 reseñadores'],
-      esPremium: true
-    }
-  ];
+
+  const esEditorial = Sesion.rol() === 'editorial';
+
+  let planes;
+
+  if (esEditorial) {
+    // Los valores de editorial vienen de `configuracion` para no hardcodear precios/límites.
+    const { data: config } = await supabaseClient
+      .from('configuracion')
+      .select('clave, valor')
+      .in('clave', [
+        'PRECIO_EDITORIAL_PLUS_ARS',
+        'PLAN_EDITORIAL_FREE_CAMPANAS',
+        'PLAN_EDITORIAL_FREE_RESENADORES',
+        'PLAN_EDITORIAL_PLUS_CAMPANAS',
+        'PLAN_EDITORIAL_PLUS_RESENADORES'
+      ]);
+
+    const val = (clave, fallback) => (config || []).find(c => c.clave === clave)?.valor ?? fallback;
+
+    const precioPlus       = parseInt(val('PRECIO_EDITORIAL_PLUS_ARS', '60000'));
+    const campanasFree     = val('PLAN_EDITORIAL_FREE_CAMPANAS', '5');
+    const resenadoresFree  = val('PLAN_EDITORIAL_FREE_RESENADORES', '40');
+    const campanasPlus     = val('PLAN_EDITORIAL_PLUS_CAMPANAS', '-1');
+    const resenadoresPlus  = val('PLAN_EDITORIAL_PLUS_RESENADORES', '-1');
+
+    planes = [
+      {
+        id: 'editorial_free',
+        nombre: 'Free',
+        precio: '$0',
+        subprecio: 'Para empezar',
+        beneficios: [
+          `${campanasFree} campañas por mes`,
+          `Hasta ${resenadoresFree} reseñadores`
+        ],
+        esPremium: false
+      },
+      {
+        id: 'editorial_plus',
+        nombre: 'Editorial Plus',
+        precio: `$${precioPlus.toLocaleString('es-AR')}`,
+        subprecio: 'Facturación mensual',
+        beneficios: [
+          campanasPlus === '-1' ? 'Campañas ilimitadas' : `${campanasPlus} campañas por mes`,
+          resenadoresPlus === '-1' ? 'Reseñadores ilimitados' : `Hasta ${resenadoresPlus} reseñadores`
+        ],
+        esPremium: true,
+        // El upgrade real se conecta en Fase 6 (Edge Functions todavía rechazan rol editorial)
+        proximamente: true
+      }
+    ];
+  } else {
+    // ── Autor: exactamente igual que antes, sin ningún cambio ──
+    planes = [
+      {
+        id: 'free',
+        nombre: 'Free',
+        precio: '$0',
+        subprecio: 'Para empezar',
+        beneficios: ['1 campaña por mes', 'Hasta 10 reseñadores'],
+        esPremium: false
+      },
+      {
+        id: 'basic',
+        nombre: 'Basic',
+        precio: '$20.000',
+        subprecio: '$190.000/año',
+        beneficios: ['3 campañas por mes', 'Hasta 50 reseñadores'],
+        esPremium: false
+      },
+      {
+        id: 'premium',
+        nombre: 'Premium',
+        precio: '$40.000',
+        subprecio: '$380.000/año',
+        beneficios: ['5 campañas por mes', 'Hasta 100 reseñadores'],
+        esPremium: true
+      }
+    ];
+  }
 
   contenedor.innerHTML = `
     <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:24px;">Elegí tu plan</h3>
     <div style="display:flex; flex-direction:column; gap:14px;">
       ${planes.map(p => {
         const esActual = p.id === plan;
-        const esMenor = (p.id === 'free' && (plan === 'basic' || plan === 'premium')) || (p.id === 'basic' && plan === 'premium');
+        const esMenor = (p.id === 'free' && (plan === 'basic' || plan === 'premium')) || (p.id === 'basic' && plan === 'premium') || (p.id === 'editorial_free' && plan === 'editorial_plus');
         return `
           <div style="
             background: ${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'};
@@ -1017,6 +1071,8 @@ async function cargarPlanAutor(idUsuario) {
                 ? `<button class="btn-sm" disabled style="background:${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'}; color:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Plan actual</button>`
                 : esMenor
                 ? ''
+                : p.proximamente
+                ? `<button class="btn-sm" disabled style="background:rgba(255,255,255,0.15); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default; opacity:0.7;">Próximamente</button>`
                 : `<button class="btn-sm" onclick="iniciarPago('${p.id}')" style="background:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; color:${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer;">Elegir ${p.nombre}</button>`
               }
             </div>
@@ -1027,6 +1083,7 @@ async function cargarPlanAutor(idUsuario) {
     ${fechaVenc ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
   `;
 }
+
 async function iniciarPago(plan) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
