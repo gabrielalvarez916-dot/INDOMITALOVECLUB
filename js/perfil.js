@@ -42,9 +42,19 @@ async function cargarPerfil() {
       _bibliotecaEsPropia = true;
     }
     await _cargarPerfilReseñador(_idReseñadorPerfilActual, '-propio');
+
+  } else if (rol === 'editorial') {
+    if (!_idEditorialPerfilActual) {
+      const { data: idEdi, error: errId } = await supabaseClient.rpc('obtener_id_editorial_por_email', { p_email: Sesion.email() });
+      if (errId || !idEdi || idEdi.error) {
+        _estadoPerfilPublico('error', '-propio');
+        return;
+      }
+      _idEditorialPerfilActual = idEdi.id;
+    }
+    await _cargarPerfilEditorial(_idEditorialPerfilActual, '-propio');
   }
 }
-
 
 // ────────────────────────────────────────────────────────────
 // CARGAR FORMULARIO DE EDICIÓN (modal "Editar perfil")
@@ -86,6 +96,7 @@ async function cargarFormularioEdicionPerfil() {
     tiktok: perfilRaw.tiktok,
     amazon: perfilRaw.amazon,
     tropesFavoritos: perfilRaw.tropes_favoritos,
+    sitioWeb: perfilRaw.sitio_web,
     fotoPerfil: perfilRaw.avatares?.imagen_url
   };
 
@@ -96,7 +107,7 @@ async function cargarFormularioEdicionPerfil() {
     renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', tropesArray);
   }
 
-  if (rol === 'autor') {
+  if (rol === 'autor' || rol === 'editorial') {
     toggleElemento('seccion-biblioteca', true);
     await cargarBibliotecaPanel(usuario.id);
   } else {
@@ -124,10 +135,12 @@ async function cargarFormularioEdicionPerfil() {
 function ajustarFormularioPorRol(rol) {
   const esAutor     = rol === 'autor';
   const esReseñador = rol === 'reseñador';
-  toggleElemento('seccion-biblioteca',   esAutor);
-  toggleElemento('grupo-generos',        esReseñador);
-  toggleElemento('grupo-descripcion',    esReseñador);
+  const esEditorial = rol === 'editorial';
+  toggleElemento('seccion-biblioteca',   esAutor || esEditorial);
+  toggleElemento('grupo-generos',        esReseñador || esEditorial);
+  toggleElemento('grupo-descripcion',    esReseñador || esEditorial);
   toggleElemento('grupo-tropes-perfil',  esReseñador);
+  toggleElemento('grupo-sitio-web',      esEditorial);
   if (esReseñador) {
     renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', []);
   }
@@ -158,6 +171,7 @@ function rellenarFormularioPerfil(perfil) {
   setVal('perfil-instagram',   perfil.instagram);
   setVal('perfil-tiktok',      perfil.tiktok);
   setVal('perfil-amazon',      perfil.amazon);
+  setVal('perfil-sitio-web',   perfil.sitioWeb);
 
   // Foto de perfil
   const fotoEl = document.getElementById('perfil-foto');
@@ -201,6 +215,11 @@ async function guardarPerfil(event) {
     datos.tropesFavoritos   = obtenerTropesComoTexto('perfil');
   }
 
+  if (rol === 'editorial') {
+    datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
+    datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
+    datos.sitioWeb          = document.getElementById('perfil-sitio-web')?.value?.trim();
+  }
   if (!datos.alias) {
     mostrarMensajeError('perfil-error', 'El alias es obligatorio.');
     return;
@@ -217,7 +236,8 @@ async function guardarPerfil(event) {
       amazon: datos.amazon,
       generos: datos.generos,
       descripcion_lector: datos.descripcionLector,
-      tropes_favoritos: datos.tropesFavoritos
+      tropes_favoritos: datos.tropesFavoritos,
+      sitio_web: datos.sitioWeb
     })
     .eq('id', usuario.id);
 
