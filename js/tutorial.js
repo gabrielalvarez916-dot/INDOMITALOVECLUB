@@ -54,8 +54,9 @@ const TUTORIAL_PASOS_CONFIG = {
 const _TutorialState = {
   activo: false,
   rol: null,
-  pasos: [],       // datos cargados de Supabase (imagen, título, texto) por paso
-  indice: 0        // índice del paso actual (0-based)
+  pasos: [],       // datos cargados de Supabase (imagen, título, texto) por paso; incluye paso 0 = intro
+  indice: 0,       // índice del paso actual (0-based, corresponde a pasos 1..6)
+  enIntro: false   // true mientras se muestra la pantalla de bienvenida (paso 0, antes del globo)
 };
 
 // ────────────────────────────────────────────────────────────
@@ -78,9 +79,10 @@ async function inicializarTutorialBienvenida(usuario) {
     _TutorialState.rol = usuario.rol;
     _TutorialState.pasos = pasos.sort((a, b) => a.numero_paso - b.numero_paso);
     _TutorialState.indice = 0;
+    _TutorialState.enIntro = true;
 
     _asegurarWidgetGloboTutorial();
-    _mostrarPasoTutorial();
+    _mostrarIntroTutorial();
   } catch (e) {
     console.error('Error inicializando tutorial de bienvenida:', e);
   }
@@ -90,9 +92,28 @@ async function inicializarTutorialBienvenida(usuario) {
 // NAVEGACIÓN ENTRE PASOS
 // ────────────────────────────────────────────────────────────
 
+function _mostrarIntroTutorial() {
+  const intro = _TutorialState.pasos.find(p => p.numero_paso === 0);
+  if (!intro) { _TutorialState.enIntro = false; _mostrarPasoTutorial(); return; }
+
+  _ocultarGloboTutorial();
+
+  document.getElementById('tutorial-mascota-titulo').textContent = intro.titulo || '';
+  document.getElementById('tutorial-mascota-texto').textContent = intro.texto || '';
+  document.getElementById('tutorial-mascota-imagen').src = intro.imagen_mascota || '';
+  document.getElementById('tutorial-mascota-paso-contador').textContent = '';
+
+  const btnAnterior = document.getElementById('btn-tutorial-anterior');
+  const btnSiguiente = document.getElementById('btn-tutorial-siguiente');
+  if (btnAnterior) btnAnterior.style.display = 'none';
+  if (btnSiguiente) btnSiguiente.textContent = 'Empezar tutorial';
+
+  mostrarModal('modal-tutorial-mascota');
+}
+
 function _mostrarPasoTutorial() {
   const config = TUTORIAL_PASOS_CONFIG[_TutorialState.rol];
-  const datos = _TutorialState.pasos[_TutorialState.indice];
+  const datos = _TutorialState.pasos.find(p => p.numero_paso === _TutorialState.indice + 1);
   const pasoConfig = config[_TutorialState.indice];
 
   if (!datos || !pasoConfig) {
@@ -112,7 +133,7 @@ function _mostrarPasoTutorial() {
 
   const btnAnterior = document.getElementById('btn-tutorial-anterior');
   const btnSiguiente = document.getElementById('btn-tutorial-siguiente');
-  if (btnAnterior) btnAnterior.style.display = _TutorialState.indice === 0 ? 'none' : 'inline-block';
+  if (btnAnterior) btnAnterior.style.display = 'inline-block';
   if (btnSiguiente) btnSiguiente.textContent = _TutorialState.indice === config.length - 1 ? '¡Listo!' : 'Siguiente';
 
   mostrarModal('modal-tutorial-mascota');
@@ -123,12 +144,29 @@ function _mostrarPasoTutorial() {
 }
 
 function pasoSiguienteTutorial() {
+  if (_TutorialState.enIntro) {
+    _TutorialState.enIntro = false;
+    _mostrarPasoTutorial();
+    return;
+  }
+
   const config = TUTORIAL_PASOS_CONFIG[_TutorialState.rol];
   if (_TutorialState.indice >= config.length - 1) {
     cerrarTutorialBienvenida();
     return;
   }
   _TutorialState.indice++;
+  _mostrarPasoTutorial();
+}
+
+function pasoAnteriorTutorial() {
+  if (_TutorialState.enIntro) return;
+  if (_TutorialState.indice === 0) {
+    _TutorialState.enIntro = true;
+    _mostrarIntroTutorial();
+    return;
+  }
+  _TutorialState.indice--;
   _mostrarPasoTutorial();
 }
 
