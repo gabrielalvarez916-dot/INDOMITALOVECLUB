@@ -878,7 +878,9 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
     linkAmazon:        document.getElementById('nc-link-amazon')?.value?.trim(),
     cuposTotal:        parseInt(document.getElementById('nc-cupos')?.value),
     modalidadLectura:  document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor',
-    plataformasResena: plataformasSeleccionadas
+    plataformasResena: plataformasSeleccionadas,
+    tipoColaboracion:  document.querySelector('input[name="nc-tipo-colaboracion"]:checked')?.value || 'digital',
+    alcanceEnvio:      document.querySelector('input[name="nc-alcance-envio"]:checked')?.value || null
   };
 
   const { data: campanaCreada, error } = await supabaseClient
@@ -894,7 +896,9 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
       link_amazon_libro:  datos.linkAmazon,
       cupos_total:        datos.cuposTotal,
       modalidad_lectura:  datos.modalidadLectura,
-      plataformas_resena: datos.plataformasResena
+      plataformas_resena: datos.plataformasResena,
+      tipo_colaboracion:  datos.tipoColaboracion,
+      alcance_envio:      datos.tipoColaboracion === 'digital' ? null : datos.alcanceEnvio
     })
     .select()
     .single();
