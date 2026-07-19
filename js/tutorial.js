@@ -229,6 +229,10 @@ function _asegurarWidgetGloboTutorial() {
 function _posicionarGloboTutorial(idElementoDestino) {
   const globo = document.getElementById('tutorial-globo');
   const destino = document.getElementById(idElementoDestino);
+  // Limpia el resaltado del paso anterior
+  document.querySelectorAll('.tutorial-destino-resaltado').forEach(el =>
+    el.classList.remove('tutorial-destino-resaltado')
+  );
   if (!globo || !destino) {
     if (globo) globo.style.display = 'none';
     return;
