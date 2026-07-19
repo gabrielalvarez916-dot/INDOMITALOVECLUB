@@ -250,8 +250,9 @@ function cerrarModales() {
   const overlay = document.getElementById('modal-overlay');
   if (overlay) overlay.classList.remove('activo');
 
-  // Cierra todos los modales activos
+  // Cierra todos los modales activos, excepto el del tutorial si está en curso
   document.querySelectorAll('.modal.activo').forEach(modal => {
+    if (modal.id === 'modal-tutorial-mascota' && typeof _TutorialState !== 'undefined' && _TutorialState.activo) return;
     modal.classList.remove('activo');
   });
 
