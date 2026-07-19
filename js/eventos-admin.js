@@ -39,7 +39,7 @@ function _eventoFormVacio() {
     textoModal: '',
     historia: '',
     imagenesActuales: {}, // URLs ya subidas (al editar)
-    retos: { autor: [], reseñador: [] },
+    retos: { autor: [], reseñador: [], editorial: [] },
     tema: {
       colorPrincipal: '#e05a8a',
       mascota: {
@@ -153,6 +153,9 @@ function renderizarFormEvento() {
         <h4 class="panel-titulo" style="font-size:16px; margin-top:20px;">Retos — Reseñador</h4>
         <div id="ev-retos-reseñador">${_construirBloqueRetosRol('reseñador')}</div>
         <button type="button" class="btn-secundario btn-sm" onclick="agregarRetoAdmin('reseñador')">+ Agregar reto (reseñador)</button>
+        <h4 class="panel-titulo" style="font-size:16px; margin-top:20px;">Retos — Editorial</h4>
+<div id="ev-retos-editorial">${_construirBloqueRetosRol('editorial')}</div>
+<button type="button" class="btn-secundario btn-sm" onclick="agregarRetoAdmin('editorial')">+ Agregar reto (editorial)</button>
       </div>
 
       <div id="panel-tab-imagenes" style="display:${_eventoFormTabActiva === 'imagenes' ? 'block' : 'none'};">
@@ -688,9 +691,10 @@ function editarEventoAdmin(idEvento) {
     historia: e.historia || '',
     imagenesActuales: e.imagenes || {},
     retos: {
-      autor: (e.retos?.autor || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) })),
-      reseñador: (e.retos?.reseñador || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) }))
-    },
+  autor: (e.retos?.autor || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) })),
+  reseñador: (e.retos?.reseñador || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) })),
+  editorial: (e.retos?.editorial || []).map(r => ({ ...r, subRetos: (r.subRetos || []).map(sr => ({ ...sr })) }))
+},
     tema: _normalizarTemaCargado(e.tema)
   };
   renderizarFormEvento();
