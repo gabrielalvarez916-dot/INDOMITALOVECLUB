@@ -165,8 +165,9 @@ async function seleccionarRol(rol) {
     rol: rol
   };
 
-  // Editorial arranca directamente en su plan free (5 campañas / 40 reseñadores)
-  if (rol === 'editorial') {
+  // Autor y editorial arrancan en su plan free correspondiente.
+  // Reseñador no maneja plan, así que no le seteamos nada.
+  if (rol === 'autor' || rol === 'editorial') {
     datosNuevoUsuario.plan = 'free';
   }
 
