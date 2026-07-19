@@ -5007,3 +5007,11 @@ img { max-width: 100%; display: block; }
     width: auto;
   }
 }
+
+.tutorial-destino-resaltado {
+  position: relative;
+  z-index: 9998;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(92, 15, 26, 0.45), 0 0 0 4px var(--color-primario, #ff4d8d);
+  transition: box-shadow 0.3s ease;
+}
