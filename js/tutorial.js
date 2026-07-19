@@ -24,7 +24,7 @@ const TUTORIAL_PASOS_CONFIG = {
           if (typeof cargarFormularioEdicionPerfil === 'function') cargarFormularioEdicionPerfil();
         }, 50);
       } },
-    { destino: 'tabbtn-mis-postulaciones', abrir: () => mostrarPanelRol() },
+    { destino: 'nav-panel', abrir: () => mostrarPanelRol() },
     { destino: 'tabbtn-ranking-resenador', abrir: () => {
         mostrarPanelRol();
         setTimeout(() => document.getElementById('tabbtn-ranking-resenador')?.click(), 50);
@@ -149,7 +149,7 @@ function _mostrarPasoTutorial() {
 
   // 3. Mueve el globo hacia el elemento destino (con margen para que la
   //    pantalla/panel termine de renderizar tras el "abrir()").
-  setTimeout(() => _posicionarGloboTutorial(pasoConfig.destino), 150);
+  setTimeout(() => _posicionarGloboTutorial(pasoConfig.destino), 400);
 }
 
 function pasoSiguienteTutorial() {
@@ -252,7 +252,7 @@ function _posicionarGloboTutorial(idElementoDestino) {
     return;
   }
 
-  destino.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  destino.scrollIntoView({ behavior: 'auto', block: 'center' });
 
   const actualizarPosicionGlobo = () => {
     const rect = destino.getBoundingClientRect();
