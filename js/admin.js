@@ -952,11 +952,14 @@ async function eliminarModalActualizacionAdmin(idModal) {
 
 const TUTORIAL_DESTINOS = {
   'reseñador': ['Campañas', 'Perfil', 'Postulaciones y ARCs activas', 'Ranking', 'Biblioteca', 'Evento'],
-  'autor': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento', 'Nueva campaña']
+  'autor': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento', 'Nueva campaña'],
+  'editorial': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento', 'Nueva campaña']
 };
 
 function _slugRolTutorial(rol) {
-  return rol === 'reseñador' ? 'resenador' : 'autor';
+  if (rol === 'reseñador') return 'resenador';
+  if (rol === 'editorial') return 'editorial';
+  return 'autor';
 }
 
 async function cargarTutorialesAdmin() {
@@ -974,7 +977,7 @@ async function cargarTutorialesAdmin() {
     return;
   }
 
-  const porRol = { 'reseñador': [], 'autor': [] };
+  const porRol = { 'reseñador': [], 'autor': [], 'editorial': [] };
   (pasos || []).forEach(p => { if (porRol[p.rol]) porRol[p.rol].push(p); });
 
   cont.innerHTML = `
@@ -982,9 +985,13 @@ async function cargarTutorialesAdmin() {
       <p class="plan-nombre" style="font-size:18px;">Tutorial de bienvenida — Reseñador</p>
       ${_construirPasosTutorialAdmin('reseñador', porRol['reseñador'])}
     </div>
-    <div class="plan-info">
+    <div class="plan-info" style="margin-bottom:32px;">
       <p class="plan-nombre" style="font-size:18px;">Tutorial de bienvenida — Autor</p>
       ${_construirPasosTutorialAdmin('autor', porRol['autor'])}
+    </div>
+    <div class="plan-info">
+      <p class="plan-nombre" style="font-size:18px;">Tutorial de bienvenida — Editorial</p>
+      ${_construirPasosTutorialAdmin('editorial', porRol['editorial'])}
     </div>
   `;
 }
