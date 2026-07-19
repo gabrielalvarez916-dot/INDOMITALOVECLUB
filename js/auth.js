@@ -200,6 +200,7 @@ async function completarLogin(usuario) {
   verificarModalActualizacion();
   redirigirSegunRol(usuario);
   mostrarToast(`¡Bienvenida, ${usuario.alias || usuario.nombre}!`, 'ok');
+  if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(usuario);
 }
 
 // ────────────────────────────────────────────────────────────
