@@ -124,10 +124,10 @@ function mostrarPanelRol() {
   const rol = Sesion.rol();
   if (rol === 'autor') mostrarSeccion('panel-autor');
   else if (rol === 'reseñador') mostrarSeccion('panel-resenador');
+  else if (rol === 'editorial') mostrarSeccion('feed'); // temporal — se cambia a 'panel-editorial' en Fase 3
   else if (rol === 'admin') mostrarSeccion('admin');
   else mostrarSeccion('login');
 }
-
 
 // ────────────────────────────────────────────────────────────
 // HEADER
