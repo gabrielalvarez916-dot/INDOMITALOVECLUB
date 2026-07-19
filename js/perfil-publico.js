@@ -287,16 +287,6 @@ function _pintarPerfilEditorial(perfil, libros, campañas, gamif, sufijo = '') {
       : '';
   }
 
-  const sitioWebEl = document.getElementById('pp-editorial-sitio-web' + sufijo);
-  if (sitioWebEl) {
-    if (perfil.sitioWeb) {
-      sitioWebEl.href = perfil.sitioWeb;
-      sitioWebEl.style.display = '';
-    } else {
-      sitioWebEl.style.display = 'none';
-    }
-  }
-
   const descripcionEl = document.getElementById('pp-editorial-descripcion' + sufijo);
   const bloqueDescripcion = document.getElementById('pp-bloque-editorial-descripcion' + sufijo);
   if (descripcionEl) {
@@ -758,13 +748,18 @@ avatarEl.src = _resolverAvatar(perfil.avatarUrl);
     ubicacionEl.style.display = partes.length ? '' : 'none';
   }
 
-  // Redes sociales
+// Redes sociales
   const redesEl = document.getElementById('pp-redes' + sufijo);
   if (redesEl) {
+    const esEditorial = perfil.rol === 'editorial';
     const redes = [];
     if (perfil.instagram) redes.push(`<a href="${_esc(perfil.instagram)}" target="_blank" class="pp-red-link pp-red-instagram">Instagram</a>`);
     if (perfil.tiktok)    redes.push(`<a href="${_esc(perfil.tiktok)}"    target="_blank" class="pp-red-link pp-red-tiktok">TikTok</a>`);
-    if (perfil.amazon)    redes.push(`<a href="${_esc(perfil.amazon)}"    target="_blank" class="pp-red-link pp-red-amazon">Amazon</a>`);
+    if (esEditorial) {
+      if (perfil.sitioWeb) redes.push(`<a href="${_esc(perfil.sitioWeb)}" target="_blank" class="pp-red-link pp-red-sitioweb">Sitio web</a>`);
+    } else if (perfil.amazon) {
+      redes.push(`<a href="${_esc(perfil.amazon)}" target="_blank" class="pp-red-link pp-red-amazon">Amazon</a>`);
+    }
     redesEl.innerHTML = redes.join('');
     redesEl.style.display = redes.length ? '' : 'none';
   }
