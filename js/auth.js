@@ -167,8 +167,10 @@ async function seleccionarRol(rol) {
 
   // Autor y editorial arrancan en su plan free correspondiente.
   // Reseñador no maneja plan, así que no le seteamos nada.
-  if (rol === 'autor' || rol === 'editorial') {
+  if (rol === 'autor') {
     datosNuevoUsuario.plan = 'free';
+  } else if (rol === 'editorial') {
+    datosNuevoUsuario.plan = 'editorial_free';
   }
 
   const { data: nuevoPerfil, error } = await supabaseClient
@@ -350,7 +352,7 @@ function redirigirSegunRol(usuario) {
       mostrarSeccion('feed');
       break;
     case 'editorial':
-      mostrarSeccion('feed'); // temporal — se cambia cuando armemos el panel de editorial en Fase 3
+      mostrarSeccion('panel-autor');
       break;
     case 'admin':
       mostrarSeccion('admin');
