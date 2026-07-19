@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   } else {
     // No hay sesión: muestra pantalla de login
-    mostrarHeaderDeslogueado();
-    mostrarSeccion('login');
+    HeaderDeslogueado();
+    Seccion('login');
   }
 
   // Si el link trae ?campana=ID, abre el detalle automáticamente
