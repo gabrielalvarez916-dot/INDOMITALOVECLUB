@@ -226,8 +226,11 @@ function mostrarModal(idModal) {
   if (overlay && idModal !== 'modal-tutorial-mascota') overlay.classList.add('activo');
   modal.classList.add('activo');
 
-  // Evita scroll del body mientras el modal está abierto
-  document.body.style.overflow = 'hidden';
+ // Evita scroll del body mientras el modal está abierto (excepto en el tutorial,
+  // que necesita permitir que el usuario recorra la página para ver el elemento señalado)
+  if (idModal !== 'modal-tutorial-mascota') {
+    document.body.style.overflow = 'hidden';
+  }
 
   // Inicializa los selectores de tropes según el modal
  if (idModal === 'modal-nuevo-libro') {
