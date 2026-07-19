@@ -223,7 +223,7 @@ function mostrarModal(idModal) {
     return;
   }
 
- if (overlay) overlay.classList.add('activo');
+  if (overlay && idModal !== 'modal-tutorial-mascota') overlay.classList.add('activo');
   modal.classList.add('activo');
 
   // Evita scroll del body mientras el modal está abierto
