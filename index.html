@@ -511,6 +511,56 @@
       </div>
       <!-- /BLOQUE RESEÑADOR (propio) -->
 
+      <!-- BLOQUE EDITORIAL (propio) -->
+      <div id="pp-bloque-editorial-propio" style="display:none;">
+
+        <!-- Cabecera -->
+        <div class="pp-cabecera">
+          <img id="pp-avatar-ed-propio" src="" alt="Avatar" class="pp-avatar" />
+          <div class="pp-cabecera-info">
+            <p id="pp-alias-ed-propio"     class="pp-alias"></p>
+            <p id="pp-ubicacion-ed-propio" class="pp-ubicacion"></p>
+            <p id="pp-editorial-miembro-desde-propio" class="pp-miembro-desde"></p>
+            <div id="pp-redes-ed-propio"   class="pp-redes"></div>
+            <a id="pp-editorial-sitio-web-propio" href="" target="_blank" class="pp-link-externo" style="display:none;">Sitio web →</a>
+          </div>
+        </div>
+
+        <!-- Gamificación -->
+        <div class="pp-bloque" id="pp-editorial-gamificacion-cont-propio" style="display:none;">
+          <div id="pp-editorial-gamificacion-propio"></div>
+        </div>
+
+        <!-- Presentación -->
+        <div class="pp-bloque" id="pp-bloque-editorial-descripcion-propio" style="display:none;">
+          <p class="pp-bloque-titulo">Presentación</p>
+          <p id="pp-editorial-descripcion-propio" class="pp-texto-truncado"></p>
+        </div>
+
+        <!-- Géneros que trabajamos -->
+        <div class="pp-bloque" id="pp-bloque-editorial-generos-propio" style="display:none;">
+          <p class="pp-bloque-titulo">Géneros que trabajamos</p>
+          <p id="pp-editorial-generos-propio" class="pp-etiquetas"></p>
+        </div>
+
+        <!-- Libros -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Mis libros publicados</p>
+          <div id="pp-editorial-libros-propio" class="estante-fila"></div>
+          <button class="btn-secundario btn-full" id="pp-btn-ver-libros-editorial-propio" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+            Ver todos mis libros →
+          </button>
+        </div>
+
+        <!-- Campañas activas -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Campañas activas</p>
+          <div id="pp-editorial-campanas-propio" class="pp-libros-goodreads-grid"></div>
+        </div>
+
+      </div>
+      <!-- /BLOQUE EDITORIAL (propio) -->
+
     </div>
   </section>
 
@@ -1288,6 +1338,11 @@
         <label class="form-label">Tropes favoritos</label>
         <div id="perfil-tropes-contenedor"></div>
       </div>
+
+      <div class="form-grupo" id="grupo-sitio-web" style="display:none;">
+        <label class="form-label">Sitio web</label>
+        <input type="url" id="perfil-sitio-web" class="form-input" placeholder="https://tueditorial.com" />
+      </div>
       
       <div class="form-separador">Redes sociales</div>
 
@@ -1438,8 +1493,59 @@
         </button>
       </div>
  
-    </div>
+   </div>
     <!-- /BLOQUE RESEÑADOR -->
+
+    <!-- BLOQUE EDITORIAL -->
+    <div id="pp-bloque-editorial" style="display:none;">
+
+      <!-- Cabecera -->
+      <div class="pp-cabecera">
+        <img id="pp-avatar-ed" src="" alt="Avatar" class="pp-avatar" />
+        <div class="pp-cabecera-info">
+          <p id="pp-alias-ed"     class="pp-alias"></p>
+          <button id="pp-btn-denunciar-ed" class="pp-btn-denunciar" onclick="abrirModalDenuncia('usuario_autor', _idEditorialPerfilActual)" title="Denunciar">🚩 Denunciar</button>
+          <p id="pp-ubicacion-ed" class="pp-ubicacion"></p>
+          <p id="pp-editorial-miembro-desde" class="pp-miembro-desde"></p>
+          <div id="pp-redes-ed"   class="pp-redes"></div>
+          <a id="pp-editorial-sitio-web" href="" target="_blank" class="pp-link-externo" style="display:none;">Sitio web →</a>
+        </div>
+      </div>
+
+      <!-- Gamificación -->
+      <div class="pp-bloque" id="pp-editorial-gamificacion-cont" style="display:none;">
+        <div id="pp-editorial-gamificacion"></div>
+      </div>
+
+      <!-- Presentación -->
+      <div class="pp-bloque" id="pp-bloque-editorial-descripcion" style="display:none;">
+        <p class="pp-bloque-titulo">Presentación</p>
+        <p id="pp-editorial-descripcion" class="pp-texto-truncado"></p>
+      </div>
+
+      <!-- Géneros que trabajamos -->
+      <div class="pp-bloque" id="pp-bloque-editorial-generos" style="display:none;">
+        <p class="pp-bloque-titulo">Géneros que trabajamos</p>
+        <p id="pp-editorial-generos" class="pp-etiquetas"></p>
+      </div>
+
+      <!-- Libros -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Libros publicados</p>
+        <div id="pp-editorial-libros" class="estante-fila"></div>
+        <button class="btn-secundario btn-full" id="pp-btn-ver-libros-editorial" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+          Ver todos los libros →
+        </button>
+      </div>
+
+      <!-- Campañas activas -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Campañas activas</p>
+        <div id="pp-editorial-campanas" class="pp-libros-goodreads-grid"></div>
+      </div>
+
+    </div>
+    <!-- /BLOQUE EDITORIAL -->
  
   </div>
   <!-- /modal-body -->
