@@ -262,7 +262,7 @@
     <div class="seccion-inner">
       <div class="panel-header">
         <h2 class="panel-titulo">Mi panel</h2>
-        <button class="btn-primario" id="btn-nueva-campana" onclick="mostrarModal('modal-nueva-campana')">+ Nueva campaña</button>
+        <button class="btn-primario" id="btn-nueva-campana" onclick="abrirModalNuevaCampana()">+ Nueva campaña</button>
       </div>
       <div class="stats-grid" id="autor-stats"></div>
       <div class="tabs">
@@ -802,7 +802,41 @@
     </label>
   </div>
 </div>
-        <div id="nc-error" class="mensaje-error" style="display:none;"></div>
+        <div class="form-grupo" id="nc-colaboracion-fisica-wrap" style="display:none;">
+  <label class="form-label">Tipo de colaboración *</label>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="nc-tipo-colaboracion" value="digital" checked />
+      <span>💻 Solo digital</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-tipo-colaboracion" value="fisico" />
+      <span>📦 Solo físico</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-tipo-colaboracion" value="digital_fisico" />
+      <span>💻📦 Digital + físico</span>
+    </label>
+  </div>
+</div>
+<div class="form-grupo" id="nc-alcance-envio-wrap" style="display:none;">
+  <label class="form-label">Alcance de los envíos físicos *</label>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="nc-alcance-envio" value="pais" checked />
+      <span>Solo mi país</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-alcance-envio" value="latam" />
+      <span>Latinoamérica</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-alcance-envio" value="internacional" />
+      <span>Internacional</span>
+    </label>
+  </div>
+</div>
+    <div id="nc-error" class="mensaje-error" style="display:none;"></div>
         <div id="nc-ok" class="mensaje-ok" style="display:none;"></div>
         <div class="modal-footer">
           <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
@@ -1574,6 +1608,7 @@
 <script src="js/feed.js"></script>
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js"></script>
+<script src="js/colaboraciones-fisicas.js"></script>
 <script src="js/resenador.js?v=2"></script>
 <script src="js/admin.js?v=2"></script>
 <script src="js/perfil.js"></script>
