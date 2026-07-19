@@ -24,7 +24,7 @@
         <span class="logo-texto">Indómita Love Club</span>
       </div>
       <nav id="nav-principal">
-        <a href="#" class="nav-link" onclick="mostrarSeccion('feed')">Campañas</a>
+        <a href="#" class="nav-link" id="nav-campanas" onclick="mostrarSeccion('feed')">Campañas</a>
         <a href="#" class="nav-link" id="nav-panel" style="display:none;" onclick="mostrarPanelRol()">Panel</a>
         <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
        <a href="#" class="nav-link" id="nav-faq-autor" style="display:none;" onclick="mostrarSeccion('faq-autor')">Dudas</a>
@@ -259,11 +259,11 @@
       </div>
       <div class="stats-grid" id="autor-stats"></div>
       <div class="tabs">
-        <button class="tab activo" onclick="cambiarTab(this, 'tab-campanas-activas')">Campañas activas</button>
-        <button class="tab" onclick="cambiarTab(this, 'tab-postulaciones')">Postulaciones</button>
+        <button class="tab activo" id="tabbtn-campanas-activas" onclick="cambiarTab(this, 'tab-campanas-activas')">Campañas activas</button>
+        <button class="tab" id="tabbtn-postulaciones-autor" onclick="cambiarTab(this, 'tab-postulaciones')">Postulaciones</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-autor')">Historial</button>
-        <button class="tab" onclick="cambiarTab(this, 'tab-plan')">Mi plan</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-ranking-libros'); if(typeof cargarRankingLibros === 'function') cargarRankingLibros(); else setTimeout(cargarRankingLibros, 100)">Ranking libros</button>
+        <button class="tab" id="tabbtn-plan" onclick="cambiarTab(this, 'tab-plan')">Mi plan</button>
+<button class="tab" id="tabbtn-ranking-libros" onclick="cambiarTab(this, 'tab-ranking-libros'); if(typeof cargarRankingLibros === 'function') cargarRankingLibros(); else setTimeout(cargarRankingLibros, 100)">Ranking libros</button>
       </div>
       <div id="tab-campanas-activas" class="tab-contenido activo">
         <div id="autor-campanas-lista" class="campanas-lista"></div>
@@ -292,10 +292,10 @@
       </div>
       <div class="stats-grid" id="resenador-stats"></div>
       <div class="tabs">
-        <button class="tab activo" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
+        <button class="tab activo" id="tabbtn-mis-postulaciones" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
-        <button class="tab" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
+        <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
         <button class="tab" onclick="mostrarSeccion('biblioteca-resenador')">Mi biblioteca</button>
       </div>
       <div id="tab-mis-postulaciones" class="tab-contenido activo">
@@ -391,7 +391,7 @@
 
       <div class="panel-header">
         <h2 class="panel-titulo">Mi perfil</h2>
-        <button class="btn-primario" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
+        <button class="btn-primario" id="btn-editar-perfil" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
       </div>
 
       <!-- ESTADO: cargando (vista propia embebida) -->
@@ -593,6 +593,24 @@
     <button type="button" class="btn-primario" id="btn-modal-actualizaciones-entendido">Entendido</button>
   </div>
 </div>
+
+   <!-- Modal: mascota del tutorial de bienvenida -->
+<div id="modal-tutorial-mascota" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="tutorial-mascota-titulo"></h3>
+    <button class="modal-cerrar" onclick="cerrarTutorialBienvenida()">✕</button>
+  </div>
+  <div class="modal-body" style="text-align:center;">
+    <img id="tutorial-mascota-imagen" src="" alt="" style="width:110px; height:110px; object-fit:contain; margin-bottom:12px;" />
+    <p id="tutorial-mascota-texto" style="font-size:14px;"></p>
+    <p id="tutorial-mascota-paso-contador" style="font-size:12px; opacity:0.6; margin-top:8px;"></p>
+  </div>
+  <div class="modal-footer" style="display:flex; justify-content:space-between; gap:8px;">
+    <button type="button" class="btn-secundario" id="btn-tutorial-anterior" onclick="pasoAnteriorTutorial()">Anterior</button>
+    <button type="button" class="btn-primario" id="btn-tutorial-siguiente" onclick="pasoSiguienteTutorial()">Siguiente</button>
+  </div>
+</div>
+
 
   <!-- Modal: inicio de evento -->
 <div id="modal-evento-inicio" class="modal">
