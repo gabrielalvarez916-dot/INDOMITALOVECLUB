@@ -52,6 +52,8 @@ const TUTORIAL_PASOS_CONFIG = {
   ]
 };
 
+let _tutorialScrollHandler = null;
+
 const _TutorialState = {
   activo: false,
   rol: null,
@@ -234,10 +236,13 @@ function _asegurarWidgetGloboTutorial() {
 function _posicionarGloboTutorial(idElementoDestino) {
   const globo = document.getElementById('tutorial-globo');
   const destino = document.getElementById(idElementoDestino);
-  // Limpia el resaltado del paso anterior
+
   document.querySelectorAll('.tutorial-destino-resaltado').forEach(el =>
     el.classList.remove('tutorial-destino-resaltado')
   );
+
+  _quitarListenerScrollTutorial();
+
   if (!globo || !destino) {
     if (globo) globo.style.display = 'none';
     return;
@@ -245,15 +250,36 @@ function _posicionarGloboTutorial(idElementoDestino) {
 
   destino.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  setTimeout(() => {
+  const actualizarPosicionGlobo = () => {
     const rect = destino.getBoundingClientRect();
     globo.style.top = `${rect.top + rect.height / 2 - 17}px`;
     globo.style.left = `${rect.left + rect.width / 2 - 17}px`;
+  };
+
+  setTimeout(() => {
+    actualizarPosicionGlobo();
     globo.style.display = 'block';
+    destino.classList.add('tutorial-destino-resaltado');
+
+    _tutorialScrollHandler = actualizarPosicionGlobo;
+    window.addEventListener('scroll', _tutorialScrollHandler, true);
+    window.addEventListener('resize', _tutorialScrollHandler);
   }, 250);
+}
+
+function _quitarListenerScrollTutorial() {
+  if (_tutorialScrollHandler) {
+    window.removeEventListener('scroll', _tutorialScrollHandler, true);
+    window.removeEventListener('resize', _tutorialScrollHandler);
+    _tutorialScrollHandler = null;
+  }
 }
 
 function _ocultarGloboTutorial() {
   const globo = document.getElementById('tutorial-globo');
   if (globo) globo.style.display = 'none';
+  document.querySelectorAll('.tutorial-destino-resaltado').forEach(el =>
+    el.classList.remove('tutorial-destino-resaltado')
+  );
+  _quitarListenerScrollTutorial();
 }
