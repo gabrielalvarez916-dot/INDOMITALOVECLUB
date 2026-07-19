@@ -148,7 +148,8 @@ function _mostrarModalInicioEvento(evento) {
     <p class="evento-modal-texto">${_escaparHtml(evento.textoModal).replace(/\n/g, '<br>')}</p>
   `;
 
-  mostrarModal('modal-evento-inicio'); // patrón real de ui.js (classList 'activo')
+ mostrarModal('modal-evento-inicio'); // patrón real de ui.js (classList 'activo')
+  document.getElementById('evento-widget-flotante')?.style.setProperty('display', 'none', 'important');
   _iniciarAnimacionBesosCayendo(evento);
 
  btnEntendido.onclick = async () => {
