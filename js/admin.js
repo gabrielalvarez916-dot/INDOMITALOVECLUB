@@ -952,7 +952,7 @@ async function eliminarModalActualizacionAdmin(idModal) {
 
 const TUTORIAL_DESTINOS = {
   'reseñador': ['Campañas', 'Perfil', 'Postulaciones y ARCs activas', 'Ranking', 'Biblioteca', 'Evento'],
-  'autor': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento']
+  'autor': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento', 'Nueva campaña']
 };
 
 function _slugRolTutorial(rol) {
