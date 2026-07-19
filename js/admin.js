@@ -990,18 +990,19 @@ async function cargarTutorialesAdmin() {
 }
 
 function _construirPasosTutorialAdmin(rol, pasosExistentes) {
-  const destinos = TUTORIAL_DESTINOS[rol];
+  const destinos = ['__INTRO__', ...TUTORIAL_DESTINOS[rol]];
   const slug = _slugRolTutorial(rol);
 
   return destinos.map((destino, idx) => {
-    const numeroPaso = idx + 1;
+    const numeroPaso = idx; // idx 0 = intro (paso 0), idx 1..6 = pasos 1..6
     const existente = pasosExistentes.find(p => p.numero_paso === numeroPaso) || {};
     const idBase = `tutorial-${slug}-${numeroPaso}`;
+    const esIntro = destino === '__INTRO__';
 
     return `
-      <div class="form-grupo" style="border:1px solid var(--borde, #333); border-radius:10px; padding:16px; margin-top:16px;">
-        <p style="font-weight:700; margin-bottom:4px;">Paso ${numeroPaso}</p>
-        <p style="font-size:12px; opacity:0.7; margin-bottom:12px;">🎯 Apunta a: ${destino}</p>
+      <div class="form-grupo" style="border:1px solid var(--borde, #333); border-radius:10px; padding:16px; margin-top:16px; ${esIntro ? 'background:rgba(255,77,141,0.06);' : ''}">
+        <p style="font-weight:700; margin-bottom:4px;">${esIntro ? 'Paso 0 — Introducción' : `Paso ${numeroPaso}`}</p>
+        <p style="font-size:12px; opacity:0.7; margin-bottom:12px;">${esIntro ? '💬 Mensaje general de bienvenida (no apunta a nada, aparece antes del globo)' : `🎯 Apunta a: ${destino}`}</p>
 
         <div class="form-grupo">
           <label class="form-label">Imagen de la mascota</label>
@@ -1021,7 +1022,7 @@ function _construirPasosTutorialAdmin(rol, pasosExistentes) {
         </div>
 
         <div id="${idBase}-error" class="mensaje-error" style="display:none;"></div>
-        <button type="button" class="btn-primario btn-sm" onclick="guardarPasoTutorialAdmin('${rol}', ${numeroPaso})">Guardar paso ${numeroPaso}</button>
+        <button type="button" class="btn-primario btn-sm" onclick="guardarPasoTutorialAdmin('${rol}', ${numeroPaso})">Guardar paso ${esIntro ? '0' : numeroPaso}</button>
       </div>
     `;
   }).join('');
