@@ -945,4 +945,120 @@ async function eliminarModalActualizacionAdmin(idModal) {
   mostrarToast('Modal eliminado.', 'ok');
   await cargarModalesAdmin();
 }
- 
+
+// ────────────────────────────────────────────────────────────
+// TUTORIALES DE BIENVENIDA (onboarding autor / reseñador)
+// ────────────────────────────────────────────────────────────
+
+const TUTORIAL_DESTINOS = {
+  'reseñador': ['Campañas', 'Perfil', 'Postulaciones y ARCs activas', 'Ranking', 'Biblioteca', 'Evento'],
+  'autor': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento']
+};
+
+function _slugRolTutorial(rol) {
+  return rol === 'reseñador' ? 'resenador' : 'autor';
+}
+
+async function cargarTutorialesAdmin() {
+  const cont = document.getElementById('admin-tutoriales-contenedor');
+  if (!cont) return;
+
+  cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: pasos, error } = await supabaseClient
+    .from('tutoriales_bienvenida')
+    .select('*');
+
+  if (error) {
+    cont.innerHTML = `<p class="mensaje-error">Error al cargar los tutoriales: ${error.message}</p>`;
+    return;
+  }
+
+  const porRol = { 'reseñador': [], 'autor': [] };
+  (pasos || []).forEach(p => { if (porRol[p.rol]) porRol[p.rol].push(p); });
+
+  cont.innerHTML = `
+    <div class="plan-info" style="margin-bottom:32px;">
+      <p class="plan-nombre" style="font-size:18px;">Tutorial de bienvenida — Reseñador</p>
+      ${_construirPasosTutorialAdmin('reseñador', porRol['reseñador'])}
+    </div>
+    <div class="plan-info">
+      <p class="plan-nombre" style="font-size:18px;">Tutorial de bienvenida — Autor</p>
+      ${_construirPasosTutorialAdmin('autor', porRol['autor'])}
+    </div>
+  `;
+}
+
+function _construirPasosTutorialAdmin(rol, pasosExistentes) {
+  const destinos = TUTORIAL_DESTINOS[rol];
+  const slug = _slugRolTutorial(rol);
+
+  return destinos.map((destino, idx) => {
+    const numeroPaso = idx + 1;
+    const existente = pasosExistentes.find(p => p.numero_paso === numeroPaso) || {};
+    const idBase = `tutorial-${slug}-${numeroPaso}`;
+
+    return `
+      <div class="form-grupo" style="border:1px solid var(--borde, #333); border-radius:10px; padding:16px; margin-top:16px;">
+        <p style="font-weight:700; margin-bottom:4px;">Paso ${numeroPaso}</p>
+        <p style="font-size:12px; opacity:0.7; margin-bottom:12px;">🎯 Apunta a: ${destino}</p>
+
+        <div class="form-grupo">
+          <label class="form-label">Imagen de la mascota</label>
+          ${existente.imagen_mascota ? `<img src="${existente.imagen_mascota}" alt="" style="width:60px; height:60px; object-fit:cover; border-radius:8px; display:block; margin-bottom:8px;" id="${idBase}-preview" />` : `<img src="" alt="" style="display:none;" id="${idBase}-preview" />`}
+          <input type="file" id="${idBase}-archivo" class="form-input" accept="image/png,image/jpeg,image/webp" />
+          <input type="hidden" id="${idBase}-imagen-actual" value="${existente.imagen_mascota || ''}" />
+        </div>
+
+        <div class="form-grupo">
+          <label class="form-label">Título</label>
+          <input type="text" id="${idBase}-titulo" class="form-input" value="${(existente.titulo || '').replace(/"/g, '&quot;')}" />
+        </div>
+
+        <div class="form-grupo">
+          <label class="form-label">Texto explicativo</label>
+          <textarea id="${idBase}-texto" class="form-textarea" rows="3">${existente.texto || ''}</textarea>
+        </div>
+
+        <div id="${idBase}-error" class="mensaje-error" style="display:none;"></div>
+        <button type="button" class="btn-primario btn-sm" onclick="guardarPasoTutorialAdmin('${rol}', ${numeroPaso})">Guardar paso ${numeroPaso}</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function guardarPasoTutorialAdmin(rol, numeroPaso) {
+  const slug = _slugRolTutorial(rol);
+  const idBase = `tutorial-${slug}-${numeroPaso}`;
+
+  const tituloEl = document.getElementById(`${idBase}-titulo`);
+  const textoEl = document.getElementById(`${idBase}-texto`);
+  const archivoEl = document.getElementById(`${idBase}-archivo`);
+  const imagenActualEl = document.getElementById(`${idBase}-imagen-actual`);
+  const errorEl = document.getElementById(`${idBase}-error`);
+
+  if (errorEl) errorEl.style.display = 'none';
+
+  let imagenUrl = imagenActualEl ? imagenActualEl.value : '';
+
+  try {
+    if (archivoEl && archivoEl.files && archivoEl.files[0]) {
+      imagenUrl = await subirImagen('EVENTOS', `tutoriales/${slug}/paso${numeroPaso}`, archivoEl.files[0]);
+    }
+
+    const { error } = await supabaseClient.rpc('admin_guardar_paso_tutorial', {
+      p_rol: rol,
+      p_numero_paso: numeroPaso,
+      p_titulo: tituloEl ? tituloEl.value.trim() : null,
+      p_texto: textoEl ? textoEl.value.trim() : null,
+      p_imagen_mascota: imagenUrl || null
+    });
+
+    if (error) throw new Error(error.message);
+
+    mostrarToast(`Paso ${numeroPaso} (${rol}) guardado.`, 'ok');
+    await cargarTutorialesAdmin();
+  } catch (e) {
+    if (errorEl) { errorEl.textContent = e.message; errorEl.style.display = 'block'; }
+  }
+}
