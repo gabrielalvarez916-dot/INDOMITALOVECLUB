@@ -61,9 +61,14 @@ async function _cargarPerfilEditorial(idEditorial, sufijo = '') {
     return;
   }
 
-  perfil.miembroDesde = perfil.fechaRegistro;
+ perfil.miembroDesde = perfil.fechaRegistro;
   _librosEditorialPerfilCache = libros || [];
   _aliasEditorialPerfilActual = perfil.alias;
+  // La sección "biblioteca-autor" y abrirBibliotecaAutor() son genéricas
+  // y leen de _idAutorPerfilActual, así que lo sincronizamos acá también.
+  _idAutorPerfilActual = idEditorial;
+  _librosAutorPerfilCache = libros || [];
+  _aliasAutorPerfilActual = perfil.alias;
 
   _pintarPerfilEditorial(perfil, libros || [], campañas || [], perfil, sufijo);
   _estadoPerfilPublico('editorial', sufijo);
@@ -1024,7 +1029,10 @@ async function cargarBibliotecaAutorSeccion() {
     const email = Sesion.email();
     if (!email) return;
 
-    const { data: idAut, error: errId } = await supabaseClient.rpc('obtener_id_autor_por_email', { p_email: email });
+    let { data: idAut, error: errId } = await supabaseClient.rpc('obtener_id_autor_por_email', { p_email: email });
+    if (errId || !idAut || idAut.error) {
+      ({ data: idAut, error: errId } = await supabaseClient.rpc('obtener_id_editorial_por_email', { p_email: email }));
+    }
     if (errId || !idAut || idAut.error) {
       _estadoBibliotecaAutorSeccion('error');
       return;
