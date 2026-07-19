@@ -126,7 +126,11 @@ function _mostrarPasoTutorial() {
     return;
   }
 
-  // 1. Abre la pantalla/panel correspondiente
+  // 1. Cierra cualquier modal que haya quedado abierto de un paso anterior
+  //    (ej: "Editar perfil"), sin cerrar el modal del tutorial (ya protegido en cerrarModales()).
+  cerrarModales();
+
+  // 2. Abre la pantalla/panel correspondiente
   try { pasoConfig.abrir(); } catch (e) { console.error('Error abriendo paso del tutorial:', e); }
 
   // 2. Llena el modal fijo de la mascota
