@@ -145,8 +145,22 @@ function ajustarFormularioPorRol(rol) {
   const labelGeneros = document.getElementById('label-generos');
   if (labelGeneros) labelGeneros.textContent = esEditorial ? 'Géneros que trabajamos' : 'Géneros favoritos';
 
-  const labelDescripcion = document.getElementById('label-descripcion');
+ const labelDescripcion = document.getElementById('label-descripcion');
   if (labelDescripcion) labelDescripcion.textContent = esEditorial ? 'Presentación' : 'Descripción lectora';
+
+  const campoDescripcion = document.getElementById('perfil-descripcion');
+  if (campoDescripcion) {
+    campoDescripcion.placeholder = esEditorial
+      ? 'Contanos sobre tu editorial: qué publican, hace cuánto están, qué las distingue...'
+      : 'Contanos quién sos como lect@r...';
+  }
+
+  const campoGeneros = document.getElementById('perfil-generos');
+  if (campoGeneros) {
+    campoGeneros.placeholder = esEditorial
+      ? 'Romance, Dark Romance, Fantasía romántica...'
+      : 'Romance, Dark Romance, Fantasía...';
+  }
 
   if (esReseñador) {
     renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', []);
