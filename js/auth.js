@@ -341,6 +341,9 @@ function redirigirSegunRol(usuario) {
     case 'reseñador':
       mostrarSeccion('feed');
       break;
+    case 'editorial':
+      mostrarSeccion('feed'); // temporal — se cambia cuando armemos el panel de editorial en Fase 3
+      break;
     case 'admin':
       mostrarSeccion('admin');
       break;
