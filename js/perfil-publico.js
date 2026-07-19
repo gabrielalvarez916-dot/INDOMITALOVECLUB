@@ -21,7 +21,7 @@ async function abrirPerfilPublico(id, rol) {
   _estadoPerfilPublico('cargando');
 
   try {
-    if (rol === 'autor') {
+   if (rol === 'autor') {
       await _cargarPerfilAutor(id);
       if (Sesion.rol() === 'reseñador' && typeof registrarAccionEventoSiCorresponde === 'function') {
         registrarAccionEventoSiCorresponde('revisar_perfil_autor');
@@ -31,12 +31,47 @@ async function abrirPerfilPublico(id, rol) {
       if (Sesion.rol() === 'autor' && typeof registrarAccionEventoSiCorresponde === 'function') {
         registrarAccionEventoSiCorresponde('revisar_perfil_reseñador');
       }
+    } else if (rol === 'editorial') {
+      await _cargarPerfilEditorial(id);
     }
   } catch (e) {
     _estadoPerfilPublico('error');
   }
 }
 
+// ────────────────────────────────────────────────────────────
+// CARGA DE PERFIL EDITORIAL
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Carga el perfil público de una editorial y lo pinta.
+ * @param {string} idEditorial
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+async function _cargarPerfilEditorial(idEditorial, sufijo = '') {
+  _idEditorialPerfilActual = idEditorial;
+  const [{ data: perfil, error: errPerfil }, { data: libros }, { data: campañas }] = await Promise.all([
+    supabaseClient.rpc('obtener_perfil_publico_editorial', { p_id_editorial: idEditorial }),
+    supabaseClient.rpc('listar_libros_perfil_publico',  { p_id_autor: idEditorial }),
+    supabaseClient.rpc('listar_campanas_activas_por_autor', { p_id_autor: idEditorial })
+  ]);
+
+  if (errPerfil || !perfil || perfil.error) {
+    _estadoPerfilPublico('error', sufijo);
+    return;
+  }
+
+  perfil.miembroDesde = perfil.fechaRegistro;
+  _librosEditorialPerfilCache = libros || [];
+  _aliasEditorialPerfilActual = perfil.alias;
+
+  _pintarPerfilEditorial(perfil, libros || [], campañas || [], perfil, sufijo);
+  _estadoPerfilPublico('editorial', sufijo);
+}
+
+// ────────────────────────────────────────────────────────────
+// CARGA DE PERFIL RESEÑADOR
+// ────────────────────────────────────────────────────────────
 
 // ────────────────────────────────────────────────────────────
 // CARGA DE PERFIL AUTOR
@@ -79,6 +114,9 @@ let _bibliotecaLibrosLeidosCache = [];
 let _idAutorPerfilActual = null;
 let _librosAutorPerfilCache = [];
 let _aliasAutorPerfilActual = null;
+let _idEditorialPerfilActual = null;
+let _librosEditorialPerfilCache = [];
+let _aliasEditorialPerfilActual = null;
 
 /**
  * Carga el perfil público de un reseñador y lo pinta.
@@ -198,6 +236,101 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif, sufijo = '') {
 
   // Campañas activas — cards con portada
   const campañasCont = document.getElementById('pp-autor-campanas' + sufijo);
+  if (campañasCont) {
+    if (campañas.length === 0) {
+      campañasCont.innerHTML = '<p class="pp-vacio">Sin campañas activas en este momento.</p>';
+    } else {
+      campañasCont.innerHTML = campañas.map(c => {
+        const portadaUrl = c.linkPortada
+          ? (c.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + c.linkPortada : c.linkPortada)
+          : '';
+        return `
+          <div class="pp-libro-goodreads-card">
+              <div class="pp-portada-con-sello">
+                ${portadaUrl
+                  ? `<img src="${_esc(portadaUrl)}" alt="${_esc(c.nombreLibro)}" class="pp-libro-goodreads-portada" />`
+                  : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
+                ${c.sello ? `
+                  <span class="pp-sello-flotante pp-sello-${_esc(c.sello)}">
+                    ${_iconoSello(c.sello)} ${_labelSello(c.sello)}
+                  </span>
+                ` : ''}
+              </div>
+              <div class="pp-libro-goodreads-info">
+                <p class="pp-libro-goodreads-titulo">${_esc(c.nombreLibro)}</p>
+              ${c.fechaLimite ? `<p class="pp-libro-goodreads-fecha">Fecha límite: ${formatearFechaAmigable(c.fechaLimite)}</p>` : ''}
+              <button class="btn-secundario btn-sm" style="margin-top:8px;" onclick="cerrarModalPerfilPublico(); verDetalleCampaña('${_esc(c.id)}');">
+                Ver campaña
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+  }
+}
+
+/**
+ * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
+ */
+function _pintarPerfilEditorial(perfil, libros, campañas, gamif, sufijo = '') {
+  _pintarCabeceraComun(perfil, '-ed' + sufijo);
+
+  const miembroDesdeEl = document.getElementById('pp-editorial-miembro-desde' + sufijo);
+  if (miembroDesdeEl) {
+    miembroDesdeEl.textContent = perfil.miembroDesde
+      ? `Miembro desde ${formatearFechaAmigable(perfil.miembroDesde)}`
+      : '';
+  }
+
+  const sitioWebEl = document.getElementById('pp-editorial-sitio-web' + sufijo);
+  if (sitioWebEl) {
+    if (perfil.sitioWeb) {
+      sitioWebEl.href = perfil.sitioWeb;
+      sitioWebEl.style.display = '';
+    } else {
+      sitioWebEl.style.display = 'none';
+    }
+  }
+
+  const descripcionEl = document.getElementById('pp-editorial-descripcion' + sufijo);
+  const bloqueDescripcion = document.getElementById('pp-bloque-editorial-descripcion' + sufijo);
+  if (descripcionEl) {
+    if (perfil.descripcionLector) {
+      descripcionEl.textContent = perfil.descripcionLector;
+      if (bloqueDescripcion) bloqueDescripcion.style.display = '';
+    } else if (bloqueDescripcion) {
+      bloqueDescripcion.style.display = 'none';
+    }
+  }
+
+  const generosEl = document.getElementById('pp-editorial-generos' + sufijo);
+  const bloqueGeneros = document.getElementById('pp-bloque-editorial-generos' + sufijo);
+  if (generosEl) {
+    if (perfil.generos) {
+      generosEl.textContent = perfil.generos;
+      if (bloqueGeneros) bloqueGeneros.style.display = '';
+    } else if (bloqueGeneros) {
+      bloqueGeneros.style.display = 'none';
+    }
+  }
+
+  if (gamif) {
+    const gamifCont = document.getElementById('pp-editorial-gamificacion-cont' + sufijo);
+    const gamifInner = document.getElementById('pp-editorial-gamificacion' + sufijo);
+    if (gamifCont && gamifInner) {
+      gamifInner.innerHTML = _renderGamificacionAutor(gamif);
+      gamifCont.style.display = '';
+    }
+  }
+
+  const librosCont = document.getElementById('pp-editorial-libros' + sufijo);
+  if (librosCont) {
+    librosCont.innerHTML = libros.length === 0
+      ? '<p class="estante-vacio">Sin libros cargados aún.</p>'
+      : libros.slice(0, 8).map(libro => _renderLibroEstanteAutor(libro)).join('');
+  }
+
+  const campañasCont = document.getElementById('pp-editorial-campanas' + sufijo);
   if (campañasCont) {
     if (campañas.length === 0) {
       campañasCont.innerHTML = '<p class="pp-vacio">Sin campañas activas en este momento.</p>';
@@ -650,7 +783,7 @@ function cerrarModalPerfilPublico() {
  * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
  */
 function _estadoPerfilPublico(estado, sufijo = '') {
-  const bloques = ['pp-cargando' + sufijo, 'pp-error' + sufijo, 'pp-bloque-autor' + sufijo, 'pp-bloque-reseñador' + sufijo];
+  const bloques = ['pp-cargando' + sufijo, 'pp-error' + sufijo, 'pp-bloque-autor' + sufijo, 'pp-bloque-reseñador' + sufijo, 'pp-bloque-editorial' + sufijo];
   bloques.forEach(id => toggleElemento(id, false));
 
   const mapa = {
@@ -658,6 +791,7 @@ function _estadoPerfilPublico(estado, sufijo = '') {
     error:     'pp-error' + sufijo,
     autor:     'pp-bloque-autor' + sufijo,
     reseñador: 'pp-bloque-reseñador' + sufijo,
+    editorial: 'pp-bloque-editorial' + sufijo,
   };
 
   if (mapa[estado]) toggleElemento(mapa[estado], true);
