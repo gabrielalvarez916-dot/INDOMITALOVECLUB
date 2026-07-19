@@ -47,7 +47,8 @@ const TUTORIAL_PASOS_CONFIG = {
         mostrarPanelRol();
         setTimeout(() => document.getElementById('tabbtn-plan')?.click(), 50);
       } },
-    { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') }
+    { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
+    { destino: 'btn-nueva-campana', abrir: () => mostrarPanelRol() }
   ]
 };
 
