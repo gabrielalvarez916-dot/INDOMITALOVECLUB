@@ -274,7 +274,8 @@ function construirCardArcActivo(p) {
   const c = p.campaña;
 
  return `
-   <div class="arc-card-portada-wrap">
+   <div class="arc-card">
+    <div class="arc-card-portada-wrap">
         ${c.linkPortada
           ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="arc-card-portada" onerror="this.style.display='none'" />`
           : `<div class="arc-card-portada arc-card-portada--vacia">📖</div>`}
