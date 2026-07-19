@@ -82,7 +82,9 @@ async function inicializarTutorialBienvenida(usuario) {
     _TutorialState.indice = 0;
     _TutorialState.enIntro = true;
 
-    _asegurarWidgetGloboTutorial();
+   _asegurarWidgetGloboTutorial();
+    document.getElementById('btn-soporte-flotante')?.style.setProperty('display', 'none');
+    document.getElementById('evento-widget-flotante')?.style.setProperty('display', 'none');
     _mostrarIntroTutorial();
   } catch (e) {
     console.error('Error inicializando tutorial de bienvenida:', e);
@@ -181,6 +183,9 @@ async function cerrarTutorialBienvenida() {
   _TutorialState.activo = false;
   _ocultarGloboTutorial();
   cerrarModales();
+
+  document.getElementById('btn-soporte-flotante')?.style.removeProperty('display');
+  document.getElementById('evento-widget-flotante')?.style.removeProperty('display');
 
   try {
     await supabaseClient.rpc('marcar_tutorial_bienvenida_visto');
