@@ -141,6 +141,13 @@ function ajustarFormularioPorRol(rol) {
   toggleElemento('grupo-descripcion',    esReseñador || esEditorial);
   toggleElemento('grupo-tropes-perfil',  esReseñador);
   toggleElemento('grupo-sitio-web',      esEditorial);
+
+  const labelGeneros = document.getElementById('label-generos');
+  if (labelGeneros) labelGeneros.textContent = esEditorial ? 'Géneros que trabajamos' : 'Géneros favoritos';
+
+  const labelDescripcion = document.getElementById('label-descripcion');
+  if (labelDescripcion) labelDescripcion.textContent = esEditorial ? 'Presentación' : 'Descripción lectora';
+
   if (esReseñador) {
     renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', []);
   }
