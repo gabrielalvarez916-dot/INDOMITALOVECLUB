@@ -761,7 +761,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
   ${r.alias}
 </p>
             </div>
-            <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
+            <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? 0} pts</span>
           </div>
         `).join('')}
       </div>
