@@ -63,8 +63,8 @@ async function inicializarEventos() {
     const usuario = Sesion.obtener();
     if (!usuario || !usuario.id || !usuario.rol) return;
 
-    // Solo reseñador y autor tienen retos de evento (admin no participa)
-    if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador') return;
+    // Autor, reseñador y editorial tienen retos de evento (admin no participa)
+if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador' && usuario.rol !== 'editorial') return;
 
     _EventosState.idUsuario = usuario.id;
     _EventosState.rol = usuario.rol;
