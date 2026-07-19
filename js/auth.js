@@ -157,15 +157,22 @@ async function seleccionarRol(rol) {
     return;
   }
 
+  const datosNuevoUsuario = {
+    id: user.id,
+    email: user.email,
+    nombre: nombre,
+    apellido: apellido,
+    rol: rol
+  };
+
+  // Editorial arranca directamente en su plan free (5 campañas / 40 reseñadores)
+  if (rol === 'editorial') {
+    datosNuevoUsuario.plan = 'free';
+  }
+
   const { data: nuevoPerfil, error } = await supabaseClient
     .from('usuarios')
-    .upsert({
-      id: user.id,
-      email: user.email,
-      nombre: nombre,
-      apellido: apellido,
-      rol: rol
-    })
+    .upsert(datosNuevoUsuario)
     .select()
     .single();
   
