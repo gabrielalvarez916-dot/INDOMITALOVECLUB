@@ -49,6 +49,7 @@ const _EventosState = {
   idUsuario: null,        // ID_Usuario actual (Sesion.obtener().id)
   timerSecreto: null,     // Fase 7: id del setTimeout del secreto flotante
   timerCountdown: null    // id del setInterval del contador días/horas/minutos
+  timerPolling: null   //
 };
 
 // ────────────────────────────────────────────────────────────
@@ -76,11 +77,12 @@ if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador' && usuario.rol !== '
       p_rol: usuario.rol
     });
 
-   if (error || !resultado || !resultado.activo) {
+if (error || !resultado || !resultado.activo) {
       _ocultarBotonNavEvento();
       _actualizarWidgetFlotanteEvento();
       _detenerTimerSecretoEvento();
       _detenerTimerCountdownEvento();
+      _detenerPollingEventoGlobal();   // ← LÍNEA NUEVA
       _restablecerColorTemaEvento();
       return;
     }
@@ -93,6 +95,7 @@ if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador' && usuario.rol !== '
     _actualizarWidgetFlotanteEvento();
     _iniciarTimerSecretoEvento(resultado.evento);
     _iniciarTimerCountdownEvento();
+    _iniciarPollingEventoGlobal();   // ← LÍNEA NUEVA
 
     if (!resultado.modalVisto) {
       _mostrarModalInicioEvento(resultado.evento);
@@ -780,6 +783,26 @@ function _detenerTimerCountdownEvento() {
   if (_EventosState.timerCountdown) {
     clearInterval(_EventosState.timerCountdown);
     _EventosState.timerCountdown = null;
+  }
+}
+
+// Polling global: revisa el progreso del evento cada 20s sin importar
+// en qué pantalla esté el usuario ni qué acción haya hecho. Es lo único
+// que garantiza que la mascota aparezca SIEMPRE, incluso si el reto se
+// completó por una acción que no pasa por
+// registrarAccionEventoSiCorresponde() (crear campaña, publicar
+// reseña, subir libro, etc.)
+function _iniciarPollingEventoGlobal() {
+  _detenerPollingEventoGlobal();
+  _EventosState.timerPolling = setInterval(() => {
+    _refrescarProgresoEventoGlobal();
+  }, 20000);
+}
+
+function _detenerPollingEventoGlobal() {
+  if (_EventosState.timerPolling) {
+    clearInterval(_EventosState.timerPolling);
+    _EventosState.timerPolling = null;
   }
 }
 
