@@ -168,15 +168,21 @@ async function renderizarPaginaPdf(numero) {
   const context = canvas?.getContext('2d');
   if (!canvas || !context) return;
 
-  const pagina   = await _visorPdf.getPage(numero);
-  const contenedor = document.getElementById('visor-contenido');
-  const ancho    = contenedor ? contenedor.clientWidth - 48 : 600;
-  const viewport = pagina.getViewport({ scale: 1 });
-  const escala   = ancho / viewport.width;
-  const vp       = pagina.getViewport({ scale: escala });
+  const pagina      = await _visorPdf.getPage(numero);
+  const contenedor  = document.getElementById('visor-contenido');
+  const ancho       = contenedor ? contenedor.clientWidth - 48 : 600;
+  const viewport    = pagina.getViewport({ scale: 1 });
+  const escala      = ancho / viewport.width;
+  const vp          = pagina.getViewport({ scale: escala });
 
-  canvas.width  = vp.width;
-  canvas.height = vp.height;
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width  = vp.width * dpr;
+  canvas.height = vp.height * dpr;
+  canvas.style.width  = vp.width + 'px';
+  canvas.style.height = vp.height + 'px';
+
+  context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   await pagina.render({ canvasContext: context, viewport: vp }).promise;
 }
