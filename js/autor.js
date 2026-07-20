@@ -1087,9 +1087,32 @@ async function cargarPlanAutor(idUsuario) {
 }
 
 async function iniciarPago(plan) {
-  // Abrimos la ventana ANTES de cualquier await o diálogo (confirm/prompt),
-  // porque si pasa algo async o un diálogo nativo de por medio, el navegador
-  // deja de considerarlo un gesto directo del usuario y bloquea el pop-up.
+  const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Mercado Pago (ARS)\nCancelar = PayPal (USD)')
+    ? 'ARS'
+    : 'USD';
+
+  const funcion = moneda === 'ARS' ? 'crear-suscripcion' : 'crear-suscripcion-paypal';
+  const body = { plan };
+
+  if (moneda === 'ARS') {
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let payerEmail = prompt(
+      '¿Con qué mail vas a pagar en Mercado Pago?\n(Puede ser distinto al mail de tu cuenta de Indómita)'
+    );
+    payerEmail = payerEmail?.trim();
+
+    if (!payerEmail || !regexEmail.test(payerEmail)) {
+      mostrarToast('Necesitamos un mail válido de Mercado Pago para continuar.', 'error');
+      return;
+    }
+
+    body.payerEmail = payerEmail;
+  }
+
+  // Recién ahora, después de que el usuario ya contestó los diálogos (todavía
+  // "cerca" del click original), abrimos la pestaña. Al ser diálogos síncronos
+  // (no un await), el navegador todavía lo considera parte del mismo gesto
+  // y no bloquea el pop-up.
   const ventanaPago = window.open('', '_blank');
   if (ventanaPago) {
     ventanaPago.document.write('Cargando el pago, un momento...');
@@ -1100,31 +1123,6 @@ async function iniciarPago(plan) {
     if (ventanaPago) ventanaPago.close();
     mostrarToast('Tu sesión expiró. Volvé a iniciar sesión e intentá de nuevo.', 'error');
     return;
-  }
-
-  const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Mercado Pago (ARS)\nCancelar = PayPal (USD)')
-    ? 'ARS'
-    : 'USD';
-
-  const funcion = moneda === 'ARS' ? 'crear-suscripcion' : 'crear-suscripcion-paypal';
-
-  const body = { plan };
-
-  if (moneda === 'ARS') {
-    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    let payerEmail = prompt(
-      '¿Con qué mail vas a pagar en Mercado Pago?\n(Puede ser distinto al mail de tu cuenta de Indómita)',
-      session.user.email || ''
-    );
-    payerEmail = payerEmail?.trim();
-
-    if (!payerEmail || !regexEmail.test(payerEmail)) {
-      if (ventanaPago) ventanaPago.close();
-      mostrarToast('Necesitamos un mail válido de Mercado Pago para continuar.', 'error');
-      return;
-    }
-
-    body.payerEmail = payerEmail;
   }
 
   const { data, error } = await supabaseClient.functions.invoke(funcion, {
@@ -1149,10 +1147,10 @@ async function iniciarPago(plan) {
   if (ventanaPago) {
     ventanaPago.location.href = data.urlPago;
   } else {
-    // Si igual se bloqueó (puede pasar en Safari incluso así), dejamos un link clickeable como último recurso.
     mostrarToast('Tu navegador bloqueó la ventana de pago. Habilitá pop-ups para este sitio e intentá de nuevo.', 'error');
   }
 }
+
 // ────────────────────────────────────────────────────────────
 // BIBLIOTECA (desde panel)
 // ────────────────────────────────────────────────────────────
