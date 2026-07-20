@@ -49,6 +49,24 @@ const TUTORIAL_PASOS_CONFIG = {
       } },
     { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
     { destino: 'btn-nueva-campana', abrir: () => mostrarPanelRol() }
+  ],
+  'editorial': [
+    { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed') },
+    { destino: 'tabbtn-campanas-activas', abrir: () => mostrarPanelRol() },
+    { destino: 'tabbtn-postulaciones-autor', abrir: () => {
+        mostrarPanelRol();
+        setTimeout(() => document.getElementById('tabbtn-postulaciones-autor')?.click(), 50);
+      } },
+    { destino: 'tabbtn-ranking-libros', abrir: () => {
+        mostrarPanelRol();
+        setTimeout(() => document.getElementById('tabbtn-ranking-libros')?.click(), 50);
+      } },
+    { destino: 'tabbtn-plan', abrir: () => {
+        mostrarPanelRol();
+        setTimeout(() => document.getElementById('tabbtn-plan')?.click(), 50);
+      } },
+    { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
+    { destino: 'btn-nueva-campana', abrir: () => mostrarPanelRol() }
   ]
 };
 
@@ -70,7 +88,7 @@ async function inicializarTutorialBienvenida(usuario) {
   try {
     if (!usuario || usuario.rol === 'admin') return;
     if (usuario.tutorial_bienvenida_visto) return;
-    if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador') return;
+    if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador' && usuario.rol !== 'editorial') return;
 
     const { data: pasos, error } = await supabaseClient.rpc('obtener_tutorial_bienvenida', {
       p_rol: usuario.rol
