@@ -48,7 +48,7 @@ const _EventosState = {
   rol: null,              // rol del usuario actual ('autor' | 'reseñador')
   idUsuario: null,        // ID_Usuario actual (Sesion.obtener().id)
   timerSecreto: null,     // Fase 7: id del setTimeout del secreto flotante
-  timerCountdown: null    // id del setInterval del contador días/horas/minutos
+  timerCountdown: null,    // id del setInterval del contador días/horas/minutos
   timerPolling: null   //
 };
 
