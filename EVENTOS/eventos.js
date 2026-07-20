@@ -835,9 +835,8 @@ function _cerrarMensajeMascota() {
 
 function _mostrarMensajeMascotaSiCorresponde(evento, reto) {
   const mensajes = evento.tema?.mascota?.mensajes;
-  if (!mensajes) return;
-  const texto = mensajes[reto.id];
-  if (!texto) return;
+  const texto = mensajes?.[reto.id]
+    || `¡Completaste ${reto.nombre}! ¡Conseguiste ${reto.puntos} pts!`;
   _mostrarMensajeMascota(evento, texto);
 }
 
