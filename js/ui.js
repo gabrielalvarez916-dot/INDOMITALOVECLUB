@@ -322,6 +322,7 @@ function cambiarTab(tabClickeado, idContenido) {
  */
 function cerrarSesion() {
   detenerNotificaciones();
+  if (typeof _detenerPollingEventoGlobal === 'function') _detenerPollingEventoGlobal(); // ← LÍNEA NUEVA
   supabaseClient.auth.signOut(); // ← agregar esta línea
   if (typeof google !== 'undefined' && google.accounts) {
     google.accounts.id.disableAutoSelect();
