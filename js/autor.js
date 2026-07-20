@@ -1109,21 +1109,13 @@ async function iniciarPago(plan) {
     body.payerEmail = payerEmail;
   }
 
-  // Recién ahora, después de que el usuario ya contestó los diálogos (todavía
-  // "cerca" del click original), abrimos la pestaña. Al ser diálogos síncronos
-  // (no un await), el navegador todavía lo considera parte del mismo gesto
-  // y no bloquea el pop-up.
-  const ventanaPago = window.open('', '_blank');
-  if (ventanaPago) {
-    ventanaPago.document.write('Cargando el pago, un momento...');
-  }
-
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
-    if (ventanaPago) ventanaPago.close();
     mostrarToast('Tu sesión expiró. Volvé a iniciar sesión e intentá de nuevo.', 'error');
     return;
   }
+
+  toggleBoton('btn-crear-campana', false, 'Redirigiendo a Mercado Pago...'); // opcional, feedback visual
 
   const { data, error } = await supabaseClient.functions.invoke(funcion, {
     body,
@@ -1131,7 +1123,6 @@ async function iniciarPago(plan) {
   });
 
   if (error || !data?.ok) {
-    if (ventanaPago) ventanaPago.close();
     let mensaje = data?.error || error?.message || 'Error al iniciar el pago.';
     if (error?.context && typeof error.context.json === 'function') {
       try {
@@ -1143,14 +1134,11 @@ async function iniciarPago(plan) {
     return;
   }
 
-  mostrarToast('Te llevamos a completar el pago. Cuando se confirme, tu plan se activa solo.', 'ok');
-  if (ventanaPago) {
-    ventanaPago.location.href = data.urlPago;
-  } else {
-    mostrarToast('Tu navegador bloqueó la ventana de pago. Habilitá pop-ups para este sitio e intentá de nuevo.', 'error');
-  }
+  // En vez de abrir pestaña nueva: redirigimos la misma pestaña. No hay
+  // pop-up que un navegador pueda bloquear porque no estamos abriendo
+  // ninguna ventana nueva.
+  window.location.href = data.urlPago;
 }
-
 // ────────────────────────────────────────────────────────────
 // BIBLIOTECA (desde panel)
 // ────────────────────────────────────────────────────────────
