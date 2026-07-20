@@ -1087,8 +1087,17 @@ async function cargarPlanAutor(idUsuario) {
 }
 
 async function iniciarPago(plan) {
+  // Abrimos la ventana ANTES de cualquier await o diálogo (confirm/prompt),
+  // porque si pasa algo async o un diálogo nativo de por medio, el navegador
+  // deja de considerarlo un gesto directo del usuario y bloquea el pop-up.
+  const ventanaPago = window.open('', '_blank');
+  if (ventanaPago) {
+    ventanaPago.document.write('Cargando el pago, un momento...');
+  }
+
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
+    if (ventanaPago) ventanaPago.close();
     mostrarToast('Tu sesión expiró. Volvé a iniciar sesión e intentá de nuevo.', 'error');
     return;
   }
@@ -1101,10 +1110,6 @@ async function iniciarPago(plan) {
 
   const body = { plan };
 
-  // Mercado Pago exige payer_email en el preapproval y valida que coincida con
-  // la cuenta de MP con la que se paga, que puede ser distinta al mail de la
-  // cuenta de Indómita (caso Leticia). Se lo pedimos acá, precargado con el
-  // mail de la cuenta pero editable.
   if (moneda === 'ARS') {
     const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let payerEmail = prompt(
@@ -1114,16 +1119,12 @@ async function iniciarPago(plan) {
     payerEmail = payerEmail?.trim();
 
     if (!payerEmail || !regexEmail.test(payerEmail)) {
+      if (ventanaPago) ventanaPago.close();
       mostrarToast('Necesitamos un mail válido de Mercado Pago para continuar.', 'error');
       return;
     }
 
     body.payerEmail = payerEmail;
-  }
-
-  const ventanaPago = window.open('', '_blank');
-  if (ventanaPago) {
-    ventanaPago.document.write('Cargando el pago, un momento...');
   }
 
   const { data, error } = await supabaseClient.functions.invoke(funcion, {
@@ -1148,10 +1149,10 @@ async function iniciarPago(plan) {
   if (ventanaPago) {
     ventanaPago.location.href = data.urlPago;
   } else {
-    window.open(data.urlPago, '_blank');
+    // Si igual se bloqueó (puede pasar en Safari incluso así), dejamos un link clickeable como último recurso.
+    mostrarToast('Tu navegador bloqueó la ventana de pago. Habilitá pop-ups para este sitio e intentá de nuevo.', 'error');
   }
 }
-
 // ────────────────────────────────────────────────────────────
 // BIBLIOTECA (desde panel)
 // ────────────────────────────────────────────────────────────
