@@ -1099,13 +1099,35 @@ async function iniciarPago(plan) {
 
   const funcion = moneda === 'ARS' ? 'crear-suscripcion' : 'crear-suscripcion-paypal';
 
+  const body = { plan };
+
+  // Mercado Pago exige payer_email en el preapproval y valida que coincida con
+  // la cuenta de MP con la que se paga, que puede ser distinta al mail de la
+  // cuenta de Indómita (caso Leticia). Se lo pedimos acá, precargado con el
+  // mail de la cuenta pero editable.
+  if (moneda === 'ARS') {
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let payerEmail = prompt(
+      '¿Con qué mail vas a pagar en Mercado Pago?\n(Puede ser distinto al mail de tu cuenta de Indómita)',
+      session.user.email || ''
+    );
+    payerEmail = payerEmail?.trim();
+
+    if (!payerEmail || !regexEmail.test(payerEmail)) {
+      mostrarToast('Necesitamos un mail válido de Mercado Pago para continuar.', 'error');
+      return;
+    }
+
+    body.payerEmail = payerEmail;
+  }
+
   const ventanaPago = window.open('', '_blank');
   if (ventanaPago) {
     ventanaPago.document.write('Cargando el pago, un momento...');
   }
 
   const { data, error } = await supabaseClient.functions.invoke(funcion, {
-    body: { plan },
+    body,
     headers: { Authorization: `Bearer ${session.access_token}` }
   });
 
