@@ -437,6 +437,7 @@ async function guardarPerfilObligatorio(event, usuario) {
   verificarModalActualizacion();
   redirigirSegunRol(perfilActualizado);
   mostrarToast(`¡Bienvenida, ${perfilActualizado.alias}!`, 'ok');
+  if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(perfilActualizado);
 }
 
 // ────────────────────────────────────────────────────────────
