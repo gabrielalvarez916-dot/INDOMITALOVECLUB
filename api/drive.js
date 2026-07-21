@@ -35,8 +35,8 @@ export default async function handler(req, res) {
     // Headers para permitir lectura desde el navegador
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'private, max-age=3600');
-
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    
     res.status(200).send(Buffer.from(buffer));
 
   } catch (e) {
