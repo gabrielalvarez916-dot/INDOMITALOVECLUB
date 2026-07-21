@@ -195,8 +195,8 @@ function construirCardPostulacionReseñador(p) {
 
   const linksLibro = !campañaCancelada && p.estado === 'aprobada' && (c.linkEpub || c.linkPdf) ? `
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-      ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.linkEpub}', '${c.nombreLibro}')">📖 Leer EPUB</button>` : ''}
-      ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.linkPdf}', '${c.nombreLibro}')">📄 Leer PDF</button>`   : ''}
+      ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">📖 Leer EPUB</button>` : ''}
+      ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}')">📄 Leer PDF</button>`   : ''}
     </div>
   ` : '';
 
@@ -289,8 +289,8 @@ function construirCardArcActivo(p) {
 </p>
         <p class="arc-card-fecha">📅 Vence el ${formatearFechaAmigable(p.fechaLimiteEntrega || c.fechaLimite)}</p>
         <div class="arc-card-acciones">
-  ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.linkEpub}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
-  ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.linkPdf}', '${c.nombreLibro}')">Leer PDF</button>`   : ''}
+  ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
+  ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}')">Leer PDF</button>`   : ''}
   <button class="btn-secundario btn-full arc-btn-resena" onclick="abrirCargarResena('${c.id}')">✓ Entregar reseña</button>
   <button class="btn-peligro btn-full" onclick="abrirModalDNF('${p.idPostulacion}', '${c.nombreLibro}', '${c.nombreAutor}')">Abandonar libro (DNF)</button>
 </div>
