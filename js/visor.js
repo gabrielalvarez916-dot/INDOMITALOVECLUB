@@ -26,51 +26,59 @@ var _pdfTotalPaginas = 0;
 // EXTRAER ID DE DRIVE
 // ────────────────────────────────────────────────────────────
 
-function extraerIdDrive(url) {
-  if (!url) return null;
+async function obtenerUrlLibro(idCampana, formato) {
   try {
-    const matchFile = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (matchFile) return matchFile[1];
-    const matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (matchId) return matchId[1];
-    return null;
-  } catch { return null; }
-}
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      mostrarErrorVisor('Tu sesión expiró. Volvé a iniciar sesión y probá de nuevo.');
+      return null;
+    }
 
-function urlProxy(url) {
-  const id = extraerIdDrive(url);
-  if (!id) return null;
-  return `/api/drive?id=${id}`;
+    const { data, error } = await supabase.functions.invoke('obtener-url-libro', {
+      body: { id_campana: idCampana, formato }
+    });
+
+    if (error || !data?.url) {
+      mostrarErrorVisor((data && data.error) || 'No se pudo generar el link de lectura.');
+      return null;
+    }
+    return data.url;
+  } catch (e) {
+    console.error('Error obteniendo URL del libro:', e);
+    mostrarErrorVisor('No se pudo generar el link de lectura.');
+    return null;
+  }
 }
 // ────────────────────────────────────────────────────────────
 // ABRIR VISOR EPUB
 // ────────────────────────────────────────────────────────────
-async function abrirVisorEpub(urlEpub, tituloLibro) {
-  if (!urlEpub) { mostrarToast('No hay archivo EPUB disponible.', 'error'); return; }
-  const proxyUrl = urlProxy(urlEpub);
-  if (!proxyUrl) { mostrarToast('Link de EPUB inválido.', 'error'); return; }
+async function abrirVisorEpub(idCampana, tituloLibro) {
+  if (!idCampana) { mostrarToast('No hay archivo EPUB disponible.', 'error'); return; }
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'epub');
   mostrarModal('modal-visor');
   await cargarLibreriaEpub();
-  await inicializarEpub(proxyUrl);
+  const url = await obtenerUrlLibro(idCampana, 'epub');
+  if (!url) return;
+  await inicializarEpub(url);
 }
 
 // ────────────────────────────────────────────────────────────
 // ABRIR VISOR PDF
 // ────────────────────────────────────────────────────────────
 
-async function abrirVisorPdf(urlPdf, tituloLibro) {
-  if (!urlPdf) { mostrarToast('No hay archivo PDF disponible.', 'error'); return; }
-  const proxyUrl = urlProxy(urlPdf);
-  if (!proxyUrl) { mostrarToast('Link de PDF inválido.', 'error'); return; }
+async function abrirVisorPdf(idCampana, tituloLibro) {
+  if (!idCampana) { mostrarToast('No hay archivo PDF disponible.', 'error'); return; }
 
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'pdf');
   mostrarModal('modal-visor');
 
   await cargarLibreriaPdf();
-  await inicializarPdf(proxyUrl);
+  const url = await obtenerUrlLibro(idCampana, 'pdf');
+  if (!url) return;
+  await inicializarPdf(url);
 
   if (Sesion.rol() === 'reseñador' && typeof registrarAccionEventoSiCorresponde === 'function') {
     registrarAccionEventoSiCorresponde('leer_pdf');
