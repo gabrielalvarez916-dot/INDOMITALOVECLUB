@@ -746,15 +746,15 @@
           <p class="form-hint">Si elegiste un libro de tu biblioteca, ya tiene portada — subí un archivo solo si querés cambiarla.</p>
         </div>
         <div class="form-fila">
-          <div class="form-grupo">
-            <label class="form-label">Link EPUB *</label>
-            <input type="url" id="nc-link-epub" class="form-input" required placeholder="https://drive.google.com/..." />
-          </div>
-          <div class="form-grupo">
-            <label class="form-label">Link PDF *</label>
-            <input type="url" id="nc-link-pdf" class="form-input" required placeholder="https://drive.google.com/..." />
-          </div>
-        </div>
+  <div class="form-grupo">
+    <label class="form-label">Archivo EPUB *</label>
+    <input type="file" id="nc-archivo-epub" class="form-input" accept=".epub,application/epub+zip" required />
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Archivo PDF *</label>
+    <input type="file" id="nc-archivo-pdf" class="form-input" accept=".pdf,application/pdf" required />
+  </div>
+</div>
         <div class="form-grupo">
           <label class="form-label">Link Amazon (opcional)</label>
           <input type="url" id="nc-link-amazon" class="form-input" placeholder="https://amazon.com/..." />
