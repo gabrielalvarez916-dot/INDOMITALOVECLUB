@@ -50,6 +50,37 @@ async function obtenerUrlLibro(idCampana, formato) {
     return null;
   }
 }
+
+// ────────────────────────────────────────────────────────────
+// DESCARGAR LIBRO (modalidad descarga)
+// ────────────────────────────────────────────────────────────
+async function descargarLibro(idCampana, tituloLibro, formato) {
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const token = session?.access_token;
+    if (!token) { mostrarToast('Tu sesión expiró. Volvé a iniciar sesión y probá de nuevo.', 'error'); return; }
+
+    const { data, error } = await supabaseClient.functions.invoke('obtener-url-libro', {
+      body: { id_campana: idCampana, formato, modo: 'descarga' }
+    });
+
+    if (error || !data?.url) {
+      mostrarToast((data && data.error) || 'No se pudo generar el link de descarga.', 'error');
+      return;
+    }
+
+    const a = document.createElement('a');
+    a.href = data.url;
+    a.download = `${tituloLibro}.${formato}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (e) {
+    console.error('Error descargando el libro:', e);
+    mostrarToast('No se pudo generar el link de descarga.', 'error');
+  }
+}
+
 // ────────────────────────────────────────────────────────────
 // ABRIR VISOR EPUB
 // ────────────────────────────────────────────────────────────
@@ -343,6 +374,7 @@ function cargarLibreriaEpub() {
 // Exponer funciones globalmente
 window.abrirVisorEpub = abrirVisorEpub;
 window.abrirVisorPdf  = abrirVisorPdf;
+window.descargarLibro = descargarLibro;
 window.pdfPaginaAnterior  = pdfPaginaAnterior;
 window.pdfPaginaSiguiente = pdfPaginaSiguiente;
 window.cerrarVisor    = cerrarVisor;
