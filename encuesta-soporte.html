@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Encuesta de soporte — Indómita Love Club</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bordo: #8B1A2B;
+    --bordo-oscuro: #5C0F1A;
+    --bordo-claro: #B03048;
+    --rosa: #F2C4CE;
+    --rosa-claro: #FAE8EC;
+    --crema: #F5ECD7;
+    --crema-suave: #FAF7F4;
+    --blanco: #FFFFFF;
+    --gris-texto: #2A2A2A;
+    --gris-medio: #666666;
+    --gris-borde: #E5E0D8;
+    --error: #C0392B;
+    --ok: #27AE60;
+    --fuente-titulo: 'Playfair Display', Georgia, serif;
+    --fuente-texto: 'Lato', sans-serif;
+    --radio: 10px;
+    --radio-grande: 18px;
+    --sombra: 0 2px 20px rgba(139, 26, 43, 0.08);
+    --sombra-fuerte: 0 8px 40px rgba(139, 26, 43, 0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--fuente-texto);
+    background: linear-gradient(160deg, var(--crema-suave), var(--rosa-claro));
+    color: var(--gris-texto);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .tarjeta {
+    background: var(--blanco);
+    border-radius: var(--radio-grande);
+    box-shadow: var(--sombra-fuerte);
+    max-width: 480px;
+    width: 100%;
+    padding: 36px 32px;
+  }
+  .logo-texto {
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--bordo);
+    text-align: center;
+    letter-spacing: 0.5px;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+  h1 {
+    font-family: var(--fuente-titulo);
+    font-size: 24px;
+    color: var(--bordo-oscuro);
+    text-align: center;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .subtitulo {
+    text-align: center;
+    color: var(--gris-medio);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  .pregunta { margin-bottom: 26px; }
+  .pregunta-label {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--gris-texto);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .opciones-resuelto {
+    display: flex;
+    gap: 8px;
+  }
+  .opcion-resuelto {
+    flex: 1;
+    padding: 12px 8px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: var(--radio);
+    background: var(--crema-suave);
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    color: var(--gris-medio);
+  }
+  .opcion-resuelto:hover { border-color: var(--bordo-claro); }
+  .opcion-resuelto.activo {
+    background: var(--bordo);
+    border-color: var(--bordo);
+    color: var(--blanco);
+  }
+  .estrellas {
+    display: flex;
+    gap: 6px;
+    font-size: 32px;
+    line-height: 1;
+  }
+  .estrella {
+    cursor: pointer;
+    color: var(--gris-borde);
+    transition: color 0.15s ease, transform 0.1s ease;
+    user-select: none;
+  }
+  .estrella:hover { transform: scale(1.12); }
+  .estrella.activa { color: var(--bordo); }
+  textarea {
+    width: 100%;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: var(--radio);
+    padding: 12px 14px;
+    font-family: var(--fuente-texto);
+    font-size: 14px;
+    resize: vertical;
+    min-height: 80px;
+    background: var(--crema-suave);
+  }
+  textarea:focus { outline: none; border-color: var(--bordo-claro); }
+  .btn-enviar {
+    width: 100%;
+    background: var(--bordo);
+    color: var(--blanco);
+    border: none;
+    border-radius: var(--radio);
+    padding: 14px;
+    font-family: var(--fuente-texto);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.18s ease, opacity 0.18s ease;
+  }
+  .btn-enviar:hover { background: var(--bordo-oscuro); }
+  .btn-enviar:disabled { opacity: 0.6; cursor: not-allowed; }
+  .mensaje-error {
+    color: var(--error);
+    font-size: 13px;
+    margin-top: 10px;
+    text-align: center;
+    display: none;
+  }
+  .pantalla-estado {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .pantalla-estado .icono { font-size: 48px; margin-bottom: 14px; }
+  .pantalla-estado h1 { margin-bottom: 10px; }
+  .pantalla-estado p { color: var(--gris-medio); font-size: 14px; }
+  #vista-form { display: none; }
+</style>
+</head>
+<body>
+
+<div class="tarjeta">
+  <div class="logo-texto">Indómita Love Club</div>
+
+  <!-- Vista: cargando / validando link -->
+  <div id="vista-cargando" class="pantalla-estado">
+    <p>Cargando encuesta…</p>
+  </div>
+
+  <!-- Vista: link inválido o faltan parámetros -->
+  <div id="vista-invalido" class="pantalla-estado" style="display:none;">
+    <div class="icono">⚠️</div>
+    <h1>No pudimos abrir la encuesta</h1>
+    <p>El link parece estar incompleto o ya no es válido. Si necesitás ayuda, escribinos por soporte.</p>
+  </div>
+
+  <!-- Vista: ya había respondido -->
+  <div id="vista-ya-respondido" class="pantalla-estado" style="display:none;">
+    <div class="icono">💜</div>
+    <h1>¡Ya nos habías contado!</h1>
+    <p>Ya registramos tu respuesta para este ticket. ¡Gracias por tu tiempo!</p>
+  </div>
+
+  <!-- Vista: gracias -->
+  <div id="vista-gracias" class="pantalla-estado" style="display:none;">
+    <div class="icono">✨</div>
+    <h1>¡Gracias por tu opinión!</h1>
+    <p>Tu respuesta nos ayuda a mejorar el soporte de Indómita Love Club.</p>
+  </div>
+
+  <!-- Vista: formulario -->
+  <div id="vista-form">
+    <h1>¿Cómo fue tu experiencia?</h1>
+    <p class="subtitulo">Tu ticket de soporte se cerró. Contanos cómo te fue, te toma menos de un minuto.</p>
+
+    <div class="pregunta">
+      <span class="pregunta-label">¿Tu problema fue resuelto?</span>
+      <div class="opciones-resuelto" id="grupo-resuelto">
+        <div class="opcion-resuelto" data-valor="si">Sí</div>
+        <div class="opcion-resuelto" data-valor="parcial">Parcial</div>
+        <div class="opcion-resuelto" data-valor="no">No</div>
+      </div>
+    </div>
+
+    <div class="pregunta">
+      <span class="pregunta-label">¿Cómo calificarías la atención del equipo?</span>
+      <div class="estrellas" id="estrellas-atencion" data-valor="0">
+        <span class="estrella" data-n="1">★</span>
+        <span class="estrella" data-n="2">★</span>
+        <span class="estrella" data-n="3">★</span>
+        <span class="estrella" data-n="4">★</span>
+        <span class="estrella" data-n="5">★</span>
+      </div>
+    </div>
+
+    <div class="pregunta">
+      <span class="pregunta-label">¿Qué tan rápido te respondimos?</span>
+      <div class="estrellas" id="estrellas-rapidez" data-valor="0">
+        <span class="estrella" data-n="1">★</span>
+        <span class="estrella" data-n="2">★</span>
+        <span class="estrella" data-n="3">★</span>
+        <span class="estrella" data-n="4">★</span>
+        <span class="estrella" data-n="5">★</span>
+      </div>
+    </div>
+
+    <div class="pregunta">
+      <span class="pregunta-label">¿Algo que quieras contarnos? (opcional)</span>
+      <textarea id="comentario" maxlength="2000" placeholder="Escribí acá tu comentario..."></textarea>
+    </div>
+
+    <button class="btn-enviar" id="btn-enviar">Enviar respuesta</button>
+    <p class="mensaje-error" id="mensaje-error"></p>
+  </div>
+</div>
+
+<script>
+  const EDGE_FUNCTION_URL = 'https://zthimkucjtuffzcmdbtf.supabase.co/functions/v1/guardar-encuesta-soporte';
+
+  const params = new URLSearchParams(window.location.search);
+  const idTicket = params.get('ticket');
+  const firma = params.get('firma');
+
+  const vistaCargando = document.getElementById('vista-cargando');
+  const vistaInvalido = document.getElementById('vista-invalido');
+  const vistaForm = document.getElementById('vista-form');
+  const vistaGracias = document.getElementById('vista-gracias');
+  const vistaYaRespondido = document.getElementById('vista-ya-respondido');
+  const mensajeError = document.getElementById('mensaje-error');
+
+  function mostrarSolo(vista) {
+    [vistaCargando, vistaInvalido, vistaForm, vistaGracias, vistaYaRespondido].forEach(v => v.style.display = 'none');
+    vista.style.display = 'block';
+  }
+
+  // Validación básica de parámetros. La validación real (firma HMAC) la hace
+  // el backend recién cuando se envía el formulario — acá solo evitamos
+  // mostrar el form si obviamente falta algo.
+  if (!idTicket || !firma) {
+    mostrarSolo(vistaInvalido);
+  } else {
+    mostrarSolo(vistaForm);
+  }
+
+  // --- Selección de "problema resuelto" ---
+  let valorResuelto = null;
+  document.querySelectorAll('.opcion-resuelto').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.opcion-resuelto').forEach(o => o.classList.remove('activo'));
+      el.classList.add('activo');
+      valorResuelto = el.dataset.valor;
+    });
+  });
+
+  // --- Estrellas ---
+  function armarEstrellas(contenedorId) {
+    const cont = document.getElementById(contenedorId);
+    const estrellas = cont.querySelectorAll('.estrella');
+    estrellas.forEach(estrella => {
+      estrella.addEventListener('click', () => {
+        const n = parseInt(estrella.dataset.n, 10);
+        cont.dataset.valor = n;
+        estrellas.forEach(e => {
+          e.classList.toggle('activa', parseInt(e.dataset.n, 10) <= n);
+        });
+      });
+    });
+  }
+  armarEstrellas('estrellas-atencion');
+  armarEstrellas('estrellas-rapidez');
+
+  // --- Envío ---
+  document.getElementById('btn-enviar').addEventListener('click', async () => {
+    mensajeError.style.display = 'none';
+
+    const puntuacionAtencion = parseInt(document.getElementById('estrellas-atencion').dataset.valor, 10);
+    const puntuacionRapidez = parseInt(document.getElementById('estrellas-rapidez').dataset.valor, 10);
+    const comentario = document.getElementById('comentario').value.trim();
+
+    if (!valorResuelto) {
+      mensajeError.textContent = 'Contanos si tu problema fue resuelto.';
+      mensajeError.style.display = 'block';
+      return;
+    }
+    if (!puntuacionAtencion) {
+      mensajeError.textContent = 'Elegí una calificación para la atención.';
+      mensajeError.style.display = 'block';
+      return;
+    }
+    if (!puntuacionRapidez) {
+      mensajeError.textContent = 'Elegí una calificación para la rapidez.';
+      mensajeError.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('btn-enviar');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const resp = await fetch(EDGE_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idTicket,
+          firma,
+          problemaResuelto: valorResuelto,
+          puntuacionAtencion,
+          puntuacionRapidez,
+          comentario: comentario || null,
+        }),
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (data.yaRespondido) {
+        mostrarSolo(vistaYaRespondido);
+        return;
+      }
+
+      if (!resp.ok || data.error) {
+        throw new Error(data.error || 'Error al enviar la encuesta.');
+      }
+
+      mostrarSolo(vistaGracias);
+    } catch (e) {
+      mensajeError.textContent = 'No pudimos enviar tu respuesta. Probá de nuevo en unos minutos.';
+      mensajeError.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Enviar respuesta';
+    }
+  });
+</script>
+
+</body>
+</html>
