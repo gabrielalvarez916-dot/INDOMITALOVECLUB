@@ -14,7 +14,7 @@ async function obtenerPostulacionesReseñador() {
     .from('postulaciones')
     .select(`
       id, estado, fecha_postulacion, fecha_respuesta, fecha_limite_entrega, fecha_abandono, motivo_abandono,
-      campanas ( id, nombre_libro, nombre_autor, link_portada, id_usuario_autor, estado, fecha_limite,
+      campanas ( id, nombre_libro, nombre_autor, link_portada, id_usuario_autor, estado, fecha_limite, modalidad_lectura,
         campanas_archivos ( link_epub, link_pdf ) )
     `)
     .eq('id_usuario_resenador', user.id);
@@ -55,8 +55,9 @@ return (data || [])
         idAutor: p.campanas.id_usuario_autor,
         estado: p.campanas.estado,
         fechaLimite: p.campanas.fecha_limite,
-        linkEpub: p.campanas.campanas_archivos?.link_epub || '',
-        linkPdf: p.campanas.campanas_archivos?.link_pdf || ''
+       linkEpub: p.campanas.campanas_archivos?.link_epub || '',
+        linkPdf: p.campanas.campanas_archivos?.link_pdf || '',
+        modalidadLectura: p.campanas.modalidad_lectura || 'visor'
       } : null
     }));
 }
@@ -207,6 +208,8 @@ function construirCardPostulacionReseñador(p) {
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
       ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">📖 Leer EPUB</button>` : ''}
       ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}')">📄 Leer PDF</button>`   : ''}
+      ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
+      ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
     </div>
   ` : '';
 
@@ -317,8 +320,10 @@ function construirCardArcActivo(p) {
 </p>
         <p class="arc-card-fecha"${yaVencio ? ' style="color:#c0392b;font-weight:600;"' : ''}>${textoFecha}</p>
         <div class="arc-card-acciones">
-  ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
+ ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
   ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}')">Leer PDF</button>`   : ''}
+  ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
+  ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
   <button class="btn-secundario btn-full arc-btn-resena" onclick="abrirCargarResena('${c.id}')">✓ Entregar reseña</button>
   <button class="btn-peligro btn-full" onclick="abrirModalDNF('${p.idPostulacion}', '${c.nombreLibro}', '${c.nombreAutor}')">Abandonar libro (DNF)</button>
 </div>
