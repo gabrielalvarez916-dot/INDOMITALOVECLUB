@@ -23,11 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
         verificarModalActualizacion();
       }
     }, 100);
-  } else {
+ } else {
     // No hay sesión: muestra pantalla de login
-    HeaderDeslogueado();
-    Seccion('login');
-  }
+    mostrarHeaderDeslogueado();
+    mostrarSeccion('login');
+}
 
   // Si el link trae ?campana=ID, abre el detalle automáticamente
   const params = new URLSearchParams(window.location.search);
