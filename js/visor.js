@@ -12,7 +12,8 @@
 var VISOR_CONFIG = {
   pdfWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
   pdfLib:    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-  epubLib: 'https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js'
+  epubLib: 'https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js',
+  jszipLib: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
 };
 
 // Estado global del visor
@@ -90,6 +91,7 @@ async function abrirVisorEpub(idCampana, tituloLibro) {
   configurarModalVisor(tituloLibro, 'epub');
   mostrarModal('modal-visor');
   await cargarLibreriaEpub();
+await cargarLibreriaJszip();
   const url = await obtenerUrlLibro(idCampana, 'epub');
   if (!url) return;
   await inicializarEpub(url);
@@ -374,6 +376,17 @@ function cargarLibreriaEpub() {
     document.head.appendChild(s);
   });
 }
+
+function cargarLibreriaJszip() {
+  return new Promise((resolve, reject) => {
+    if (typeof JSZip !== 'undefined') { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = VISOR_CONFIG.jszipLib;
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
 // Exponer funciones globalmente
 window.abrirVisorEpub = abrirVisorEpub;
 window.abrirVisorPdf  = abrirVisorPdf;
