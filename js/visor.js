@@ -135,7 +135,10 @@ async function inicializarEpub(url) {
     epubDiv.style.display = 'block';
 epubDiv.style.visibility = 'hidden';
 
-    _visorEpub = ePub(url, { openAs: 'epub' });
+    const respuesta = await fetch(url);
+if (!respuesta.ok) throw new Error('No se pudo descargar el EPUB (' + respuesta.status + ')');
+const arrayBuffer = await respuesta.arrayBuffer();
+_visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
 
     const rendicion = _visorEpub.renderTo(epubDiv, {
       width:  '100%',
