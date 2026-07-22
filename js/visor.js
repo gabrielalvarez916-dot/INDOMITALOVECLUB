@@ -35,7 +35,7 @@ async function obtenerUrlLibro(idCampana, formato) {
       return null;
     }
 
-    const { data, error } = await supabaseClient.functions.invoke('obtener-url-libro', {...});
+    const { data, error } = await supabaseClient.functions.invoke('obtener-url-libro', {
       body: { id_campana: idCampana, formato }
     });
 
