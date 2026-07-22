@@ -597,6 +597,106 @@ function construirFilaTicketAdmin(t) {
 }
 
 // ────────────────────────────────────────────────────────────
+// ESTADÍSTICAS DE SOPORTE (encuestas de satisfacción)
+// ────────────────────────────────────────────────────────────
+
+async function cargarEstadisticasSoporteAdmin() {
+  const contenedor = document.getElementById('admin-estadisticas-soporte-contenedor');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_estadisticas_soporte');
+
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar las estadísticas de soporte.'}</p>`;
+    return;
+  }
+
+  const { ultimos30Dias: u, tendencia: t, totalRespuestasHistorico, respuestas } = resultado;
+
+  contenedor.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p class="stat-label">Respuestas (30 días)</p>
+        <p class="stat-valor">${u.totalRespuestas}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Total histórico: ${totalRespuestasHistorico}.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Promedio atención</p>
+        <p class="stat-valor">${u.promedioAtencion} / 5</p>
+        <p style="font-size:11px; margin:2px 0 0; color:${_colorDeltaSoporte(t.deltaAtencion)};">${_textoDeltaSoporte(t.deltaAtencion)} vs mes anterior (${t.promedioAtencionMesAnterior})</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Promedio rapidez</p>
+        <p class="stat-valor">${u.promedioRapidez} / 5</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Últimos 30 días.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">% resuelto</p>
+        <p class="stat-valor">${u.pctResuelto}%</p>
+        <p style="font-size:11px; margin:2px 0 0; color:${_colorDeltaSoporte(t.deltaPctResuelto)};">${_textoDeltaSoporte(t.deltaPctResuelto)} vs mes anterior (${t.pctResueltoMesAnterior}%)</p>
+      </div>
+    </div>
+
+    <div class="form-separador">Respuestas (últimos 30 días)</div>
+    ${!respuestas || respuestas.length === 0
+      ? `<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay respuestas a la encuesta en este período.</p></div>`
+      : `
+        <table class="admin-tabla">
+          <thead>
+            <tr>
+              <th>Asunto</th>
+              <th>¿Resuelto?</th>
+              <th>Atención</th>
+              <th>Rapidez</th>
+              <th>Comentario</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${respuestas.map(r => construirFilaEncuestaSoporteAdmin(r)).join('')}
+          </tbody>
+        </table>
+      `
+    }
+  `;
+}
+
+function _colorDeltaSoporte(delta) {
+  if (delta > 0) return '#2e7d32';
+  if (delta < 0) return '#c0392b';
+  return '#888';
+}
+
+function _textoDeltaSoporte(delta) {
+  if (delta > 0) return `▲ +${delta}`;
+  if (delta < 0) return `▼ ${delta}`;
+  return '— sin cambios';
+}
+
+function construirFilaEncuestaSoporteAdmin(r) {
+  const resueltoBadge = r.problema_resuelto === 'si'
+    ? '<span class="badge badge-aprobada">Sí</span>'
+    : r.problema_resuelto === 'no'
+    ? '<span class="badge badge-rechazada">No</span>'
+    : '<span class="badge badge-pendiente">—</span>';
+
+  const filaStyle = r.necesita_atencion ? 'background:rgba(192,57,43,0.06);' : '';
+
+  return `
+    <tr style="${filaStyle}">
+      <td>${r.asunto || '—'}</td>
+      <td>${resueltoBadge}</td>
+      <td>${r.puntuacion_atencion ?? '—'}</td>
+      <td>${r.puntuacion_rapidez ?? '—'}</td>
+      <td style="max-width:280px; font-size:12px;">${escaparHtmlSoporte(r.comentario || '')}</td>
+      <td style="font-size:12px;">${r.respondido_en ? String(r.respondido_en).split('T')[0] : '—'}</td>
+    </tr>
+  `;
+}
+
+// ────────────────────────────────────────────────────────────
 // MODAL: historial de conversación + responder
 // ────────────────────────────────────────────────────────────
 
