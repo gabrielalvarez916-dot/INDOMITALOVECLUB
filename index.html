@@ -589,6 +589,7 @@
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-tickets'); cargarTicketsAdmin(Sesion.email())">Soporte</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas-soporte'); cargarEstadisticasSoporteAdmin()">Estadísticas Soporte</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas'); cargarEstadisticasAdmin()">Estadísticas</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-banners'); cargarBannersAdmin()">Banners</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-modales'); cargarModalesAdmin()">Modales</button>
@@ -604,8 +605,11 @@
       <div id="tab-admin-pagos" class="tab-contenido">
         <div id="admin-pagos-lista"></div>
       </div>
-      <div id="tab-admin-tickets" class="tab-contenido">
+     <div id="tab-admin-tickets" class="tab-contenido">
   <div id="admin-tickets-lista"></div>
+</div>
+      <div id="tab-admin-estadisticas-soporte" class="tab-contenido">
+  <div id="admin-estadisticas-soporte-contenedor"></div>
 </div>
       <div id="tab-admin-estadisticas" class="tab-contenido">
   <div id="admin-estadisticas-contenedor"></div>
