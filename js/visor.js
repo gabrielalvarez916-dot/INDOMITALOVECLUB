@@ -90,8 +90,8 @@ async function abrirVisorEpub(idCampana, tituloLibro) {
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'epub');
   mostrarModal('modal-visor');
-  await cargarLibreriaEpub();
-await cargarLibreriaJszip();
+  await cargarLibreriaJszip();
+await cargarLibreriaEpub();
   const url = await obtenerUrlLibro(idCampana, 'epub');
   if (!url) return;
   await inicializarEpub(url);
