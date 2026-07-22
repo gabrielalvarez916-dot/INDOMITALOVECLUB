@@ -812,6 +812,42 @@ async function cancelarCampanaAutor(idCampana) {
 // ────────────────────────────────────────────────────────────
 
 /**
+ * Sube un archivo (PDF o EPUB) directo a R2 para una campaña, usando
+ * la Edge Function subir-archivo-libro (flujo: presignar → PUT → confirmar).
+ *
+ * @param {string} idCampana
+ * @param {'pdf'|'epub'} formato
+ * @param {File} archivo
+ */
+async function subirArchivoLibro(idCampana, formato, archivo) {
+  const { data: presign, error: errPresign } = await supabaseClient.functions.invoke('subir-archivo-libro', {
+    body: { accion: 'presignar', id_campana: idCampana, formato }
+  });
+
+  if (errPresign || !presign?.url) {
+    throw new Error((presign && presign.error) || errPresign?.message || `No se pudo iniciar la subida del ${formato.toUpperCase()}.`);
+  }
+
+  const respPut = await fetch(presign.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': presign.content_type },
+    body: archivo
+  });
+
+  if (!respPut.ok) {
+    throw new Error(`Error al subir el archivo ${formato.toUpperCase()} (HTTP ${respPut.status}). Probá de nuevo.`);
+  }
+
+  const { data: confirm, error: errConfirm } = await supabaseClient.functions.invoke('subir-archivo-libro', {
+    body: { accion: 'confirmar', id_campana: idCampana, formato }
+  });
+
+  if (errConfirm || !confirm?.ok) {
+    throw new Error((confirm && confirm.error) || errConfirm?.message || `No se pudo confirmar la subida del ${formato.toUpperCase()}.`);
+  }
+}
+
+/**
  * Envía el formulario de nueva campaña al backend.
  * Se llama desde el submit del form en el modal.
  *
@@ -866,6 +902,15 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
     return;
   }
 
+const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
+  const archivoPdf   = document.getElementById('nc-archivo-pdf')?.files?.[0];
+
+  if (!archivoEpub || !archivoPdf) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', 'Subí el archivo EPUB y el archivo PDF.');
+    return;
+  }
+
   const datos = {
     nombreLibro:       document.getElementById('nc-nombre-libro')?.value?.trim(),
     nombreAutor:       document.getElementById('nc-nombre-autor')?.value?.trim(),
@@ -873,8 +918,6 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
     genero:            document.getElementById('nc-genero')?.value?.trim(),
     tropes:            obtenerTropesComoTexto('nc'),
     linkPortada:       linkPortada,
-    linkEpub:          document.getElementById('nc-link-epub')?.value?.trim(),
-    linkPdf:           document.getElementById('nc-link-pdf')?.value?.trim(),
     linkAmazon:        document.getElementById('nc-link-amazon')?.value?.trim(),
     cuposTotal:        parseInt(document.getElementById('nc-cupos')?.value),
     modalidadLectura:  document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor',
@@ -909,21 +952,16 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
     return;
   }
 
-  const { error: errorArchivos } = await supabaseClient
-    .from('campanas_archivos')
-    .insert({
-      id_campana: campanaCreada.id,
-      link_epub: datos.linkEpub,
-      link_pdf: datos.linkPdf
-    });
-
-  toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-
-  if (errorArchivos) {
-    mostrarMensajeError('nc-error', errorArchivos.message);
+  try {
+    await subirArchivoLibro(campanaCreada.id, 'epub', archivoEpub);
+    await subirArchivoLibro(campanaCreada.id, 'pdf', archivoPdf);
+  } catch (errArchivo) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', `La campaña se creó, pero falló la subida de archivos: ${errArchivo.message} Entrá a "Editar campaña" para volver a intentarlo.`);
     return;
   }
 
+  toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
   mostrarMensajeOk('nc-ok', '¡Campaña creada exitosamente!');
   document.getElementById('form-nueva-campana')?.reset();
 
@@ -1472,13 +1510,15 @@ async function abrirEditarCampana(idCampana) {
         <p class="form-hint">Dejá vacío para no cambiar la portada actual.</p>
       </div>
       <div class="form-grupo">
-        <label class="form-label">Link EPUB</label>
-        <input type="url" id="ec-link-epub" class="form-input" value="" placeholder="Dejá vacío para no cambiar" />
-      </div>
-      <div class="form-grupo">
-        <label class="form-label">Link PDF</label>
-        <input type="url" id="ec-link-pdf" class="form-input" value="" placeholder="Dejá vacío para no cambiar" />
-      </div>
+  <label class="form-label">Archivo EPUB</label>
+  <input type="file" id="ec-archivo-epub" class="form-input" accept=".epub,application/epub+zip" />
+  <p class="form-hint">Dejá vacío para no reemplazar el EPUB actual.</p>
+</div>
+<div class="form-grupo">
+  <label class="form-label">Archivo PDF</label>
+  <input type="file" id="ec-archivo-pdf" class="form-input" accept=".pdf,application/pdf" />
+  <p class="form-hint">Dejá vacío para no reemplazar el PDF actual.</p>
+</div>
       <div id="ec-error" class="mensaje-error" style="display:none;"></div>
       <div id="ec-ok" class="mensaje-ok" style="display:none;"></div>
       <div class="modal-footer">
@@ -1508,11 +1548,10 @@ async function guardarEditarCampana(idCampana) {
 
   const datos = {
     sinopsis: document.getElementById('ec-sinopsis')?.value?.trim(),
-    genero: document.getElementById('ec-genero')?.value?.trim(),
-    linkEpub: document.getElementById('ec-link-epub')?.value?.trim(),
-    linkPdf: document.getElementById('ec-link-pdf')?.value?.trim()
+    genero: document.getElementById('ec-genero')?.value?.trim()
   };
-
+  const archivoEpubNuevo = document.getElementById('ec-archivo-epub')?.files?.[0];
+  const archivoPdfNuevo  = document.getElementById('ec-archivo-pdf')?.files?.[0];
   const cambiosCampana = {
     sinopsis: datos.sinopsis,
     genero: datos.genero
@@ -1529,22 +1568,14 @@ async function guardarEditarCampana(idCampana) {
     return;
   }
 
-  // Solo toca campanas_archivos si el autor escribió algo nuevo.
-  // "Dejá vacío para no cambiar" → si está vacío, no se manda nada.
-  if (datos.linkEpub || datos.linkPdf) {
-    const cambiosArchivos = {};
-    if (datos.linkEpub) cambiosArchivos.link_epub = datos.linkEpub;
-    if (datos.linkPdf)  cambiosArchivos.link_pdf  = datos.linkPdf;
-
-    const { error: errorArchivos } = await supabaseClient
-      .from('campanas_archivos')
-      .update(cambiosArchivos)
-      .eq('id_campana', idCampana);
-
-    if (errorArchivos) {
-      mostrarMensajeError('ec-error', errorArchivos.message);
-      return;
-    }
+  // Solo sube archivos si el autor eligió uno nuevo.
+  // Vacío = no reemplazar el archivo actual.
+  try {
+    if (archivoEpubNuevo) await subirArchivoLibro(idCampana, 'epub', archivoEpubNuevo);
+    if (archivoPdfNuevo)  await subirArchivoLibro(idCampana, 'pdf', archivoPdfNuevo);
+  } catch (errArchivo) {
+    mostrarMensajeError('ec-error', errArchivo.message);
+    return;
   }
 
   mostrarMensajeOk('ec-ok', '¡Campaña actualizada correctamente!');
