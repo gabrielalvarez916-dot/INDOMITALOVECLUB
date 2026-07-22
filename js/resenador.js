@@ -21,16 +21,26 @@ async function obtenerPostulacionesReseñador() {
 
   if (error) { console.error(error); return []; }
 
-  const ahora = new Date();
-  return (data || [])
-    .filter(p => {
-      if (p.estado === 'pendiente') return true;
-      const fechaResolucion = new Date(p.fecha_respuesta || p.fecha_postulacion);
-      if (isNaN(fechaResolucion.getTime())) return true;
-      const limite = new Date(fechaResolucion);
-      limite.setDate(limite.getDate() + DURACION_PLAN_DIAS_RESEÑA);
-      return ahora <= limite;
-    })
+  const DIAS_GRACIA_ENTREGA = 7;
+
+const ahora = new Date();
+return (data || [])
+  .filter(p => {
+    if (p.estado === 'pendiente') return true;
+
+    if (p.estado === 'aprobada' && p.fecha_limite_entrega) {
+      const limiteConGracia = new Date(p.fecha_limite_entrega);
+      limiteConGracia.setDate(limiteConGracia.getDate() + DIAS_GRACIA_ENTREGA);
+      return ahora <= limiteConGracia;
+    }
+
+    // abandonadas, rechazadas u otros casos sin fecha_limite_entrega: se mantiene el criterio original
+    const fechaResolucion = new Date(p.fecha_respuesta || p.fecha_postulacion);
+    if (isNaN(fechaResolucion.getTime())) return true;
+    const limite = new Date(fechaResolucion);
+    limite.setDate(limite.getDate() + DURACION_PLAN_DIAS_RESEÑA);
+    return ahora <= limite;
+  })
     .map(p => ({
       idPostulacion: p.id,
       estado: p.estado,
@@ -240,15 +250,19 @@ async function cargarArcsActivos(email) {
 
   const postulaciones = await obtenerPostulacionesReseñador();
   const ahora = new Date();
+  
   // Un ARC está activo mientras la postulación siga aprobada y no haya vencido
   // el plazo PERSONAL de entrega del reseñador (no el estado global de la campaña).
- _arcsActivosReseñador = postulaciones.filter(p =>
-    p.estado === 'aprobada' &&
-    p.campaña &&
-    p.campaña.estado !== 'cancelada' &&
-    p.fechaLimiteEntrega &&
-    ahora <= new Date(p.fechaLimiteEntrega)
-  );
+ const DIAS_GRACIA_ENTREGA = 7; // debe coincidir con la gracia de la policy RLS en Supabase
+
+_arcsActivosReseñador = postulaciones.filter(p => {
+  if (p.estado !== 'aprobada' || !p.campaña || p.campaña.estado === 'cancelada' || !p.fechaLimiteEntrega) {
+    return false;
+  }
+  const limiteConGracia = new Date(p.fechaLimiteEntrega);
+  limiteConGracia.setDate(limiteConGracia.getDate() + DIAS_GRACIA_ENTREGA);
+  return ahora <= limiteConGracia;
+});
   
   if (_arcsActivosReseñador.length === 0) {
     contenedor.innerHTML = `
@@ -272,8 +286,22 @@ async function cargarArcsActivos(email) {
  */
 function construirCardArcActivo(p) {
   const c = p.campaña;
+  const DIAS_GRACIA_ENTREGA = 7;
 
- return `
+  const fechaLimite = p.fechaLimiteEntrega || c.fechaLimite;
+  const ahora = new Date();
+  const yaVencio = fechaLimite && ahora > new Date(fechaLimite);
+
+  let textoFecha;
+  if (yaVencio) {
+    const fechaTope = new Date(fechaLimite);
+    fechaTope.setDate(fechaTope.getDate() + DIAS_GRACIA_ENTREGA);
+    textoFecha = `⚠️ Campaña vencida el ${formatearFechaAmigable(fechaLimite)}. Podés entregar hasta el ${formatearFechaAmigable(fechaTope.toISOString())}`;
+  } else {
+    textoFecha = `📅 Vence el ${formatearFechaAmigable(fechaLimite)}`;
+  }
+
+  return `
    <div class="arc-card">
     <div class="arc-card-portada-wrap">
         ${c.linkPortada
@@ -287,7 +315,7 @@ function construirCardArcActivo(p) {
    ${c.idAutor ? `onclick="abrirPerfilPublico('${c.idAutor}', 'autor')" style="cursor:pointer;"` : ''}>
   por ${c.nombreAutor}
 </p>
-        <p class="arc-card-fecha">📅 Vence el ${formatearFechaAmigable(p.fechaLimiteEntrega || c.fechaLimite)}</p>
+        <p class="arc-card-fecha"${yaVencio ? ' style="color:#c0392b;font-weight:600;"' : ''}>${textoFecha}</p>
         <div class="arc-card-acciones">
   ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
   ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}')">Leer PDF</button>`   : ''}
@@ -297,8 +325,7 @@ function construirCardArcActivo(p) {
       </div>
     </div>
   `;
-  }
-
+}
 
 // ────────────────────────────────────────────────────────────
 // CARGAR RESEÑA
