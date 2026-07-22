@@ -247,6 +247,86 @@ async function cancelarCampañaAdmin(idCampaña, nombreLibro) {
   await cargarCampañasAdmin();
 }
 
+// ────────────────────────────────────────────────────────────
+// INCUMPLIMIENTOS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Carga y muestra los incumplimientos de entrega (últimos 90 días) en el panel admin.
+ */
+async function cargarIncumplimientosAdmin() {
+  const contenedor = document.getElementById('admin-incumplimientos-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_incumplimientos');
+
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar los incumplimientos.'}</p>`;
+    return;
+  }
+
+  const incumplimientos = resultado.incumplimientos || [];
+
+  if (incumplimientos.length === 0) {
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <p class="estado-vacio-icono">🎉</p>
+        <p class="estado-vacio-texto">Sin incumplimientos registrados en los últimos 90 días.</p>
+      </div>
+    `;
+    return;
+  }
+
+  contenedor.innerHTML = `
+    <p class="form-info" style="margin-bottom:14px;">
+      <strong>${resultado.total90Dias}</strong> incumplimiento${resultado.total90Dias === 1 ? '' : 's'} registrado${resultado.total90Dias === 1 ? '' : 's'} en los últimos 90 días.
+    </p>
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Reseñador</th>
+          <th>Libro</th>
+          <th>Autor</th>
+          <th>Venció el</th>
+          <th>Incumplido el</th>
+          <th>Reincidencia (90d)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${incumplimientos.map(i => construirFilaIncumplimientoAdmin(i)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+/**
+ * Construye la fila de un incumplimiento para la tabla admin.
+ *
+ * @param {Object} i — datos del incumplimiento
+ * @returns {string} HTML de la fila
+ */
+function construirFilaIncumplimientoAdmin(i) {
+  const n = i.incumplimientos_90dias;
+
+  const badgeReincidencia = n >= 3
+    ? `<span class="badge badge-rechazada">${n} — bloqueo activo</span>`
+    : n === 2
+    ? `<span class="badge badge-pendiente">${n} — 1 campaña activa máx.</span>`
+    : `<span class="badge badge-nivel">${n} — solo aviso</span>`;
+
+  return `
+    <tr>
+      <td style="font-size:12px;">${i.alias || '—'}<br><span style="color:#888;">${i.email}</span></td>
+      <td>${i.nombre_libro}</td>
+      <td style="font-size:12px;">${i.nombre_autor}</td>
+      <td style="font-size:12px;">${i.fecha_limite_entrega ? String(i.fecha_limite_entrega).split('T')[0] : '—'}</td>
+      <td style="font-size:12px;">${i.fecha_incumplida ? String(i.fecha_incumplida).split('T')[0] : '—'}</td>
+      <td>${badgeReincidencia}</td>
+    </tr>
+  `;
+}
 
 // ────────────────────────────────────────────────────────────
 // SUSCRIPCIONES (antes "Pagos" — ahora es solo lectura,
