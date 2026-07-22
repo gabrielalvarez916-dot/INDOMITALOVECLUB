@@ -819,13 +819,28 @@ async function cancelarCampanaAutor(idCampana) {
  * @param {'pdf'|'epub'} formato
  * @param {File} archivo
  */
+async function _leerErrorEdgeFunction(error, mensajePorDefecto) {
+  if (error?.context && typeof error.context.json === 'function') {
+    try {
+      const bodyReal = await error.context.json();
+      return bodyReal?.detalle
+        ? `${bodyReal.error || mensajePorDefecto} | DETALLE: ${bodyReal.detalle}${bodyReal.codigo ? ' (' + bodyReal.codigo + ')' : ''}`
+        : (bodyReal?.error || mensajePorDefecto);
+    } catch (e) {
+      return mensajePorDefecto;
+    }
+  }
+  return error?.message || mensajePorDefecto;
+}
+
 async function subirArchivoLibro(idCampana, formato, archivo) {
   const { data: presign, error: errPresign } = await supabaseClient.functions.invoke('subir-archivo-libro', {
     body: { accion: 'presignar', id_campana: idCampana, formato }
   });
 
   if (errPresign || !presign?.url) {
-    throw new Error((presign && presign.error) || errPresign?.message || `No se pudo iniciar la subida del ${formato.toUpperCase()}.`);
+    const detalle = await _leerErrorEdgeFunction(errPresign, `No se pudo iniciar la subida del ${formato.toUpperCase()}.`);
+    throw new Error(detalle);
   }
 
   const respPut = await fetch(presign.url, {
@@ -843,7 +858,8 @@ async function subirArchivoLibro(idCampana, formato, archivo) {
   });
 
   if (errConfirm || !confirm?.ok) {
-    throw new Error((confirm && confirm.error) || errConfirm?.message || `No se pudo confirmar la subida del ${formato.toUpperCase()}.`);
+    const detalle = await _leerErrorEdgeFunction(errConfirm, `No se pudo confirmar la subida del ${formato.toUpperCase()}.`);
+    throw new Error(detalle);
   }
 }
 
