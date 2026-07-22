@@ -101,7 +101,8 @@ async function inicializarEpub(url) {
 
     epubDiv.innerHTML = '';
     if (cargando) cargando.style.display = 'flex';
-    epubDiv.style.display = 'none';
+    epubDiv.style.display = 'block';
+epubDiv.style.visibility = 'hidden';
 
     _visorEpub = ePub(url, { openAs: 'epub' });
 
@@ -115,7 +116,7 @@ async function inicializarEpub(url) {
     await rendicion.display();
 
     if (cargando) cargando.style.display = 'none';
-    epubDiv.style.display = 'block';
+    epubDiv.style.visibility = 'visible';
 
     // Controles de navegación
     const btnAnterior  = document.getElementById('visor-anterior');
@@ -129,7 +130,8 @@ async function inicializarEpub(url) {
   } catch (e) {
     console.error('Error EPUB:', e);
     if (cargando) cargando.style.display = 'none';
-    mostrarErrorVisor('No se pudo cargar el EPUB. Verificá que el archivo esté compartido en Drive como "Cualquiera con el link puede ver".');
+    epubDiv.style.visibility = 'visible';
+    mostrarErrorVisor('No se pudo cargar el EPUB.');
   }
 }
 
