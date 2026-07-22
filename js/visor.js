@@ -28,14 +28,14 @@ var _pdfTotalPaginas = 0;
 
 async function obtenerUrlLibro(idCampana, formato) {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     const token = session?.access_token;
     if (!token) {
       mostrarErrorVisor('Tu sesión expiró. Volvé a iniciar sesión y probá de nuevo.');
       return null;
     }
 
-    const { data, error } = await supabase.functions.invoke('obtener-url-libro', {
+    const { data, error } = await supabaseClient.functions.invoke('obtener-url-libro', {...});
       body: { id_campana: idCampana, formato }
     });
 
