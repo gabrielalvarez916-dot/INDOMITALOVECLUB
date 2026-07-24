@@ -59,14 +59,6 @@ async function _buscarTropes(idGenero, textoBusqueda) {
 // ────────────────────────────────────────────────────────────
 
 /**
- * Renderiza el componente de selección de tropes dentro de un contenedor.
- * Genera un acordeón por categoría, con checkboxes por trope y campo "Otros".
- *
- * @param {string} contenedorId — id del div donde se renderiza
- * @param {string} prefijo — prefijo único para los ids ('libro' o 'nc')
- * @param {string[]} seleccionados — array de tropes ya seleccionados (para edición)
- */
-/**
  * Renderiza el flujo nuevo: género → subgénero (si aplica) → buscador de tropes.
  *
  * @param {string} contenedorId
@@ -253,6 +245,11 @@ function quitarTrope(prefijo, id) {
 // PREVIEW DE TROPES SELECCIONADOS
 // ────────────────────────────────────────────────────────────
 
+/**
+ * Genera el HTML del preview de tropes seleccionados (chips con botón "quitar").
+ *
+ * @param {string} prefijo
+ */
 function renderizarChipsTropes(prefijo) {
   const preview = document.getElementById(`${prefijo}-tropes-preview`);
   if (!preview) return;
@@ -283,12 +280,6 @@ function renderizarChipsTropes(prefijo) {
 // ────────────────────────────────────────────────────────────
 
 /**
- * Devuelve el array de tropes seleccionados (checkboxes + campo otros).
- *
- * @param {string} prefijo
- * @returns {string[]}
- */
-/**
  * Devuelve { id_genero, id_subgenero, idsTropes } para guardar:
  * - id_genero / id_subgenero van directo en la fila de libros/campanas
  * - idsTropes es el array de integer para insertar en libro_tropes / campana_tropes
@@ -303,8 +294,9 @@ function obtenerSeleccionTropes(prefijo) {
 }
 
 /**
- * Convierte un string de tropes guardado en el backend
- * a un array para pre-cargar el selector.
+ * Convierte un string de tropes guardado en el formato viejo (texto libre)
+ * a un array, solo para mostrar en modo lectura libros/usuarios sin migrar.
+ * No se usa para guardar nada nuevo.
  *
  * @param {string} texto — 'Enemigos a Amantes, Fake Dating, ...'
  * @returns {string[]}
