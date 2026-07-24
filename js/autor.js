@@ -987,12 +987,19 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     return;
   }
 
-  try {
+ try {
     await subirArchivoLibro(campanaCreada.id, 'epub', archivoEpub);
     await subirArchivoLibro(campanaCreada.id, 'pdf', archivoPdf);
   } catch (errArchivo) {
+    // Si falla la subida, cancelamos la campaña recién creada para que
+    // no quede "activa" y visible en el feed sin archivos cargados.
+    await supabaseClient
+      .from('campanas')
+      .update({ estado: 'cancelada' })
+      .eq('id', campanaCreada.id);
+
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-    mostrarMensajeError('nc-error', `La campaña se creó, pero falló la subida de archivos: ${errArchivo.message} Entrá a "Editar campaña" para volver a intentarlo.`);
+    mostrarMensajeError('nc-error', `Hubo un error al subir los archivos (${errArchivo.message}). La campaña no se publicó — volvé a intentar crearla.`);
     return;
   }
 
