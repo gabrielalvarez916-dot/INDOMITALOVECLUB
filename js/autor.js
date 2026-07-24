@@ -332,14 +332,18 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
   const idsResenadores = (data || []).map(p => p.usuarios?.id).filter(Boolean);
   const mesActual = _mesActual();
 
-  const [{ data: rankings }, { data: insignias }] = await Promise.all([
-    supabaseClient.from('ranking').select('id_usuario_resenador, posicion, porcentaje_completion, puntos_mensuales, categoria').in('id_usuario_resenador', idsResenadores).eq('mes_año', mesActual),
-    supabaseClient.from('insignias').select('id_usuario, tipo, codigo').in('id_usuario', idsResenadores)
+  const [{ data: rankings }, { data: insignias }, confiabilidades] = await Promise.all([
+    supabaseClient.from('ranking').select('id_usuario_resenador, posicion, puntos_mensuales, categoria').in('id_usuario_resenador', idsResenadores).eq('mes_año', mesActual),
+    supabaseClient.from('insignias').select('id_usuario, tipo, codigo').in('id_usuario', idsResenadores),
+    Promise.all(idsResenadores.map(id =>
+      supabaseClient.rpc('calcular_confiabilidad', { p_usuario: id }).then(r => ({ id, confiabilidad: r.data }))
+    ))
   ]);
 
   _postulacionesAutor = (data || []).map(p => {
     const u = p.usuarios;
     const rankingUsuario = (rankings || []).find(r => r.id_usuario_resenador === u?.id);
+    const confiabilidadUsuario = (confiabilidades || []).find(c => c.id === u?.id)?.confiabilidad || null;
     return {
       idPostulacion: p.id,
       idCampana,
@@ -359,9 +363,9 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
         coincidenciaTropes: _coincidenciaTropes(campanaActual?.tropes, u.tropes_favoritos),
         ranking: rankingUsuario ? {
           posicion: rankingUsuario.posicion,
-          completion: rankingUsuario.porcentaje_completion,
           puntaje: rankingUsuario.puntos_mensuales
         } : null,
+        confiabilidad: confiabilidadUsuario,
         badges: (insignias || []).filter(i => i.id_usuario === u.id)
       } : null
     };
@@ -404,10 +408,24 @@ function construirCardPostulacion(p) {
     </div>
   ` : '';
 
+ const COLORES_CONFIABILIDAD = {
+    gris:     { emoji: '⚪', label: 'Sin historial' },
+    rojo:     { emoji: '🔴', label: 'Baja' },
+    amarillo: { emoji: '🟡', label: 'Media' },
+    azul:     { emoji: '🔵', label: 'Alta' },
+    verde:    { emoji: '🟢', label: 'Muy alta' }
+  };
+  const conf = r?.confiabilidad;
+  const confInfo = COLORES_CONFIABILIDAD[conf?.color] || COLORES_CONFIABILIDAD.gris;
+  const confiabilidadHtml = conf ? `
+    <p class="postulacion-confiabilidad">
+      ${confInfo.emoji} Confiabilidad: <strong>${conf.sinHistorial ? confInfo.label : conf.puntaje}</strong>
+    </p>
+  ` : '';
+
   const rankingHtml = r?.ranking?.posicion ? `
     <p class="postulacion-ranking">
       🏅 <strong>#${r.ranking.posicion}</strong> en el ranking
-      · ${r.ranking.completion?.toFixed(0) ?? '—'}% completion
       · Puntaje: ${r.ranking.puntaje?.toFixed(1) ?? '—'}
     </p>
   ` : '';
@@ -451,6 +469,7 @@ const avatarHtml = r?.fotoPerfil
       </div>
       ${badgesHtml ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0;">${badgesHtml}</div>` : ''}
       ${rankingHtml}
+      ${confiabilidadHtml}
       ${p.descripcionLector ? `<p class="postulacion-descripcion">${truncarTexto(p.descripcionLector, 150)}</p>` : ''}
      ${redesHtml ? `<div class="postulacion-redes">${redesHtml}</div>` : ''}
       ${botonesAccion}
