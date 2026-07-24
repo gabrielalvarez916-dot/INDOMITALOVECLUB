@@ -1504,29 +1504,6 @@ async function precargarLibroEnCampana() {
     tropes: libro.tropesCatalogo || []
   });
 }
-
-  const libro = _librosAutor.find(l => l.id === idLibro);
-  if (!libro) return;
-
-  document.getElementById('nc-nombre-libro').value = libro.titulo      || '';
-  document.getElementById('nc-nombre-autor').value = Sesion.obtener()?.alias || '';
-  document.getElementById('nc-sinopsis').value     = libro.sinopsis    || '';
-  document.getElementById('nc-genero').value       = libro.genero      || '';
-  document.getElementById('nc-link-portada').value = '';
-  document.getElementById('nc-link-amazon').value  = libro.linkAmazon  || '';
-
-  // La portada del libro ya está subida a Storage; se reutiliza si el autor
-  // no elige un archivo nuevo en el input de portada de la campaña.
-  _portadaPrecargadaCampana = libro.linkPortada || null;
-  if (previewPortada) {
-    previewPortada.innerHTML = libro.linkPortada
-      ? `<img src="${libro.linkPortada}" alt="Portada del libro" style="max-width:120px; display:block; margin-top:8px; border-radius:6px;" />`
-      : '';
-  }
-
-  const tropesArray = tropesTextoAArray(libro.tropes || '');
-  renderizarSelectorTropes('nc-tropes-contenedor', 'nc', tropesArray);
-}
 function construirCardRankingSlider(l) {
   const portada = l.linkPortada
     ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" onerror="this.style.display='none'" />`
