@@ -3,31 +3,6 @@
 // Feed público de campañas, filtros, detalle, postulación
 // ============================================================
 
-function renderizarFeed(campañas) {
-  const grid = document.getElementById('feed-grid');
-  if (!grid) return;
-
-  if (campañas.length === 0) {
-    // ... código existente
-    return;
-  }
-
-  // AGREGA ESTO: muestra las cards SIN esperar a que carguen las imágenes
-  grid.innerHTML = campañas.map(c => construirCardCampaña(c)).join('');
-  
-  // Y carga las imágenes de fondo después
-  setTimeout(() => {
-    grid.querySelectorAll('img').forEach(img => {
-      img.loading = 'lazy'; // Carga solo cuando se ve
-    });
-  }, 0);
-
-  toggleElemento('feed-grid', true);
-  toggleElemento('feed-lista-titulo', true);
-  toggleElemento('feed-ticker', true);
-  toggleElemento('feed-vacio', false);
-}
-
 // ────────────────────────────────────────────────────────────
 // VARIABLES GLOBALES DEL FEED
 // ────────────────────────────────────────────────────────────
@@ -104,7 +79,9 @@ async function cargarFeed() {
     (archivos || []).forEach(a => { archivosPorCampana[a.id_campana] = a; });
   }
 
-  _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id]));
+  _campañasTodas = await Promise.all(
+    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id]))
+  );
 
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
@@ -117,19 +94,19 @@ async function cargarFeed() {
   Slider.init();
 }
 
-function normalizarCampana(c, ranking, archivo) {
+async function normalizarCampana(c, ranking, archivo) {
   const usuario = Sesion.obtener();
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
 
   let coincidenciaTropes;
-  if (usuario?.rol === 'reseñador' && usuario.tropes_favoritos && c.tropes) {
-    const favoritos = usuario.tropes_favoritos.split(',').map(t => t.trim().toLowerCase());
-    const propios = c.tropes.split(',').map(t => t.trim().toLowerCase());
-    const coincidencias = propios.filter(t => favoritos.includes(t));
-    coincidenciaTropes = propios.length > 0
-      ? Math.round((coincidencias.length / propios.length) * 100)
-      : 0;
+  if (usuario?.rol === 'reseñador' && usuario.id) {
+    const { data, error } = await supabaseClient
+      .rpc('calcular_coincidencia_tropes', {
+        p_id_usuario: usuario.id,
+        p_id_campana: c.id
+      });
+    if (!error) coincidenciaTropes = data;
   }
 
  return {
@@ -175,6 +152,14 @@ function renderizarFeed(campañas) {
   }
 
   grid.innerHTML = campañas.map(c => construirCardCampaña(c)).join('');
+
+  // Carga las imágenes de fondo con lazy loading
+  setTimeout(() => {
+    grid.querySelectorAll('img').forEach(img => {
+      img.loading = 'lazy'; // Carga solo cuando se ve
+    });
+  }, 0);
+
   toggleElemento('feed-grid', true);
   toggleElemento('feed-lista-titulo', true);
   toggleElemento('feed-ticker', true);
@@ -334,7 +319,7 @@ async function verDetalleCampaña(idCampaña) {
     .eq('id_campana', idCampaña)
     .maybeSingle();
 
-  const c = normalizarCampana(campanaRaw, undefined, archivoRaw);
+  const c = await normalizarCampana(campanaRaw, undefined, archivoRaw);
   if (titulo) titulo.textContent = c.nombreLibro;
 
   const portadaHtml = c.linkPortada
