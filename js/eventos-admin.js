@@ -534,7 +534,7 @@ async function guardarEventoAdmin(event) {
     const archivo = document.getElementById(`ev-img-${campo}`)?.files?.[0];
     if (archivo) {
       try {
-        imagenes[campo] = await subirImagen('EVENTOS', `${idEvento}/${campo}`, archivo);
+        imagenes[campo] = await subirImagen('EVENTOS', `${idEvento}/${campo}-${crypto.randomUUID()}`, archivo);
       } catch (errImg) {
         toggleBoton('btn-guardar-evento', true, '', textoBoton);
         mostrarMensajeError('evento-error', `Error en imagen "${campo}": ${errImg.message}`);
@@ -562,7 +562,7 @@ async function guardarEventoAdmin(event) {
     const archivo = document.getElementById(inputId)?.files?.[0];
     if (archivo) {
       try {
-        asignar(await subirImagen('EVENTOS', `${idEvento}/${path}`, archivo));
+        asignar(await subirImagen('EVENTOS', `${idEvento}/${path}-${crypto.randomUUID()}`, archivo));
       } catch (errImg) {
         toggleBoton('btn-guardar-evento', true, '', textoBoton);
         mostrarMensajeError('evento-error', `Error en imagen de tema "${path}": ${errImg.message}`);

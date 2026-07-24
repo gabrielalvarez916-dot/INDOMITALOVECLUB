@@ -37,7 +37,8 @@ async function subirImagen(bucket, ruta, archivo) {
     .from(bucket)
     .upload(rutaCompleta, archivo, {
       upsert: true,
-      contentType: archivo.type
+      contentType: archivo.type,
+      cacheControl: '31536000' // 1 año — evita re-descargas del mismo archivo mientras no cambie
     });
 
   if (error) {

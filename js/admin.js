@@ -1231,7 +1231,7 @@ async function guardarPasoTutorialAdmin(rol, numeroPaso) {
 
   try {
     if (archivoEl && archivoEl.files && archivoEl.files[0]) {
-      imagenUrl = await subirImagen('EVENTOS', `tutoriales/${slug}/paso${numeroPaso}`, archivoEl.files[0]);
+      imagenUrl = await subirImagen('EVENTOS', `tutoriales/${slug}/paso${numeroPaso}-${crypto.randomUUID()}`, archivoEl.files[0]);
     }
 
     const { error } = await supabaseClient.rpc('admin_guardar_paso_tutorial', {
