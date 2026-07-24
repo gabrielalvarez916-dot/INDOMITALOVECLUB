@@ -80,7 +80,7 @@ async function cargarFeed() {
     return;
   }
 
-  const idsLibros = [...new Set((campanas || []).map(c => c.id_libro).filter(Boolean))];
+ const idsLibros = [...new Set((campanas || []).map(c => c.id_libro).filter(Boolean))];
   let rankingsPorLibro = {};
 
   if (idsLibros.length > 0) {
@@ -92,7 +92,19 @@ async function cargarFeed() {
     (rankings || []).forEach(r => { rankingsPorLibro[r.id_libro] = r; });
   }
 
- _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro]));
+  const idsCampanas = (campanas || []).map(c => c.id);
+  let archivosPorCampana = {};
+
+  if (idsCampanas.length > 0) {
+    const { data: archivos } = await supabaseClient
+      .from('campanas_archivos')
+      .select('*')
+      .in('id_campana', idsCampanas);
+
+    (archivos || []).forEach(a => { archivosPorCampana[a.id_campana] = a; });
+  }
+
+ _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id]));
 
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
@@ -105,7 +117,7 @@ async function cargarFeed() {
   Slider.init();
 }
 
-function normalizarCampana(c, ranking) {
+function normalizarCampana(c, ranking, archivo) {
   const usuario = Sesion.obtener();
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
@@ -120,7 +132,7 @@ function normalizarCampana(c, ranking) {
       : 0;
   }
 
-  return {
+ return {
     id: c.id,
     idAutor: c.id_usuario_autor,
     nombreLibro: c.nombre_libro,
@@ -138,6 +150,9 @@ function normalizarCampana(c, ranking) {
     modalidadLectura: c.modalidad_lectura,
     plataformasReseña: c.plataformas_resena || [],
     coincidenciaTropes,
+    linkEpub: archivo?.link_epub || null,
+    linkPdf: archivo?.link_pdf || null,
+    tieneArchivo: !!(archivo?.link_epub || archivo?.link_pdf),
     rankingLibro: ranking ? {
       esTop5: ranking.es_top5,
       esTop20: ranking.es_top20,
@@ -219,9 +234,14 @@ const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
      </p>`
   : '';
 
- let botonHtml = '';
+let botonHtml = '';
   if (c.estaVencida) {
     botonHtml = `<button class="btn-secundario btn-sm" disabled style="opacity:0.5; cursor:not-allowed;">Campaña cerrada</button>`;
+  } else if (!c.tieneArchivo) {
+    botonHtml = `
+      <button class="btn-secundario btn-sm" disabled style="opacity:0.5; cursor:not-allowed;">Postularme</button>
+      <p style="font-size:11px; color:var(--bordo); margin-top:4px;">Este autor aún no ha cargado el libro correctamente.</p>
+    `;
   } else if (rol === 'reseñador') {
     if (c.cuposDisponibles > 0) {
       botonHtml = `<button class="btn-primario btn-sm" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`;
@@ -308,7 +328,13 @@ async function verDetalleCampaña(idCampaña) {
     return;
   }
 
-  const c = normalizarCampana(campanaRaw);
+  const { data: archivoRaw } = await supabaseClient
+    .from('campanas_archivos')
+    .select('*')
+    .eq('id_campana', idCampaña)
+    .maybeSingle();
+
+  const c = normalizarCampana(campanaRaw, undefined, archivoRaw);
   if (titulo) titulo.textContent = c.nombreLibro;
 
   const portadaHtml = c.linkPortada
@@ -351,7 +377,14 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
 
   const rol = Sesion.rol();
   if (footer) {
-    if (rol === 'reseñador' && c.cuposDisponibles > 0) {
+    if (!c.tieneArchivo) {
+      footer.innerHTML = `
+        <div style="text-align:center;">
+          <button class="btn-primario" disabled style="opacity:0.5; cursor:not-allowed;">Postularme a esta campaña</button>
+          <p style="font-size:12px; color:var(--bordo); margin-top:6px;">Este autor aún no ha cargado el libro correctamente.</p>
+        </div>
+      `;
+    } else if (rol === 'reseñador' && c.cuposDisponibles > 0) {
       footer.innerHTML = `<button class="btn-primario" onclick="cerrarModales(); iniciarPostulacion('${c.id}')">Postularme a esta campaña</button>`;
     } else if (!rol) {
       footer.innerHTML = `<button class="btn-primario" onclick="cerrarModales(); mostrarSeccion('login')">Ingresá para postularte</button>`;
@@ -441,6 +474,12 @@ async function confirmarPostulacion(idCampaña) {
   const usuario = Sesion.obtener();
 
   const campaña = _campañasTodas.find(c => c.id === idCampaña);
+
+  if (campaña && !campaña.tieneArchivo) {
+    mostrarToast('Este autor aún no ha cargado el libro correctamente.', 'error');
+    return;
+  }
+
   if (campaña && campaña.plataformasReseña && campaña.plataformasReseña.length > 0) {
     const mapeo = {
       Amazon:    usuario.amazon,
@@ -536,8 +575,13 @@ const Slider = (() => {
         ).join('')
       : '';
 
-    let botonHtml = '';
-    if (rol === 'reseñador' && c.cuposDisponibles > 0) {
+   let botonHtml = '';
+    if (!c.tieneArchivo) {
+      botonHtml = `
+        <button class="btn-postular" disabled style="opacity:0.5; cursor:not-allowed;">Postularme →</button>
+        <p style="font-size:11px; color:var(--bordo); margin-top:4px;">Este autor aún no ha cargado el libro correctamente.</p>
+      `;
+    } else if (rol === 'reseñador' && c.cuposDisponibles > 0) {
       botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme →</button>`;
     } else if (!rol) {
       botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte →</button>`;
