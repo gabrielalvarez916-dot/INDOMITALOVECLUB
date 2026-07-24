@@ -111,15 +111,24 @@ if (!user) return;
 
 const mesActual = new Date().toISOString().slice(0, 7);
 
-const [{ data: gamificacion }, { data: ranking }] = await Promise.all([
+const [{ data: gamificacion }, { data: ranking }, { data: confiabilidad }] = await Promise.all([
   supabaseClient.from('gamificacion').select('badge_historico').eq('id_usuario', user.id).maybeSingle(),
-  supabaseClient.from('ranking').select('posicion, puntos_mensuales, porcentaje_completion, categoria').eq('id_usuario_resenador', user.id).eq('mes_año', mesActual).maybeSingle()
+  supabaseClient.from('ranking').select('posicion, puntos_mensuales, categoria').eq('id_usuario_resenador', user.id).eq('mes_año', mesActual).maybeSingle(),
+  supabaseClient.rpc('calcular_confiabilidad', { p_usuario: user.id })
 ]);
 
 const badgeHistorico  = gamificacion?.badge_historico || '—';
 const puntosMensuales = ranking?.puntos_mensuales ?? '—';
 const categoria       = ranking?.categoria || '';
 
+const COLORES_CONFIABILIDAD = {
+  gris:     { emoji: '⚪', label: 'Sin historial aún' },
+  rojo:     { emoji: '🔴', label: 'Baja' },
+  amarillo: { emoji: '🟡', label: 'Media' },
+  azul:     { emoji: '🔵', label: 'Alta' },
+  verde:    { emoji: '🟢', label: 'Muy alta' }
+};
+const confInfo = COLORES_CONFIABILIDAD[confiabilidad?.color] || COLORES_CONFIABILIDAD.gris;
 const ICONOS_SVG = {
     medalla: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M9 13.5L7 22l5-3 5 3-2-8.5"/></svg>',
     grafico: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 16l4-6 3 3 5-8"/></svg>',
