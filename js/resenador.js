@@ -151,7 +151,7 @@ const stats = [
     { icono: '🎖️', valor: badgeHistorico, label: 'Badge histórico', variante: 'bordo', texto: true },
     { icono: '📊', valor: ranking ? '#' + ranking.posicion : '—', label: 'Posición ranking', variante: 'dorado' },
     { icono: '⭐', valor: puntosMensuales, label: 'Puntos este mes', variante: 'rosa' },
-    { icono: '⏱️', valor: ranking ? ranking.porcentaje_completion + '%' : '—', label: 'Completion este mes', variante: 'crema' },
+    { icono: confInfo.emoji, valor: confiabilidad?.sinHistorial ? confInfo.label : (confiabilidad?.puntaje ?? '—'), label: 'Confiabilidad', variante: 'crema', texto: confiabilidad?.sinHistorial === true },
     { icono: categoria === 'top5' ? '🏆' : '🎗️', valor: labelCategoria, label: 'Categoría del mes', variante: 'dorado', texto: true }
   ];
 
