@@ -47,15 +47,19 @@ function mezclarArray(arr) {
 // CARGAR FEED
 // ────────────────────────────────────────────────────────────
 
+function ordenarFeed(campañas) {
+  const conCupo = mezclarArray(campañas.filter(c => c.cuposDisponibles > 0));
+  const sinCupo = mezclarArray(campañas.filter(c => c.cuposDisponibles <= 0));
+  return [...conCupo, ...sinCupo];
+}
+
 async function cargarFeed() {
   const vacio = document.getElementById('feed-vacio');
-
   toggleElemento('feed-cargando', true);
   toggleElemento('feed-grid', false);
   toggleElemento('feed-vacio', false);
   toggleElemento('feed-lista-titulo', false);
   toggleElemento('feed-ticker', false);
-
   cargarBannerPublicitario();
   cargarTickerEvento();
 
@@ -80,38 +84,34 @@ async function cargarFeed() {
     return;
   }
 
- const idsLibros = [...new Set((campanas || []).map(c => c.id_libro).filter(Boolean))];
+  const idsLibros = [...new Set((campanas || []).map(c => c.id_libro).filter(Boolean))];
   let rankingsPorLibro = {};
-
   if (idsLibros.length > 0) {
     const { data: rankings } = await supabaseClient
       .from('ranking_libros_historico')
       .select('*')
       .in('id_libro', idsLibros);
-
     (rankings || []).forEach(r => { rankingsPorLibro[r.id_libro] = r; });
   }
 
   const idsCampanas = (campanas || []).map(c => c.id);
   let archivosPorCampana = {};
-
   if (idsCampanas.length > 0) {
     const { data: archivos } = await supabaseClient
       .from('campanas_archivos')
       .select('*')
       .in('id_campana', idsCampanas);
-
     (archivos || []).forEach(a => { archivosPorCampana[a.id_campana] = a; });
   }
 
- _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id]));
+  _campañasTodas = (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id]));
 
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
     return;
   }
 
-  _campañasTodas = mezclarArray(_campañasTodas);
+  _campañasTodas = ordenarFeed(_campañasTodas);
 
   renderizarFeed(_campañasTodas);
   Slider.init();
