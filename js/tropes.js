@@ -52,7 +52,6 @@ async function _buscarTropes(idGenero, textoBusqueda) {
   if (error) { console.error('Error buscando tropes:', error); return []; }
   return data;
 }
-];
 
 
 // ────────────────────────────────────────────────────────────
@@ -254,26 +253,6 @@ function quitarTrope(prefijo, id) {
 // PREVIEW DE TROPES SELECCIONADOS
 // ────────────────────────────────────────────────────────────
 
-/**
- * Actualiza el preview de tropes seleccionados debajo del acordeón.
- *
- * @param {string} prefijo
- */
-function actualizarPreviewTropes(prefijo) {
-  const preview = document.getElementById(`${prefijo}-tropes-preview`);
-  if (!preview) return;
-
-  const seleccionados = obtenerTropesSeleccionados(prefijo);
-  preview.innerHTML = generarPreviewTropes(prefijo, seleccionados);
-}
-
-/**
- * Genera el HTML del preview de tropes seleccionados.
- *
- * @param {string} prefijo
- * @param {string[]} seleccionados
- * @returns {string}
- */
 function renderizarChipsTropes(prefijo) {
   const preview = document.getElementById(`${prefijo}-tropes-preview`);
   if (!preview) return;
