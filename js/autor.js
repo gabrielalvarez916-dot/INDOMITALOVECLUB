@@ -946,12 +946,20 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     return;
   }
 
+  const seleccionTropes = obtenerSeleccionTropes('nc');
+
+  if (!seleccionTropes.id_genero) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', 'Elegí un género para la campaña.');
+    return;
+  }
+
   const datos = {
     nombreLibro:       document.getElementById('nc-nombre-libro')?.value?.trim(),
     nombreAutor:       document.getElementById('nc-nombre-autor')?.value?.trim(),
     sinopsis:          document.getElementById('nc-sinopsis')?.value?.trim(),
-    genero:            document.getElementById('nc-genero')?.value?.trim(),
-    tropes:            obtenerTropesComoTexto('nc'),
+    idGenero:          seleccionTropes.id_genero,
+    idSubgenero:       seleccionTropes.id_subgenero,
     linkPortada:       linkPortada,
     linkAmazon:        document.getElementById('nc-link-amazon')?.value?.trim(),
     cuposTotal:        parseInt(document.getElementById('nc-cupos')?.value),
@@ -968,8 +976,8 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
       nombre_libro:       datos.nombreLibro,
       nombre_autor:       datos.nombreAutor,
       sinopsis:           datos.sinopsis,
-      genero:             datos.genero,
-      tropes:             datos.tropes,
+      id_genero:          datos.idGenero,
+      id_subgenero:       datos.idSubgenero,
       link_portada:       datos.linkPortada,
       link_amazon_libro:  datos.linkAmazon,
       cupos_total:        datos.cuposTotal,
@@ -985,6 +993,20 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
     mostrarMensajeError('nc-error', error.message);
     return;
+  }
+
+  if (seleccionTropes.idsTropes.length > 0) {
+    const { error: errorTropes } = await supabaseClient
+      .from('campana_tropes')
+      .insert(seleccionTropes.idsTropes.map(idTrope => ({
+        id_campana: campanaCreada.id,
+        id_trope: idTrope
+      })));
+
+    if (errorTropes) {
+      // La campaña ya se creó; no la revertimos por esto, pero lo dejamos en consola.
+      console.error('Error guardando tropes de la campaña:', errorTropes);
+    }
   }
 
  try {
@@ -1239,13 +1261,29 @@ async function cargarBibliotecaPanel(idUsuario) {
 
   if (error) return;
 
+  const idsLibros = (data || []).map(l => l.id);
+  let tropesPorLibro = {};
+  if (idsLibros.length > 0) {
+    const { data: tropesRows } = await supabaseClient
+      .from('libro_tropes')
+      .select('id_libro, tropes ( id, nombre )')
+      .in('id_libro', idsLibros);
+    (tropesRows || []).forEach(row => {
+      if (!tropesPorLibro[row.id_libro]) tropesPorLibro[row.id_libro] = [];
+      if (row.tropes) tropesPorLibro[row.id_libro].push({ id: row.tropes.id, nombre: row.tropes.nombre });
+    });
+  }
+
   _librosAutor = (data || []).map(l => ({
     id: l.id,
     titulo: l.titulo,
     sinopsisBreve: l.sinopsis_breve,
     sinopsis: l.sinopsis_breve,
     genero: l.genero,
+    idGenero: l.id_genero,
+    idSubgenero: l.id_subgenero,
     tropes: l.tropes,
+    tropesCatalogo: tropesPorLibro[l.id] || [],
     linkPortada: l.link_portada,
     linkAmazon: l.link_amazon
   }));
@@ -1253,7 +1291,6 @@ async function cargarBibliotecaPanel(idUsuario) {
   const contenedor = document.getElementById('biblioteca-lista');
   if (contenedor) renderizarBiblioteca(_librosAutor);
 }
-
 /**
  * Renderiza la lista de libros de la biblioteca.
  *
@@ -1319,28 +1356,50 @@ async function agregarLibro(event) {
     }
   }
 
+  const seleccionTropes = obtenerSeleccionTropes('libro');
+
+  if (!seleccionTropes.id_genero) {
+    mostrarMensajeError('libro-error', 'Elegí un género para el libro.');
+    return;
+  }
+
   const datos = {
     titulo:         titulo,
     sinopsisBreve:  document.getElementById('libro-sinopsis')?.value?.trim(),
-    genero:         document.getElementById('libro-genero')?.value?.trim(),
-    tropes: obtenerTropesComoTexto('libro'),
+    idGenero:       seleccionTropes.id_genero,
+    idSubgenero:    seleccionTropes.id_subgenero,
     linkPortada: linkPortada,
     linkAmazon:     document.getElementById('libro-amazon')?.value?.trim()
   };
 
-  const { error } = await supabaseClient.from('libros').insert({
+  const { data: libroCreado, error } = await supabaseClient.from('libros').insert({
     id_usuario_autor: user.id,
     titulo: datos.titulo,
     sinopsis_breve: datos.sinopsisBreve,
-    genero: datos.genero,
-    tropes: datos.tropes,
+    id_genero: datos.idGenero,
+    id_subgenero: datos.idSubgenero,
     link_portada: datos.linkPortada,
     link_amazon: datos.linkAmazon
-  });
+  })
+    .select()
+    .single();
 
   if (error) {
     mostrarMensajeError('libro-error', error.message);
     return;
+  }
+
+  if (seleccionTropes.idsTropes.length > 0) {
+    const { error: errorTropes } = await supabaseClient
+      .from('libro_tropes')
+      .insert(seleccionTropes.idsTropes.map(idTrope => ({
+        id_libro: libroCreado.id,
+        id_trope: idTrope
+      })));
+
+    if (errorTropes) {
+      console.error('Error guardando tropes del libro:', errorTropes);
+    }
   }
 
   document.getElementById('form-nuevo-libro')?.reset();
@@ -1349,7 +1408,6 @@ async function agregarLibro(event) {
   await cargarBibliotecaPanel(user.id);
   if (typeof cargarBibliotecaAutorSeccion === 'function') await cargarBibliotecaAutorSeccion();
 }
-
 /**
  * Elimina un libro de la biblioteca del autor.
  *
@@ -1382,7 +1440,7 @@ mostrarToast('Libro eliminado.', 'ok');
 // ────────────────────────────────────────────────────────────
 
 async function inicializarModalNuevaCampana() {
-  renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
+  await renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
 
    // Muestra la fecha de cierre calculada (hoy + 30 días). Ya no la elige el autor.
   const fechaCierre = new Date();
@@ -1404,7 +1462,7 @@ async function inicializarModalNuevaCampana() {
   });
 }
 
-function precargarLibroEnCampana() {
+async function precargarLibroEnCampana() {
   const selector = document.getElementById('nc-libro-selector');
   const idLibro  = selector?.value;
 
@@ -1414,14 +1472,38 @@ function precargarLibroEnCampana() {
     document.getElementById('nc-nombre-libro').value = '';
     document.getElementById('nc-nombre-autor').value = '';
     document.getElementById('nc-sinopsis').value     = '';
-    document.getElementById('nc-genero').value       = '';
     document.getElementById('nc-link-portada').value = '';
     document.getElementById('nc-link-amazon').value  = '';
     _portadaPrecargadaCampana = null;
     if (previewPortada) previewPortada.innerHTML = '';
-    renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
+    await renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
     return;
   }
+
+  const libro = _librosAutor.find(l => l.id === idLibro);
+  if (!libro) return;
+
+  document.getElementById('nc-nombre-libro').value = libro.titulo      || '';
+  document.getElementById('nc-nombre-autor').value = Sesion.obtener()?.alias || '';
+  document.getElementById('nc-sinopsis').value     = libro.sinopsis    || '';
+  document.getElementById('nc-link-portada').value = '';
+  document.getElementById('nc-link-amazon').value  = libro.linkAmazon  || '';
+
+  // La portada del libro ya está subida a Storage; se reutiliza si el autor
+  // no elige un archivo nuevo en el input de portada de la campaña.
+  _portadaPrecargadaCampana = libro.linkPortada || null;
+  if (previewPortada) {
+    previewPortada.innerHTML = libro.linkPortada
+      ? `<img src="${libro.linkPortada}" alt="Portada del libro" style="max-width:120px; display:block; margin-top:8px; border-radius:6px;" />`
+      : '';
+  }
+
+  await renderizarSelectorTropes('nc-tropes-contenedor', 'nc', {
+    id_genero: libro.idGenero,
+    id_subgenero: libro.idSubgenero,
+    tropes: libro.tropesCatalogo || []
+  });
+}
 
   const libro = _librosAutor.find(l => l.id === idLibro);
   if (!libro) return;
