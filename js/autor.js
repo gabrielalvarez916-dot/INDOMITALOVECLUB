@@ -310,8 +310,6 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
 
   contenedor.innerHTML = `<p class="seccion-subtitulo">Postulaciones para <strong>${nombreLibro}</strong></p><div class="cargando-container"><div class="spinner"></div></div>`;
 
-  const campanaActual = _campañasAutor.find(c => c.id === idCampana);
-
   const { data, error } = await supabaseClient
     .from('postulaciones')
     .select(`
@@ -329,14 +327,17 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
     return;
   }
 
-  const idsResenadores = (data || []).map(p => p.usuarios?.id).filter(Boolean);
+ const idsResenadores = (data || []).map(p => p.usuarios?.id).filter(Boolean);
   const mesActual = _mesActual();
 
-  const [{ data: rankings }, { data: insignias }, confiabilidades] = await Promise.all([
+  const [{ data: rankings }, { data: insignias }, confiabilidades, coincidenciasTropes] = await Promise.all([
     supabaseClient.from('ranking').select('id_usuario_resenador, posicion, puntos_mensuales, categoria').in('id_usuario_resenador', idsResenadores).eq('mes_año', mesActual),
     supabaseClient.from('insignias').select('id_usuario, tipo, codigo').in('id_usuario', idsResenadores),
     Promise.all(idsResenadores.map(id =>
       supabaseClient.rpc('calcular_confiabilidad', { p_usuario: id }).then(r => ({ id, confiabilidad: r.data }))
+    )),
+    Promise.all(idsResenadores.map(id =>
+      supabaseClient.rpc('calcular_coincidencia_tropes', { p_id_usuario: id, p_id_campana: idCampana }).then(r => ({ id, valor: r.data }))
     ))
   ]);
 
@@ -360,7 +361,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
         amazon: u.amazon,
         fotoPerfil: u.avatares?.imagen_url || null,
         labelNivel: rankingUsuario ? _labelLiga(rankingUsuario.categoria) : null,
-        coincidenciaTropes: _coincidenciaTropes(campanaActual?.tropes, u.tropes_favoritos),
+        coincidenciaTropes: (coincidenciasTropes || []).find(ct => ct.id === u?.id)?.valor ?? null,
         ranking: rankingUsuario ? {
           posicion: rankingUsuario.posicion,
           puntaje: rankingUsuario.puntos_mensuales
