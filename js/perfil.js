@@ -148,7 +148,7 @@ function ajustarFormularioPorRol(rol) {
   const esReseñador = rol === 'reseñador';
   const esEditorial = rol === 'editorial';
   toggleElemento('seccion-biblioteca',   esAutor || esEditorial);
-  toggleElemento('grupo-generos',        esReseñador || esEditorial);
+  toggleElemento('grupo-generos',        esEditorial);
   toggleElemento('grupo-descripcion',    esReseñador || esEditorial);
   toggleElemento('grupo-tropes-perfil',  esReseñador);
   toggleElemento('grupo-sitio-web',      esEditorial);
