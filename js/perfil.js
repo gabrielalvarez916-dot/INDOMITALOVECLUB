@@ -266,8 +266,6 @@ async function guardarPerfil(event) {
       amazon: datos.amazon,
       generos: datos.generos,
       descripcion_lector: datos.descripcionLector,
-      id_genero: seleccionTropesPerfil ? seleccionTropesPerfil.id_genero : undefined,
-      id_subgenero: seleccionTropesPerfil ? seleccionTropesPerfil.id_subgenero : undefined,
       sitio_web: datos.sitioWeb
     })
     .eq('id', usuario.id);
