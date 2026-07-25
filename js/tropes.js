@@ -155,6 +155,12 @@ async function renderizarSelectorTropes(contenedorId, prefijo, valoresIniciales 
     }
 
     renderizarChipsTropes(prefijo);
+  } else if (estado.seleccionados.length > 0) {
+    // Caso libro/campaña vieja sin migrar: todavía no tiene género asignado
+    // (id_genero null) pero ya tiene tropes cargados del sistema viejo.
+    // Los mostramos igual para que no queden ocultos y se pierdan al guardar.
+    document.getElementById(`${prefijo}-contenedor-buscador-tropes`).style.display = 'block';
+    renderizarChipsTropes(prefijo);
   }
 }
 
@@ -163,6 +169,7 @@ async function renderizarSelectorTropes(contenedorId, prefijo, valoresIniciales 
  */
 async function onCambioGenero(prefijo) {
   const estado = _estado(prefijo);
+  const idGeneroAnterior = estado.idGenero;
   const select = document.getElementById(`${prefijo}-select-genero`);
   const idGenero = select.value ? parseInt(select.value, 10) : null;
   const opt = select.options[select.selectedIndex];
@@ -170,7 +177,13 @@ async function onCambioGenero(prefijo) {
 
   estado.idGenero = idGenero;
   estado.idSubgenero = null;
-  estado.seleccionados = []; // cambiar de género invalida los tropes elegidos (son de otro género)
+  // Si ya había un género distinto asignado, los tropes elegidos son de otro
+  // género y no aplican más. Pero si antes no había género (libro/campaña
+  // vieja sin migrar), los tropes que ya tenía siguen siendo válidos para
+  // el género que se le está asignando ahora por primera vez — no los borramos.
+  if (idGeneroAnterior !== null && idGeneroAnterior !== idGenero) {
+    estado.seleccionados = [];
+  }
 
   const contSub = document.getElementById(`${prefijo}-contenedor-subgenero`);
   const contBuscador = document.getElementById(`${prefijo}-contenedor-buscador-tropes`);
