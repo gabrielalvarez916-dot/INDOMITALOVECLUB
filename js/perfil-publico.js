@@ -360,6 +360,18 @@ function _pintarPerfilEditorial(perfil, libros, campañas, gamif, sufijo = '') {
 }
 
 /**
+ * Resuelve la etiqueta de género/subgénero de un libro que viene del RPC
+ * listar_libros_perfil_publico (ya trae nombreGenero/nombreSubgenero
+ * resueltos del catálogo). Si el libro no está migrado, cae al texto viejo.
+ */
+function _etiquetaGeneroLibro(libro) {
+  if (libro.nombreGenero) {
+    return libro.nombreSubgenero ? `${libro.nombreGenero} · ${libro.nombreSubgenero}` : libro.nombreGenero;
+  }
+  return libro.genero || null;
+}
+
+/**
  * Card de libro para el perfil público de autor — mismo estilo
  * "Goodreads" que ya usamos para libros de reseñador, pero con
  * género y puntuación promedio global en vez de estrellas de 1-5
@@ -385,7 +397,7 @@ function _renderCardLibroAutor(libro) {
         : '<div class="pp-libro-goodreads-portada pp-portada-placeholder">📖</div>'}
       <div class="pp-libro-goodreads-info">
         <p class="pp-libro-goodreads-titulo">${_esc(libro.titulo)} ${badge}</p>
-        ${libro.genero ? `<p class="pp-libro-goodreads-autor">${_esc(libro.genero)}</p>` : ''}
+        ${_etiquetaGeneroLibro(libro) ? `<p class="pp-libro-goodreads-autor">${_esc(_etiquetaGeneroLibro(libro))}</p>` : ''}
         ${puntuacionHtml}
         ${libro.amazon ? `<a href="${_esc(libro.amazon)}" target="_blank" class="pp-link-externo">Ver en Amazon →</a>` : ''}
      </div>
@@ -441,7 +453,7 @@ function _renderLibroEstanteAutorPropio(libro) {
  * en vez de _librosAutor, para no depender de que el panel de autor haya
  * cargado antes. El guardado sigue siendo guardarEditarLibro, sin tocar.
  */
-function abrirEditarLibroPropio(idLibro) {
+async function abrirEditarLibroPropio(idLibro) {
   const libro = _librosAutorPerfilCache.find(l => l.id === idLibro);
   if (!libro) return;
 
@@ -469,8 +481,7 @@ function abrirEditarLibroPropio(idLibro) {
         <textarea id="el-sinopsis" class="form-textarea" rows="4">${_esc(libro.sinopsisBreve || '')}</textarea>
       </div>
       <div class="form-grupo">
-        <label class="form-label">Género</label>
-        <input type="text" id="el-genero" class="form-input" value="${_esc(libro.genero || '')}" />
+        <div id="el-tropes-contenedor"></div>
       </div>
       <div class="form-grupo">
         <label class="form-label">Portada</label>
@@ -486,6 +497,12 @@ function abrirEditarLibroPropio(idLibro) {
       </div>
     </form>
   `;
+
+  await renderizarSelectorTropes('el-tropes-contenedor', 'el', {
+    id_genero: libro.idGenero,
+    id_subgenero: libro.idSubgenero,
+    tropes: libro.tropesCatalogo || []
+  });
 }
 
 /**
@@ -502,9 +519,11 @@ function abrirDetalleLibroAutor(idLibro) {
     ? (libro.portada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.portada : libro.portada)
     : '';
 
-  const tropesArr = typeof tropesTextoAArray === 'function'
-    ? tropesTextoAArray(libro.tropes || '')
-    : (libro.tropes || '').split(',').map(t => t.trim()).filter(Boolean);
+  const tropesArr = (libro.tropesCatalogo && libro.tropesCatalogo.length > 0)
+    ? libro.tropesCatalogo.map(t => t.nombre)
+    : (typeof tropesTextoAArray === 'function'
+        ? tropesTextoAArray(libro.tropes || '')
+        : (libro.tropes || '').split(',').map(t => t.trim()).filter(Boolean));
 
   mostrarModal('modal-detalle-campana');
 
@@ -522,7 +541,7 @@ function abrirDetalleLibroAutor(idLibro) {
         : ''}
       <p style="font-family:var(--fuente-titulo); font-size:20px; font-weight:700; color:var(--bordo-oscuro); font-style:italic; margin-bottom:4px;">${_esc(libro.titulo || '')}</p>
       ${_aliasAutorPerfilActual ? `<p style="font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--gris-suave); margin-bottom:8px;">por ${_esc(_aliasAutorPerfilActual)}</p>` : ''}
-      ${libro.genero ? `<span class="slide-genero">${_esc(libro.genero)}</span>` : ''}
+      ${_etiquetaGeneroLibro(libro) ? `<span class="slide-genero">${_esc(_etiquetaGeneroLibro(libro))}</span>` : ''}
     </div>
     ${libro.sinopsisBreve ? `<p style="font-size:14px; color:var(--gris-texto); line-height:1.6; margin-bottom:16px;">${_esc(libro.sinopsisBreve)}</p>` : ''}
     ${tropesArr.length > 0 ? `<div class="campana-tropes">${tropesArr.map(t => `<span class="campana-trope">${_esc(t)}</span>`).join('')}</div>` : ''}

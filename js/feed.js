@@ -37,6 +37,7 @@ async function cargarFeed() {
   toggleElemento('feed-ticker', false);
   cargarBannerPublicitario();
   cargarTickerEvento();
+  poblarFiltroGenero();
 
   const { data: campanas, error } = await supabaseClient
     .from('campanas')
@@ -120,6 +121,8 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo) {
     if (!error) coincidenciaTropes = data;
   }
 
+  const etiquetaGenero = await obtenerEtiquetaGenero(c.id_genero, c.id_subgenero);
+
  return {
     id: c.id,
     idAutor: c.id_usuario_autor,
@@ -128,7 +131,9 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo) {
     sinopsis: c.sinopsis,
    tropes: c.tropes,
     tropesCatalogo: tropesCatalogo || [],
-    genero: c.genero,
+    genero: etiquetaGenero || c.genero, // fallback al texto viejo si la campaña no está migrada
+    idGenero: c.id_genero,
+    idSubgenero: c.id_subgenero,
     linkPortada: c.link_portada,
     portadaValida: !!c.link_portada,
     linkAmazon: c.link_amazon_libro,
@@ -185,7 +190,7 @@ function renderizarFeed(campañas) {
 
 function filtrarFeed() {
   const textoBuscar = (document.getElementById('filtro-buscar')?.value || '').toLowerCase().trim();
-  const generoFiltro = (document.getElementById('filtro-genero')?.value || '').toLowerCase().trim();
+  const idGeneroFiltro = document.getElementById('filtro-genero')?.value || '';
 
   let campañasFiltradas = _campañasTodas;
 
@@ -196,13 +201,35 @@ function filtrarFeed() {
     );
   }
 
-  if (generoFiltro) {
+  if (idGeneroFiltro) {
     campañasFiltradas = campañasFiltradas.filter(c =>
-      c.genero && c.genero.toLowerCase().includes(generoFiltro)
+      c.idGenero === parseInt(idGeneroFiltro, 10)
     );
   }
 
   renderizarFeed(campañasFiltradas);
+}
+
+/**
+ * Llena el <select> de filtro de género con el catálogo real de generos
+ * (antes tenía una lista vieja hardcodeada que no coincidía con la tabla `generos`).
+ */
+async function poblarFiltroGenero() {
+  const select = document.getElementById('filtro-genero');
+  if (!select) return;
+
+  const { data, error } = await supabaseClient
+    .from('generos')
+    .select('id, nombre')
+    .eq('activo', true)
+    .order('orden');
+
+  if (error) { console.error('Error cargando generos para el filtro:', error); return; }
+
+  select.innerHTML = `
+    <option value="">Todos los géneros</option>
+    ${(data || []).map(g => `<option value="${g.id}">${g.nombre}</option>`).join('')}
+  `;
 }
 
 

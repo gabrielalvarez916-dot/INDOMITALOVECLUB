@@ -298,8 +298,70 @@ function renderizarChipsTropes(prefijo) {
 
 
 // ────────────────────────────────────────────────────────────
-// OBTENER VALOR FINAL
+// ETIQUETA DE GÉNERO / SUBGÉNERO (para mostrar en cards, feed, perfil, etc.)
 // ────────────────────────────────────────────────────────────
+
+let _cacheGenerosPromise = null;
+let _cacheSubgenerosPromise = null;
+
+/**
+ * Trae y cachea en memoria TODOS los géneros del catálogo (son pocos).
+ * Se reutiliza durante toda la sesión de la página.
+ */
+function _obtenerCacheGeneros() {
+  if (!_cacheGenerosPromise) {
+    _cacheGenerosPromise = supabaseClient
+      .from('generos')
+      .select('id, nombre')
+      .then(({ data, error }) => {
+        if (error) { console.error('Error cargando cache de generos:', error); return []; }
+        return data || [];
+      });
+  }
+  return _cacheGenerosPromise;
+}
+
+/**
+ * Trae y cachea en memoria TODOS los subgéneros del catálogo (son pocos).
+ */
+function _obtenerCacheSubgeneros() {
+  if (!_cacheSubgenerosPromise) {
+    _cacheSubgenerosPromise = supabaseClient
+      .from('subgeneros')
+      .select('id, nombre')
+      .then(({ data, error }) => {
+        if (error) { console.error('Error cargando cache de subgeneros:', error); return []; }
+        return data || [];
+      });
+  }
+  return _cacheSubgenerosPromise;
+}
+
+/**
+ * Devuelve la etiqueta de género/subgénero lista para mostrar
+ * (ej: "Romance · Dark Romance" o solo "Fantasía" si el género no tiene subgénero).
+ * Devuelve null si no hay id_genero (para que quien la use pueda hacer fallback
+ * al texto viejo en libros/campañas no migrados).
+ *
+ * @param {number|null} idGenero
+ * @param {number|null} idSubgenero
+ * @returns {Promise<string|null>}
+ */
+async function obtenerEtiquetaGenero(idGenero, idSubgenero) {
+  if (!idGenero) return null;
+
+  const generos = await _obtenerCacheGeneros();
+  const genero = generos.find(g => g.id === idGenero);
+  if (!genero) return null;
+
+  if (!idSubgenero) return genero.nombre;
+
+  const subgeneros = await _obtenerCacheSubgeneros();
+  const subgenero = subgeneros.find(s => s.id === idSubgenero);
+  return subgenero ? `${genero.nombre} · ${subgenero.nombre}` : genero.nombre;
+}
+
+
 
 /**
  * Devuelve { id_genero, id_subgenero, idsTropes } para guardar:

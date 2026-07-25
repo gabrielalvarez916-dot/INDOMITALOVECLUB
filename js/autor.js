@@ -1278,19 +1278,19 @@ async function cargarBibliotecaPanel(idUsuario) {
     });
   }
 
-  _librosAutor = (data || []).map(l => ({
+  _librosAutor = await Promise.all((data || []).map(async l => ({
     id: l.id,
     titulo: l.titulo,
     sinopsisBreve: l.sinopsis_breve,
     sinopsis: l.sinopsis_breve,
-    genero: l.genero,
+    genero: (await obtenerEtiquetaGenero(l.id_genero, l.id_subgenero)) || l.genero, // fallback al texto viejo si no está migrado
     idGenero: l.id_genero,
     idSubgenero: l.id_subgenero,
     tropes: l.tropes,
     tropesCatalogo: tropesPorLibro[l.id] || [],
     linkPortada: l.link_portada,
     linkAmazon: l.link_amazon
-  }));
+  })));
 
   const contenedor = document.getElementById('biblioteca-lista');
   if (contenedor) renderizarBiblioteca(_librosAutor);
