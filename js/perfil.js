@@ -106,16 +106,10 @@ async function cargarFormularioEdicionPerfil() {
   if (rol === 'reseñador') {
     const { data: tropesRows } = await supabaseClient
       .from('usuario_tropes')
-      .select('tropes ( id, nombre )')
+      .select('tropes ( id, nombre, id_genero )')
       .eq('id_usuario', usuario.id);
 
     const tropesCatalogo = (tropesRows || []).map(row => row.tropes).filter(Boolean);
-
-    await renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', {
-      id_genero: perfil.idGenero,
-      id_subgenero: perfil.idSubgenero,
-      tropes: tropesCatalogo
-    });
 
     const [{ data: generosRows }, { data: subgenerosRows }] = await Promise.all([
       supabaseClient.from('usuario_generos').select('id_genero').eq('id_usuario', usuario.id),
@@ -126,6 +120,8 @@ async function cargarFormularioEdicionPerfil() {
       (generosRows || []).map(r => r.id_genero),
       (subgenerosRows || []).map(r => r.id_subgenero)
     );
+
+    renderizarBuscadorTropesFavoritos(tropesCatalogo);
   }
 
   if (rol === 'autor' || rol === 'editorial') {
@@ -259,6 +255,9 @@ async function onToggleGeneroPerfil(checkbox) {
     const subs = await _cargarSubgeneros(idGenero);
     const idsSubsDeEsteGenero = subs.map(s => s.id);
     _subgenerosSeleccionadosPerfil = _subgenerosSeleccionadosPerfil.filter(id => !idsSubsDeEsteGenero.includes(id));
+    // al destildar un género, se descartan los tropes favoritos que pertenecían a ese género
+    _tropesFavoritosPerfil = _tropesFavoritosPerfil.filter(t => t.id_genero !== idGenero);
+    renderizarChipsTropesFavoritos();
   }
   await renderizarSubgenerosCheckboxPerfil();
 }
@@ -315,6 +314,106 @@ function obtenerSeleccionGenerosPerfil() {
 
 
 // ────────────────────────────────────────────────────────────
+// TROPES FAVORITOS (reseñador) — buscador sin desplegable de género,
+// busca en todos los géneros ya tildados arriba.
+// ────────────────────────────────────────────────────────────
+
+let _tropesFavoritosPerfil = []; // [{id, nombre, id_genero}]
+let _debounceBusquedaTropesFavoritos;
+
+function renderizarBuscadorTropesFavoritos(tropesIniciales = []) {
+  _tropesFavoritosPerfil = [...tropesIniciales];
+  const contenedor = document.getElementById('perfil-tropes-contenedor');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = `
+    <div class="tropes-buscador-wrapper">
+      <input
+        type="text"
+        id="perfil-buscador-tropes-favoritos"
+        class="form-input"
+        placeholder="Buscá un trope..."
+        autocomplete="off"
+        oninput="onBuscarTropesFavoritos()"
+        onfocus="onBuscarTropesFavoritos()"
+      />
+      <div class="tropes-dropdown" id="perfil-dropdown-tropes-favoritos" style="display:none;"></div>
+    </div>
+    <div class="tropes-seleccionados-preview" id="perfil-tropes-favoritos-preview"></div>
+  `;
+  renderizarChipsTropesFavoritos();
+}
+
+async function onBuscarTropesFavoritos() {
+  clearTimeout(_debounceBusquedaTropesFavoritos);
+  _debounceBusquedaTropesFavoritos = setTimeout(async () => {
+    const input = document.getElementById('perfil-buscador-tropes-favoritos');
+    const dropdown = document.getElementById('perfil-dropdown-tropes-favoritos');
+    if (!input || !dropdown) return;
+
+    if (_generosSeleccionadosPerfil.length === 0) {
+      dropdown.innerHTML = `<div class="tropes-dropdown-vacio">Elegí al menos un género favorito para buscar tropes.</div>`;
+      dropdown.style.display = 'block';
+      return;
+    }
+
+    const resultados = await _buscarTropesPorGeneros(_generosSeleccionadosPerfil, input.value);
+    const idsYaSeleccionados = _tropesFavoritosPerfil.map(t => t.id);
+    const disponibles = resultados.filter(t => !idsYaSeleccionados.includes(t.id));
+
+    dropdown.innerHTML = disponibles.length === 0
+      ? `<div class="tropes-dropdown-vacio">Sin resultados</div>`
+      : disponibles.map(t => `
+          <div class="tropes-dropdown-item" onclick="seleccionarTropeFavorito(${t.id}, '${t.nombre.replace(/'/g, "\\'")}', ${t.id_genero})">
+            ${t.nombre}
+          </div>
+        `).join('');
+    dropdown.style.display = 'block';
+  }, 250);
+}
+
+function seleccionarTropeFavorito(id, nombre, idGenero) {
+  if (!_tropesFavoritosPerfil.some(t => t.id === id)) {
+    _tropesFavoritosPerfil.push({ id, nombre, id_genero: idGenero });
+  }
+  document.getElementById('perfil-buscador-tropes-favoritos').value = '';
+  document.getElementById('perfil-dropdown-tropes-favoritos').style.display = 'none';
+  renderizarChipsTropesFavoritos();
+}
+
+function quitarTropeFavorito(id) {
+  _tropesFavoritosPerfil = _tropesFavoritosPerfil.filter(t => t.id !== id);
+  renderizarChipsTropesFavoritos();
+}
+
+function renderizarChipsTropesFavoritos() {
+  const preview = document.getElementById('perfil-tropes-favoritos-preview');
+  if (!preview) return;
+
+  if (_tropesFavoritosPerfil.length === 0) {
+    preview.innerHTML = `<p class="tropes-preview-vacio">Ningún trope seleccionado todavía.</p>`;
+    return;
+  }
+
+  preview.innerHTML = `
+    <p class="tropes-preview-label">Seleccionados:</p>
+    <div class="tropes-tags">
+      ${_tropesFavoritosPerfil.map(t => `
+        <span class="tropes-tag">
+          ${t.nombre}
+          <button type="button" class="tropes-tag-quitar" onclick="quitarTropeFavorito(${t.id})">×</button>
+        </span>
+      `).join('')}
+    </div>
+  `;
+}
+
+function obtenerTropesFavoritosPerfil() {
+  return _tropesFavoritosPerfil.map(t => t.id);
+}
+
+
+// ────────────────────────────────────────────────────────────
 // GUARDAR PERFIL
 // ────────────────────────────────────────────────────────────
 
@@ -342,12 +441,12 @@ async function guardarPerfil(event) {
     amazon:   document.getElementById('perfil-amazon')?.value?.trim(),
   };
 
- let seleccionTropesPerfil = null;
+ let idsTropesFavoritosPerfil = null;
   let seleccionGenerosPerfil = null;
   if (rol === 'reseñador') {
     datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
     datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
-    seleccionTropesPerfil    = obtenerSeleccionTropes('perfil');
+    idsTropesFavoritosPerfil = obtenerTropesFavoritosPerfil();
     seleccionGenerosPerfil   = obtenerSeleccionGenerosPerfil();
   }
   
@@ -381,13 +480,13 @@ async function guardarPerfil(event) {
     return;
   }
 
-  if (rol === 'reseñador' && seleccionTropesPerfil) {
+  if (rol === 'reseñador' && idsTropesFavoritosPerfil) {
     await supabaseClient.from('usuario_tropes').delete().eq('id_usuario', usuario.id);
 
-    if (seleccionTropesPerfil.idsTropes.length > 0) {
+    if (idsTropesFavoritosPerfil.length > 0) {
       const { error: errorTropesPerfil } = await supabaseClient
         .from('usuario_tropes')
-        .insert(seleccionTropesPerfil.idsTropes.map(idTrope => ({
+        .insert(idsTropesFavoritosPerfil.map(idTrope => ({
           id_usuario: usuario.id,
           id_trope: idTrope
         })));

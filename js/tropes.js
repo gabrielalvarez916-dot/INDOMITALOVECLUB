@@ -53,6 +53,28 @@ async function _buscarTropes(idGenero, textoBusqueda) {
   return data;
 }
 
+/**
+ * Busca tropes en varios géneros a la vez (usado en el perfil del reseñador,
+ * donde puede tener más de un género favorito).
+ */
+async function _buscarTropesPorGeneros(idsGenero, textoBusqueda) {
+  if (!idsGenero || idsGenero.length === 0) return [];
+
+  let query = supabaseClient
+    .from('tropes')
+    .select('id, nombre, id_genero')
+    .in('id_genero', idsGenero)
+    .eq('activo', true);
+
+  if (textoBusqueda && textoBusqueda.trim()) {
+    query = query.ilike('nombre', `%${textoBusqueda.trim()}%`);
+  }
+
+  const { data, error } = await query.order('orden').limit(20);
+  if (error) { console.error('Error buscando tropes:', error); return []; }
+  return data;
+}
+
 
 // ────────────────────────────────────────────────────────────
 // RENDERIZAR SELECTOR DE TROPES
