@@ -43,19 +43,6 @@ function _mesActual() {
  * @param {string} tropesUsuario  — texto de tropes favoritos del usuario (u.tropes_favoritos)
  * @returns {number|null} porcentaje 0-100, o null si falta algún dato
  */
-function _coincidenciaTropes(tropesCampana, tropesUsuario) {
-  if (!tropesCampana || !tropesUsuario) return null;
-
-  const arrCampana  = tropesTextoAArray(tropesCampana);
-  const arrUsuario  = tropesTextoAArray(tropesUsuario);
-
-  if (arrCampana.length === 0 || arrUsuario.length === 0) return null;
-
-  const setUsuario = new Set(arrUsuario.map(t => t.toLowerCase().trim()));
-  const coincidencias = arrCampana.filter(t => setUsuario.has(t.toLowerCase().trim())).length;
-
-  return Math.round((coincidencias / arrCampana.length) * 100);
-}
 
 function _labelLiga(codigo) {
   switch (codigo) {
