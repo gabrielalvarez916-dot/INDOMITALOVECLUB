@@ -95,16 +95,27 @@ async function cargarFormularioEdicionPerfil() {
     instagram: perfilRaw.instagram,
     tiktok: perfilRaw.tiktok,
     amazon: perfilRaw.amazon,
-    tropesFavoritos: perfilRaw.tropes_favoritos,
+    idGenero: perfilRaw.id_genero,
+    idSubgenero: perfilRaw.id_subgenero,
     sitioWeb: perfilRaw.sitio_web,
     fotoPerfil: perfilRaw.avatares?.imagen_url
   };
 
   rellenarFormularioPerfil(perfil);
 
-  if (rol === 'reseñador' && perfil.tropesFavoritos) {
-    const tropesArray = tropesTextoAArray(perfil.tropesFavoritos);
-    renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', tropesArray);
+  if (rol === 'reseñador') {
+    const { data: tropesRows } = await supabaseClient
+      .from('usuario_tropes')
+      .select('tropes ( id, nombre )')
+      .eq('id_usuario', usuario.id);
+
+    const tropesCatalogo = (tropesRows || []).map(row => row.tropes).filter(Boolean);
+
+    await renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', {
+      id_genero: perfil.idGenero,
+      id_subgenero: perfil.idSubgenero,
+      tropes: tropesCatalogo
+    });
   }
 
   if (rol === 'autor' || rol === 'editorial') {
@@ -162,10 +173,7 @@ function ajustarFormularioPorRol(rol) {
       : 'Romance, Dark Romance, Fantasía...';
   }
 
-  if (esReseñador) {
-    renderizarSelectorTropes('perfil-tropes-contenedor', 'perfil', []);
-  }
-  }
+   }
 
 
 
@@ -230,12 +238,13 @@ async function guardarPerfil(event) {
     amazon:   document.getElementById('perfil-amazon')?.value?.trim(),
   };
 
+ let seleccionTropesPerfil = null;
   if (rol === 'reseñador') {
     datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
     datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
-    datos.tropesFavoritos   = obtenerTropesComoTexto('perfil');
+    seleccionTropesPerfil    = obtenerSeleccionTropes('perfil');
   }
-
+  
   if (rol === 'editorial') {
     datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
     datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
@@ -257,7 +266,8 @@ async function guardarPerfil(event) {
       amazon: datos.amazon,
       generos: datos.generos,
       descripcion_lector: datos.descripcionLector,
-      tropes_favoritos: datos.tropesFavoritos,
+      id_genero: seleccionTropesPerfil ? seleccionTropesPerfil.id_genero : undefined,
+      id_subgenero: seleccionTropesPerfil ? seleccionTropesPerfil.id_subgenero : undefined,
       sitio_web: datos.sitioWeb
     })
     .eq('id', usuario.id);
@@ -265,6 +275,23 @@ async function guardarPerfil(event) {
   if (error) {
     mostrarMensajeError('perfil-error', error.message || 'Error al guardar el perfil.');
     return;
+  }
+
+  if (rol === 'reseñador' && seleccionTropesPerfil) {
+    await supabaseClient.from('usuario_tropes').delete().eq('id_usuario', usuario.id);
+
+    if (seleccionTropesPerfil.idsTropes.length > 0) {
+      const { error: errorTropesPerfil } = await supabaseClient
+        .from('usuario_tropes')
+        .insert(seleccionTropesPerfil.idsTropes.map(idTrope => ({
+          id_usuario: usuario.id,
+          id_trope: idTrope
+        })));
+
+      if (errorTropesPerfil) {
+        console.error('Error guardando tropes del perfil:', errorTropesPerfil);
+      }
+    }
   }
 
   Sesion.guardar({ ...usuario, ...datos });
