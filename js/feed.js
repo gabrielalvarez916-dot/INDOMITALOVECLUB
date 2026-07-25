@@ -79,10 +79,21 @@ async function cargarFeed() {
     (archivos || []).forEach(a => { archivosPorCampana[a.id_campana] = a; });
   }
 
-  _campañasTodas = await Promise.all(
-    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id]))
-  );
+  let tropesPorCampana = {};
+  if (idsCampanas.length > 0) {
+    const { data: tropesRows } = await supabaseClient
+      .from('campana_tropes')
+      .select('id_campana, tropes ( nombre )')
+      .in('id_campana', idsCampanas);
+    (tropesRows || []).forEach(row => {
+      if (!tropesPorCampana[row.id_campana]) tropesPorCampana[row.id_campana] = [];
+      if (row.tropes) tropesPorCampana[row.id_campana].push(row.tropes.nombre);
+    });
+  }
 
+  _campañasTodas = await Promise.all(
+    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id], tropesPorCampana[c.id]))
+  );
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
     return;
@@ -94,7 +105,7 @@ async function cargarFeed() {
   Slider.init();
 }
 
-async function normalizarCampana(c, ranking, archivo) {
+async function normalizarCampana(c, ranking, archivo, tropesCatalogo) {
   const usuario = Sesion.obtener();
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
@@ -115,7 +126,8 @@ async function normalizarCampana(c, ranking, archivo) {
     nombreLibro: c.nombre_libro,
     nombreAutor: c.nombre_autor,
     sinopsis: c.sinopsis,
-    tropes: c.tropes,
+   tropes: c.tropes,
+    tropesCatalogo: tropesCatalogo || [],
     genero: c.genero,
     linkPortada: c.link_portada,
     portadaValida: !!c.link_portada,
@@ -205,11 +217,13 @@ function construirCardCampaña(c) {
   ? `<img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>`
   : `<div class="campana-portada-lista-placeholder">📖</div>`;
 
-  const tropesHtml = c.tropes
-    ? c.tropes.split(',').slice(0, 3).map(t =>
-        `<span class="campana-trope">${t.trim()}</span>`
-      ).join('')
-    : '';
+ const listaTropes = (c.tropesCatalogo && c.tropesCatalogo.length > 0)
+    ? c.tropesCatalogo
+    : tropesTextoAArray(c.tropes); // fallback para campañas viejas sin catálogo
+
+  const tropesHtml = listaTropes.slice(0, 3).map(t =>
+    `<span class="campana-trope">${t}</span>`
+  ).join('');
 
 const iconoPlataforma = { Amazon: '🛒', TikTok: '🎵', Instagram: '📸', Goodreads: '📚' };
 const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
@@ -319,7 +333,14 @@ async function verDetalleCampaña(idCampaña) {
     .eq('id_campana', idCampaña)
     .maybeSingle();
 
-  const c = await normalizarCampana(campanaRaw, undefined, archivoRaw);
+  const { data: tropesRaw } = await supabaseClient
+    .from('campana_tropes')
+    .select('tropes ( nombre )')
+    .eq('id_campana', idCampaña);
+
+  const tropesCatalogoDetalle = (tropesRaw || []).map(t => t.tropes?.nombre).filter(Boolean);
+
+  const c = await normalizarCampana(campanaRaw, undefined, archivoRaw, tropesCatalogoDetalle);
   if (titulo) titulo.textContent = c.nombreLibro;
 
   const portadaHtml = c.linkPortada
@@ -336,7 +357,9 @@ async function verDetalleCampaña(idCampaña) {
       <p style="font-size:13px; color:var(--gris-suave); margin-bottom:4px;">por ${c.nombreAutor}</p>
       ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
       <p style="margin:16px 0; font-size:14px; line-height:1.6;">${c.sinopsis}</p>
-     ${c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : ''}
+    ${(c.tropesCatalogo && c.tropesCatalogo.length > 0)
+        ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropesCatalogo.join(', ')}</p>`
+        : (c.tropes ? `<p style="font-size:13px; color:var(--gris-suave);"><strong>Tropes:</strong> ${c.tropes}</p>` : '')}
 ${c.plataformasReseña && c.plataformasReseña.length > 0
   ? `<p style="font-size:13px; margin-top:8px;">
        📋 <strong>Requisitos:</strong> Contar con cuenta activa en ${c.plataformasReseña.join(' y ')}
@@ -554,11 +577,13 @@ const Slider = (() => {
        <div class="slide-libro-sombra"></div>
      </div>`;
 
-    const tropesHtml = c.tropes
-      ? c.tropes.split(',').slice(0, 4).map(t =>
-          `<span class="slide-trope">${t.trim()}</span>`
-        ).join('')
-      : '';
+   const listaTropesSlide = (c.tropesCatalogo && c.tropesCatalogo.length > 0)
+      ? c.tropesCatalogo
+      : tropesTextoAArray(c.tropes);
+
+    const tropesHtml = listaTropesSlide.slice(0, 4).map(t =>
+      `<span class="slide-trope">${t}</span>`
+    ).join('');
 
    let botonHtml = '';
     if (!c.tieneArchivo) {
