@@ -503,9 +503,28 @@ async function verificarModalActualizacion() {
 }
 
 // A dónde navega cada código de destino guardado en el modal.
-const DESTINOS_BOTON_MODAL = {
+// Separado por grupo porque "Biblioteca" y "Ranking" son secciones distintas
+// según el rol (ej: biblioteca-autor vs biblioteca-resenador).
+const DESTINOS_BOTON_MODAL_AUTOR_EDITORIAL = {
   panel: () => { if (typeof mostrarPanelRol === 'function') mostrarPanelRol(); },
-  perfil: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('perfil'); }
+  feed: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('feed'); },
+  biblioteca: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('biblioteca-autor'); },
+  ranking: () => {
+    if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
+    setTimeout(() => document.getElementById('tabbtn-ranking-libros')?.click(), 50);
+  },
+  evento: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('evento'); }
+};
+
+const DESTINOS_BOTON_MODAL_RESENADOR = {
+  perfil: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('perfil'); },
+  feed: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('feed'); },
+  biblioteca: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('biblioteca-resenador'); },
+  ranking: () => {
+    if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
+    setTimeout(() => document.getElementById('tabbtn-ranking-resenador')?.click(), 50);
+  },
+  evento: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('evento'); }
 };
 
 function mostrarModalActualizaciones(modal) {
@@ -530,14 +549,15 @@ function mostrarModalActualizaciones(modal) {
   const usuario = Sesion.obtener();
   const rolADestino = { 'reseñador': modal.boton_destino_resenador, 'autor': modal.boton_destino_autor_editorial, 'editorial': modal.boton_destino_autor_editorial };
   const destino = usuario ? rolADestino[usuario.rol] : null;
+  const mapaDestinos = usuario?.rol === 'reseñador' ? DESTINOS_BOTON_MODAL_RESENADOR : DESTINOS_BOTON_MODAL_AUTOR_EDITORIAL;
 
   if (btnAccion) {
-    if (modal.boton_texto && destino && DESTINOS_BOTON_MODAL[destino]) {
+    if (modal.boton_texto && destino && mapaDestinos[destino]) {
       btnAccion.textContent = modal.boton_texto;
       btnAccion.style.display = '';
       btnAccion.onclick = () => {
         registrarModalVisto(modal.id);
-        DESTINOS_BOTON_MODAL[destino]();
+        mapaDestinos[destino]();
       };
     } else {
       btnAccion.style.display = 'none';

@@ -1103,6 +1103,10 @@ async function cargarModalesAdmin() {
           <select id="modal-act-destino-autor" class="form-input">
             <option value="">Sin botón para este grupo</option>
             <option value="panel">Ir a Campañas activas</option>
+            <option value="feed">Ir a Feed</option>
+            <option value="biblioteca">Ir a Biblioteca</option>
+            <option value="ranking">Ir a Ranking de libros</option>
+            <option value="evento">Ir a Evento</option>
           </select>
         </div>
         <div class="form-grupo">
@@ -1110,6 +1114,10 @@ async function cargarModalesAdmin() {
           <select id="modal-act-destino-resenador" class="form-input">
             <option value="">Sin botón para este grupo</option>
             <option value="perfil">Ir a Editar perfil</option>
+            <option value="feed">Ir a Feed</option>
+            <option value="biblioteca">Ir a Biblioteca</option>
+            <option value="ranking">Ir a Ranking</option>
+            <option value="evento">Ir a Evento</option>
           </select>
         </div>
         <div id="modal-act-error" class="mensaje-error" style="display:none;"></div>
