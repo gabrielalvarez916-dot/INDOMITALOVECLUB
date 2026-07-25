@@ -366,7 +366,7 @@ function _pintarPerfilEditorial(perfil, libros, campañas, gamif, sufijo = '') {
  */
 function _etiquetaGeneroLibro(libro) {
   if (libro.nombreGenero) {
-    return libro.nombreSubgenero ? `${libro.nombreGenero} · ${libro.nombreSubgenero}` : libro.nombreGenero;
+    return libro.nombresSubgeneros ? `${libro.nombreGenero} · ${libro.nombresSubgeneros}` : libro.nombreGenero;
   }
   return libro.genero || null;
 }
@@ -500,7 +500,9 @@ async function abrirEditarLibroPropio(idLibro) {
 
   await renderizarSelectorTropes('el-tropes-contenedor', 'el', {
     id_genero: libro.idGenero,
-    id_subgenero: libro.idSubgenero,
+    ids_subgenero: libro.idsSubgeneros && libro.idsSubgeneros.length > 0
+      ? libro.idsSubgeneros
+      : (libro.idSubgenero ? [libro.idSubgenero] : []),
     tropes: libro.tropesCatalogo || []
   });
 }

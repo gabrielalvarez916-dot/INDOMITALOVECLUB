@@ -92,8 +92,20 @@ async function cargarFeed() {
     });
   }
 
+  let subgenerosPorCampana = {};
+  if (idsCampanas.length > 0) {
+    const { data: subgenerosRows } = await supabaseClient
+      .from('campana_subgeneros')
+      .select('id_campana, id_subgenero')
+      .in('id_campana', idsCampanas);
+    (subgenerosRows || []).forEach(row => {
+      if (!subgenerosPorCampana[row.id_campana]) subgenerosPorCampana[row.id_campana] = [];
+      subgenerosPorCampana[row.id_campana].push(row.id_subgenero);
+    });
+  }
+
   _campañasTodas = await Promise.all(
-    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id], tropesPorCampana[c.id]))
+    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id]))
   );
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
@@ -106,7 +118,7 @@ async function cargarFeed() {
   Slider.init();
 }
 
-async function normalizarCampana(c, ranking, archivo, tropesCatalogo) {
+async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero) {
   const usuario = Sesion.obtener();
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
@@ -121,7 +133,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo) {
     if (!error) coincidenciaTropes = data;
   }
 
-  const etiquetaGenero = await obtenerEtiquetaGenero(c.id_genero, c.id_subgenero);
+  const etiquetaGenero = await obtenerEtiquetaGeneroMulti(c.id_genero, idsSubgenero && idsSubgenero.length > 0 ? idsSubgenero : (c.id_subgenero ? [c.id_subgenero] : []));
 
  return {
     id: c.id,
@@ -134,6 +146,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo) {
     genero: etiquetaGenero || c.genero, // fallback al texto viejo si la campaña no está migrada
     idGenero: c.id_genero,
     idSubgenero: c.id_subgenero,
+    idsSubgeneros: idsSubgenero || [],
     linkPortada: c.link_portada,
     portadaValida: !!c.link_portada,
     linkAmazon: c.link_amazon_libro,
@@ -367,7 +380,14 @@ async function verDetalleCampaña(idCampaña) {
 
   const tropesCatalogoDetalle = (tropesRaw || []).map(t => t.tropes?.nombre).filter(Boolean);
 
-  const c = await normalizarCampana(campanaRaw, undefined, archivoRaw, tropesCatalogoDetalle);
+  const { data: subgenerosRaw } = await supabaseClient
+    .from('campana_subgeneros')
+    .select('id_subgenero')
+    .eq('id_campana', idCampaña);
+
+  const idsSubgeneroDetalle = (subgenerosRaw || []).map(s => s.id_subgenero);
+
+  const c = await normalizarCampana(campanaRaw, undefined, archivoRaw, tropesCatalogoDetalle, idsSubgeneroDetalle);
   if (titulo) titulo.textContent = c.nombreLibro;
 
   const portadaHtml = c.linkPortada

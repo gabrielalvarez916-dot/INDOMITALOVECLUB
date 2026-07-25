@@ -388,6 +388,34 @@ async function obtenerEtiquetaGenero(idGenero, idSubgenero) {
 
 
 /**
+ * Igual que obtenerEtiquetaGenero, pero acepta varios subgéneros y los muestra todos
+ * (ej: "Distopía · Postapocalíptico, Rebelión / Resistencia").
+ * Si idsSubgenero está vacío o es null, se comporta igual que la etiqueta simple.
+ *
+ * @param {number|null} idGenero
+ * @param {number[]|null} idsSubgenero
+ * @returns {Promise<string|null>}
+ */
+async function obtenerEtiquetaGeneroMulti(idGenero, idsSubgenero) {
+  if (!idGenero) return null;
+
+  const generos = await _obtenerCacheGeneros();
+  const genero = generos.find(g => g.id === idGenero);
+  if (!genero) return null;
+
+  if (!idsSubgenero || idsSubgenero.length === 0) return genero.nombre;
+
+  const subgeneros = await _obtenerCacheSubgeneros();
+  const nombres = idsSubgenero
+    .map(id => subgeneros.find(s => s.id === id)?.nombre)
+    .filter(Boolean);
+
+  return nombres.length > 0 ? `${genero.nombre} · ${nombres.join(', ')}` : genero.nombre;
+}
+
+
+
+/**
  * Devuelve { id_genero, id_subgenero, idsSubgeneros, idsTropes } para guardar:
  * - id_genero / id_subgenero (primer subgénero elegido) van directo en la fila de libros/campanas,
  *   por compatibilidad con el resto del sistema (feed, perfil público, ranking) que todavía lee esa columna singular.
