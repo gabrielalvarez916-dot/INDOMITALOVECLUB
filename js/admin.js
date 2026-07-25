@@ -1084,6 +1084,34 @@ async function cargarModalesAdmin() {
           <label class="form-label">Imagen decorativa (opcional)</label>
           <input type="url" id="modal-act-imagen" class="form-input" placeholder="https://..." />
         </div>
+        <div class="form-grupo">
+          <label class="form-label">¿A quién se le muestra? *</label>
+          <select id="modal-act-alcance" class="form-input">
+            <option value="todos">Todos los usuarios</option>
+            <option value="existentes">Solo usuarios existentes (cualquier rol, no aplica a los que se registren después)</option>
+            <option value="resenador">Solo reseñadores</option>
+            <option value="autor">Solo autores</option>
+            <option value="editorial">Solo editorial</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Texto del botón de acción (opcional, además de "Entendido")</label>
+          <input type="text" id="modal-act-boton-texto" class="form-input" placeholder="Ej: Revisar ahora" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Destino del botón para autor/editorial</label>
+          <select id="modal-act-destino-autor" class="form-input">
+            <option value="">Sin botón para este grupo</option>
+            <option value="panel">Ir a Campañas activas</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Destino del botón para reseñador</label>
+          <select id="modal-act-destino-resenador" class="form-input">
+            <option value="">Sin botón para este grupo</option>
+            <option value="perfil">Ir a Editar perfil</option>
+          </select>
+        </div>
         <div id="modal-act-error" class="mensaje-error" style="display:none;"></div>
         <button type="submit" class="btn-primario">Crear modal</button>
       </form>
@@ -1113,7 +1141,8 @@ async function cargarModalesAdmin() {
         <tr>
           <th>Título</th>
           <th>Texto</th>
-          <th>Imagen</th>
+          <th>Alcance</th>
+          <th>Botón</th>
           <th>Estado</th>
           <th>Creado</th>
           <th>Acciones</th>
@@ -1126,6 +1155,14 @@ async function cargarModalesAdmin() {
   `;
 }
 
+const ETIQUETAS_ALCANCE_MODAL = {
+  todos: 'Todos',
+  existentes: 'Solo existentes',
+  resenador: 'Solo reseñadores',
+  autor: 'Solo autores',
+  editorial: 'Solo editorial'
+};
+
 function construirFilaModalActualizacionAdmin(m) {
   const estadoBadge = m.activo
     ? '<span class="badge badge-aprobada">Activo</span>'
@@ -1137,11 +1174,16 @@ function construirFilaModalActualizacionAdmin(m) {
     ? `<button class="btn-secundario btn-sm" onclick="desactivarModalActualizacionAdmin('${m.id}')">Desactivar</button>`
     : `<button class="btn-primario btn-sm" onclick="activarModalActualizacionAdmin('${m.id}')">Activar</button>`;
 
+  const descripcionBoton = m.boton_texto
+    ? `${escaparHtmlModalAdmin(m.boton_texto)}${m.boton_destino_autor_editorial ? ' · autor/editorial → ' + m.boton_destino_autor_editorial : ''}${m.boton_destino_resenador ? ' · reseñador → ' + m.boton_destino_resenador : ''}`
+    : '—';
+
   return `
     <tr>
       <td style="font-weight:700;">${escaparHtmlModalAdmin(m.titulo)}</td>
-      <td style="max-width:260px; font-size:12px;">${escaparHtmlModalAdmin(textoCorto)}</td>
-      <td>${m.imagen_url ? `<img src="${m.imagen_url}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:6px;" />` : '—'}</td>
+      <td style="max-width:220px; font-size:12px;">${escaparHtmlModalAdmin(textoCorto)}</td>
+      <td style="font-size:12px;">${ETIQUETAS_ALCANCE_MODAL[m.alcance] || m.alcance}</td>
+      <td style="font-size:12px;">${descripcionBoton}</td>
       <td>${estadoBadge}</td>
       <td style="font-size:12px;">${m.creado_en ? String(m.creado_en).split('T')[0] : '—'}</td>
       <td style="display:flex; gap:6px;">
@@ -1164,6 +1206,10 @@ async function crearModalActualizacionAdmin(event) {
   const titulo = document.getElementById('modal-act-titulo')?.value.trim();
   const texto = document.getElementById('modal-act-texto')?.value.trim();
   const imagenUrl = document.getElementById('modal-act-imagen')?.value.trim() || null;
+  const alcance = document.getElementById('modal-act-alcance')?.value || 'todos';
+  const botonTexto = document.getElementById('modal-act-boton-texto')?.value.trim() || null;
+  const destinoAutor = document.getElementById('modal-act-destino-autor')?.value || null;
+  const destinoResenador = document.getElementById('modal-act-destino-resenador')?.value || null;
   const errorEl = document.getElementById('modal-act-error');
 
   if (errorEl) errorEl.style.display = 'none';
@@ -1175,7 +1221,16 @@ async function crearModalActualizacionAdmin(event) {
 
   const { error } = await supabaseClient
     .from('modales_actualizacion')
-    .insert({ titulo, texto, imagen_url: imagenUrl, activo: false });
+    .insert({
+      titulo,
+      texto,
+      imagen_url: imagenUrl,
+      activo: false,
+      alcance,
+      boton_texto: botonTexto,
+      boton_destino_autor_editorial: destinoAutor,
+      boton_destino_resenador: destinoResenador
+    });
 
   if (error) {
     if (errorEl) { errorEl.textContent = error.message; errorEl.style.display = 'block'; }

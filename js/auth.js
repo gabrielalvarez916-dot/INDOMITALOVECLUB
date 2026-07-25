@@ -476,6 +476,14 @@ async function verificarModalActualizacion() {
 
   if (error || !modal) return; // no hay ningún modal activo, no mostramos nada
 
+  // Alcance por rol: 'todos' y 'existentes' aplican a cualquier rol (a 'existentes'
+  // los usuarios nuevos ya quedan excluidos aparte, al elegir rol por primera vez).
+  // 'resenador' / 'autor' / 'editorial' solo aplican a ese rol puntual.
+  const ROL_A_ALCANCE = { 'reseñador': 'resenador', 'autor': 'autor', 'editorial': 'editorial' };
+  if (modal.alcance !== 'todos' && modal.alcance !== 'existentes') {
+    if (ROL_A_ALCANCE[usuario.rol] !== modal.alcance) return;
+  }
+
   // ¿Este usuario ya vio ESTE modal en particular? (usamos su id como "tipo")
   const { data: yaVisto, error: errorVisto } = await supabaseClient
     .from('modal_actualizaciones')
@@ -494,11 +502,18 @@ async function verificarModalActualizacion() {
   }
 }
 
+// A dónde navega cada código de destino guardado en el modal.
+const DESTINOS_BOTON_MODAL = {
+  panel: () => { if (typeof mostrarPanelRol === 'function') mostrarPanelRol(); },
+  perfil: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('perfil'); }
+};
+
 function mostrarModalActualizaciones(modal) {
   const modalEl = document.getElementById('modal-actualizaciones');
   const overlay = document.getElementById('modal-overlay');
   const contenedor = document.getElementById('modal-actualizaciones-contenido');
   const btnEntendido = document.getElementById('btn-modal-actualizaciones-entendido');
+  const btnAccion = document.getElementById('btn-modal-actualizaciones-accion');
 
   if (!modalEl || !overlay || !contenedor || !btnEntendido) return;
 
@@ -510,6 +525,24 @@ function mostrarModalActualizaciones(modal) {
   overlay.style.display = 'block';
   modalEl.style.display = 'block';
   document.body.style.overflow = 'hidden';
+
+  // Botón de acción (opcional): navega según el rol del usuario y además marca el modal como visto.
+  const usuario = Sesion.obtener();
+  const rolADestino = { 'reseñador': modal.boton_destino_resenador, 'autor': modal.boton_destino_autor_editorial, 'editorial': modal.boton_destino_autor_editorial };
+  const destino = usuario ? rolADestino[usuario.rol] : null;
+
+  if (btnAccion) {
+    if (modal.boton_texto && destino && DESTINOS_BOTON_MODAL[destino]) {
+      btnAccion.textContent = modal.boton_texto;
+      btnAccion.style.display = '';
+      btnAccion.onclick = () => {
+        registrarModalVisto(modal.id);
+        DESTINOS_BOTON_MODAL[destino]();
+      };
+    } else {
+      btnAccion.style.display = 'none';
+    }
+  }
 
   btnEntendido.onclick = () => {
     registrarModalVisto(modal.id);
