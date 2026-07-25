@@ -70,6 +70,8 @@ function _mapCampana(c) {
     sinopsis:          c.sinopsis,
     tropes:            c.tropes,
     genero:            c.genero,
+    idGenero:          c.id_genero,
+    idSubgenero:       c.id_subgenero,
     linkPortada:       c.link_portada,
     linkAmazon:        c.link_amazon_libro,
     cuposTotal:        c.cupos_total,
@@ -201,6 +203,20 @@ async function cargarCampañasAutor(idUsuario) {
 
   if (_campañasAutor.length > 0) {
     const ids = _campañasAutor.map(c => c.id);
+
+    const { data: tropesRows } = await supabaseClient
+      .from('campana_tropes')
+      .select('id_campana, tropes ( id, nombre )')
+      .in('id_campana', ids);
+
+    const tropesPorCampana = {};
+    (tropesRows || []).forEach(row => {
+      if (!tropesPorCampana[row.id_campana]) tropesPorCampana[row.id_campana] = [];
+      if (row.tropes) tropesPorCampana[row.id_campana].push({ id: row.tropes.id, nombre: row.tropes.nombre });
+    });
+    _campañasAutor.forEach(c => {
+      c.tropesCatalogo = tropesPorCampana[c.id] || [];
+    });
 
     const { data: postulacionesPend } = await supabaseClient
       .from('postulaciones')
@@ -1589,8 +1605,7 @@ async function abrirEditarCampana(idCampana) {
         <textarea id="ec-sinopsis" class="form-textarea" rows="4">${campana.sinopsis || ''}</textarea>
       </div>
       <div class="form-grupo">
-        <label class="form-label">Género</label>
-        <input type="text" id="ec-genero" class="form-input" value="${campana.genero || ''}" />
+        <div id="ec-tropes-contenedor"></div>
       </div>
       <div class="form-grupo">
         <label class="form-label">Portada</label>
@@ -1616,6 +1631,12 @@ async function abrirEditarCampana(idCampana) {
       </div>
     </form>
   `;
+
+  await renderizarSelectorTropes('ec-tropes-contenedor', 'ec', {
+    id_genero: campana.idGenero,
+    id_subgenero: campana.idSubgenero,
+    tropes: campana.tropesCatalogo || []
+  });
 }
 
 async function guardarEditarCampana(idCampana) {
@@ -1635,15 +1656,24 @@ async function guardarEditarCampana(idCampana) {
     }
   }
 
+  const seleccionTropes = obtenerSeleccionTropes('ec');
+
+  if (!seleccionTropes.id_genero) {
+    mostrarMensajeError('ec-error', 'Elegí un género para la campaña.');
+    return;
+  }
+
   const datos = {
     sinopsis: document.getElementById('ec-sinopsis')?.value?.trim(),
-    genero: document.getElementById('ec-genero')?.value?.trim()
+    idGenero: seleccionTropes.id_genero,
+    idSubgenero: seleccionTropes.id_subgenero
   };
   const archivoEpubNuevo = document.getElementById('ec-archivo-epub')?.files?.[0];
   const archivoPdfNuevo  = document.getElementById('ec-archivo-pdf')?.files?.[0];
   const cambiosCampana = {
     sinopsis: datos.sinopsis,
-    genero: datos.genero
+    id_genero: datos.idGenero,
+    id_subgenero: datos.idSubgenero
   };
   if (linkPortada) cambiosCampana.link_portada = linkPortada;
 
@@ -1655,6 +1685,29 @@ async function guardarEditarCampana(idCampana) {
   if (error) {
     mostrarMensajeError('ec-error', error.message);
     return;
+  }
+
+  // Reemplaza los tropes de la campaña: borra los anteriores y carga los elegidos ahora.
+  const { error: errorBorrarTropes } = await supabaseClient
+    .from('campana_tropes')
+    .delete()
+    .eq('id_campana', idCampana);
+
+  if (errorBorrarTropes) {
+    console.error('Error borrando tropes previos de la campaña:', errorBorrarTropes);
+  }
+
+  if (seleccionTropes.idsTropes.length > 0) {
+    const { error: errorTropes } = await supabaseClient
+      .from('campana_tropes')
+      .insert(seleccionTropes.idsTropes.map(idTrope => ({
+        id_campana: idCampana,
+        id_trope: idTrope
+      })));
+
+    if (errorTropes) {
+      console.error('Error guardando tropes de la campaña:', errorTropes);
+    }
   }
 
   // Solo sube archivos si el autor eligió uno nuevo.
@@ -1697,8 +1750,7 @@ async function abrirEditarLibro(idLibro) {
         <textarea id="el-sinopsis" class="form-textarea" rows="4">${libro.sinopsis || ''}</textarea>
       </div>
       <div class="form-grupo">
-        <label class="form-label">Género</label>
-        <input type="text" id="el-genero" class="form-input" value="${libro.genero || ''}" />
+        <div id="el-tropes-contenedor"></div>
       </div>
       <div class="form-grupo">
         <label class="form-label">Portada</label>
@@ -1714,6 +1766,12 @@ async function abrirEditarLibro(idLibro) {
       </div>
     </form>
   `;
+
+  await renderizarSelectorTropes('el-tropes-contenedor', 'el', {
+    id_genero: libro.idGenero,
+    id_subgenero: libro.idSubgenero,
+    tropes: libro.tropesCatalogo || []
+  });
 }
 
 async function guardarEditarLibro(idLibro) {
@@ -1733,14 +1791,23 @@ async function guardarEditarLibro(idLibro) {
     }
   }
 
+  const seleccionTropes = obtenerSeleccionTropes('el');
+
+  if (!seleccionTropes.id_genero) {
+    mostrarMensajeError('el-error', 'Elegí un género para el libro.');
+    return;
+  }
+
   const datos = {
     sinopsisBreve: document.getElementById('el-sinopsis')?.value?.trim(),
-    genero:        document.getElementById('el-genero')?.value?.trim()
+    idGenero: seleccionTropes.id_genero,
+    idSubgenero: seleccionTropes.id_subgenero
   };
 
   const cambiosLibro = {
     sinopsis_breve: datos.sinopsisBreve,
-    genero: datos.genero
+    id_genero: datos.idGenero,
+    id_subgenero: datos.idSubgenero
   };
   if (linkPortada) cambiosLibro.link_portada = linkPortada;
 
@@ -1752,6 +1819,29 @@ async function guardarEditarLibro(idLibro) {
   if (error) {
     mostrarMensajeError('el-error', error.message);
     return;
+  }
+
+  // Reemplaza los tropes del libro: borra los anteriores y carga los elegidos ahora.
+  const { error: errorBorrarTropes } = await supabaseClient
+    .from('libro_tropes')
+    .delete()
+    .eq('id_libro', idLibro);
+
+  if (errorBorrarTropes) {
+    console.error('Error borrando tropes previos del libro:', errorBorrarTropes);
+  }
+
+  if (seleccionTropes.idsTropes.length > 0) {
+    const { error: errorTropes } = await supabaseClient
+      .from('libro_tropes')
+      .insert(seleccionTropes.idsTropes.map(idTrope => ({
+        id_libro: idLibro,
+        id_trope: idTrope
+      })));
+
+    if (errorTropes) {
+      console.error('Error guardando tropes del libro:', errorTropes);
+    }
   }
 
   mostrarMensajeOk('el-ok', '¡Libro actualizado correctamente!');
