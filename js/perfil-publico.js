@@ -1190,14 +1190,20 @@ const _LABELS_MOODS = {
   nostalgico: '🕰️ Nostálgico',
   adictivo: '🔥 Adictivo',
   reconfortante: '🤍 Reconfortante',
-  intenso: '⚡ Intenso'
+  intenso: '⚡ Intenso',
+  oscuro: '🖤 Oscuro',
+  epico: '⚔️ Épico',
+  melancolico: '🌧️ Melancólico'
 };
 
 const _ICONOS_RATING_DECORATIVO = {
   romance: '♥',
   spice: '🌶️',
   drama: '🎭',
-  estilo: '✒️'
+  estilo: '✒️',
+  tension: '🗡️',
+  ritmo: '⏱️',
+  worldbuilding: '🗺️'
 };
 
 /**
@@ -1249,7 +1255,10 @@ function abrirResenaInterna(idResena) {
     romance: r.ratingRomance,
     spice: r.ratingSpice,
     drama: r.ratingDrama,
-    estilo: r.ratingEstilo
+    estilo: r.ratingEstilo,
+    tension: r.ratingTension,
+    ritmo: r.ratingRitmo,
+    worldbuilding: r.ratingWorldbuilding
   };
   const hayRatings = Object.values(ratings).some(v => v);
   if (!hayRatings) {

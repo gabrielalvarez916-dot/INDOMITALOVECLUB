@@ -392,7 +392,7 @@ function abrirCargarResena(idCampaña) {
 
   // Reset ratings decorativos
   document.querySelectorAll('.rating-decorativo-btn').forEach(b => b.classList.remove('activo'));
-  ['romance', 'spice', 'drama', 'estilo'].forEach(cat => {
+  ['romance', 'spice', 'drama', 'estilo', 'tension', 'ritmo', 'worldbuilding'].forEach(cat => {
     document.getElementById('resena-rating-' + cat).value = '';
   });
 
@@ -471,7 +471,10 @@ async function enviarResena(event) {
     ratingRomance: document.getElementById('resena-rating-romance')?.value || '',
     ratingSpice:   document.getElementById('resena-rating-spice')?.value || '',
     ratingDrama:   document.getElementById('resena-rating-drama')?.value || '',
-    ratingEstilo:  document.getElementById('resena-rating-estilo')?.value || ''
+    ratingEstilo:  document.getElementById('resena-rating-estilo')?.value || '',
+    ratingTension:      document.getElementById('resena-rating-tension')?.value || '',
+    ratingRitmo:        document.getElementById('resena-rating-ritmo')?.value || '',
+    ratingWorldbuilding: document.getElementById('resena-rating-worldbuilding')?.value || ''
   };
 
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -505,7 +508,10 @@ async function enviarResena(event) {
     rating_romance: datos.ratingRomance ? parseInt(datos.ratingRomance) : null,
     rating_spice: datos.ratingSpice ? parseInt(datos.ratingSpice) : null,
     rating_drama: datos.ratingDrama ? parseInt(datos.ratingDrama) : null,
-    rating_estilo: datos.ratingEstilo ? parseInt(datos.ratingEstilo) : null
+    rating_estilo: datos.ratingEstilo ? parseInt(datos.ratingEstilo) : null,
+    rating_tension: datos.ratingTension ? parseInt(datos.ratingTension) : null,
+    rating_ritmo: datos.ratingRitmo ? parseInt(datos.ratingRitmo) : null,
+    rating_worldbuilding: datos.ratingWorldbuilding ? parseInt(datos.ratingWorldbuilding) : null
   });
 
   if (error) {

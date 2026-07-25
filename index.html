@@ -915,6 +915,18 @@
                 <input type="checkbox" name="resena-mood" value="intenso" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
                 <span>⚡ Intenso</span>
               </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="oscuro" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🖤 Oscuro</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="epico" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>⚔️ Épico</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="melancolico" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🌧️ Melancólico</span>
+              </label>
             </div>
           </div>
 
@@ -980,6 +992,42 @@
                 <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="5" onclick="seleccionarRatingDecorativo('estilo',5)">✒️</button>
               </div>
               <input type="hidden" id="resena-rating-estilo" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Tensión</span>
+              <div class="rating-decorativo-container" data-categoria="tension">
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="1" onclick="seleccionarRatingDecorativo('tension',1)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="2" onclick="seleccionarRatingDecorativo('tension',2)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="3" onclick="seleccionarRatingDecorativo('tension',3)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="4" onclick="seleccionarRatingDecorativo('tension',4)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="5" onclick="seleccionarRatingDecorativo('tension',5)">🗡️</button>
+              </div>
+              <input type="hidden" id="resena-rating-tension" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Ritmo</span>
+              <div class="rating-decorativo-container" data-categoria="ritmo">
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="1" onclick="seleccionarRatingDecorativo('ritmo',1)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="2" onclick="seleccionarRatingDecorativo('ritmo',2)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="3" onclick="seleccionarRatingDecorativo('ritmo',3)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="4" onclick="seleccionarRatingDecorativo('ritmo',4)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="5" onclick="seleccionarRatingDecorativo('ritmo',5)">⏱️</button>
+              </div>
+              <input type="hidden" id="resena-rating-ritmo" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Creación de mundos</span>
+              <div class="rating-decorativo-container" data-categoria="worldbuilding">
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="1" onclick="seleccionarRatingDecorativo('worldbuilding',1)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="2" onclick="seleccionarRatingDecorativo('worldbuilding',2)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="3" onclick="seleccionarRatingDecorativo('worldbuilding',3)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="4" onclick="seleccionarRatingDecorativo('worldbuilding',4)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="5" onclick="seleccionarRatingDecorativo('worldbuilding',5)">🗺️</button>
+              </div>
+              <input type="hidden" id="resena-rating-worldbuilding" value="" />
             </div>
           </div>
 
@@ -1078,6 +1126,18 @@
         <div class="rating-decorativo-fila">
           <span class="rating-decorativo-label">Estilo de escritura</span>
           <div class="rating-decorativo-container" id="ri-rating-estilo"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Tensión</span>
+          <div class="rating-decorativo-container" id="ri-rating-tension"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Ritmo</span>
+          <div class="rating-decorativo-container" id="ri-rating-ritmo"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Creación de mundos</span>
+          <div class="rating-decorativo-container" id="ri-rating-worldbuilding"></div>
         </div>
       </div>
     </div>
