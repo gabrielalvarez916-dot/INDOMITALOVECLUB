@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/pago-exitoso", "destination": "/pago-exitoso.html" },
+    { "source": "/pago-cancelado", "destination": "/pago-cancelado.html" }
+  ]
+}
