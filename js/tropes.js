@@ -11,7 +11,7 @@ const _tropesEstado = {}; // { [prefijo]: { idGenero, idSubgenero, tropesDisponi
 
 function _estado(prefijo) {
   if (!_tropesEstado[prefijo]) {
-    _tropesEstado[prefijo] = { idGenero: null, idSubgenero: null, tropesDisponibles: [], seleccionados: [] };
+    _tropesEstado[prefijo] = { idGenero: null, idsSubgeneros: [], tropesDisponibles: [], seleccionados: [] };
   }
   return _tropesEstado[prefijo];
 }
@@ -85,7 +85,8 @@ async function _buscarTropesPorGeneros(idsGenero, textoBusqueda) {
  *
  * @param {string} contenedorId
  * @param {string} prefijo
- * @param {object} valoresIniciales — { id_genero, id_subgenero, tropes: [{id, nombre}] } (para edición)
+ * @param {object} valoresIniciales — { id_genero, ids_subgenero: number[], tropes: [{id, nombre}] } (para edición)
+ *   Por compatibilidad también acepta el viejo `id_subgenero` (singular) y lo trata como un array de 1.
  */
 async function renderizarSelectorTropes(contenedorId, prefijo, valoresIniciales = {}) {
   const contenedor = document.getElementById(contenedorId);
@@ -93,7 +94,9 @@ async function renderizarSelectorTropes(contenedorId, prefijo, valoresIniciales 
 
   const estado = _estado(prefijo);
   estado.idGenero = valoresIniciales.id_genero || null;
-  estado.idSubgenero = valoresIniciales.id_subgenero || null;
+  estado.idsSubgeneros = valoresIniciales.ids_subgenero
+    ? [...valoresIniciales.ids_subgenero]
+    : (valoresIniciales.id_subgenero ? [valoresIniciales.id_subgenero] : []);
   estado.seleccionados = valoresIniciales.tropes ? [...valoresIniciales.tropes] : [];
 
   const generos = await _cargarGeneros();
@@ -113,10 +116,8 @@ async function renderizarSelectorTropes(contenedorId, prefijo, valoresIniciales 
       </div>
 
       <div class="form-group" id="${prefijo}-contenedor-subgenero" style="display:none;">
-        <label>Subgénero</label>
-        <select id="${prefijo}-select-subgenero" class="form-input" onchange="onCambioSubgenero('${prefijo}')">
-          <option value="">Seleccioná un subgénero...</option>
-        </select>
+        <label>Subgénero (podés elegir más de uno)</label>
+        <div class="tropes-checkboxes" id="${prefijo}-checkboxes-subgenero"></div>
       </div>
 
       <div class="form-group" id="${prefijo}-contenedor-buscador-tropes" style="display:none;">
@@ -147,11 +148,7 @@ async function renderizarSelectorTropes(contenedorId, prefijo, valoresIniciales 
     if (tieneSubgenero) {
       document.getElementById(`${prefijo}-contenedor-subgenero`).style.display = 'block';
       const subs = await _cargarSubgeneros(estado.idGenero);
-      const selectSub = document.getElementById(`${prefijo}-select-subgenero`);
-      selectSub.innerHTML = `
-        <option value="">Seleccioná un subgénero...</option>
-        ${subs.map(s => `<option value="${s.id}" ${estado.idSubgenero === s.id ? 'selected' : ''}>${s.nombre}</option>`).join('')}
-      `;
+      _renderizarCheckboxesSubgenero(prefijo, subs);
     }
 
     renderizarChipsTropes(prefijo);
@@ -176,7 +173,7 @@ async function onCambioGenero(prefijo) {
   const tieneSubgenero = opt && opt.dataset.tieneSubgenero === 'true';
 
   estado.idGenero = idGenero;
-  estado.idSubgenero = null;
+  estado.idsSubgeneros = [];
   // Si ya había un género distinto asignado, los tropes elegidos son de otro
   // género y no aplican más. Pero si antes no había género (libro/campaña
   // vieja sin migrar), los tropes que ya tenía siguen siendo válidos para
@@ -198,30 +195,44 @@ async function onCambioGenero(prefijo) {
   if (tieneSubgenero) {
     contSub.style.display = 'block';
     const subs = await _cargarSubgeneros(idGenero);
-    const selectSub = document.getElementById(`${prefijo}-select-subgenero`);
-    selectSub.innerHTML = `
-      <option value="">Seleccioná un subgénero...</option>
-      ${subs.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('')}
-    `;
-    contBuscador.style.display = 'none'; // hasta elegir subgénero, no mostramos tropes
+    _renderizarCheckboxesSubgenero(prefijo, subs);
   } else {
     contSub.style.display = 'none';
-    contBuscador.style.display = 'block';
   }
+
+  contBuscador.style.display = 'block'; // elegir subgénero es opcional, no bloquea la carga de tropes
 
   renderizarChipsTropes(prefijo);
 }
 
 /**
- * Se dispara al elegir subgénero: habilita el buscador de tropes.
+ * Pinta los checkboxes de subgénero (selección múltiple) para el género actual.
  */
-function onCambioSubgenero(prefijo) {
+function _renderizarCheckboxesSubgenero(prefijo, subs) {
   const estado = _estado(prefijo);
-  const select = document.getElementById(`${prefijo}-select-subgenero`);
-  estado.idSubgenero = select.value ? parseInt(select.value, 10) : null;
+  const cont = document.getElementById(`${prefijo}-checkboxes-subgenero`);
+  if (!cont) return;
+  cont.innerHTML = subs.map(s => `
+    <label class="tropes-checkbox-label">
+      <input type="checkbox" value="${s.id}"
+        ${estado.idsSubgeneros.includes(s.id) ? 'checked' : ''}
+        onchange="onToggleSubgenero('${prefijo}', this)" />
+      ${s.nombre}
+    </label>
+  `).join('');
+}
 
-  const contBuscador = document.getElementById(`${prefijo}-contenedor-buscador-tropes`);
-  contBuscador.style.display = select.value ? 'block' : 'none';
+/**
+ * Se dispara al tildar/destildar un subgénero (selección múltiple).
+ */
+function onToggleSubgenero(prefijo, checkbox) {
+  const estado = _estado(prefijo);
+  const idSubgenero = parseInt(checkbox.value, 10);
+  if (checkbox.checked) {
+    if (!estado.idsSubgeneros.includes(idSubgenero)) estado.idsSubgeneros.push(idSubgenero);
+  } else {
+    estado.idsSubgeneros = estado.idsSubgeneros.filter(id => id !== idSubgenero);
+  }
 }
 
 /**
@@ -377,15 +388,18 @@ async function obtenerEtiquetaGenero(idGenero, idSubgenero) {
 
 
 /**
- * Devuelve { id_genero, id_subgenero, idsTropes } para guardar:
- * - id_genero / id_subgenero van directo en la fila de libros/campanas
+ * Devuelve { id_genero, id_subgenero, idsSubgeneros, idsTropes } para guardar:
+ * - id_genero / id_subgenero (primer subgénero elegido) van directo en la fila de libros/campanas,
+ *   por compatibilidad con el resto del sistema (feed, perfil público, ranking) que todavía lee esa columna singular.
+ * - idsSubgeneros es el array completo para insertar en libro_subgeneros / campana_subgeneros (multi-subgénero real).
  * - idsTropes es el array de integer para insertar en libro_tropes / campana_tropes
  */
 function obtenerSeleccionTropes(prefijo) {
   const estado = _estado(prefijo);
   return {
     id_genero: estado.idGenero,
-    id_subgenero: estado.idSubgenero,
+    id_subgenero: estado.idsSubgeneros[0] || null,
+    idsSubgeneros: [...estado.idsSubgeneros],
     idsTropes: estado.seleccionados.map(t => t.id)
   };
 }

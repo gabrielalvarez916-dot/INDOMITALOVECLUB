@@ -214,8 +214,21 @@ async function cargarCampañasAutor(idUsuario) {
       if (!tropesPorCampana[row.id_campana]) tropesPorCampana[row.id_campana] = [];
       if (row.tropes) tropesPorCampana[row.id_campana].push({ id: row.tropes.id, nombre: row.tropes.nombre });
     });
+
+    const { data: subgenerosRows } = await supabaseClient
+      .from('campana_subgeneros')
+      .select('id_campana, id_subgenero')
+      .in('id_campana', ids);
+
+    const subgenerosPorCampana = {};
+    (subgenerosRows || []).forEach(row => {
+      if (!subgenerosPorCampana[row.id_campana]) subgenerosPorCampana[row.id_campana] = [];
+      subgenerosPorCampana[row.id_campana].push(row.id_subgenero);
+    });
+
     _campañasAutor.forEach(c => {
       c.tropesCatalogo = tropesPorCampana[c.id] || [];
+      c.idsSubgeneros = subgenerosPorCampana[c.id] || [];
     });
 
     const { data: postulacionesPend } = await supabaseClient
@@ -1013,6 +1026,19 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     }
   }
 
+  if (seleccionTropes.idsSubgeneros.length > 0) {
+    const { error: errorSubgeneros } = await supabaseClient
+      .from('campana_subgeneros')
+      .insert(seleccionTropes.idsSubgeneros.map(idSubgenero => ({
+        id_campana: campanaCreada.id,
+        id_subgenero: idSubgenero
+      })));
+
+    if (errorSubgeneros) {
+      console.error('Error guardando subgéneros de la campaña:', errorSubgeneros);
+    }
+  }
+
  try {
     await subirArchivoLibro(campanaCreada.id, 'epub', archivoEpub);
     await subirArchivoLibro(campanaCreada.id, 'pdf', archivoPdf);
@@ -1267,6 +1293,7 @@ async function cargarBibliotecaPanel(idUsuario) {
 
   const idsLibros = (data || []).map(l => l.id);
   let tropesPorLibro = {};
+  let subgenerosPorLibro = {};
   if (idsLibros.length > 0) {
     const { data: tropesRows } = await supabaseClient
       .from('libro_tropes')
@@ -1275,6 +1302,15 @@ async function cargarBibliotecaPanel(idUsuario) {
     (tropesRows || []).forEach(row => {
       if (!tropesPorLibro[row.id_libro]) tropesPorLibro[row.id_libro] = [];
       if (row.tropes) tropesPorLibro[row.id_libro].push({ id: row.tropes.id, nombre: row.tropes.nombre });
+    });
+
+    const { data: subgenerosRows } = await supabaseClient
+      .from('libro_subgeneros')
+      .select('id_libro, id_subgenero')
+      .in('id_libro', idsLibros);
+    (subgenerosRows || []).forEach(row => {
+      if (!subgenerosPorLibro[row.id_libro]) subgenerosPorLibro[row.id_libro] = [];
+      subgenerosPorLibro[row.id_libro].push(row.id_subgenero);
     });
   }
 
@@ -1286,6 +1322,7 @@ async function cargarBibliotecaPanel(idUsuario) {
     genero: (await obtenerEtiquetaGenero(l.id_genero, l.id_subgenero)) || l.genero, // fallback al texto viejo si no está migrado
     idGenero: l.id_genero,
     idSubgenero: l.id_subgenero,
+    idsSubgeneros: subgenerosPorLibro[l.id] || [],
     tropes: l.tropes,
     tropesCatalogo: tropesPorLibro[l.id] || [],
     linkPortada: l.link_portada,
@@ -1403,6 +1440,19 @@ async function agregarLibro(event) {
 
     if (errorTropes) {
       console.error('Error guardando tropes del libro:', errorTropes);
+    }
+  }
+
+  if (seleccionTropes.idsSubgeneros.length > 0) {
+    const { error: errorSubgeneros } = await supabaseClient
+      .from('libro_subgeneros')
+      .insert(seleccionTropes.idsSubgeneros.map(idSubgenero => ({
+        id_libro: libroCreado.id,
+        id_subgenero: idSubgenero
+      })));
+
+    if (errorSubgeneros) {
+      console.error('Error guardando subgéneros del libro:', errorSubgeneros);
     }
   }
 
@@ -1634,7 +1684,9 @@ async function abrirEditarCampana(idCampana) {
 
   await renderizarSelectorTropes('ec-tropes-contenedor', 'ec', {
     id_genero: campana.idGenero,
-    id_subgenero: campana.idSubgenero,
+    ids_subgenero: campana.idsSubgeneros && campana.idsSubgeneros.length > 0
+      ? campana.idsSubgeneros
+      : (campana.idSubgenero ? [campana.idSubgenero] : []),
     tropes: campana.tropesCatalogo || []
   });
 }
@@ -1710,6 +1762,29 @@ async function guardarEditarCampana(idCampana) {
     }
   }
 
+  // Reemplaza los subgéneros de la campaña: borra los anteriores y carga los elegidos ahora.
+  const { error: errorBorrarSubgeneros } = await supabaseClient
+    .from('campana_subgeneros')
+    .delete()
+    .eq('id_campana', idCampana);
+
+  if (errorBorrarSubgeneros) {
+    console.error('Error borrando subgéneros previos de la campaña:', errorBorrarSubgeneros);
+  }
+
+  if (seleccionTropes.idsSubgeneros.length > 0) {
+    const { error: errorSubgeneros } = await supabaseClient
+      .from('campana_subgeneros')
+      .insert(seleccionTropes.idsSubgeneros.map(idSubgenero => ({
+        id_campana: idCampana,
+        id_subgenero: idSubgenero
+      })));
+
+    if (errorSubgeneros) {
+      console.error('Error guardando subgéneros de la campaña:', errorSubgeneros);
+    }
+  }
+
   // Solo sube archivos si el autor eligió uno nuevo.
   // Vacío = no reemplazar el archivo actual.
   try {
@@ -1769,7 +1844,9 @@ async function abrirEditarLibro(idLibro) {
 
   await renderizarSelectorTropes('el-tropes-contenedor', 'el', {
     id_genero: libro.idGenero,
-    id_subgenero: libro.idSubgenero,
+    ids_subgenero: libro.idsSubgeneros && libro.idsSubgeneros.length > 0
+      ? libro.idsSubgeneros
+      : (libro.idSubgenero ? [libro.idSubgenero] : []),
     tropes: libro.tropesCatalogo || []
   });
 }
@@ -1841,6 +1918,30 @@ async function guardarEditarLibro(idLibro) {
 
     if (errorTropes) {
       console.error('Error guardando tropes del libro:', errorTropes);
+    }
+  }
+
+  // Reemplaza los subgéneros del libro: borra los anteriores y carga los elegidos ahora.
+  // (El trigger de la base propaga automáticamente este cambio a la campaña activa del libro, si tiene una.)
+  const { error: errorBorrarSubgeneros } = await supabaseClient
+    .from('libro_subgeneros')
+    .delete()
+    .eq('id_libro', idLibro);
+
+  if (errorBorrarSubgeneros) {
+    console.error('Error borrando subgéneros previos del libro:', errorBorrarSubgeneros);
+  }
+
+  if (seleccionTropes.idsSubgeneros.length > 0) {
+    const { error: errorSubgeneros } = await supabaseClient
+      .from('libro_subgeneros')
+      .insert(seleccionTropes.idsSubgeneros.map(idSubgenero => ({
+        id_libro: idLibro,
+        id_subgenero: idSubgenero
+      })));
+
+    if (errorSubgeneros) {
+      console.error('Error guardando subgéneros del libro:', errorSubgeneros);
     }
   }
 
