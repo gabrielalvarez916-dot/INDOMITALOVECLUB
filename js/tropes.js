@@ -9,6 +9,11 @@
 // ============================================================
 const _tropesEstado = {}; // { [prefijo]: { idGenero, idSubgenero, tropesDisponibles: [], seleccionados: [] } }
 
+// Prefijos donde se muestra el botón "Proponer un trope nuevo".
+// Solo en creación (Nueva Campaña y Cargar Libro), nunca en Editar libro/campaña,
+// y nunca en el selector de tropes favoritos del reseñador (ese usa otro prefijo).
+const _PREFIJOS_CON_PROPUESTA_TROPE = ['nc', 'libro'];
+
 function _estado(prefijo) {
   if (!_tropesEstado[prefijo]) {
     _tropesEstado[prefijo] = { idGenero: null, idsSubgeneros: [], tropesDisponibles: [], seleccionados: [] };
@@ -135,6 +140,29 @@ async function renderizarSelectorTropes(contenedorId, prefijo, valoresIniciales 
           <div class="tropes-dropdown" id="${prefijo}-dropdown-tropes" style="display:none;"></div>
         </div>
         <div class="tropes-seleccionados-preview" id="${prefijo}-tropes-preview"></div>
+
+        ${_PREFIJOS_CON_PROPUESTA_TROPE.includes(prefijo) ? `
+          <div class="tropes-proponer-wrapper">
+            <button type="button" class="tropes-proponer-link" id="${prefijo}-link-proponer" onclick="mostrarFormularioProponerTrope('${prefijo}')">
+              + Proponer un trope nuevo
+            </button>
+            <div class="tropes-proponer-form" id="${prefijo}-form-proponer" style="display:none;">
+              <label>¿Qué trope proponés?</label>
+              <input
+                type="text"
+                id="${prefijo}-input-proponer"
+                class="form-input"
+                placeholder="Ej: Amor de a poquito"
+                maxlength="60"
+              />
+              <p class="tropes-proponer-ayuda">Se guarda para revisión del equipo. No se agrega a tu selección hasta que sea aprobado.</p>
+              <div class="tropes-proponer-botones">
+                <button type="button" class="btn-secundario btn-sm" onclick="guardarTropePropuesto('${prefijo}')">Guardar propuesta</button>
+                <button type="button" class="tropes-proponer-link" onclick="cancelarProponerTrope('${prefijo}')">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -284,6 +312,135 @@ function quitarTrope(prefijo, id) {
   const estado = _estado(prefijo);
   estado.seleccionados = estado.seleccionados.filter(t => t.id !== id);
   renderizarChipsTropes(prefijo);
+}
+
+
+// ────────────────────────────────────────────────────────────
+// PROPONER TROPE NUEVO (autor/editorial, en creación de libro/campaña)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Muestra el formulario para escribir el trope propuesto.
+ */
+function mostrarFormularioProponerTrope(prefijo) {
+  const link = document.getElementById(`${prefijo}-link-proponer`);
+  const form = document.getElementById(`${prefijo}-form-proponer`);
+  if (link) link.style.display = 'none';
+  if (form) form.style.display = 'block';
+  document.getElementById(`${prefijo}-input-proponer`)?.focus();
+}
+
+/**
+ * Cierra el formulario sin guardar y lo deja listo para volver a usarse.
+ */
+function cancelarProponerTrope(prefijo) {
+  const link = document.getElementById(`${prefijo}-link-proponer`);
+  const form = document.getElementById(`${prefijo}-form-proponer`);
+  const input = document.getElementById(`${prefijo}-input-proponer`);
+  if (input) input.value = '';
+  if (form) form.style.display = 'none';
+  if (link) link.style.display = 'inline-block';
+}
+
+/**
+ * Saca tildes y pasa a minúscula para poder detectar duplicados
+ * aunque estén escritos distinto ("Enemigos a amantes" vs "enemigos a Amantes").
+ */
+function _normalizarNombreTrope(nombre) {
+  return nombre
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Si el prefijo tiene un libro existente asociado en el formulario (ej: campaña
+ * armada a partir de un libro ya cargado), devuelve su id. Si es un libro/campaña
+ * todavía sin guardar, devuelve null (la propuesta igual se guarda, solo que sin
+ * ese dato de contexto).
+ */
+function _idLibroContextoPropuesta(prefijo) {
+  if (prefijo === 'nc') {
+    const selector = document.getElementById('nc-libro-selector');
+    return selector && selector.value ? selector.value : null;
+  }
+  return null;
+}
+
+/**
+ * Guarda la propuesta de un trope nuevo: la crea en tropes_propuestos (o reutiliza
+ * la existente si otro autor ya propuso lo mismo para ese género) y registra quién
+ * la propuso. No modifica en nada la selección de tropes del formulario: el trope
+ * solo pasa a estar disponible para elegir si un admin lo aprueba después.
+ * Deja el formulario listo para cargar una propuesta más, de a una por vez.
+ */
+async function guardarTropePropuesto(prefijo) {
+  const estado = _estado(prefijo);
+  const input = document.getElementById(`${prefijo}-input-proponer`);
+  const nombre = input?.value.trim();
+
+  if (!estado.idGenero) {
+    mostrarToast('Elegí primero un género.', 'error');
+    return;
+  }
+  if (!nombre) {
+    mostrarToast('Escribí el nombre del trope que querés proponer.', 'error');
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const nombreNormalizado = _normalizarNombreTrope(nombre);
+
+  // ¿Ya existe una propuesta igual para este género? (evita duplicados en la lista de admin)
+  const { data: existente, error: errorBusqueda } = await supabaseClient
+    .from('tropes_propuestos')
+    .select('id')
+    .eq('id_genero', estado.idGenero)
+    .eq('nombre_normalizado', nombreNormalizado)
+    .maybeSingle();
+
+  if (errorBusqueda) {
+    console.error('Error buscando propuesta existente:', errorBusqueda);
+    mostrarToast('No se pudo guardar la propuesta.', 'error');
+    return;
+  }
+
+  let idPropuesta = existente?.id;
+
+  if (!idPropuesta) {
+    const { data: nueva, error: errorInsert } = await supabaseClient
+      .from('tropes_propuestos')
+      .insert({ id_genero: estado.idGenero, nombre, nombre_normalizado: nombreNormalizado })
+      .select('id')
+      .single();
+
+    if (errorInsert) {
+      console.error('Error creando propuesta de trope:', errorInsert);
+      mostrarToast('No se pudo guardar la propuesta.', 'error');
+      return;
+    }
+    idPropuesta = nueva.id;
+  }
+
+  const { error: errorAutor } = await supabaseClient
+    .from('tropes_propuestos_autores')
+    .insert({
+      id_propuesta: idPropuesta,
+      id_usuario_autor: user.id,
+      id_libro: _idLibroContextoPropuesta(prefijo)
+    });
+
+  if (errorAutor) {
+    console.error('Error vinculando propuesta de trope:', errorAutor);
+    mostrarToast('No se pudo guardar la propuesta.', 'error');
+    return;
+  }
+
+  mostrarToast('¡Gracias! Tu propuesta va a ser revisada por el equipo.', 'ok');
+  cancelarProponerTrope(prefijo); // deja todo listo para cargar otra, de a una por vez
 }
 
 

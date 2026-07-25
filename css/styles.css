@@ -1705,6 +1705,42 @@ img { max-width: 100%; display: block; }
   font-weight: 600;
 }
 
+/* ── Proponer trope nuevo ────────────────────────────────── */
+.tropes-proponer-wrapper { margin-top: 10px; }
+
+.tropes-proponer-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--bordo);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tropes-proponer-link:hover { color: var(--rosa); }
+
+.tropes-proponer-form {
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--crema-suave);
+  border: 1px solid var(--rosa-claro);
+  border-radius: 8px;
+}
+
+.tropes-proponer-ayuda {
+  font-size: 11px;
+  color: var(--gris-suave);
+  margin: 4px 0 8px;
+}
+
+.tropes-proponer-botones {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 /* ── Avatar grid ──────────────────────────────────────────── */
 .avatar-grid {
   display: grid;

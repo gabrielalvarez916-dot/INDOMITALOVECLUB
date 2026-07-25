@@ -329,6 +329,130 @@ function construirFilaIncumplimientoAdmin(i) {
 }
 
 // ────────────────────────────────────────────────────────────
+// TROPES PROPUESTOS (autores/editoriales proponen, admin aprueba o rechaza)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Carga y muestra en el panel admin las propuestas de tropes pendientes de revisión.
+ */
+async function cargarTropesPropuestosAdmin() {
+  const contenedor = document.getElementById('admin-tropes-propuestos-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: propuestas, error } = await supabaseClient
+    .from('tropes_propuestos')
+    .select(`
+      id, nombre, creado_en,
+      generos ( nombre ),
+      tropes_propuestos_autores (
+        creado_en,
+        usuarios ( alias, email ),
+        libros ( titulo )
+      )
+    `)
+    .order('creado_en', { ascending: true });
+
+  if (error) {
+    contenedor.innerHTML = `<p class="mensaje-error">Error al cargar las propuestas: ${error.message}</p>`;
+    return;
+  }
+
+  if (!propuestas || propuestas.length === 0) {
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <p class="estado-vacio-icono">✨</p>
+        <p class="estado-vacio-texto">No hay tropes propuestos pendientes de revisión.</p>
+      </div>
+    `;
+    return;
+  }
+
+  contenedor.innerHTML = `
+    <p class="form-info" style="margin-bottom:14px;">
+      <strong>${propuestas.length}</strong> propuesta${propuestas.length === 1 ? '' : 's'} pendiente${propuestas.length === 1 ? '' : 's'}.
+    </p>
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Trope propuesto</th>
+          <th>Género</th>
+          <th>Propuesto por</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${propuestas.map(p => construirFilaTropePropuestoAdmin(p)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+/**
+ * Construye la fila de una propuesta de trope para la tabla admin.
+ *
+ * @param {Object} p — propuesta con sus autores anidados
+ * @returns {string} HTML de la fila
+ */
+function construirFilaTropePropuestoAdmin(p) {
+  const autores = (p.tropes_propuestos_autores || []).map(a => {
+    const quien = a.usuarios?.alias || a.usuarios?.email || 'Autor desconocido';
+    const libro = a.libros?.titulo ? ` (${a.libros.titulo})` : '';
+    return `${quien}${libro}`;
+  }).join('<br>') || '—';
+
+  const nombreEscapado = p.nombre.replace(/'/g, "\\'");
+
+  return `
+    <tr>
+      <td><strong>${p.nombre}</strong></td>
+      <td>${p.generos?.nombre || '—'}</td>
+      <td style="font-size:12px;">${autores}</td>
+      <td>
+        <button type="button" class="btn-secundario btn-sm" onclick="aprobarTropePropuestoAdmin('${p.id}', '${nombreEscapado}')">Aprobar</button>
+        <button type="button" class="btn-secundario btn-sm" onclick="rechazarTropePropuestoAdmin('${p.id}', '${nombreEscapado}')">Rechazar</button>
+      </td>
+    </tr>
+  `;
+}
+
+/**
+ * Aprueba una propuesta: la integra al catálogo de tropes de ese género
+ * (queda disponible para elegir en libros/campañas) y borra la propuesta.
+ */
+async function aprobarTropePropuestoAdmin(idPropuesta, nombre) {
+  if (!confirm(`¿Aprobar "${nombre}" e integrarlo al catálogo de tropes?`)) return;
+
+  const { error } = await supabaseClient.rpc('aprobar_trope_propuesto', { p_id_propuesta: idPropuesta });
+
+  if (error) {
+    mostrarToast(error.message || 'Error al aprobar la propuesta.', 'error');
+    return;
+  }
+
+  mostrarToast(`"${nombre}" fue agregado al catálogo de tropes.`, 'ok');
+  await cargarTropesPropuestosAdmin();
+}
+
+/**
+ * Rechaza una propuesta: no pasa nada más, se borra sin dejar rastro en el catálogo.
+ */
+async function rechazarTropePropuestoAdmin(idPropuesta, nombre) {
+  if (!confirm(`¿Rechazar "${nombre}"? No se agregará al catálogo.`)) return;
+
+  const { error } = await supabaseClient.rpc('rechazar_trope_propuesto', { p_id_propuesta: idPropuesta });
+
+  if (error) {
+    mostrarToast(error.message || 'Error al rechazar la propuesta.', 'error');
+    return;
+  }
+
+  mostrarToast(`Propuesta "${nombre}" rechazada.`, 'ok');
+  await cargarTropesPropuestosAdmin();
+}
+
+// ────────────────────────────────────────────────────────────
 // SUSCRIPCIONES (antes "Pagos" — ahora es solo lectura,
 // la activación/rechazo la maneja automáticamente el webhook
 // de Mercado Pago / PayPal, no el admin)

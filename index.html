@@ -585,6 +585,7 @@
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-tickets'); cargarTicketsAdmin(Sesion.email())">Soporte</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-incumplimientos'); cargarIncumplimientosAdmin()">Incumplimientos</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-tropes-propuestos'); cargarTropesPropuestosAdmin()">Tropes propuestos</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas-soporte'); cargarEstadisticasSoporteAdmin()">Estadísticas Soporte</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas'); cargarEstadisticasAdmin()">Estadísticas</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-banners'); cargarBannersAdmin()">Banners</button>
@@ -606,6 +607,9 @@
 </div>
 <div id="tab-admin-incumplimientos" class="tab-contenido">
   <div id="admin-incumplimientos-lista"></div>
+</div>
+<div id="tab-admin-tropes-propuestos" class="tab-contenido">
+  <div id="admin-tropes-propuestos-lista"></div>
 </div>
       <div id="tab-admin-estadisticas-soporte" class="tab-contenido">
   <div id="admin-estadisticas-soporte-contenedor"></div>
