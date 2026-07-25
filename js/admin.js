@@ -791,7 +791,7 @@ function construirFilaTicketAdmin(t) {
     <tr>
       <td style="font-size:12px;">${t.email}</td>
       <td><span class="badge badge-nivel">${t.rol || '—'}</span></td>
-      <td>${tipoBadge || t.asunto || ''}</td>
+      <td>${tipoBadge || t.asunto || ''} ${t.adjuntoKey ? '📎' : ''}</td>
       <td style="max-width:280px; font-size:12px;">${t.mensaje}</td>
       <td style="font-size:12px;">${t.fecha ? String(t.fecha).split('T')[0] : '—'}</td>
       <td>${estadoBadge}</td>
@@ -933,10 +933,19 @@ async function abrirModalTicketAdmin(idTicket) {
       </div>
       <p style="font-size:12px; color:#888; margin:0 0 12px;">${ticket?.email || ''}</p>
       ${ticket?.tipo === 'denuncia' ? _renderLinkDenunciaAdmin(ticket) : ''}
+      ${ticket?.adjuntoKey ? `
+        <p style="font-size:12px; margin:0 0 12px;">
+          <a href="#" onclick="event.preventDefault(); verAdjuntoSoporte('${idTicket}', '${ticket.adjuntoKey}')">📎 Ver adjunto del mensaje original (${escaparHtmlSoporte(ticket.adjuntoNombre || 'archivo')})</a>
+        </p>
+      ` : ''}
       <div id="modal-ticket-historial" style="flex:1; overflow-y:auto; margin-bottom:12px; min-height:80px;">
         <div class="cargando-container"><div class="spinner"></div></div>
       </div>
       <textarea id="modal-ticket-mensaje" rows="3" placeholder="Escribí tu respuesta..." style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+      <div style="margin-top:8px;">
+        <label style="font-size:12px; color:#888;">Adjuntar archivo a la respuesta (opcional, jpg/png/webp/heic/pdf, máx. 8MB)</label>
+        <input type="file" id="modal-ticket-adjunto" accept=".jpg,.jpeg,.png,.webp,.heic,.pdf" style="display:block; margin-top:4px; font-size:12px;" />
+      </div>
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
         <button class="btn-secundario btn-sm" onclick="cerrarModalTicketAdmin()">Cancelar</button>
         <button class="btn-secundario btn-sm" onclick="enviarRespuestaModalTicket('${idTicket}')">Enviar respuesta</button>
@@ -954,7 +963,7 @@ async function cargarHistorialModalTicket(idTicket) {
 
   const { data: mensajes, error } = await supabaseClient
     .from('soporte_mensajes')
-    .select('autor, cuerpo, creado_en')
+    .select('autor, cuerpo, creado_en, adjunto_key, adjunto_nombre, adjunto_tipo')
     .eq('id_ticket', idTicket)
     .order('creado_en', { ascending: true });
 
@@ -974,6 +983,13 @@ async function cargarHistorialModalTicket(idTicket) {
         ${m.autor === 'admin' ? 'Admin' : 'Usuario'} — ${m.creado_en ? new Date(m.creado_en).toLocaleString() : ''}
       </div>
       <div style="font-size:13px; white-space:pre-wrap;">${escaparHtmlSoporte(m.cuerpo)}</div>
+      ${m.adjunto_key ? `
+        <div style="margin-top:6px;">
+          <a href="#" onclick="event.preventDefault(); verAdjuntoSoporte('${idTicket}', '${m.adjunto_key}')" style="font-size:12px;">📎 ${escaparHtmlSoporte(m.adjunto_nombre || 'Ver adjunto')}</a>
+        </div>
+      ` : m.adjunto_nombre ? `
+        <div style="margin-top:6px; font-size:12px; color:#888;">📎 ${escaparHtmlSoporte(m.adjunto_nombre)} (enviado por mail)</div>
+      ` : ''}
     </div>
   `).join('');
 
@@ -1005,6 +1021,38 @@ async function obtenerTokenFresco() {
   return session.access_token;
 }
 
+// Adjuntos de la respuesta del admin: viajan como base64 dentro del mismo
+// request a soporte-responder, sin pasar por R2 (no hace falta guardarlos,
+// solo van embebidos en el mail).
+const TIPOS_ADJUNTO_ADMIN = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', heic: 'image/heic', pdf: 'application/pdf' };
+const MAX_BYTES_ADJUNTO_ADMIN = 8 * 1024 * 1024;
+
+function archivoABase64(archivo) {
+  return new Promise((resolve, reject) => {
+    const lector = new FileReader();
+    lector.onload = () => resolve(String(lector.result).split(',')[1] || '');
+    lector.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+    lector.readAsDataURL(archivo);
+  });
+}
+
+async function verAdjuntoSoporte(idTicket, key) {
+  const token = await obtenerTokenFresco();
+  if (!token) {
+    mostrarToast('No se pudo autenticar la sesión de admin.', 'error');
+    return;
+  }
+  const { data, error } = await supabaseClient.functions.invoke('obtener-adjunto-soporte', {
+    body: { id_ticket: idTicket, key },
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (error || data?.error || !data?.url) {
+    mostrarToast(data?.error || error?.message || 'No se pudo abrir el adjunto.', 'error');
+    return;
+  }
+  window.open(data.url, '_blank');
+}
+
 async function enviarRespuestaModalTicket(idTicket) {
   const textarea = document.getElementById('modal-ticket-mensaje');
   const mensaje = textarea?.value?.trim();
@@ -1019,8 +1067,31 @@ async function enviarRespuestaModalTicket(idTicket) {
     return;
   }
 
+  let adjunto = null;
+  const inputAdjunto = document.getElementById('modal-ticket-adjunto');
+  const archivo = inputAdjunto?.files?.[0];
+  if (archivo) {
+    if (archivo.size > MAX_BYTES_ADJUNTO_ADMIN) {
+      mostrarToast('El archivo es demasiado grande (máximo 8MB).', 'error');
+      return;
+    }
+    const formato = (archivo.name.split('.').pop() || '').toLowerCase();
+    const tipo = TIPOS_ADJUNTO_ADMIN[formato];
+    if (!tipo) {
+      mostrarToast('Formato no permitido. Usá jpg, png, webp, heic o pdf.', 'error');
+      return;
+    }
+    try {
+      const contenidoBase64 = await archivoABase64(archivo);
+      adjunto = { nombre: archivo.name, tipo, contenidoBase64 };
+    } catch (e) {
+      mostrarToast(e.message || 'No se pudo leer el archivo.', 'error');
+      return;
+    }
+  }
+
   const { data, error } = await supabaseClient.functions.invoke('soporte-responder', {
-    body: { id_ticket: idTicket, mensaje },
+    body: { id_ticket: idTicket, mensaje, adjunto },
     headers: { Authorization: `Bearer ${token}` }
   });
 
@@ -1031,6 +1102,7 @@ async function enviarRespuestaModalTicket(idTicket) {
 
   mostrarToast('Respuesta enviada.', 'ok');
   textarea.value = '';
+  if (inputAdjunto) inputAdjunto.value = '';
   await cargarHistorialModalTicket(idTicket);
   await cargarTicketsAdmin();
 }

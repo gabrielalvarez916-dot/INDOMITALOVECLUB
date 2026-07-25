@@ -1341,6 +1341,11 @@
         <label class="form-label">Mensaje *</label>
         <textarea id="soporte-mensaje" class="form-textarea" rows="4" required placeholder="Contanos el problema con el mayor detalle posible..."></textarea>
       </div>
+      <div class="form-grupo">
+        <label class="form-label">Adjuntar archivo (opcional)</label>
+        <input type="file" id="soporte-adjunto" class="form-input" accept=".jpg,.jpeg,.png,.webp,.heic,.pdf" />
+        <p style="font-size:12px; color:#888; margin:4px 0 0;">Imagen o PDF, máximo 8MB.</p>
+      </div>
       <div id="soporte-error" class="mensaje-error" style="display:none;"></div>
       <div id="soporte-ok" class="mensaje-ok" style="display:none;"></div>
       <div class="modal-footer">
