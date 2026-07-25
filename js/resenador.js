@@ -262,13 +262,28 @@ async function cargarArcsActivos(email) {
 
   const postulaciones = await obtenerPostulacionesReseñador();
   const ahora = new Date();
-  
-  // Un ARC está activo mientras la postulación siga aprobada y no haya vencido
-  // el plazo PERSONAL de entrega del reseñador (no el estado global de la campaña).
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const idsPostulacionesConResena = new Set();
+  if (user && postulaciones.length) {
+    const { data: resenasExistentes } = await supabaseClient
+      .from('resenas')
+      .select('id_postulacion')
+      .eq('id_usuario_resenador', user.id)
+      .in('id_postulacion', postulaciones.map(p => p.idPostulacion));
+    (resenasExistentes || []).forEach(r => idsPostulacionesConResena.add(r.id_postulacion));
+  }
+
+  // Un ARC está activo mientras la postulación siga aprobada, no haya vencido
+  // el plazo PERSONAL de entrega del reseñador (no el estado global de la campaña),
+  // y todavía no se haya entregado la reseña.
  const DIAS_GRACIA_ENTREGA = 7; // debe coincidir con la gracia de la policy RLS en Supabase
 
 _arcsActivosReseñador = postulaciones.filter(p => {
   if (p.estado !== 'aprobada' || !p.campaña || p.campaña.estado === 'cancelada' || !p.fechaLimiteEntrega) {
+    return false;
+  }
+  if (idsPostulacionesConResena.has(p.idPostulacion)) {
     return false;
   }
   const limiteConGracia = new Date(p.fechaLimiteEntrega);
