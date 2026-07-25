@@ -27,6 +27,7 @@ const NOTIF_TEXTOS = {
   campaña_cancelada_autor: (d) => `La campaña "${d.nombreLibro || ''}" en la que participabas fue cancelada.`,
   recordatorio_resena: (d) => `Te quedan pocos días para entregar tu reseña de "${d.nombreLibro || ''}".`,
   ticket_actualizado: (d) => `Tu ticket de soporte "${d.asunto || ''}" cambió de estado.`,
+  completar_subgenero_perfil: () => `Actualizamos el sistema de géneros: entrá a tu perfil y elegí tu subgénero favorito de Romance (ej. Dark Romance, Paranormal) para no perderte recomendaciones.`,
 
   // Para EVENTOS
   evento_reto_completado: (d) => `¡Completaste el reto "${d.nombreReto || ''}" de "${d.nombreEvento || ''}"! +${d.puntosGanados || 0} puntos.`,
@@ -265,7 +266,7 @@ function _navegarPorNotificacion(notif) {
     return;
   }
 
-  if (notif.tipo === 'ticket_actualizado') {
+  if (notif.tipo === 'ticket_actualizado' || notif.tipo === 'completar_subgenero_perfil') {
     if (typeof mostrarSeccion === 'function') mostrarSeccion('perfil');
     return;
   }
