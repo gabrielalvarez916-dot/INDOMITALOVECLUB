@@ -116,6 +116,16 @@ async function cargarFormularioEdicionPerfil() {
       id_subgenero: perfil.idSubgenero,
       tropes: tropesCatalogo
     });
+
+    const [{ data: generosRows }, { data: subgenerosRows }] = await Promise.all([
+      supabaseClient.from('usuario_generos').select('id_genero').eq('id_usuario', usuario.id),
+      supabaseClient.from('usuario_subgeneros').select('id_subgenero').eq('id_usuario', usuario.id)
+    ]);
+
+    await renderizarGenerosCheckboxPerfil(
+      (generosRows || []).map(r => r.id_genero),
+      (subgenerosRows || []).map(r => r.id_subgenero)
+    );
   }
 
   if (rol === 'autor' || rol === 'editorial') {
@@ -151,6 +161,7 @@ function ajustarFormularioPorRol(rol) {
   toggleElemento('grupo-generos',        esEditorial);
   toggleElemento('grupo-descripcion',    esReseñador || esEditorial);
   toggleElemento('grupo-tropes-perfil',  esReseñador);
+  toggleElemento('grupo-generos-resenador', esReseñador);
   toggleElemento('grupo-sitio-web',      esEditorial);
 
   const labelGeneros = document.getElementById('label-generos');
@@ -211,6 +222,99 @@ function rellenarFormularioPerfil(perfil) {
 
 
 // ────────────────────────────────────────────────────────────
+// GÉNEROS Y SUBGÉNEROS FAVORITOS (reseñador) — selección múltiple
+// Reutiliza _cargarGeneros() / _cargarSubgeneros() de tropes.js.
+// ────────────────────────────────────────────────────────────
+
+let _generosSeleccionadosPerfil = [];
+let _subgenerosSeleccionadosPerfil = [];
+let _generosCatalogoCachePerfil = [];
+
+async function renderizarGenerosCheckboxPerfil(idsGenerosIniciales = [], idsSubgenerosIniciales = []) {
+  _generosSeleccionadosPerfil = [...idsGenerosIniciales];
+  _subgenerosSeleccionadosPerfil = [...idsSubgenerosIniciales];
+  _generosCatalogoCachePerfil = await _cargarGeneros();
+
+  const contenedor = document.getElementById('perfil-generos-checkboxes');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = _generosCatalogoCachePerfil.map(g => `
+    <label class="tropes-checkbox-label">
+      <input type="checkbox" value="${g.id}" data-tiene-subgenero="${g.tiene_subgenero}"
+        ${_generosSeleccionadosPerfil.includes(g.id) ? 'checked' : ''}
+        onchange="onToggleGeneroPerfil(this)" />
+      ${g.nombre}
+    </label>
+  `).join('');
+
+  await renderizarSubgenerosCheckboxPerfil();
+}
+
+async function onToggleGeneroPerfil(checkbox) {
+  const idGenero = parseInt(checkbox.value, 10);
+  if (checkbox.checked) {
+    if (!_generosSeleccionadosPerfil.includes(idGenero)) _generosSeleccionadosPerfil.push(idGenero);
+  } else {
+    _generosSeleccionadosPerfil = _generosSeleccionadosPerfil.filter(id => id !== idGenero);
+    const subs = await _cargarSubgeneros(idGenero);
+    const idsSubsDeEsteGenero = subs.map(s => s.id);
+    _subgenerosSeleccionadosPerfil = _subgenerosSeleccionadosPerfil.filter(id => !idsSubsDeEsteGenero.includes(id));
+  }
+  await renderizarSubgenerosCheckboxPerfil();
+}
+
+async function renderizarSubgenerosCheckboxPerfil() {
+  const contenedor = document.getElementById('perfil-subgeneros-contenedor');
+  if (!contenedor) return;
+
+  const generosConSubgenero = _generosCatalogoCachePerfil
+    .filter(g => g.tiene_subgenero && _generosSeleccionadosPerfil.includes(g.id));
+
+  if (generosConSubgenero.length === 0) {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  const bloques = await Promise.all(generosConSubgenero.map(async genero => {
+    const subs = await _cargarSubgeneros(genero.id);
+    return `
+      <div class="form-grupo" style="margin-top:10px;">
+        <label class="form-label" style="font-size:12px;">Subgéneros de ${genero.nombre}</label>
+        <div class="tropes-checkboxes">
+          ${subs.map(s => `
+            <label class="tropes-checkbox-label">
+              <input type="checkbox" value="${s.id}"
+                ${_subgenerosSeleccionadosPerfil.includes(s.id) ? 'checked' : ''}
+                onchange="onToggleSubgeneroPerfil(this)" />
+              ${s.nombre}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }));
+
+  contenedor.innerHTML = bloques.join('');
+}
+
+function onToggleSubgeneroPerfil(checkbox) {
+  const idSubgenero = parseInt(checkbox.value, 10);
+  if (checkbox.checked) {
+    if (!_subgenerosSeleccionadosPerfil.includes(idSubgenero)) _subgenerosSeleccionadosPerfil.push(idSubgenero);
+  } else {
+    _subgenerosSeleccionadosPerfil = _subgenerosSeleccionadosPerfil.filter(id => id !== idSubgenero);
+  }
+}
+
+function obtenerSeleccionGenerosPerfil() {
+  return {
+    idsGeneros: [..._generosSeleccionadosPerfil],
+    idsSubgeneros: [..._subgenerosSeleccionadosPerfil]
+  };
+}
+
+
+// ────────────────────────────────────────────────────────────
 // GUARDAR PERFIL
 // ────────────────────────────────────────────────────────────
 
@@ -239,10 +343,12 @@ async function guardarPerfil(event) {
   };
 
  let seleccionTropesPerfil = null;
+  let seleccionGenerosPerfil = null;
   if (rol === 'reseñador') {
     datos.generos           = document.getElementById('perfil-generos')?.value?.trim();
     datos.descripcionLector = document.getElementById('perfil-descripcion')?.value?.trim();
     seleccionTropesPerfil    = obtenerSeleccionTropes('perfil');
+    seleccionGenerosPerfil   = obtenerSeleccionGenerosPerfil();
   }
   
   if (rol === 'editorial') {
@@ -289,6 +395,31 @@ async function guardarPerfil(event) {
       if (errorTropesPerfil) {
         console.error('Error guardando tropes del perfil:', errorTropesPerfil);
       }
+    }
+  }
+
+  if (rol === 'reseñador' && seleccionGenerosPerfil) {
+    await supabaseClient.from('usuario_generos').delete().eq('id_usuario', usuario.id);
+    await supabaseClient.from('usuario_subgeneros').delete().eq('id_usuario', usuario.id);
+
+    if (seleccionGenerosPerfil.idsGeneros.length > 0) {
+      const { error: errorGenerosPerfil } = await supabaseClient
+        .from('usuario_generos')
+        .insert(seleccionGenerosPerfil.idsGeneros.map(idGenero => ({
+          id_usuario: usuario.id,
+          id_genero: idGenero
+        })));
+      if (errorGenerosPerfil) console.error('Error guardando géneros del perfil:', errorGenerosPerfil);
+    }
+
+    if (seleccionGenerosPerfil.idsSubgeneros.length > 0) {
+      const { error: errorSubgenerosPerfil } = await supabaseClient
+        .from('usuario_subgeneros')
+        .insert(seleccionGenerosPerfil.idsSubgeneros.map(idSubgenero => ({
+          id_usuario: usuario.id,
+          id_subgenero: idSubgenero
+        })));
+      if (errorSubgenerosPerfil) console.error('Error guardando subgéneros del perfil:', errorSubgenerosPerfil);
     }
   }
 
