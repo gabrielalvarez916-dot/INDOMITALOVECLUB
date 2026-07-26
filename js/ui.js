@@ -35,6 +35,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (idCampanaURL && typeof verDetalleCampaña === 'function') {
     setTimeout(() => verDetalleCampaña(idCampanaURL), 300);
   }
+
+  // Si el link trae ?reconexion=..., avisa si se reclamó el regalo por reingresar
+  const reconexion = params.get('reconexion');
+  if (reconexion) {
+    const mensajesReconexion = {
+      puntos20: '🎉 ¡Reclamaste tus 20 puntos de regalo!',
+      cupos5: '🎁 ¡Reclamaste tus 5 reseñadores de regalo para tu próxima campaña!',
+      ya_canjeado: 'Ya habías reclamado este regalo anteriormente.'
+    };
+    const mensaje = mensajesReconexion[reconexion];
+    if (mensaje) {
+      setTimeout(() => mostrarToast(mensaje, reconexion === 'ya_canjeado' ? 'info' : 'ok'), 400);
+    }
+    // Limpia el parámetro de la URL para que no se repita el toast al refrescar
+    params.delete('reconexion');
+    const nuevaUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+    window.history.replaceState({}, '', nuevaUrl);
+  }
 });
 
 // ────────────────────────────────────────────────────────────
