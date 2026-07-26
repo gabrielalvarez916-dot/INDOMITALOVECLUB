@@ -3,7 +3,7 @@
 // Configuración global del frontend
 // ============================================================
 const CONFIG = {
-  FRONTEND_URL: 'https://indomitaloveclub.vercel.app',
+  FRONTEND_URL: 'https://loveclub.indomitastudioeditorial.com.ar',
   EMAIL_ADMIN: 'indomitagencia@gmail.com',
   NOMBRE_APP: 'Indómita Love Club',
 };
