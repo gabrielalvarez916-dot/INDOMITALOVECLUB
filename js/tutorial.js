@@ -14,16 +14,113 @@
 //   título, texto) se trae desde Supabase (tabla tutoriales_bienvenida).
 // ============================================================
 
+// ────────────────────────────────────────────────────────────
+// GATES DE ACTIVACIÓN — condiciones que hay que cumplir para
+// poder avanzar (y salir) de ciertos pasos del tutorial.
+// Cada gate es async y devuelve true/false. Se corren contra
+// Supabase en el momento (sin flags guardados: siempre reflejan
+// el estado real, así que si el usuario ya cumplió la condición
+// en una sesión anterior, el paso se destraba solo).
+// ────────────────────────────────────────────────────────────
+
+async function _tutGatePostulacionReseñador(idUsuario) {
+  const { count, error } = await supabaseClient
+    .from('postulaciones')
+    .select('id', { count: 'exact', head: true })
+    .eq('id_usuario_resenador', idUsuario);
+  if (error) { console.error('Error gate postulación:', error); return false; }
+  return (count || 0) > 0;
+}
+
+async function _tutGatePerfilReseñador(idUsuario) {
+  const [{ data: usuario, error: errUsuario }, { count, error: errGeneros }] = await Promise.all([
+    supabaseClient.from('usuarios').select('descripcion_lector').eq('id', idUsuario).maybeSingle(),
+    supabaseClient.from('usuario_generos').select('id_genero', { count: 'exact', head: true }).eq('id_usuario', idUsuario)
+  ]);
+  if (errUsuario || errGeneros) { console.error('Error gate perfil reseñador:', errUsuario || errGeneros); return false; }
+  const tieneDescripcion = !!(usuario?.descripcion_lector && usuario.descripcion_lector.trim().length > 0);
+  const tieneGeneros = (count || 0) > 0;
+  return tieneDescripcion && tieneGeneros;
+}
+
+async function _tutGateAvatarAutor(idUsuario) {
+  const { data, error } = await supabaseClient
+    .from('usuarios')
+    .select('avatar_id')
+    .eq('id', idUsuario)
+    .maybeSingle();
+  if (error) { console.error('Error gate avatar:', error); return false; }
+  return data?.avatar_id != null;
+}
+
+async function _tutGateLibroAutor(idUsuario) {
+  const { count, error } = await supabaseClient
+    .from('libros')
+    .select('id', { count: 'exact', head: true })
+    .eq('id_usuario_autor', idUsuario)
+    .eq('eliminado', false);
+  if (error) { console.error('Error gate libro:', error); return false; }
+  return (count || 0) > 0;
+}
+
+async function _tutGateCampanaAutor(idUsuario) {
+  const { count, error } = await supabaseClient
+    .from('campanas')
+    .select('id', { count: 'exact', head: true })
+    .eq('id_usuario_autor', idUsuario);
+  if (error) { console.error('Error gate campaña:', error); return false; }
+  return (count || 0) > 0;
+}
+
+const _PASOS_AUTOR_EDITORIAL = [
+  { destino: 'btn-editar-perfil', abrir: () => {
+      mostrarSeccion('perfil');
+      setTimeout(() => {
+        mostrarModal('modal-editar-perfil');
+        if (typeof cargarFormularioEdicionPerfil === 'function') cargarFormularioEdicionPerfil();
+      }, 50);
+    },
+    gate: _tutGateAvatarAutor,
+    mensajeBloqueo: 'Elegí un avatar para tu perfil (botón "Cambiar avatar") para poder continuar.' },
+  { destino: 'btn-agregar-libro-biblioteca-autor', abrir: () => {
+      mostrarSeccion('biblioteca-autor');
+      setTimeout(() => mostrarModal('modal-nuevo-libro'), 400);
+    },
+    gate: _tutGateLibroAutor,
+    mensajeBloqueo: 'Cargá tu primer libro para poder continuar.' },
+  { destino: 'btn-nueva-campana', abrir: () => {
+      mostrarPanelRol();
+      setTimeout(() => mostrarModal('modal-nueva-campana'), 400);
+    },
+    gate: _tutGateCampanaAutor,
+    mensajeBloqueo: 'Creá tu primera campaña para poder continuar.' },
+  { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed') },
+  { destino: 'tabbtn-campanas-activas', abrir: () => mostrarPanelRol() },
+  { destino: 'tabbtn-postulaciones-autor', abrir: () => {
+      mostrarPanelRol();
+      setTimeout(() => document.getElementById('tabbtn-postulaciones-autor')?.click(), 50);
+    } },
+  { destino: 'tabbtn-plan', abrir: () => {
+      mostrarPanelRol();
+      setTimeout(() => document.getElementById('tabbtn-plan')?.click(), 50);
+    } },
+  { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') }
+];
+
 const TUTORIAL_PASOS_CONFIG = {
   'reseñador': [
-    { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed') },
+    { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed'),
+      gate: _tutGatePostulacionReseñador,
+      mensajeBloqueo: 'Postulate a un libro desde acá para poder continuar.' },
     { destino: 'btn-editar-perfil', abrir: () => {
         mostrarSeccion('perfil');
         setTimeout(() => {
           mostrarModal('modal-editar-perfil');
           if (typeof cargarFormularioEdicionPerfil === 'function') cargarFormularioEdicionPerfil();
         }, 50);
-      } },
+      },
+      gate: _tutGatePerfilReseñador,
+      mensajeBloqueo: 'Elegí tus géneros favoritos y contanos algo sobre vos como lector@ para poder continuar.' },
     { destino: 'nav-panel', abrir: () => mostrarPanelRol() },
     { destino: 'tabbtn-ranking-resenador', abrir: () => {
         mostrarPanelRol();
@@ -32,42 +129,8 @@ const TUTORIAL_PASOS_CONFIG = {
     { destino: 'bib-titulo-seccion', abrir: () => mostrarSeccion('biblioteca-resenador') },
     { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') }
   ],
-  'autor': [
-    { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed') },
-    { destino: 'tabbtn-campanas-activas', abrir: () => mostrarPanelRol() },
-    { destino: 'tabbtn-postulaciones-autor', abrir: () => {
-        mostrarPanelRol();
-        setTimeout(() => document.getElementById('tabbtn-postulaciones-autor')?.click(), 50);
-      } },
-    { destino: 'tabbtn-ranking-libros', abrir: () => {
-        mostrarPanelRol();
-        setTimeout(() => document.getElementById('tabbtn-ranking-libros')?.click(), 50);
-      } },
-    { destino: 'tabbtn-plan', abrir: () => {
-        mostrarPanelRol();
-        setTimeout(() => document.getElementById('tabbtn-plan')?.click(), 50);
-      } },
-    { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
-    { destino: 'btn-nueva-campana', abrir: () => mostrarPanelRol() }
-  ],
-  'editorial': [
-    { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed') },
-    { destino: 'tabbtn-campanas-activas', abrir: () => mostrarPanelRol() },
-    { destino: 'tabbtn-postulaciones-autor', abrir: () => {
-        mostrarPanelRol();
-        setTimeout(() => document.getElementById('tabbtn-postulaciones-autor')?.click(), 50);
-      } },
-    { destino: 'tabbtn-ranking-libros', abrir: () => {
-        mostrarPanelRol();
-        setTimeout(() => document.getElementById('tabbtn-ranking-libros')?.click(), 50);
-      } },
-    { destino: 'tabbtn-plan', abrir: () => {
-        mostrarPanelRol();
-        setTimeout(() => document.getElementById('tabbtn-plan')?.click(), 50);
-      } },
-    { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
-    { destino: 'btn-nueva-campana', abrir: () => mostrarPanelRol() }
-  ]
+  'autor': _PASOS_AUTOR_EDITORIAL,
+  'editorial': _PASOS_AUTOR_EDITORIAL
 };
 
 let _tutorialScrollHandler = null;
@@ -77,7 +140,8 @@ const _TutorialState = {
   rol: null,
   pasos: [],       // datos cargados de Supabase (imagen, título, texto) por paso; incluye paso 0 = intro
   indice: 0,       // índice del paso actual (0-based, corresponde a pasos 1..6)
-  enIntro: false   // true mientras se muestra la pantalla de bienvenida (paso 0, antes del globo)
+  enIntro: false,  // true mientras se muestra la pantalla de bienvenida (paso 0, antes del globo)
+  gateBloqueando: false // true mientras el paso actual tiene una condición de activación sin cumplir
 };
 
 // ────────────────────────────────────────────────────────────
@@ -120,6 +184,9 @@ function _mostrarIntroTutorial() {
   if (!intro) { _TutorialState.enIntro = false; _mostrarPasoTutorial(); return; }
 
   _ocultarGloboTutorial();
+  _TutorialState.gateBloqueando = false;
+  _ocultarMensajeBloqueoTutorial();
+  _actualizarVisibilidadCerrarTutorial();
 
   document.getElementById('tutorial-mascota-titulo').textContent = intro.titulo || '';
   document.getElementById('tutorial-mascota-texto').textContent = intro.texto || '';
@@ -134,7 +201,7 @@ function _mostrarIntroTutorial() {
   mostrarModal('modal-tutorial-mascota');
 }
 
-function _mostrarPasoTutorial() {
+async function _mostrarPasoTutorial() {
   const config = TUTORIAL_PASOS_CONFIG[_TutorialState.rol];
   const datos = _TutorialState.pasos.find(p => p.numero_paso === _TutorialState.indice + 1);
   const pasoConfig = config[_TutorialState.indice];
@@ -163,14 +230,34 @@ function _mostrarPasoTutorial() {
   if (btnAnterior) btnAnterior.style.display = 'inline-block';
   if (btnSiguiente) btnSiguiente.textContent = _TutorialState.indice === config.length - 1 ? '¡Listo!' : 'Siguiente';
 
+  // Mientras este paso tenga un gate, arrancamos asumiendo que está bloqueado
+  // (se corrige apenas resuelve el chequeo real contra Supabase más abajo).
+  _TutorialState.gateBloqueando = !!pasoConfig.gate;
+  _ocultarMensajeBloqueoTutorial();
+  _actualizarVisibilidadCerrarTutorial();
+
   mostrarModal('modal-tutorial-mascota');
 
   // 3. Mueve el globo hacia el elemento destino (con margen para que la
   //    pantalla/panel termine de renderizar tras el "abrir()").
   setTimeout(() => _posicionarGloboTutorial(pasoConfig.destino), 400);
+
+  // 4. Si el paso tiene gate, lo chequeamos ya mismo por si el usuario ya
+  //    cumplió la condición antes (ej: en una sesión previa) — así no lo
+  //    dejamos bloqueado innecesariamente.
+  if (pasoConfig.gate) {
+    const indiceDeEstePaso = _TutorialState.indice;
+    const idUsuario = Sesion.obtener()?.id;
+    const cumple = idUsuario ? await pasoConfig.gate(idUsuario) : false;
+    // Si el usuario ya avanzó/cerró el tutorial mientras esperábamos la respuesta, no pisamos nada.
+    if (_TutorialState.activo && !_TutorialState.enIntro && _TutorialState.indice === indiceDeEstePaso) {
+      _TutorialState.gateBloqueando = !cumple;
+      _actualizarVisibilidadCerrarTutorial();
+    }
+  }
 }
 
-function pasoSiguienteTutorial() {
+async function pasoSiguienteTutorial() {
   if (_TutorialState.enIntro) {
     _TutorialState.enIntro = false;
     _mostrarPasoTutorial();
@@ -178,6 +265,33 @@ function pasoSiguienteTutorial() {
   }
 
   const config = TUTORIAL_PASOS_CONFIG[_TutorialState.rol];
+  const pasoConfigActual = config[_TutorialState.indice];
+
+  if (pasoConfigActual?.gate) {
+    const btnSiguiente = document.getElementById('btn-tutorial-siguiente');
+    const idUsuario = Sesion.obtener()?.id;
+
+    if (btnSiguiente) { btnSiguiente.disabled = true; btnSiguiente.dataset.textoOriginal = btnSiguiente.textContent; btnSiguiente.textContent = 'Verificando...'; }
+
+    const cumple = idUsuario ? await pasoConfigActual.gate(idUsuario) : false;
+
+    if (btnSiguiente) { btnSiguiente.disabled = false; btnSiguiente.textContent = btnSiguiente.dataset.textoOriginal || 'Siguiente'; }
+
+    // El tutorial pudo haberse cerrado mientras esperábamos la respuesta (ej: el usuario cerró sesión).
+    if (!_TutorialState.activo) return;
+
+    if (!cumple) {
+      _TutorialState.gateBloqueando = true;
+      _mostrarMensajeBloqueoTutorial(pasoConfigActual.mensajeBloqueo);
+      _actualizarVisibilidadCerrarTutorial();
+      return;
+    }
+
+    _TutorialState.gateBloqueando = false;
+    _ocultarMensajeBloqueoTutorial();
+    _actualizarVisibilidadCerrarTutorial();
+  }
+
   if (_TutorialState.indice >= config.length - 1) {
     cerrarTutorialBienvenida();
     return;
@@ -197,13 +311,38 @@ function pasoAnteriorTutorial() {
   _mostrarPasoTutorial();
 }
 
-function pasoAnteriorTutorial() {
-  if (_TutorialState.indice === 0) return;
-  _TutorialState.indice--;
-  _mostrarPasoTutorial();
+// ────────────────────────────────────────────────────────────
+// GATES — mensaje de bloqueo y control del botón cerrar (✕)
+// ────────────────────────────────────────────────────────────
+
+function _mostrarMensajeBloqueoTutorial(mensaje) {
+  const el = document.getElementById('tutorial-mascota-bloqueo');
+  if (!el) return;
+  el.textContent = mensaje || 'Completá lo que te pedimos en este paso para poder continuar.';
+  el.style.display = 'block';
+}
+
+function _ocultarMensajeBloqueoTutorial() {
+  const el = document.getElementById('tutorial-mascota-bloqueo');
+  if (el) el.style.display = 'none';
+}
+
+/**
+ * Oculta el botón ✕ del modal del tutorial mientras el paso actual
+ * tenga una condición de activación sin cumplir, para que no se pueda
+ * salir del tutorial "saltando" el paso obligatorio.
+ */
+function _actualizarVisibilidadCerrarTutorial() {
+  const btnCerrar = document.querySelector('#modal-tutorial-mascota .modal-cerrar');
+  if (!btnCerrar) return;
+  btnCerrar.style.display = _TutorialState.gateBloqueando ? 'none' : '';
 }
 
 async function cerrarTutorialBienvenida() {
+  // Salvoconducto: si el paso actual tiene un gate sin cumplir, no se puede cerrar
+  // el tutorial (el botón ✕ ya está oculto en ese caso, esto es un refuerzo extra).
+  if (_TutorialState.gateBloqueando) return;
+
   _TutorialState.activo = false;
   _ocultarGloboTutorial();
   cerrarModales();
