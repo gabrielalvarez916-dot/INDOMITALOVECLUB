@@ -4414,87 +4414,25 @@ img { max-width: 100%; display: block; }
 /* ── Reseñas — Cards estilo "carpeta" (modal Ver reseñas) ─── */
 .resenas-carpetas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 24px 18px;
   margin-top: 6px;
 }
 
-.resena-carpeta-moods {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.resena-carpeta-mood-chip {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--bordo);
-  background: var(--rosa-claro);
-  padding: 3px 9px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.resena-carpeta-ratings-extra {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 8px 0;
-}
-
-.resena-carpeta-rating-extra-fila {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.resena-carpeta-rating-extra-label {
-  font-size: 11px;
-  color: var(--gris-suave);
-}
-
-.resena-carpeta-rating-extra-estrellas {
-  font-size: 12px;
-  color: #C9A84C;
-  letter-spacing: 1px;
-}
-
-.resena-carpeta-frases {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.resena-carpeta-frase {
-  font-size: 12px;
-  font-style: italic;
-  color: var(--gris-texto);
-  line-height: 1.4;
-  border-left: 2px solid var(--rosa);
-  padding-left: 8px;
-  margin: 0;
-}
-
-.resena-carpeta-separador {
-  border: none;
-  border-top: 1px solid var(--crema-oscura);
-  margin: 2px 0;
-}
-
-.resena-carpeta-comentario {
-  font-size: 13px;
-  font-style: italic;
-  color: var(--gris-texto);
-  line-height: 1.5;
-  margin: 0;
-}
-
+/* Reusada dentro del modal "Reseña interna" (grupo Links) */
 .resena-carpeta-links {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 2px;
+}
+
+.resena-interna-comentario {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--gris-texto);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .resena-carpeta {

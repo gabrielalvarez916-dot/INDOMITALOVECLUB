@@ -1207,6 +1207,92 @@ const _ICONOS_RATING_DECORATIVO = {
 };
 
 /**
+ * Pinta el modal de solo lectura "Reseña interna" con los datos ya normalizados.
+ * Se usa desde dos lugares: la biblioteca del reseñador (abrirResenaInterna) y
+ * la carpeta de reseñas del autor (abrirResenaInternaAutor, en autor.js) — ambos
+ * arman el mismo objeto `datos` a partir de su propia fuente y llaman a esta
+ * función para que el modal se vea exactamente igual en los dos casos.
+ *
+ * @param {Object} datos — { portadaUrl, nombreLibro, nombreAutor, puntuacionLibro,
+ *   fechaPostulacion, fechaEntrega, moods, frases: string[], ratings: {romance,...},
+ *   comentario, links: {instagram, tiktok, amazon, goodreads} }
+ */
+function _pintarResenaInterna(datos) {
+  const portadaEl = document.getElementById('ri-portada');
+  portadaEl.style.display = '';
+  portadaEl.src = datos.portadaUrl || '';
+  document.getElementById('ri-titulo').textContent = datos.nombreLibro || '';
+  document.getElementById('ri-autor').textContent = 'por ' + (datos.nombreAutor || '');
+
+  const puntuacion = datos.puntuacionLibro || 0;
+  document.getElementById('ri-estrellas').textContent = puntuacion
+    ? '★'.repeat(puntuacion) + '☆'.repeat(5 - puntuacion)
+    : 'Sin calificar';
+
+  document.getElementById('ri-fecha-postulacion').textContent = datos.fechaPostulacion ? formatearFechaAmigable(datos.fechaPostulacion) : '—';
+  document.getElementById('ri-fecha-entrega').textContent = datos.fechaEntrega ? formatearFechaAmigable(datos.fechaEntrega) : '—';
+
+  const moodsCont = document.getElementById('ri-moods');
+  const moods = datos.moods || [];
+  if (moods.length === 0) {
+    document.getElementById('ri-moods-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-moods-grupo').style.display = '';
+    moodsCont.innerHTML = moods.map(m => `<span class="mood-chip-solo-lectura">${_esc(_LABELS_MOODS[m] || m)}</span>`).join('');
+  }
+
+  const frasesCont = document.getElementById('ri-frases');
+  const frases = (datos.frases || []).filter(Boolean);
+  if (frases.length === 0) {
+    document.getElementById('ri-frases-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-frases-grupo').style.display = '';
+    frasesCont.innerHTML = frases.map(f => `<p class="resena-interna-frase">"${_esc(f)}"</p>`).join('');
+  }
+
+  const ratings = datos.ratings || {};
+  const hayRatings = Object.values(ratings).some(v => v);
+  if (!hayRatings) {
+    document.getElementById('ri-ratings-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-ratings-grupo').style.display = '';
+    Object.entries(ratings).forEach(([cat, valor]) => {
+      const cont = document.getElementById('ri-rating-' + cat);
+      if (!cont) return;
+      const icono = _ICONOS_RATING_DECORATIVO[cat];
+      const v = valor || 0;
+      cont.innerHTML = Array.from({ length: 5 }, (_, i) =>
+        `<span class="rating-decorativo-btn${i < v ? ' activo' : ''}">${icono}</span>`
+      ).join('');
+    });
+  }
+
+  const l = datos.links || {};
+  const linksHtml = [
+    l.instagram ? `<a href="${l.instagram}" target="_blank" class="red-link">Instagram</a>` : '',
+    l.tiktok    ? `<a href="${l.tiktok}" target="_blank" class="red-link">TikTok</a>` : '',
+    l.amazon    ? `<a href="${l.amazon}" target="_blank" class="red-link">Amazon</a>` : '',
+    l.goodreads ? `<a href="${l.goodreads}" target="_blank" class="red-link">Goodreads</a>` : ''
+  ].filter(Boolean).join('');
+  if (!linksHtml) {
+    document.getElementById('ri-links-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-links-grupo').style.display = '';
+    document.getElementById('ri-links').innerHTML = linksHtml;
+  }
+
+  const comentarioEl = document.getElementById('ri-comentario');
+  if (!datos.comentario) {
+    document.getElementById('ri-comentario-grupo').style.display = 'none';
+  } else {
+    document.getElementById('ri-comentario-grupo').style.display = '';
+    comentarioEl.textContent = '"' + datos.comentario + '"';
+  }
+
+  mostrarModal('modal-resena-interna');
+}
+
+/**
  * Abre el modal de solo lectura con el detalle de la Reseña interna
  * de un libro ya leído. Se llama al tocar un libro en "Leídos".
  * @param {string} idResena
@@ -1219,61 +1305,30 @@ function abrirResenaInterna(idResena) {
     ? (r.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + r.linkPortada : r.linkPortada)
     : '';
 
-  const portadaEl = document.getElementById('ri-portada');
-  portadaEl.style.display = '';
-  portadaEl.src = portadaUrl;
-  document.getElementById('ri-titulo').textContent = r.nombreLibro || '';
-  document.getElementById('ri-autor').textContent = 'por ' + (r.nombreAutor || '');
-
-  const puntuacion = r.puntuacionLibro || 0;
-  document.getElementById('ri-estrellas').textContent = puntuacion
-    ? '★'.repeat(puntuacion) + '☆'.repeat(5 - puntuacion)
-    : 'Sin calificar';
-
-  document.getElementById('ri-fecha-postulacion').textContent = r.fechaPostulacion ? formatearFechaAmigable(r.fechaPostulacion) : '—';
-  document.getElementById('ri-fecha-entrega').textContent = r.fechaEntrega ? formatearFechaAmigable(r.fechaEntrega) : '—';
-
-  const moodsCont = document.getElementById('ri-moods');
-  const moods = r.moods || [];
-  if (moods.length === 0) {
-    document.getElementById('ri-moods-grupo').style.display = 'none';
-  } else {
-    document.getElementById('ri-moods-grupo').style.display = '';
-    moodsCont.innerHTML = moods.map(m => `<span class="mood-chip-solo-lectura">${_esc(_LABELS_MOODS[m] || m)}</span>`).join('');
-  }
-
-  const frasesCont = document.getElementById('ri-frases');
-  const frases = [r.fraseFavorita1, r.fraseFavorita2, r.fraseFavorita3].filter(Boolean);
-  if (frases.length === 0) {
-    document.getElementById('ri-frases-grupo').style.display = 'none';
-  } else {
-    document.getElementById('ri-frases-grupo').style.display = '';
-    frasesCont.innerHTML = frases.map(f => `<p class="resena-interna-frase">"${_esc(f)}"</p>`).join('');
-  }
-
-  const ratings = {
-    romance: r.ratingRomance,
-    spice: r.ratingSpice,
-    drama: r.ratingDrama,
-    estilo: r.ratingEstilo,
-    tension: r.ratingTension,
-    ritmo: r.ratingRitmo,
-    worldbuilding: r.ratingWorldbuilding
-  };
-  const hayRatings = Object.values(ratings).some(v => v);
-  if (!hayRatings) {
-    document.getElementById('ri-ratings-grupo').style.display = 'none';
-  } else {
-    document.getElementById('ri-ratings-grupo').style.display = '';
-    Object.entries(ratings).forEach(([cat, valor]) => {
-      const cont = document.getElementById('ri-rating-' + cat);
-      const icono = _ICONOS_RATING_DECORATIVO[cat];
-      const v = valor || 0;
-      cont.innerHTML = Array.from({ length: 5 }, (_, i) =>
-        `<span class="rating-decorativo-btn${i < v ? ' activo' : ''}">${icono}</span>`
-      ).join('');
-    });
-  }
-
-  mostrarModal('modal-resena-interna');
+  _pintarResenaInterna({
+    portadaUrl,
+    nombreLibro: r.nombreLibro,
+    nombreAutor: r.nombreAutor,
+    puntuacionLibro: r.puntuacionLibro,
+    fechaPostulacion: r.fechaPostulacion,
+    fechaEntrega: r.fechaEntrega,
+    moods: r.moods,
+    frases: [r.fraseFavorita1, r.fraseFavorita2, r.fraseFavorita3],
+    ratings: {
+      romance: r.ratingRomance,
+      spice: r.ratingSpice,
+      drama: r.ratingDrama,
+      estilo: r.ratingEstilo,
+      tension: r.ratingTension,
+      ritmo: r.ratingRitmo,
+      worldbuilding: r.ratingWorldbuilding
+    },
+    comentario: r.comentarios,
+    links: {
+      instagram: r.linkInstagram,
+      tiktok: r.linkTikTok,
+      amazon: r.linkAmazon,
+      goodreads: r.linkGoodreads
+    }
+  });
 }
