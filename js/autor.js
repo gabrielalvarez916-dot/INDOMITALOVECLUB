@@ -1504,6 +1504,25 @@ async function inicializarModalNuevaCampana() {
     infoFecha.textContent = `Tu campaña estará activa hasta el ${fechaCierre.toLocaleDateString('es-AR')}.`;
   }
 
+  // Si tiene cupos de regalo por reconexión, avisa que se suman al límite de su plan
+  const hintRegalo = document.getElementById('nc-cupos-regalo-hint');
+  if (hintRegalo) {
+    hintRegalo.style.display = 'none';
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      const { data: usuarioRow } = await supabaseClient
+        .from('usuarios')
+        .select('cupos_regalo_disponibles')
+        .eq('id', user.id)
+        .maybeSingle();
+      const cupos = usuarioRow?.cupos_regalo_disponibles ?? 0;
+      if (cupos > 0) {
+        hintRegalo.textContent = `🎁 Tenés ${cupos} reseñad@r${cupos === 1 ? '' : 'es'} de regalo: se suman al límite de tu plan en esta campaña.`;
+        hintRegalo.style.display = 'block';
+      }
+    }
+  }
+
   const selector = document.getElementById('nc-libro-selector');
   if (!selector) return;
 
