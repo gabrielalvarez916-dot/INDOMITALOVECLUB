@@ -104,7 +104,8 @@ const _PASOS_AUTOR_EDITORIAL = [
       mostrarPanelRol();
       setTimeout(() => document.getElementById('tabbtn-plan')?.click(), 50);
     } },
-  { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') }
+  { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
+  { destino: null, abrir: () => {} }
 ];
 
 const TUTORIAL_PASOS_CONFIG = {
@@ -127,7 +128,8 @@ const TUTORIAL_PASOS_CONFIG = {
         setTimeout(() => document.getElementById('tabbtn-ranking-resenador')?.click(), 50);
       } },
     { destino: 'bib-titulo-seccion', abrir: () => mostrarSeccion('biblioteca-resenador') },
-    { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') }
+    { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
+    { destino: null, abrir: () => {} }
   ],
   'autor': _PASOS_AUTOR_EDITORIAL,
   'editorial': _PASOS_AUTOR_EDITORIAL

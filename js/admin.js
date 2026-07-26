@@ -1390,9 +1390,9 @@ async function eliminarModalActualizacionAdmin(idModal) {
 // ────────────────────────────────────────────────────────────
 
 const TUTORIAL_DESTINOS = {
-  'reseñador': ['Campañas', 'Perfil', 'Postulaciones y ARCs activas', 'Ranking', 'Biblioteca', 'Evento'],
-  'autor': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento', 'Nueva campaña'],
-  'editorial': ['Campañas', 'Campañas activas', 'Postulaciones', 'Ranking libros', 'Mi plan', 'Evento', 'Nueva campaña']
+  'reseñador': ['Campañas', 'Perfil', 'Panel', 'Ranking', 'Biblioteca', 'Evento', 'Despedida'],
+  'autor': ['Perfil', 'Agregar libro', 'Nueva campaña', 'Campañas', 'Campañas activas', 'Postulaciones', 'Mi plan', 'Evento', 'Despedida'],
+  'editorial': ['Perfil', 'Agregar libro', 'Nueva campaña', 'Campañas', 'Campañas activas', 'Postulaciones', 'Mi plan', 'Evento', 'Despedida']
 };
 
 function _slugRolTutorial(rol) {
@@ -1444,11 +1444,12 @@ function _construirPasosTutorialAdmin(rol, pasosExistentes) {
     const existente = pasosExistentes.find(p => p.numero_paso === numeroPaso) || {};
     const idBase = `tutorial-${slug}-${numeroPaso}`;
     const esIntro = destino === '__INTRO__';
+    const esDespedida = destino === 'Despedida';
 
     return `
       <div class="form-grupo" style="border:1px solid var(--borde, #333); border-radius:10px; padding:16px; margin-top:16px; ${esIntro ? 'background:rgba(255,77,141,0.06);' : ''}">
         <p style="font-weight:700; margin-bottom:4px;">${esIntro ? 'Paso 0 — Introducción' : `Paso ${numeroPaso}`}</p>
-        <p style="font-size:12px; opacity:0.7; margin-bottom:12px;">${esIntro ? '💬 Mensaje general de bienvenida (no apunta a nada, aparece antes del globo)' : `🎯 Apunta a: ${destino}`}</p>
+        <p style="font-size:12px; opacity:0.7; margin-bottom:12px;">${esIntro ? '💬 Mensaje general de bienvenida (no apunta a nada, aparece antes del globo)' : esDespedida ? '👋 Pantalla de cierre (no apunta a nada, último paso del tutorial)' : `🎯 Apunta a: ${destino}`}</p>
 
         <div class="form-grupo">
           <label class="form-label">Imagen de la mascota</label>
