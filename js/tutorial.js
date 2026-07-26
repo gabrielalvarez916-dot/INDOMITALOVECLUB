@@ -330,21 +330,18 @@ function _ocultarMensajeBloqueoTutorial() {
 }
 
 /**
- * Oculta el botón ✕ del modal del tutorial mientras el paso actual
- * tenga una condición de activación sin cumplir, para que no se pueda
- * salir del tutorial "saltando" el paso obligatorio.
+ * Oculta el botón ✕ del modal del tutorial mientras el tutorial esté activo,
+ * para que no se pueda salir en ningún paso hasta terminarlo. Antes solo se
+ * ocultaba durante los pasos con gate sin cumplir, así que en cualquier paso
+ * sin gate (la mayoría) se podía cerrar el tutorial igual — ya no.
  */
 function _actualizarVisibilidadCerrarTutorial() {
   const btnCerrar = document.querySelector('#modal-tutorial-mascota .modal-cerrar');
   if (!btnCerrar) return;
-  btnCerrar.style.display = _TutorialState.gateBloqueando ? 'none' : '';
+  btnCerrar.style.display = _TutorialState.activo ? 'none' : '';
 }
 
 async function cerrarTutorialBienvenida() {
-  // Salvoconducto: si el paso actual tiene un gate sin cumplir, no se puede cerrar
-  // el tutorial (el botón ✕ ya está oculto en ese caso, esto es un refuerzo extra).
-  if (_TutorialState.gateBloqueando) return;
-
   _TutorialState.activo = false;
   _ocultarGloboTutorial();
   cerrarModales();
