@@ -749,11 +749,19 @@ async function cargarTicketsAdmin() {
   window._ticketsAdmin = tickets; // guardamos para poder usar asunto/email en el modal
 
   if (tickets.length === 0) {
-    contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay tickets de soporte.</p></div>`;
+    contenedor.innerHTML = `
+      <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+        <button class="btn-secundario btn-sm" onclick="abrirModalNuevoTicketAdmin()">+ Nuevo ticket</button>
+      </div>
+      <div class="estado-vacio"><p class="estado-vacio-texto">No hay tickets de soporte.</p></div>
+    `;
     return;
   }
 
   contenedor.innerHTML = `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+      <button class="btn-secundario btn-sm" onclick="abrirModalNuevoTicketAdmin()">+ Nuevo ticket</button>
+    </div>
     <table class="admin-tabla">
       <thead>
         <tr>
@@ -1004,6 +1012,95 @@ function escaparHtmlSoporte(texto) {
 
 function cerrarModalTicketAdmin() {
   document.getElementById('modal-ticket-soporte')?.remove();
+}
+
+// ────────────────────────────────────────────────────────────
+// MODAL: crear un ticket nuevo (iniciado por el admin)
+// ────────────────────────────────────────────────────────────
+
+function abrirModalNuevoTicketAdmin() {
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-nuevo-ticket-soporte';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;';
+  overlay.innerHTML = `
+    <div style="background:#fff; border-radius:12px; padding:20px; max-width:480px; width:90%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="margin:0; font-size:16px;">Nuevo ticket de soporte</h3>
+        <button onclick="cerrarModalNuevoTicketAdmin()" style="background:none; border:none; font-size:20px; cursor:pointer; line-height:1;">×</button>
+      </div>
+      <label style="font-size:12px; color:#888;">Email del usuario</label>
+      <input type="email" id="nuevo-ticket-email" placeholder="usuario@email.com" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box; margin:4px 0 10px;" />
+      <label style="font-size:12px; color:#888;">Asunto</label>
+      <input type="text" id="nuevo-ticket-asunto" placeholder="Asunto del mensaje" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box; margin:4px 0 10px;" />
+      <label style="font-size:12px; color:#888;">Mensaje</label>
+      <textarea id="nuevo-ticket-mensaje" rows="4" placeholder="Escribí el mensaje..." style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; resize:vertical; box-sizing:border-box; margin:4px 0 10px;"></textarea>
+      <label style="font-size:12px; color:#888;">Adjuntar archivo (opcional, jpg/png/webp/heic/pdf, máx. 8MB)</label>
+      <input type="file" id="nuevo-ticket-adjunto" accept=".jpg,.jpeg,.png,.webp,.heic,.pdf" style="display:block; margin-top:4px; font-size:12px;" />
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+        <button class="btn-secundario btn-sm" onclick="cerrarModalNuevoTicketAdmin()">Cancelar</button>
+        <button class="btn-secundario btn-sm" onclick="enviarNuevoTicketAdmin()">Crear y enviar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function cerrarModalNuevoTicketAdmin() {
+  document.getElementById('modal-nuevo-ticket-soporte')?.remove();
+}
+
+async function enviarNuevoTicketAdmin() {
+  const email = document.getElementById('nuevo-ticket-email')?.value?.trim();
+  const asunto = document.getElementById('nuevo-ticket-asunto')?.value?.trim();
+  const mensaje = document.getElementById('nuevo-ticket-mensaje')?.value?.trim();
+
+  if (!email || !mensaje) {
+    mostrarToast('Completá el email y el mensaje.', 'error');
+    return;
+  }
+
+  const token = await obtenerTokenFresco();
+  if (!token) {
+    mostrarToast('No se pudo autenticar la sesión de admin.', 'error');
+    return;
+  }
+
+  let adjunto = null;
+  const inputAdjunto = document.getElementById('nuevo-ticket-adjunto');
+  const archivo = inputAdjunto?.files?.[0];
+  if (archivo) {
+    if (archivo.size > MAX_BYTES_ADJUNTO_ADMIN) {
+      mostrarToast('El archivo es demasiado grande (máximo 8MB).', 'error');
+      return;
+    }
+    const formato = (archivo.name.split('.').pop() || '').toLowerCase();
+    const tipo = TIPOS_ADJUNTO_ADMIN[formato];
+    if (!tipo) {
+      mostrarToast('Formato no permitido. Usá jpg, png, webp, heic o pdf.', 'error');
+      return;
+    }
+    try {
+      const contenidoBase64 = await archivoABase64(archivo);
+      adjunto = { nombre: archivo.name, tipo, contenidoBase64 };
+    } catch (e) {
+      mostrarToast(e.message || 'No se pudo leer el archivo.', 'error');
+      return;
+    }
+  }
+
+  const { data, error } = await supabaseClient.functions.invoke('soporte-crear-ticket-admin', {
+    body: { email, asunto, mensaje, adjunto },
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (error || data?.error) {
+    mostrarToast(data?.error || error?.message || 'No se pudo crear el ticket.', 'error');
+    return;
+  }
+
+  mostrarToast('Ticket creado y mail enviado.', 'ok');
+  cerrarModalNuevoTicketAdmin();
+  await cargarTicketsAdmin();
 }
 
 async function obtenerTokenFresco() {
