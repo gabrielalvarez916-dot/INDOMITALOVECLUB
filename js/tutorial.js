@@ -143,7 +143,8 @@ const _TutorialState = {
   pasos: [],       // datos cargados de Supabase (imagen, título, texto) por paso; incluye paso 0 = intro
   indice: 0,       // índice del paso actual (0-based, corresponde a pasos 1..6)
   enIntro: false,  // true mientras se muestra la pantalla de bienvenida (paso 0, antes del globo)
-  gateBloqueando: false // true mientras el paso actual tiene una condición de activación sin cumplir
+  gateBloqueando: false, // true mientras el paso actual tiene una condición de activación sin cumplir
+  minimizado: false // true mientras el tutorial está reducido a la píldora flotante
 };
 
 // ────────────────────────────────────────────────────────────
@@ -188,7 +189,6 @@ function _mostrarIntroTutorial() {
   _ocultarGloboTutorial();
   _TutorialState.gateBloqueando = false;
   _ocultarMensajeBloqueoTutorial();
-  _actualizarVisibilidadCerrarTutorial();
 
   document.getElementById('tutorial-mascota-titulo').textContent = intro.titulo || '';
   document.getElementById('tutorial-mascota-texto').textContent = intro.texto || '';
@@ -236,7 +236,6 @@ async function _mostrarPasoTutorial() {
   // (se corrige apenas resuelve el chequeo real contra Supabase más abajo).
   _TutorialState.gateBloqueando = !!pasoConfig.gate;
   _ocultarMensajeBloqueoTutorial();
-  _actualizarVisibilidadCerrarTutorial();
 
   mostrarModal('modal-tutorial-mascota');
 
@@ -254,7 +253,6 @@ async function _mostrarPasoTutorial() {
     // Si el usuario ya avanzó/cerró el tutorial mientras esperábamos la respuesta, no pisamos nada.
     if (_TutorialState.activo && !_TutorialState.enIntro && _TutorialState.indice === indiceDeEstePaso) {
       _TutorialState.gateBloqueando = !cumple;
-      _actualizarVisibilidadCerrarTutorial();
     }
   }
 }
@@ -285,13 +283,11 @@ async function pasoSiguienteTutorial() {
     if (!cumple) {
       _TutorialState.gateBloqueando = true;
       _mostrarMensajeBloqueoTutorial(pasoConfigActual.mensajeBloqueo);
-      _actualizarVisibilidadCerrarTutorial();
       return;
     }
 
     _TutorialState.gateBloqueando = false;
     _ocultarMensajeBloqueoTutorial();
-    _actualizarVisibilidadCerrarTutorial();
   }
 
   if (_TutorialState.indice >= config.length - 1) {
@@ -314,7 +310,7 @@ function pasoAnteriorTutorial() {
 }
 
 // ────────────────────────────────────────────────────────────
-// GATES — mensaje de bloqueo y control del botón cerrar (✕)
+// GATES — mensaje de bloqueo
 // ────────────────────────────────────────────────────────────
 
 function _mostrarMensajeBloqueoTutorial(mensaje) {
@@ -329,21 +325,11 @@ function _ocultarMensajeBloqueoTutorial() {
   if (el) el.style.display = 'none';
 }
 
-/**
- * Oculta el botón ✕ del modal del tutorial mientras el tutorial esté activo,
- * para que no se pueda salir en ningún paso hasta terminarlo. Antes solo se
- * ocultaba durante los pasos con gate sin cumplir, así que en cualquier paso
- * sin gate (la mayoría) se podía cerrar el tutorial igual — ya no.
- */
-function _actualizarVisibilidadCerrarTutorial() {
-  const btnCerrar = document.querySelector('#modal-tutorial-mascota .modal-cerrar');
-  if (!btnCerrar) return;
-  btnCerrar.style.display = _TutorialState.activo ? 'none' : '';
-}
-
 async function cerrarTutorialBienvenida() {
   _TutorialState.activo = false;
+  _TutorialState.minimizado = false;
   _ocultarGloboTutorial();
+  _ocultarPildoraTutorial();
   cerrarModales();
 
   document.getElementById('btn-soporte-flotante')?.style.removeProperty('display');
@@ -354,6 +340,59 @@ async function cerrarTutorialBienvenida() {
   } catch (e) {
     console.error('Error marcando tutorial como visto:', e);
   }
+}
+
+// ────────────────────────────────────────────────────────────
+// MINIMIZAR / EXPANDIR — el tutorial nunca se cierra del todo,
+// solo se reduce a una píldora flotante que lo vuelve a abrir.
+// ────────────────────────────────────────────────────────────
+
+function minimizarTutorialBienvenida() {
+  if (!_TutorialState.activo || _TutorialState.minimizado) return;
+  _TutorialState.minimizado = true;
+  document.getElementById('modal-tutorial-mascota')?.classList.add('tutorial-minimizado');
+  _ocultarGloboTutorial();
+  _mostrarPildoraTutorial();
+}
+
+function expandirTutorialBienvenida() {
+  if (!_TutorialState.activo || !_TutorialState.minimizado) return;
+  _TutorialState.minimizado = false;
+  document.getElementById('modal-tutorial-mascota')?.classList.remove('tutorial-minimizado');
+  _ocultarPildoraTutorial();
+
+  if (!_TutorialState.enIntro) {
+    const config = TUTORIAL_PASOS_CONFIG[_TutorialState.rol];
+    const pasoConfigActual = config?.[_TutorialState.indice];
+    if (pasoConfigActual?.destino) _posicionarGloboTutorial(pasoConfigActual.destino);
+  }
+}
+
+function _asegurarPildoraTutorial() {
+  let pill = document.getElementById('tutorial-pill');
+  if (pill) return pill;
+
+  pill = document.createElement('button');
+  pill.id = 'tutorial-pill';
+  pill.type = 'button';
+  pill.className = 'tutorial-pill';
+  pill.setAttribute('aria-label', 'Reabrir tutorial');
+  pill.innerHTML = `<img id="tutorial-pill-imagen" src="" alt="" /><span>Tutorial</span>`;
+  pill.addEventListener('click', expandirTutorialBienvenida);
+  document.body.appendChild(pill);
+  return pill;
+}
+
+function _mostrarPildoraTutorial() {
+  const pill = _asegurarPildoraTutorial();
+  const imgOrigen = document.getElementById('tutorial-mascota-imagen')?.getAttribute('src');
+  const imgPildora = document.getElementById('tutorial-pill-imagen');
+  if (imgPildora && imgOrigen) imgPildora.src = imgOrigen;
+  pill.classList.add('activo');
+}
+
+function _ocultarPildoraTutorial() {
+  document.getElementById('tutorial-pill')?.classList.remove('activo');
 }
 
 // ────────────────────────────────────────────────────────────

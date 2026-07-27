@@ -1377,6 +1377,61 @@ img { max-width: 100%; display: block; }
   border-top: 1px solid var(--gris-borde);
 }
 
+/* ── Tutorial de bienvenida: minimizar + panel lateral en mobile ──── */
+.tutorial-header-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--gris-suave);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radio);
+  transition: var(--transicion);
+  line-height: 1;
+}
+
+.tutorial-header-btn:hover { background: var(--rosa-claro); color: var(--bordo); }
+
+/* Píldora flotante: reabre el tutorial cuando está minimizado (PC y mobile) */
+.tutorial-pill {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  position: fixed;
+  right: 18px;
+  bottom: 90px;
+  z-index: 310;
+  background: var(--bordo);
+  color: var(--blanco);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px 8px 8px;
+  box-shadow: var(--sombra-fuerte);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tutorial-pill.activo { display: flex; }
+
+.tutorial-pill img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--blanco);
+}
+
+/* En mobile, mientras está minimizado el modal queda oculto (solo la píldora se ve) */
+#modal-tutorial-mascota.tutorial-minimizado.activo { display: none; }
+
+@media (max-width: 768px) {
+  .tutorial-pill {
+    right: 14px;
+    bottom: 80px;
+  }
+}
+
 /* ── Perfil ───────────────────────────────────────────────── */
 .perfil-foto-container {
   display: flex;
@@ -5063,11 +5118,17 @@ img { max-width: 100%; display: block; }
 
 @media (max-width: 768px) {
   #modal-tutorial-mascota {
-    bottom: 12px;
-    right: 12px;
-    left: 12px;
-    max-width: none;
-    width: auto;
+    top: 0;
+    bottom: auto;
+    right: 0;
+    left: auto;
+    transform: none;
+    width: 86%;
+    max-width: 300px;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    overflow-y: auto;
   }
 }
 
@@ -5075,6 +5136,6 @@ img { max-width: 100%; display: block; }
   position: relative;
   z-index: 9998;
   border-radius: 8px;
-  box-shadow: 0 0 0 9999px rgba(92, 15, 26, 0.45), 0 0 0 4px var(--color-primario, #ff4d8d);
+  box-shadow: 0 0 0 4px var(--color-primario, #ff4d8d);
   transition: box-shadow 0.3s ease;
 }
