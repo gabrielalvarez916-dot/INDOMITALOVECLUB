@@ -13,7 +13,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Fraunces:ital,wght@0,600;0,700;1,600;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/landing.css" />
 
   <!-- TODO SEO: schema.org Organization -->
@@ -43,6 +43,14 @@
       }
     })();
   </script>
+
+  <!-- BANDA TICKER -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>Libros gratis</span><span>Reseñas reales, no bots</span><span>Autores y editoriales</span><span>Comunidad de lectoras y lectores</span>
+      <span>Libros gratis</span><span>Reseñas reales, no bots</span><span>Autores y editoriales</span><span>Comunidad de lectoras y lectores</span>
+    </div>
+  </div>
 
   <!-- HEADER -->
   <header id="header-landing">
@@ -100,26 +108,99 @@
   </section>
 
   <!-- ============================================================
-       TODO: sección "el problema" (enfoque: "no todos son de lanzamiento")
+       PROBLEMA — bloque de color con statement grande
        ============================================================ -->
   <section id="problema">
-    <!-- TODO: contenido pendiente de escribir -->
+    <div class="problema-inner">
+      <span class="kicker">El problema</span>
+      <p class="problema-statement">No todas las reseñas nacen de una lectura real. <strong>Acá sí.</strong> Conectamos autores, editoriales y reseñadores que de verdad leen, opinan y se comprometen.</p>
+    </div>
   </section>
 
   <!-- ============================================================
-       TODO: sección "qué la diferencia" con datos reales
-       (campañas hechas, reseñas entregadas, reseñadores activos)
+       CÓMO FUNCIONA — pasos numerados
+       ============================================================ -->
+  <section id="como-funciona">
+    <span class="kicker">Cómo funciona</span>
+    <h2 class="seccion-titulo">Tres pasos, sin vueltas</h2>
+    <p class="seccion-bajada">Ya seas reseñador/a, autor/a o editorial, el camino es simple.</p>
+    <div class="pasos">
+      <div class="paso">
+        <span class="paso-numero">1</span>
+        <h3>Elegí tu rol</h3>
+        <p>Sumate como reseñador/a, autor/a o editorial y armá tu perfil en minutos.</p>
+      </div>
+      <div class="paso">
+        <span class="paso-numero">2</span>
+        <h3>Conectate</h3>
+        <p>Descubrí campañas activas o publicá la tuya y encontrá la contraparte ideal.</p>
+      </div>
+      <div class="paso">
+        <span class="paso-numero">3</span>
+        <h3>Cumplí tu parte</h3>
+        <p>Leé y reseñá, o recibí reseñas reales para tu libro. Todo queda registrado en tu historial.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIFERENCIADORES — badges de confianza
        ============================================================ -->
   <section id="diferenciadores">
-    <!-- TODO: pendiente de números reales -->
+    <div class="diferenciadores-inner">
+      <span class="kicker">Qué nos diferencia</span>
+      <h2 class="seccion-titulo">Confianza de punta a punta</h2>
+      <div class="badges-confianza">
+        <div class="badge-confianza">
+          <span class="icono">🚫</span>
+          <strong>Sin bots</strong>
+          <span>Cada reseña viene de una persona real que leyó el libro.</span>
+        </div>
+        <div class="badge-confianza">
+          <span class="icono">📊</span>
+          <strong>Historial de cumplimiento</strong>
+          <span>Elegís reseñadores por su trayectoria real, no solo por su bio.</span>
+        </div>
+        <div class="badge-confianza">
+          <span class="icono">📚</span>
+          <strong>Catálogo en un solo lugar</strong>
+          <span>Gestioná todas tus campañas y reseñas desde un único panel.</span>
+        </div>
+        <div class="badge-confianza">
+          <span class="icono">🤝</span>
+          <strong>Comunidad activa</strong>
+          <span>Eventos, ranking y un espacio pensado para quienes aman leer.</span>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ============================================================
-       TODO: FAQ corta
+       FAQ corta
        ============================================================ -->
   <section id="faq">
-    <!-- TODO: contenido pendiente de escribir -->
+    <span class="kicker">Preguntas frecuentes</span>
+    <h2 class="seccion-titulo">Lo que más nos preguntan</h2>
+    <div class="faq-lista">
+      <details class="faq-item">
+        <summary>¿Cuánto cuesta sumarme como reseñador/a?</summary>
+        <p>Sumarte como reseñador/a es gratuito. Recibís libros a cambio de tu reseña honesta.</p>
+      </details>
+      <details class="faq-item">
+        <summary>¿Cómo se garantiza que las reseñas sean reales?</summary>
+        <p>Cada reseñador/a tiene un historial de cumplimiento visible, y las campañas quedan registradas de punta a punta.</p>
+      </details>
+      <details class="faq-item">
+        <summary>¿Puedo publicar más de un libro?</summary>
+        <p>Sí, autores y editoriales pueden gestionar todo su catálogo desde un mismo panel.</p>
+      </details>
+    </div>
   </section>
+
+  <!-- ============================================================
+       WORDMARK gigante
+       ============================================================ -->
+  <div id="wordmark"><span>Indómita Love Club</span></div>
 
   <footer id="footer-landing">
     <p>&copy; 2026 Indómita Love Club</p>

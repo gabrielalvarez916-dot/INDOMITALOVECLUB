@@ -1,8 +1,8 @@
 /* ============================================================
    landing.css — Indómita Love Club
    Hoja liviana y propia de la landing pública.
-   Reutiliza la paleta de marca de css/styles.css pero no depende
-   de ese archivo (evita cargar los estilos de la plataforma logueada).
+   Reutiliza la paleta de marca pero no depende de css/styles.css
+   (evita cargar los estilos de la plataforma logueada).
    ============================================================ */
 
 :root {
@@ -21,8 +21,9 @@
   --gris-suave:    #999999;
   --gris-borde:    #E5E0D8;
 
-  --fuente-titulo: 'Playfair Display', Georgia, serif;
-  --fuente-texto:  'Lato', sans-serif;
+  --fuente-titulo:  'Playfair Display', Georgia, serif;
+  --fuente-display: 'Fraunces', 'Playfair Display', Georgia, serif;
+  --fuente-texto:   'Lato', sans-serif;
 
   --radio:         10px;
   --radio-grande:  18px;
@@ -46,12 +47,57 @@ body {
   font-family: var(--fuente-texto);
   color: var(--gris-texto);
   background: var(--crema-suave);
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   TICKER — banda de texto en movimiento continuo
+   ============================================================ */
+.ticker {
+  background: var(--bordo);
+  color: var(--rosa-claro);
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 9px 0;
+}
+
+.ticker-track {
+  display: inline-flex;
+  animation: mover-ticker 26s linear infinite;
+}
+
+.ticker-track span {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--fuente-texto);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0 22px;
+}
+
+.ticker-track span::after {
+  content: '\2726';
+  margin-left: 22px;
+  opacity: 0.6;
+}
+
+@keyframes mover-ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
 }
 
 /* HEADER */
 #header-landing {
   background: var(--blanco);
   border-bottom: 1px solid var(--gris-borde);
+  position: relative;
+  z-index: 5;
 }
 
 .header-landing-inner {
@@ -146,11 +192,13 @@ body {
 }
 
 #hero h1 {
-  font-family: var(--fuente-titulo);
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-family: var(--fuente-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 3.1rem);
   color: var(--bordo-oscuro);
   margin: 0 0 16px;
-  line-height: 1.15;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .bajada {
@@ -174,10 +222,11 @@ body {
 .ganchos li {
   background: var(--rosa-claro);
   color: var(--bordo-oscuro);
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.85rem;
   padding: 8px 16px;
   border-radius: var(--radio-pill);
+  border: 1px solid rgba(139, 26, 43, 0.12);
 }
 
 .btn-cta {
@@ -197,6 +246,282 @@ body {
 .btn-cta:hover {
   background: var(--bordo-oscuro);
   box-shadow: var(--sombra-fuerte);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   ETIQUETA DE SECCIÓN (kicker chico arriba de cada título)
+   ============================================================ */
+.kicker {
+  display: inline-block;
+  font-family: var(--fuente-texto);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bordo-claro);
+  background: var(--rosa-claro);
+  padding: 6px 16px;
+  border-radius: var(--radio-pill);
+  margin-bottom: 14px;
+}
+
+/* ============================================================
+   PROBLEMA — bloque de color con statement grande (estilo cita)
+   ============================================================ */
+#problema {
+  background: var(--bordo);
+  color: var(--crema);
+  padding: 72px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#problema::before,
+#problema::after {
+  content: 'RESEÑAS REALES';
+  position: absolute;
+  font-family: var(--fuente-display);
+  font-weight: 700;
+  font-size: 7rem;
+  color: rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#problema::before { top: -20px; left: -40px; }
+#problema::after   { bottom: -50px; right: -40px; }
+
+.problema-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.problema-inner .kicker {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--crema);
+}
+
+.problema-statement {
+  font-family: var(--fuente-display);
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(1.5rem, 3.4vw, 2.3rem);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.problema-statement strong {
+  font-style: normal;
+  color: var(--rosa-claro);
+}
+
+/* ============================================================
+   CÓMO FUNCIONA — pasos numerados (estilo Step 1/2/3)
+   ============================================================ */
+#como-funciona {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 88px 24px 64px;
+  text-align: center;
+}
+
+.seccion-titulo {
+  font-family: var(--fuente-display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+  color: var(--bordo-oscuro);
+  margin: 0 0 12px;
+}
+
+.seccion-bajada {
+  color: var(--gris-medio);
+  max-width: 520px;
+  margin: 0 auto 48px;
+  line-height: 1.5;
+}
+
+.pasos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  text-align: left;
+}
+
+.paso {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 28px 24px;
+  transition: var(--transicion);
+}
+
+.paso:hover {
+  box-shadow: var(--sombra-fuerte);
+  transform: translateY(-3px);
+}
+
+.paso-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bordo);
+  color: var(--blanco);
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.paso h3 {
+  font-family: var(--fuente-texto);
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  color: var(--gris-texto);
+}
+
+.paso p {
+  color: var(--gris-medio);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ============================================================
+   DIFERENCIADORES — grilla de badges de confianza
+   ============================================================ */
+#diferenciadores {
+  background: var(--crema);
+  padding: 64px 24px 80px;
+}
+
+.diferenciadores-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.badges-confianza {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 44px;
+}
+
+.badge-confianza {
+  background: var(--blanco);
+  border-radius: var(--radio-grande);
+  padding: 26px 18px;
+  box-shadow: var(--sombra);
+}
+
+.badge-confianza .icono {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.badge-confianza strong {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 1.05rem;
+  color: var(--bordo-oscuro);
+  margin-bottom: 6px;
+}
+
+.badge-confianza span {
+  font-size: 0.85rem;
+  color: var(--gris-medio);
+  line-height: 1.4;
+  display: block;
+}
+
+/* ============================================================
+   FAQ
+   ============================================================ */
+#faq {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 24px 96px;
+  text-align: center;
+}
+
+.faq-lista {
+  text-align: left;
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio);
+  padding: 4px 22px;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--gris-texto);
+  padding: 18px 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::after {
+  content: '+';
+  font-size: 1.4rem;
+  color: var(--bordo);
+  font-weight: 400;
+  transition: var(--transicion);
+}
+
+.faq-item[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.faq-item p {
+  color: var(--gris-medio);
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+/* ============================================================
+   WORDMARK — bloque tipográfico gigante antes del footer
+   ============================================================ */
+#wordmark {
+  background: var(--bordo-oscuro);
+  padding: 56px 24px;
+  text-align: center;
+  overflow: hidden;
+}
+
+#wordmark span {
+  display: block;
+  font-family: var(--fuente-display);
+  font-weight: 700;
+  font-style: italic;
+  color: var(--crema);
+  font-size: clamp(2.6rem, 9vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 /* FOOTER */
@@ -205,5 +530,23 @@ body {
   padding: 32px 24px;
   color: var(--gris-suave);
   font-size: 0.85rem;
-  border-top: 1px solid var(--gris-borde);
+  background: var(--crema-suave);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 760px) {
+  .pasos {
+    grid-template-columns: 1fr;
+  }
+  .badges-confianza {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 460px) {
+  .badges-confianza {
+    grid-template-columns: 1fr;
+  }
 }
