@@ -14,6 +14,43 @@
  * @returns {Promise<string>} URL pública del archivo subido
  * @throws {Error} si el archivo es inválido o la subida falla
  */
+/**
+ * Redimensiona y comprime una imagen en el navegador antes de subirla.
+ * Convierte siempre a JPEG para maximizar compresión.
+ */
+async function comprimirImagen(archivo, maxAncho = 1000, calidad = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const urlTemp = URL.createObjectURL(archivo);
+
+    img.onload = () => {
+      URL.revokeObjectURL(urlTemp);
+      let { width, height } = img;
+      if (width > maxAncho) {
+        height = Math.round(height * (maxAncho / width));
+        width = maxAncho;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error('No se pudo comprimir la imagen.'));
+          resolve(new File([blob], archivo.name, { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        calidad
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(urlTemp);
+      reject(new Error('No se pudo leer la imagen para comprimir.'));
+    };
+    img.src = urlTemp;
+  });
+}
+
 async function subirImagen(bucket, ruta, archivo) {
   if (!archivo) {
     throw new Error('No se seleccionó ningún archivo.');
@@ -29,7 +66,11 @@ async function subirImagen(bucket, ruta, archivo) {
     throw new Error('El archivo supera el límite de 10 MB.');
   }
 
-  const extension = archivo.name.split('.').pop().toLowerCase();
+  if (bucket === 'PORTADAS' || bucket === 'EVENTOS') {
+    archivo = await comprimirImagen(archivo, 1000, 0.82);
+  }
+
+  const extension = bucket === 'PORTADAS' || bucket === 'EVENTOS' ? 'jpg' : archivo.name.split('.').pop().toLowerCase();
   const rutaCompleta = `${ruta}.${extension}`;
 
   const { error } = await supabaseClient
