@@ -1379,18 +1379,24 @@ img { max-width: 100%; display: block; }
 
 /* ── Tutorial de bienvenida: minimizar + panel lateral en mobile ──── */
 .tutorial-header-btn {
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--rosa-claro);
   border: none;
-  font-size: 18px;
-  color: var(--gris-suave);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--radio);
-  transition: var(--transicion);
+  font-size: 20px;
+  font-weight: 700;
   line-height: 1;
+  color: var(--bordo);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: var(--transicion);
+  flex-shrink: 0;
 }
 
-.tutorial-header-btn:hover { background: var(--rosa-claro); color: var(--bordo); }
+.tutorial-header-btn:hover { background: var(--rosa); color: var(--blanco); }
 
 /* Píldora flotante: reabre el tutorial cuando está minimizado (PC y mobile) */
 .tutorial-pill {
