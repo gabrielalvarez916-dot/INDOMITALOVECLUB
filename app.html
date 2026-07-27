@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indómita Love Club</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+ <header id="header" style="position:relative;">
+  <div id="header-animacion-global" style="position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:999;"></div>
+    <div class="header-inner">
+      <div class="logo">
+        <img src="Logo.png" alt="Indómita Love Club" id="logo-img" />
+        <span class="logo-texto">Indómita Love Club</span>
+      </div>
+      <nav id="nav-principal">
+        <a href="#" class="nav-link" id="nav-campanas" onclick="mostrarSeccion('feed')">Campañas</a>
+        <a href="#" class="nav-link" id="nav-panel" style="display:none;" onclick="mostrarPanelRol()">Panel</a>
+        <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
+       <a href="#" class="nav-link" id="nav-faq-autor" style="display:none;" onclick="mostrarSeccion('faq-autor')">Dudas</a>
+        <a href="#" class="nav-link" id="nav-admin" style="display:none;" onclick="mostrarSeccion('admin')">Admin</a>
+        <a href="#" class="nav-link" id="nav-evento" style="display:none;" onclick="mostrarSeccion('evento')">💋 Evento</a>
+      </nav>
+      <div id="header-auth">
+  <div id="notif-campana-cont" style="display:none;">
+    <button id="notif-campana-btn" class="notif-campana-btn" onclick="toggleNotificaciones()" aria-label="Notificaciones">
+      🔔
+      <span id="notif-badge" class="notif-badge" style="display:none;">0</span>
+    </button>
+    <div id="notif-panel" class="notif-panel" style="display:none;">
+      <div class="notif-panel-header">
+        <span>Notificaciones</span>
+        <button class="notif-marcar-todas" onclick="marcarTodasComoLeidas()">Marcar todas como leídas</button>
+      </div>
+      <div id="notif-lista" class="notif-lista"></div>
+    </div>
+  </div>
+  <button class="btn-primario" id="btn-login-header" onclick="mostrarSeccion('login')">Ingresar</button>
+  <div id="usuario-menu" style="display:none;">
+    <span id="usuario-alias" class="usuario-alias"></span>
+    <button class="btn-secundario btn-sm" onclick="cerrarSesion()">Salir</button>
+  </div>
+</div>
+</div>
+</header>
+
+  <!-- Contenedor de partícula de evento: a pantalla completa, independiente del header -->
+<div id="evento-particula-pantalla-completa" style="position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:600;"></div>
+
+
+<!-- SECCIÓN: LOGIN -->
+  <section id="seccion-login" class="seccion">
+
+    <!-- Corazones decorativos de fondo -->
+    <div class="login-corazon login-corazon-1">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#F2C4CE"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-2">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#E8A0B0"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-3">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#F2C4CE"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-4">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="#8B1A2B"/>
+      </svg>
+    </div>
+    <div class="login-corazon login-corazon-5">
+      <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C100 160 10 100 10 50 C10 20 35 0 65 0 C80 0 92 8 100 20 C108 8 120 0 135 0 C165 0 190 20 190 50 C190 100 100 160 100 160Z" fill="none" stroke="#E8A0B0" stroke-width="6"/>
+      </svg>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="login-layout">
+
+      <!-- Columna izquierda: logo + texto + botón -->
+      <div class="login-izquierda">
+        <img src="Logo.png" alt="Indómita Love Club" class="login-logo-img" />
+
+        <div class="login-textos">
+          <h1 class="login-bienvenida">Bienvenida<br>al Love Club</h1>
+          <div class="login-separador-deco">
+            <span class="login-sep-linea"></span>
+            <span class="login-sep-corazon">♥</span>
+            <span class="login-sep-linea"></span>
+          </div>
+          <p class="login-subtitulo">La comunidad de romance donde aut@res y reseñad@res se encuentran</p>
+        </div>
+
+        <!-- Paso 1: botón Google -->
+        <div id="login-paso1">
+          <button class="btn-google-nuevo" id="btn-google-login">
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#fff" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#fff" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#fff" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#fff" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Ingresar con Google
+          </button>
+          <div id="google-btn-container" style="display:none;"></div>
+          <p class="login-info">Al ingresar aceptás los términos de uso de la plataforma.</p>
+        </div>
+
+        <!-- Paso 2: selección de rol -->
+        <div id="login-paso2" style="display:none;">
+          <p class="login-pregunta">¿Cómo querés usar<br>Indómita Love Club?</p>
+          <div class="form-fila" style="margin-bottom:16px;">
+            <div class="form-grupo">
+              <label class="form-label">Nombre *</label>
+              <input type="text" id="paso2-nombre" class="form-input" required />
+            </div>
+            <div class="form-grupo">
+              <label class="form-label">Apellido *</label>
+              <input type="text" id="paso2-apellido" class="form-input" required />
+            </div>
+          </div>
+          <div class="rol-opciones">
+            <button class="rol-opcion" onclick="seleccionarRol('autor')">
+              <span class="rol-icono">✍️</span>
+              <div>
+                <span class="rol-nombre">Soy aut@r</span>
+                <span class="rol-desc">Publico campañas y distribuyo mis libros</span>
+              </div>
+            </button>
+            <button class="rol-opcion" onclick="seleccionarRol('reseñador')">
+              <span class="rol-icono">📚</span>
+              <div>
+                <span class="rol-nombre">Soy reseñad@r</span>
+                <span class="rol-desc">Leo ARCs y publico reseñas</span>
+              </div>
+            </button>
+            <button class="rol-opcion" onclick="seleccionarRol('editorial')">
+              <span class="rol-icono">🏢</span>
+              <div>
+                <span class="rol-nombre">Soy editorial</span>
+                <span class="rol-desc">Cargo los libros de mis autores y gestiono sus campañas</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cargando -->
+        <div id="login-cargando" style="display:none;">
+          <div class="spinner"></div>
+          <p class="login-info">Ingresando...</p>
+        </div>
+
+        <!-- Error -->
+        <div id="login-error" class="mensaje-error" style="display:none;"></div>
+      </div>
+
+      <!-- Columna derecha: tipografía decorativa -->
+      <div class="login-derecha" aria-hidden="true">
+        <span class="login-deco-indomita">Indómita</span>
+        <span class="login-deco-love">love</span>
+      </div>
+
+    </div>
+  </section>
+  
+  <!-- SECCIÓN: FEED -->
+  <section id="seccion-feed" class="seccion" style="display:none;">
+ <!-- Banner publicitario -->
+    <div id="banner-publicitario-wrapper" style="display:none;">
+      <div id="banner-publicitario" class="banner-publicitario"></div>
+      <div class="banner-publicitario-nav" id="banner-publicitario-nav"></div>
+    </div>
+    
+    <!-- Slider hero -->
+    <div id="feed-slider-wrapper">
+      <div class="feed-slider" id="feed-slider">
+        <button class="slide-arrow slide-arrow-prev" aria-label="Anterior">&#8592;</button>
+        <button class="slide-arrow slide-arrow-next" aria-label="Siguiente">&#8594;</button>
+      </div>
+      <div class="slide-nav" id="slide-nav"></div>
+    </div>
+
+
+   <!-- Ticker -->
+    <div class="feed-ticker" id="feed-ticker" style="display:none;">
+      <div class="feed-ticker-track" id="feed-ticker-track"></div>
+    </div>
+    </div>
+
+    <div class="seccion-inner">
+
+      <!-- Filtros -->
+      <div id="feed-filtros" class="filtros">
+        <input type="text" id="filtro-buscar" placeholder="Buscar por título o autor..." class="input-buscar" oninput="filtrarFeed()" />
+        <select id="filtro-genero" class="select-filtro" onchange="filtrarFeed()">
+          <option value="">Todos los géneros</option>
+        </select>
+      </div>
+
+      <!-- Buscador de Perfiles -->
+<div class="buscador-perfiles-container">
+  <div class="buscador-perfiles-wrapper">
+    <div class="buscador-perfiles-input-group">
+      <svg class="buscador-perfiles-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input
+        id="buscador-perfiles-input"
+        type="text"
+        class="buscador-perfiles-input"
+        placeholder="Buscar autor o reseñador..."
+        autocomplete="off"
+      />
+    </div>
+    <div id="buscador-perfiles-dropdown" class="buscador-perfiles-dropdown" style="display:none;">
+      <ul id="buscador-perfiles-lista" class="buscador-perfiles-lista"></ul>
+    </div>
+  </div>
+</div>
+      
+      <!-- Estados -->
+      <div id="feed-cargando" class="cargando-container">
+        <div class="spinner"></div>
+        <p>Cargando campañas...</p>
+      </div>
+      <div id="feed-vacio" class="estado-vacio" style="display:none;">
+        <p class="estado-vacio-icono">📖</p>
+        <p class="estado-vacio-texto">No hay campañas activas en este momento.</p>
+        <p class="estado-vacio-sub">Volvé pronto o activá las notificaciones.</p>
+      </div>
+
+      <!-- Lista vertical -->
+      <p class="feed-lista-titulo" id="feed-lista-titulo" style="display:none;">Todas las campañas</p>
+      <div id="feed-grid" class="campanas-lista-vertical" style="display:none;"></div>
+
+    </div>
+  </section>
+
+
+  <!-- SECCIÓN: PANEL AUTOR -->
+  <section id="seccion-panel-autor" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <div class="panel-header">
+        <h2 class="panel-titulo">Mi panel</h2>
+        <button class="btn-primario" id="btn-nueva-campana" onclick="abrirModalNuevaCampana()">+ Nueva campaña</button>
+      </div>
+      <div class="stats-grid" id="autor-stats"></div>
+      <div class="tabs">
+        <button class="tab activo" id="tabbtn-campanas-activas" onclick="cambiarTab(this, 'tab-campanas-activas')">Campañas activas</button>
+        <button class="tab" id="tabbtn-postulaciones-autor" onclick="cambiarTab(this, 'tab-postulaciones')">Postulaciones</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-historial-autor')">Historial</button>
+        <button class="tab" id="tabbtn-plan" onclick="cambiarTab(this, 'tab-plan')">Mi plan</button>
+<button class="tab" id="tabbtn-ranking-libros" onclick="cambiarTab(this, 'tab-ranking-libros'); if(typeof cargarRankingLibros === 'function') cargarRankingLibros(); else setTimeout(cargarRankingLibros, 100)">Ranking libros</button>
+      </div>
+      <div id="tab-campanas-activas" class="tab-contenido activo">
+        <div id="autor-campanas-lista" class="campanas-lista"></div>
+      </div>
+      <div id="tab-postulaciones" class="tab-contenido">
+        <div id="autor-postulaciones-lista" class="postulaciones-lista"></div>
+      </div>
+      <div id="tab-historial-autor" class="tab-contenido">
+        <div id="autor-historial-lista" class="campanas-lista"></div>
+      </div>
+     <div id="tab-plan" class="tab-contenido">
+  <div id="autor-plan-info" class="plan-info"></div>
+</div>
+<div id="tab-ranking-libros" class="tab-contenido">
+  <div id="ranking-libros-contenedor"></div>
+</div>
+    </div>
+  </section>
+
+
+  <!-- SECCIÓN: PANEL RESEÑADOR -->
+  <section id="seccion-panel-resenador" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <div class="panel-header">
+        <h2 class="panel-titulo">Mi panel</h2>
+      </div>
+      <div class="stats-grid" id="resenador-stats"></div>
+      <div class="tabs">
+        <button class="tab activo" id="tabbtn-mis-postulaciones" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
+        <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
+        <button class="tab" onclick="mostrarSeccion('biblioteca-resenador')">Mi biblioteca</button>
+      </div>
+      <div id="tab-mis-postulaciones" class="tab-contenido activo">
+        <div id="resenador-postulaciones-lista" class="postulaciones-lista"></div>
+      </div>
+      <div id="tab-arcs-activos" class="tab-contenido">
+        <div id="resenador-arcs-lista" class="arcs-lista"></div>
+      </div>
+      <div id="tab-historial-resenador" class="tab-contenido">
+        <div id="resenador-historial-lista" class="campanas-lista"></div>
+      </div>
+  
+  <div id="tab-ranking" class="tab-contenido">
+        <div id="resenador-ranking-info" class="ranking-info"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: BIBLIOTECA RESEÑADOR -->
+  <section id="seccion-biblioteca-resenador" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <div class="panel-header">
+        <h2 class="panel-titulo" id="bib-titulo-seccion">Biblioteca</h2>
+      </div>
+
+      <div id="bib-cargando" class="cargando-container">
+        <div class="spinner"></div>
+        <p>Cargando biblioteca...</p>
+      </div>
+
+      <div id="bib-error" class="estado-vacio" style="display:none;">
+        <p class="estado-vacio-icono">😕</p>
+        <p class="estado-vacio-texto">No se pudo cargar la biblioteca.</p>
+      </div>
+
+  <div id="bib-contenido" style="display:none;">
+        <div class="estante-seccion">
+          <p class="estante-titulo">TBR</p>
+          <div class="estante-fila-wrap">
+            <div id="bib-leyendo-actualmente" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
+        </div>
+        <div class="estante-seccion">
+          <p class="estante-titulo">Leídos</p>
+          <div class="estante-fila-wrap">
+            <div id="bib-libros-leidos" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
+        </div>
+        <div class="estante-seccion">
+          <p class="estante-titulo">DNF</p>
+          <div class="estante-fila-wrap">
+            <div id="bib-dnf" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
+        </div>
+      </div>
+  </section>
+
+  <!-- SECCIÓN: BIBLIOTECA AUTOR (libros publicados) -->
+  <section id="seccion-biblioteca-autor" class="seccion" style="display:none;">
+  <div class="seccion-inner">
+    <div class="panel-header">
+      <h2 class="panel-titulo">Mis libros</h2>
+      <button id="btn-agregar-libro-biblioteca-autor" class="btn-primario" style="display:none;" onclick="mostrarModal('modal-nuevo-libro')">+ Agregar libro</button>
+    </div>
+
+      <div id="bib-autor-cargando" class="cargando-container">
+        <div class="spinner"></div>
+        <p>Cargando libros...</p>
+      </div>
+
+      <div id="bib-autor-error" class="estado-vacio" style="display:none;">
+        <p class="estado-vacio-icono">😕</p>
+        <p class="estado-vacio-texto">No se pudieron cargar los libros.</p>
+      </div>
+
+      <div id="bib-autor-contenido" style="display:none;">
+        <div class="estante-seccion">
+          <div class="estante-fila-wrap">
+            <div id="bib-autor-libros" class="estante-fila"></div>
+            <div class="estante-tabla"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: PERFIL -->
+  <section id="seccion-perfil" class="seccion" style="display:none;">
+    <div class="seccion-inner seccion-angosta">
+
+      <div class="panel-header">
+        <h2 class="panel-titulo">Mi perfil</h2>
+        <button class="btn-primario" id="btn-editar-perfil" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
+      </div>
+
+      <!-- ESTADO: cargando (vista propia embebida) -->
+      <div id="pp-cargando-propio" class="cargando-container">
+        <div class="spinner"></div>
+        <p>Cargando perfil...</p>
+      </div>
+
+      <!-- ESTADO: error (vista propia embebida) -->
+      <div id="pp-error-propio" class="estado-vacio" style="display:none;">
+        <p class="estado-vacio-icono">😕</p>
+        <p class="estado-vacio-texto">No se pudo cargar el perfil.</p>
+      </div>
+
+      <!-- BLOQUE AUTOR (propio) — copia de #pp-bloque-autor con sufijo -propio -->
+      <div id="pp-bloque-autor-propio" style="display:none;">
+
+        <!-- Cabecera -->
+        <div class="pp-cabecera">
+        <img id="pp-avatar-propio" src="" alt="Avatar" class="pp-avatar" />
+  <div class="pp-cabecera-info">
+    <p id="pp-alias-propio"     class="pp-alias"></p>
+    <p id="pp-ubicacion-propio" class="pp-ubicacion"></p>
+    <p id="pp-autor-miembro-desde-propio" class="pp-miembro-desde"></p>
+    <div id="pp-redes-propio"   class="pp-redes"></div>
+  </div>
+</div>
+        <!-- Gamificación del autor -->
+        <div class="pp-bloque" id="pp-autor-gamificacion-cont-propio" style="display:none;">
+          <div id="pp-autor-gamificacion-propio"></div>
+        </div>
+
+        <!-- Libros -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Mis libros</p>
+          <div id="pp-autor-libros-propio" class="estante-fila"></div>
+          <button class="btn-secundario btn-full" id="pp-btn-ver-libros-autor-propio" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+            Ver todos mis libros →
+          </button>
+        </div>
+
+        <!-- Campañas activas -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Campañas activas</p>
+          <div id="pp-autor-campanas-propio" class="pp-libros-goodreads-grid"></div>
+        </div>
+
+      </div>
+      <!-- /BLOQUE AUTOR (propio) -->
+
+      <!-- BLOQUE RESEÑADOR (propio) — copia de #pp-bloque-reseñador con sufijo -propio -->
+      <div id="pp-bloque-reseñador-propio" style="display:none;">
+
+        <!-- Cabecera -->
+        <div class="pp-cabecera">
+  <img id="pp-avatar-r-propio" src="" alt="Avatar" class="pp-avatar" />
+  <div class="pp-cabecera-info">
+    <p id="pp-alias-r-propio"     class="pp-alias"></p>
+    <p id="pp-ubicacion-r-propio" class="pp-ubicacion"></p>
+    <div id="pp-redes-r-propio"   class="pp-redes"></div>
+  </div>
+</div>
+
+        <!-- Badge histórico + miembro desde -->
+        <div class="pp-bloque pp-encabezado-historico">
+          <div id="pp-r-badge-historico-propio" class="pp-badges-fila"></div>
+          <p id="pp-r-miembro-desde-propio" class="pp-miembro-desde"></p>
+        </div>
+
+        <!-- Estadísticas históricas como reseñador -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Estadísticas como reseñad@r</p>
+          <div id="pp-r-stats-propio" class="pp-stats-grid"></div>
+        </div>
+
+        <!-- Insignias -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Insignias</p>
+          <div id="pp-r-insignias-propio"></div>
+        </div>
+
+        <!-- Géneros favoritos -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Géneros favoritos</p>
+          <div id="pp-reseñador-generos-propio"></div>
+        </div>
+
+        <div class="pp-bloque" id="pp-bloque-descripcion-propio">
+          <p class="pp-bloque-titulo">Sobre mí</p>
+          <p id="pp-reseñador-descripcion-propio" class="pp-texto-truncado"></p>
+          <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion-propio" onclick="_toggleVerMas('descripcion','-propio')" style="display:none;">Ver más</button>
+        </div>
+
+        <!-- Tropes favoritos -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Tropes favoritos</p>
+          <div id="pp-reseñador-tropes-propio" class="pp-tropes-lista pp-tropes-truncado"></div>
+          <button class="pp-btn-vermas" id="pp-btn-vermas-tropes-propio" onclick="_toggleVerMas('tropes','-propio')" style="display:none;">Ver más</button>
+        </div>
+
+        <!-- Últimos libros reseñados -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Últimos libros reseñados</p>
+          <div id="pp-r-ultimos-libros-propio" class="pp-libros-goodreads-grid"></div>
+          <button class="btn-secundario btn-full" id="pp-btn-ver-biblioteca-propio" style="margin-top:12px;" onclick="abrirBiblioteca()">
+            Ver biblioteca completa →
+          </button>
+        </div>
+
+      </div>
+      <!-- /BLOQUE RESEÑADOR (propio) -->
+
+      <!-- BLOQUE EDITORIAL (propio) -->
+      <div id="pp-bloque-editorial-propio" style="display:none;">
+
+        <!-- Cabecera -->
+        <div class="pp-cabecera">
+          <img id="pp-avatar-ed-propio" src="" alt="Avatar" class="pp-avatar" />
+          <div class="pp-cabecera-info">
+            <p id="pp-alias-ed-propio"     class="pp-alias"></p>
+            <p id="pp-ubicacion-ed-propio" class="pp-ubicacion"></p>
+            <p id="pp-editorial-miembro-desde-propio" class="pp-miembro-desde"></p>
+            <div id="pp-redes-ed-propio"   class="pp-redes"></div>
+          </div>
+        </div>
+
+        <!-- Gamificación -->
+        <div class="pp-bloque" id="pp-editorial-gamificacion-cont-propio" style="display:none;">
+          <div id="pp-editorial-gamificacion-propio"></div>
+        </div>
+
+        <!-- Presentación -->
+        <div class="pp-bloque" id="pp-bloque-editorial-descripcion-propio" style="display:none;">
+          <p class="pp-bloque-titulo">Presentación</p>
+          <p id="pp-editorial-descripcion-propio" class="pp-texto-truncado"></p>
+        </div>
+
+        <!-- Géneros que trabajamos -->
+        <div class="pp-bloque" id="pp-bloque-editorial-generos-propio" style="display:none;">
+          <p class="pp-bloque-titulo">Géneros que trabajamos</p>
+          <p id="pp-editorial-generos-propio" class="pp-etiquetas"></p>
+        </div>
+
+        <!-- Libros -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Mis libros publicados</p>
+          <div id="pp-editorial-libros-propio" class="estante-fila"></div>
+          <button class="btn-secundario btn-full" id="pp-btn-ver-libros-editorial-propio" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+            Ver todos mis libros →
+          </button>
+        </div>
+
+        <!-- Campañas activas -->
+        <div class="pp-bloque">
+          <p class="pp-bloque-titulo">Campañas activas</p>
+          <div id="pp-editorial-campanas-propio" class="pp-libros-goodreads-grid"></div>
+        </div>
+
+      </div>
+      <!-- /BLOQUE EDITORIAL (propio) -->
+
+    </div>
+  </section>
+
+<!-- SECCIÓN: FAQ AUTORES -->
+  <section id="seccion-faq-autor" class="seccion" style="display:none;">
+    <div class="seccion-inner seccion-angosta">
+      <h2 class="panel-titulo">Preguntas frecuentes</h2>
+      <p class="faq-intro">
+        Resolvé las dudas más comunes sobre cómo usar la plataforma.
+        Si tu pregunta no está acá, escribinos por el botón de soporte (💬)
+        o a soporteindomitaloveclub@gmail.com.
+      </p>
+      <div id="faq-autor-contenedor" class="faq-lista"></div>
+      <div class="faq-footer-soporte">
+        ¿No encontraste lo que buscabas? Usá el botón de soporte 💬
+        en la esquina de la pantalla y te ayudamos a la brevedad.
+      </div>
+    </div>
+  </section>
+  
+  <!-- SECCIÓN: ADMIN -->
+  <section id="seccion-admin" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Panel admin</h2>
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-usuarios')">Usuarios</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-tickets'); cargarTicketsAdmin(Sesion.email())">Soporte</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-incumplimientos'); cargarIncumplimientosAdmin()">Incumplimientos</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-tropes-propuestos'); cargarTropesPropuestosAdmin()">Tropes propuestos</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas-soporte'); cargarEstadisticasSoporteAdmin()">Estadísticas Soporte</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas'); cargarEstadisticasAdmin()">Estadísticas</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-banners'); cargarBannersAdmin()">Banners</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-modales'); cargarModalesAdmin()">Modales</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-eventos'); cargarEventosAdmin()">Eventos</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-tutoriales'); cargarTutorialesAdmin()">Tutoriales</button>
+      </div>
+      <div id="tab-admin-usuarios" class="tab-contenido activo">
+        <div id="admin-usuarios-lista"></div>
+      </div>
+      <div id="tab-admin-campanas" class="tab-contenido">
+        <div id="admin-campanas-lista"></div>
+      </div>
+      <div id="tab-admin-pagos" class="tab-contenido">
+        <div id="admin-pagos-lista"></div>
+      </div>
+     <div id="tab-admin-tickets" class="tab-contenido">
+  <div id="admin-tickets-lista"></div>
+</div>
+<div id="tab-admin-incumplimientos" class="tab-contenido">
+  <div id="admin-incumplimientos-lista"></div>
+</div>
+<div id="tab-admin-tropes-propuestos" class="tab-contenido">
+  <div id="admin-tropes-propuestos-lista"></div>
+</div>
+      <div id="tab-admin-estadisticas-soporte" class="tab-contenido">
+  <div id="admin-estadisticas-soporte-contenedor"></div>
+</div>
+      <div id="tab-admin-estadisticas" class="tab-contenido">
+  <div id="admin-estadisticas-contenedor"></div>
+</div>
+      <div id="tab-admin-banners" class="tab-contenido">
+        <div id="admin-banners-form-contenedor"></div>
+        <div id="admin-banners-lista" style="margin-top:24px;"></div>
+      </div>
+      <div id="tab-admin-modales" class="tab-contenido">
+  <div id="admin-modales-form-contenedor"></div>
+  <div id="admin-modales-lista" style="margin-top:24px;"></div>
+</div>
+      <div id="tab-admin-eventos" class="tab-contenido">
+        <div id="admin-eventos-form-contenedor"></div>
+        <div id="admin-eventos-lista" style="margin-top:24px;"></div>
+      </div>
+      <div id="tab-admin-tutoriales" class="tab-contenido">
+        <div id="admin-tutoriales-contenedor"></div>
+      </div>
+    </div>
+  </section>
+
+<!-- SECCIÓN: EVENTO -->
+  <section id="seccion-evento" class="seccion" style="display:none;">
+    <div class="seccion-inner seccion-angosta"></div>
+  </section>
+  
+  <!-- MODALES -->
+  <div id="modal-overlay" class="modal-overlay" onclick="cerrarModales()"></div>
+
+  <!-- Modal: ACTUALIZACIONES -->
+<div id="modal-actualizaciones" class="modal" style="display:none;">
+  <div class="modal-header">
+    <h3 class="modal-titulo">🎉 Grandes novedades</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body" id="modal-actualizaciones-contenido">
+    <!-- El contenido se rellena con JavaScript -->
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn-primario" id="btn-modal-actualizaciones-accion" style="display:none;"></button>
+    <button type="button" class="btn-secundario" id="btn-modal-actualizaciones-entendido">Entendido</button>
+  </div>
+</div>
+
+   <!-- Modal: mascota del tutorial de bienvenida -->
+<div id="modal-tutorial-mascota" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="tutorial-mascota-titulo"></h3>
+    <button class="tutorial-header-btn" id="btn-tutorial-minimizar" onclick="minimizarTutorialBienvenida()" title="Minimizar" aria-label="Minimizar tutorial">─</button>
+  </div>
+  <div class="modal-body" style="text-align:center;">
+    <img id="tutorial-mascota-imagen" src="" alt="" style="width:110px; height:110px; object-fit:contain; margin-bottom:12px;" />
+    <p id="tutorial-mascota-texto" style="font-size:14px;"></p>
+    <p id="tutorial-mascota-bloqueo" style="display:none; font-size:13px; color:#c0392b; background:#fdecea; border-radius:8px; padding:8px 12px; margin-top:10px;"></p>
+    <p id="tutorial-mascota-paso-contador" style="font-size:12px; opacity:0.6; margin-top:8px;"></p>
+  </div>
+  <div class="modal-footer" style="display:flex; justify-content:space-between; gap:8px;">
+    <button type="button" class="btn-secundario" id="btn-tutorial-anterior" onclick="pasoAnteriorTutorial()">Anterior</button>
+    <button type="button" class="btn-primario" id="btn-tutorial-siguiente" onclick="pasoSiguienteTutorial()">Siguiente</button>
+  </div>
+</div>
+
+
+  <!-- Modal: inicio de evento -->
+<div id="modal-evento-inicio" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">✨ Nuevo evento</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body" style="position:relative; overflow:hidden;">
+    <div id="evento-modal-animacion" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;"></div>
+    <div id="modal-evento-inicio-contenido" style="position:relative; text-align:center;"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn-primario" id="btn-modal-evento-entendido">¡Vamos!</button>
+  </div>
+</div>
+
+<!-- Modal: evento completado -->
+<div id="modal-evento-completado" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">🎉 ¡Insignia ganada!</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body" style="position:relative; overflow:hidden; text-align:center;">
+      <div id="evento-completado-animacion" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;"></div>
+      <div id="modal-evento-completado-contenido" style="position:relative;"></div>
+    </div>
+</div>
+  
+  <!-- Modal: detalle de campaña -->
+  <div id="modal-detalle-campana" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo" id="modal-detalle-titulo"></h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-detalle-body"></div>
+    <div class="modal-footer" id="modal-detalle-footer"></div>
+  </div>
+
+  <!-- Modal: nueva campaña -->
+  <div id="modal-nueva-campana" class="modal modal-grande">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Nueva campaña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+  <form id="form-nueva-campana" onsubmit="crearNuevaCampana(event)">
+  <div class="form-grupo">
+    <label class="form-label">¿Querés usar un libro de tu biblioteca?</label>
+    <select id="nc-libro-selector" class="form-input" onchange="precargarLibroEnCampana()">
+      <option value="">— Completar manualmente —</option>
+    </select>
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Nombre del libro *</label>
+    <input type="text" id="nc-nombre-libro" class="form-input" required />
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Nombre del autor *</label>
+    <input type="text" id="nc-nombre-autor" class="form-input" required />
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Sinopsis *</label>
+    <textarea id="nc-sinopsis" class="form-textarea" rows="4" required></textarea>
+  </div>
+<div class="form-grupo">
+  <label class="form-label">Género y tropes</label>
+  <div id="nc-tropes-contenedor"></div>
+</div>
+        <div class="form-grupo">
+          <label class="form-label">Portada *</label>
+          <div id="nc-portada-preview"></div>
+          <input type="file" id="nc-link-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
+          <p class="form-hint">Si elegiste un libro de tu biblioteca, ya tiene portada — subí un archivo solo si querés cambiarla.</p>
+        </div>
+        <div class="form-fila">
+  <div class="form-grupo">
+    <label class="form-label">Archivo EPUB *</label>
+    <input type="file" id="nc-archivo-epub" class="form-input" accept=".epub,application/epub+zip" required />
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Archivo PDF *</label>
+    <input type="file" id="nc-archivo-pdf" class="form-input" accept=".pdf,application/pdf" required />
+  </div>
+</div>
+        <div class="form-grupo">
+          <label class="form-label">Link Amazon (opcional)</label>
+          <input type="url" id="nc-link-amazon" class="form-input" placeholder="https://amazon.com/..." />
+        </div>
+        <div class="form-fila">
+  <div class="form-grupo">
+    <label class="form-label">Cupos de reseñad@res *</label>
+    <input type="number" id="nc-cupos" class="form-input" min="1" max="100" required />
+    <p id="nc-cupos-regalo-hint" class="form-hint" style="display:none; color:var(--bordo); font-weight:600;"></p>
+  </div>
+  <div class="form-grupo">
+    <label class="form-label">Fecha de cierre</label>
+    <p id="nc-fecha-limite-info" class="form-input" style="background:var(--crema); display:flex; align-items:center; color:var(--gris-suave);"></p>
+  </div>
+</div>
+    <!-- Plataformas de reseña -->
+<div class="form-grupo">
+  <label class="form-label">Plataformas de reseña <span style="color:var(--rojo, #c0392b);">*</span></label>
+  <p class="form-hint" style="margin-bottom:8px;">Elegí entre 1 y 2 plataformas donde querés recibir reseñas.</p>
+  <div id="plataformas-error" class="mensaje-error" style="display:none;"></div>
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:4px;">
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="Amazon"> Amazon
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="Goodreads"> Goodreads
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="Instagram"> Instagram
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="TikTok"> TikTok
+    </label>
+  </div>
+</div>
+    <div class="form-grupo">
+  <label class="form-label">Modalidad de lectura *</label>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="nc-modalidad-lectura" value="visor" checked />
+      <span>📖 Solo visor (sin descarga)</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-modalidad-lectura" value="descarga" />
+      <span>⬇️ Permite descarga <em class="form-hint">(puede atraer más reseñadores)</em></span>
+    </label>
+  </div>
+</div>
+        <div class="form-grupo" id="nc-colaboracion-fisica-wrap" style="display:none;">
+  <label class="form-label">Tipo de colaboración *</label>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="nc-tipo-colaboracion" value="digital" checked />
+      <span>💻 Solo digital</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-tipo-colaboracion" value="fisico" />
+      <span>📦 Solo físico</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-tipo-colaboracion" value="digital_fisico" />
+      <span>💻📦 Digital + físico</span>
+    </label>
+  </div>
+</div>
+<div class="form-grupo" id="nc-alcance-envio-wrap" style="display:none;">
+  <label class="form-label">Alcance de los envíos físicos *</label>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="nc-alcance-envio" value="pais" checked />
+      <span>Solo mi país</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-alcance-envio" value="latam" />
+      <span>Latinoamérica</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-alcance-envio" value="internacional" />
+      <span>Internacional</span>
+    </label>
+  </div>
+</div>
+    <div id="nc-error" class="mensaje-error" style="display:none;"></div>
+        <div id="nc-ok" class="mensaje-ok" style="display:none;"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+          <button type="submit" class="btn-primario">Crear campaña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- Modal: cargar reseña (2 pasos: Reseña interna + Reseña pública) -->
+  <div id="modal-cargar-resena" class="modal modal-grande">
+    <div class="modal-header">
+      <h3 class="modal-titulo" id="resena-modal-titulo">Entregar reseña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="resena-paso-indicador" id="resena-paso-indicador">Paso 1/2</p>
+
+      <form id="form-cargar-resena" onsubmit="enviarResena(event)">
+        <input type="hidden" id="resena-id-campana" />
+
+        <!-- ══════════ PASO 1/2 — RESEÑA INTERNA ══════════ -->
+        <div id="resena-paso1">
+
+          <div class="resena-paso1-cabecera">
+            <img id="paso1-portada" src="" alt="" class="resena-paso1-portada" onerror="this.style.display='none'" />
+            <div>
+              <p class="resena-paso1-titulo" id="paso1-titulo"></p>
+              <p class="resena-paso1-autor" id="paso1-autor"></p>
+            </div>
+          </div>
+
+          <div class="resena-fechas-fila">
+            <span>📅 Postulado: <strong id="paso1-fecha-postulacion">—</strong></span>
+            <span class="resena-fechas-flecha">→</span>
+            <span>Entregado: <strong id="paso1-fecha-entrega">—</strong></span>
+          </div>
+
+          <div class="form-grupo">
+            <label class="form-label">¿Cuántas estrellas le das al libro? <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <div class="estrellas-container" id="resena-estrellas-container">
+              <button type="button" class="estrella" data-valor="1" onclick="seleccionarEstrellaLibro(1)">★</button>
+              <button type="button" class="estrella" data-valor="2" onclick="seleccionarEstrellaLibro(2)">★</button>
+              <button type="button" class="estrella" data-valor="3" onclick="seleccionarEstrellaLibro(3)">★</button>
+              <button type="button" class="estrella" data-valor="4" onclick="seleccionarEstrellaLibro(4)">★</button>
+              <button type="button" class="estrella" data-valor="5" onclick="seleccionarEstrellaLibro(5)">★</button>
+            </div>
+            <p class="estrellas-label" id="resena-estrellas-label">Sin calificar</p>
+            <input type="hidden" id="resena-puntuacion-libro" value="" />
+          </div>
+
+          <div class="form-grupo">
+            <label class="form-label">Moods</label>
+            <div class="mood-chips-container">
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="divertido" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>😄 Divertido</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="nostalgico" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🕰️ Nostálgico</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="adictivo" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🔥 Adictivo</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="reconfortante" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🤍 Reconfortante</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="intenso" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>⚡ Intenso</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="oscuro" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🖤 Oscuro</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="epico" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>⚔️ Épico</span>
+              </label>
+              <label class="mood-chip">
+                <input type="checkbox" name="resena-mood" value="melancolico" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
+                <span>🌧️ Melancólico</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-grupo frase-favorita-grupo">
+            <label class="form-label">Frase favorita *</label>
+            <input type="text" id="resena-frase-1" class="form-input" placeholder="La frase que más te marcó..." />
+          </div>
+          <div class="form-grupo frase-favorita-grupo">
+            <label class="form-label">Frase favorita 2 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <input type="text" id="resena-frase-2" class="form-input" />
+          </div>
+          <div class="form-grupo frase-favorita-grupo">
+            <label class="form-label">Frase favorita 3 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <input type="text" id="resena-frase-3" class="form-input" />
+          </div>
+
+          <div class="form-grupo" style="margin-top:8px;">
+            <label class="form-label" style="margin-bottom:6px; display:block;">Extra ratings <span style="color:var(--gris-suave); font-weight:400;">(no afectan el ranking)</span></label>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Romance</span>
+              <div class="rating-decorativo-container" data-categoria="romance">
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="1" onclick="seleccionarRatingDecorativo('romance',1)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="2" onclick="seleccionarRatingDecorativo('romance',2)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="3" onclick="seleccionarRatingDecorativo('romance',3)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="4" onclick="seleccionarRatingDecorativo('romance',4)">♥</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="romance" data-valor="5" onclick="seleccionarRatingDecorativo('romance',5)">♥</button>
+              </div>
+              <input type="hidden" id="resena-rating-romance" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Spice</span>
+              <div class="rating-decorativo-container" data-categoria="spice">
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="1" onclick="seleccionarRatingDecorativo('spice',1)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="2" onclick="seleccionarRatingDecorativo('spice',2)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="3" onclick="seleccionarRatingDecorativo('spice',3)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="4" onclick="seleccionarRatingDecorativo('spice',4)">🌶️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="spice" data-valor="5" onclick="seleccionarRatingDecorativo('spice',5)">🌶️</button>
+              </div>
+              <input type="hidden" id="resena-rating-spice" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Drama</span>
+              <div class="rating-decorativo-container" data-categoria="drama">
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="1" onclick="seleccionarRatingDecorativo('drama',1)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="2" onclick="seleccionarRatingDecorativo('drama',2)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="3" onclick="seleccionarRatingDecorativo('drama',3)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="4" onclick="seleccionarRatingDecorativo('drama',4)">🎭</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="drama" data-valor="5" onclick="seleccionarRatingDecorativo('drama',5)">🎭</button>
+              </div>
+              <input type="hidden" id="resena-rating-drama" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Estilo de escritura</span>
+              <div class="rating-decorativo-container" data-categoria="estilo">
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="1" onclick="seleccionarRatingDecorativo('estilo',1)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="2" onclick="seleccionarRatingDecorativo('estilo',2)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="3" onclick="seleccionarRatingDecorativo('estilo',3)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="4" onclick="seleccionarRatingDecorativo('estilo',4)">✒️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="estilo" data-valor="5" onclick="seleccionarRatingDecorativo('estilo',5)">✒️</button>
+              </div>
+              <input type="hidden" id="resena-rating-estilo" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Tensión</span>
+              <div class="rating-decorativo-container" data-categoria="tension">
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="1" onclick="seleccionarRatingDecorativo('tension',1)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="2" onclick="seleccionarRatingDecorativo('tension',2)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="3" onclick="seleccionarRatingDecorativo('tension',3)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="4" onclick="seleccionarRatingDecorativo('tension',4)">🗡️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="tension" data-valor="5" onclick="seleccionarRatingDecorativo('tension',5)">🗡️</button>
+              </div>
+              <input type="hidden" id="resena-rating-tension" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Ritmo</span>
+              <div class="rating-decorativo-container" data-categoria="ritmo">
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="1" onclick="seleccionarRatingDecorativo('ritmo',1)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="2" onclick="seleccionarRatingDecorativo('ritmo',2)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="3" onclick="seleccionarRatingDecorativo('ritmo',3)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="4" onclick="seleccionarRatingDecorativo('ritmo',4)">⏱️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="ritmo" data-valor="5" onclick="seleccionarRatingDecorativo('ritmo',5)">⏱️</button>
+              </div>
+              <input type="hidden" id="resena-rating-ritmo" value="" />
+            </div>
+
+            <div class="rating-decorativo-fila">
+              <span class="rating-decorativo-label">Creación de mundos</span>
+              <div class="rating-decorativo-container" data-categoria="worldbuilding">
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="1" onclick="seleccionarRatingDecorativo('worldbuilding',1)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="2" onclick="seleccionarRatingDecorativo('worldbuilding',2)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="3" onclick="seleccionarRatingDecorativo('worldbuilding',3)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="4" onclick="seleccionarRatingDecorativo('worldbuilding',4)">🗺️</button>
+                <button type="button" class="rating-decorativo-btn" data-categoria="worldbuilding" data-valor="5" onclick="seleccionarRatingDecorativo('worldbuilding',5)">🗺️</button>
+              </div>
+              <input type="hidden" id="resena-rating-worldbuilding" value="" />
+            </div>
+          </div>
+
+          <div id="paso1-error" class="mensaje-error" style="display:none;"></div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+            <button type="button" class="btn-primario" onclick="irAPasoResena2()">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- ══════════ PASO 2/2 — RESEÑA PÚBLICA ══════════ -->
+        <div id="resena-paso2" style="display:none;">
+          <p class="form-info">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
+          <div class="form-grupo">
+            <label class="form-label">Instagram</label>
+            <input type="text" id="resena-instagram" class="form-input" placeholder="https://instagram.com/p/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">TikTok</label>
+            <input type="text" id="resena-tiktok" class="form-input" placeholder="https://tiktok.com/@..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Amazon</label>
+            <input type="text" id="resena-amazon" class="form-input" placeholder="https://amazon.com/review/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Goodreads</label>
+            <input type="text" id="resena-goodreads" class="form-input" placeholder="https://goodreads.com/review/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Comentarios (opcional)</label>
+            <textarea id="resena-comentarios" class="form-textarea" rows="3" placeholder="Algo que quieras comentarle al autor..."></textarea>
+          </div>
+
+          <div id="resena-error" class="mensaje-error" style="display:none;"></div>
+          <div id="resena-ok" class="mensaje-ok" style="display:none;"></div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secundario" onclick="volverAPasoResena1()">← Atrás</button>
+            <button type="submit" class="btn-primario">Enviar reseña</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Reseña interna (solo lectura, Parte C) -->
+  <div id="modal-resena-interna" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Reseña interna</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="resena-paso1-cabecera">
+        <img id="ri-portada" src="" alt="" class="resena-paso1-portada" onerror="this.style.display='none'" />
+        <div>
+          <p class="resena-paso1-titulo" id="ri-titulo"></p>
+          <p class="resena-paso1-autor" id="ri-autor"></p>
+        </div>
+      </div>
+
+      <p class="resena-interna-estrellas" id="ri-estrellas"></p>
+
+      <div class="resena-fechas-fila">
+        <span>📅 Postulado: <strong id="ri-fecha-postulacion">—</strong></span>
+        <span class="resena-fechas-flecha">→</span>
+        <span>Entregado: <strong id="ri-fecha-entrega">—</strong></span>
+      </div>
+
+      <div class="form-grupo" id="ri-moods-grupo">
+        <label class="form-label">Moods</label>
+        <div class="mood-chips-container" id="ri-moods"></div>
+      </div>
+
+      <div class="form-grupo" id="ri-frases-grupo">
+        <label class="form-label">Frases favoritas</label>
+        <div id="ri-frases"></div>
+      </div>
+
+      <div class="form-grupo" id="ri-ratings-grupo">
+        <label class="form-label" style="margin-bottom:6px; display:block;">Extra ratings</label>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Romance</span>
+          <div class="rating-decorativo-container" id="ri-rating-romance"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Spice</span>
+          <div class="rating-decorativo-container" id="ri-rating-spice"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Drama</span>
+          <div class="rating-decorativo-container" id="ri-rating-drama"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Estilo de escritura</span>
+          <div class="rating-decorativo-container" id="ri-rating-estilo"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Tensión</span>
+          <div class="rating-decorativo-container" id="ri-rating-tension"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Ritmo</span>
+          <div class="rating-decorativo-container" id="ri-rating-ritmo"></div>
+        </div>
+        <div class="rating-decorativo-fila">
+          <span class="rating-decorativo-label">Creación de mundos</span>
+          <div class="rating-decorativo-container" id="ri-rating-worldbuilding"></div>
+        </div>
+      </div>
+
+      <div class="form-grupo" id="ri-links-grupo">
+        <label class="form-label">Links</label>
+        <div class="resena-carpeta-links" id="ri-links"></div>
+      </div>
+
+      <div class="form-grupo" id="ri-comentario-grupo">
+        <label class="form-label">Comentario</label>
+        <p class="resena-interna-comentario" id="ri-comentario"></p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: abandonar campaña (DNF) -->
+  <div id="modal-dnf" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Abandonar campaña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dnf-id-postulacion" />
+      <p class="form-info" style="font-weight:700; color:var(--gris-texto);">
+        ¿Estás segur@ que querés abandonar la campaña de "<span id="dnf-nombre-libro"></span>"?
+      </p>
+
+      <div style="background:var(--rosa-claro); border-left:4px solid var(--bordo); padding:14px 16px; border-radius:0 8px 8px 0; margin:16px 0;">
+        <p style="font-weight:700; margin-bottom:8px; color:var(--bordo);">Si abandonás la campaña:</p>
+        <ul style="margin:0; padding-left:18px; font-size:13px; color:var(--gris-texto); line-height:1.7;">
+          <li>El autor será notificado.</li>
+          <li>El cupo volverá a estar disponible para otro reseñador.</li>
+          <li>Recordá que contás con <strong>3 DNF sin penalización por mes</strong>.</li>
+          <li>A partir de ese número, afectará tu porcentaje de completion.</li>
+        </ul>
+      </div>
+
+      <div class="form-grupo">
+        <label class="form-label">¿Por qué decidiste abandonar esta lectura?</label>
+        <p style="font-size:12px; color:var(--gris-suave); margin-top:-2px;">(Este comentario será visible solo para el autor)</p>
+        <textarea
+          id="dnf-motivo"
+          class="form-textarea"
+          rows="4"
+          maxlength="500"
+          placeholder="Contale al autor por qué decidiste abandonar esta lectura..."
+          oninput="actualizarContadorDNF()"
+        ></textarea>
+        <p style="font-size:12px; color:var(--gris-suave); text-align:right; margin-top:2px;">
+          <span id="dnf-char-count">0</span>/500
+        </p>
+      </div>
+
+      <div id="dnf-error" class="mensaje-error" style="display:none;"></div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" id="btn-confirmar-dnf" class="btn-peligro" onclick="confirmarDNF()">Confirmar abandono</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: calificar reseña -->
+  <div id="modal-calificar-resena" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Calificar reseña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="calificar-id-resena" />
+      <p class="form-info" id="calificar-nombre-resenador"></p>
+      <p class="form-info">¿Cómo calificás la reseña? Considerá la calidad, puntualidad y dedicación.</p>
+      <div class="estrellas-container">
+        <button class="estrella" data-valor="1" onclick="seleccionarEstrella(1)">★</button>
+        <button class="estrella" data-valor="2" onclick="seleccionarEstrella(2)">★</button>
+        <button class="estrella" data-valor="3" onclick="seleccionarEstrella(3)">★</button>
+        <button class="estrella" data-valor="4" onclick="seleccionarEstrella(4)">★</button>
+        <button class="estrella" data-valor="5" onclick="seleccionarEstrella(5)">★</button>
+      </div>
+      <p class="estrellas-label" id="estrellas-label">Seleccioná una puntuación</p>
+      <input type="hidden" id="calificar-puntuacion" value="" />
+      <div id="calificar-error" class="mensaje-error" style="display:none;"></div>
+      <div id="calificar-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-primario" onclick="enviarCalificacion()">Confirmar calificación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: nuevo libro -->
+  <div id="modal-nuevo-libro" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Agregar libro a mi biblioteca</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-nuevo-libro" onsubmit="agregarLibro(event)">
+        <div class="form-grupo">
+          <label class="form-label">Título *</label>
+          <input type="text" id="libro-titulo" class="form-input" required />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Sinopsis breve</label>
+          <textarea id="libro-sinopsis" class="form-textarea" rows="3"></textarea>
+        </div>
+         <div class="form-grupo">
+          <label class="form-label">Género y tropes</label>
+          <div id="libro-tropes-contenedor"></div>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Portada</label>
+          <input type="file" id="libro-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Link Amazon</label>
+          <input type="url" id="libro-amazon" class="form-input" placeholder="https://amazon.com/..." />
+        </div>
+        <div id="libro-error" class="mensaje-error" style="display:none;"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+          <button type="submit" class="btn-primario">Agregar libro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: completar perfil -->
+  <div id="modal-completar-perfil" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Completá tu perfil</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="form-info">Es tu primera postulación. Completá estos datos para que el autor pueda conocerte.</p>
+      <form id="form-completar-perfil" onsubmit="guardarPerfilYPostularse(event)">
+        <input type="hidden" id="completar-id-campana" />
+        <div class="form-fila">
+          <div class="form-grupo">
+            <label class="form-label">País *</label>
+            <input type="text" id="completar-pais" class="form-input" required />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Ciudad *</label>
+            <input type="text" id="completar-ciudad" class="form-input" required />
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Instagram</label>
+          <input type="url" id="completar-instagram" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">TikTok</label>
+          <input type="url" id="completar-tiktok" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Amazon</label>
+          <input type="url" id="completar-amazon" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Descripción lector@</label>
+          <textarea id="completar-descripcion" class="form-textarea" rows="3" placeholder="Contanos quién sos como lect@r..."></textarea>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Géneros favoritos</label>
+          <input type="text" id="completar-generos" class="form-input" placeholder="Romance, Dark Romance..." />
+        </div>
+        <div id="completar-error" class="mensaje-error" style="display:none;"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+          <button type="submit" class="btn-primario">Guardar y postularme</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: selector de avatar -->
+<div id="modal-selector-avatar" class="modal modal-grande modal--anidado">
+  <div class="modal-header">
+    <h3 class="modal-titulo">Elegí tu avatar</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="form-info">Seleccioná el avatar que mejor te represente.</p>
+    <div id="avatar-grid" class="avatar-grid"></div>
+    <div id="avatar-error" class="mensaje-error" style="display:none;"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+    <button type="button" class="btn-primario" onclick="guardarAvatar()">Guardar avatar</button>
+  </div>
+</div>
+
+  <!-- Botón flotante de soporte -->
+<button id="btn-soporte-flotante" onclick="mostrarModal('modal-soporte')" title="Ayuda">💬</button>
+
+<!-- Modal: soporte -->
+<div id="modal-soporte" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">¿Necesitás ayuda?</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="form-info">Contanos qué pasó y te respondemos a la brevedad.</p>
+    <form id="form-soporte" onsubmit="enviarTicketSoporte(event)">
+      <div class="form-grupo">
+        <label class="form-label">Asunto</label>
+        <input type="text" id="soporte-asunto" class="form-input" placeholder="Ej: Error al calificar una reseña" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Mensaje *</label>
+        <textarea id="soporte-mensaje" class="form-textarea" rows="4" required placeholder="Contanos el problema con el mayor detalle posible..."></textarea>
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Adjuntar archivo (opcional)</label>
+        <input type="file" id="soporte-adjunto" class="form-input" accept=".jpg,.jpeg,.png,.webp,.heic,.pdf" />
+        <p style="font-size:12px; color:#888; margin:4px 0 0;">Imagen o PDF, máximo 8MB.</p>
+      </div>
+      <div id="soporte-error" class="mensaje-error" style="display:none;"></div>
+      <div id="soporte-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="submit" class="btn-primario">Enviar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+  <!-- Modal: denuncia -->
+<div id="modal-denuncia" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">Denunciar</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <form id="form-denuncia" onsubmit="enviarDenuncia(event)">
+      <input type="hidden" id="denuncia-referencia-tipo" />
+      <input type="hidden" id="denuncia-referencia-id" />
+      <div class="form-grupo">
+        <label class="form-label">Motivo *</label>
+        <select id="denuncia-categoria" class="form-input" required>
+          <option value="">— Seleccionar —</option>
+          <option value="plagio">Plagio</option>
+          <option value="perfil_falso">Perfil falso</option>
+          <option value="contenido_no_etiquetado">Contenido no etiquetado</option>
+          <option value="acoso">Acoso</option>
+          <option value="spam">Spam</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Detalles (opcional)</label>
+        <textarea id="denuncia-mensaje" class="form-textarea" rows="4" placeholder="Contanos más si querés..."></textarea>
+      </div>
+      <div id="denuncia-error" class="mensaje-error" style="display:none;"></div>
+      <div id="denuncia-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="submit" class="btn-primario">Enviar denuncia</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: EDITAR PERFIL (nuevo — contiene el form-perfil movido tal cual desde #seccion-perfil) -->
+<div id="modal-editar-perfil" class="modal modal-grande">
+  <div class="modal-header">
+    <h3 class="modal-titulo">Editar perfil</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="perfil-foto-container">
+      <img id="perfil-foto" src="/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK" alt="Avatar de perfil" class="perfil-foto" />
+      <button class="btn-secundario btn-sm" onclick="abrirSelectorAvatar()">Cambiar avatar</button>
+    </div>
+
+    <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">
+
+      <div class="form-grupo">
+        <label class="form-label">Alias público</label>
+        <input type="text" id="perfil-alias" class="form-input" placeholder="Tu nombre en la comunidad" />
+      </div>
+
+      <div class="form-fila">
+        <div class="form-grupo">
+          <label class="form-label">País</label>
+          <input type="text" id="perfil-pais" class="form-input" placeholder="Argentina" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Ciudad</label>
+          <input type="text" id="perfil-ciudad" class="form-input" placeholder="Buenos Aires" />
+        </div>
+      </div>
+
+  <div class="form-grupo" id="grupo-generos" style="display:none;">
+<label class="form-label" id="label-generos">Géneros favoritos</label>
+        <input type="text" id="perfil-generos" class="form-input" placeholder="Romance, Dark Romance, Fantasía..." />
+      </div>
+
+   <div class="form-grupo" id="grupo-descripcion" style="display:none;">
+<label class="form-label" id="label-descripcion">Descripción lectora</label>
+        <textarea id="perfil-descripcion" class="form-textarea" placeholder="Contanos quién sos como lect@r..." rows="3"></textarea>
+      </div>
+<div class="form-grupo" id="grupo-generos-resenador" style="display:none;">
+        <label class="form-label">Géneros favoritos</label>
+        <div id="perfil-generos-checkboxes" class="tropes-checkboxes"></div>
+        <div id="perfil-subgeneros-contenedor"></div>
+      </div>
+
+      <div class="form-grupo" id="grupo-tropes-perfil" style="display:none;">
+        <label class="form-label">Tropes favoritos</label>
+        <div id="perfil-tropes-contenedor"></div>
+      </div>
+
+      <div class="form-grupo" id="grupo-sitio-web" style="display:none;">
+        <label class="form-label">Sitio web</label>
+        <input type="url" id="perfil-sitio-web" class="form-input" placeholder="https://tueditorial.com" />
+      </div>
+      
+      <div class="form-separador">Redes sociales</div>
+
+      <div class="form-grupo">
+        <label class="form-label">Instagram</label>
+        <input type="url" id="perfil-instagram" class="form-input" placeholder="https://instagram.com/tu_usuario" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">TikTok</label>
+        <input type="url" id="perfil-tiktok" class="form-input" placeholder="https://tiktok.com/@tu_usuario" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Amazon</label>
+        <input type="url" id="perfil-amazon" class="form-input" placeholder="https://amazon.com/profile/..." />
+      </div>
+
+      <div id="perfil-error" class="mensaje-error" style="display:none;"></div>
+      <div id="perfil-ok" class="mensaje-ok" style="display:none;"></div>
+
+      <button type="submit" class="btn-primario btn-full">Guardar cambios</button>
+    </form>
+
+  </div>
+</div>
+<!-- /modal-editar-perfil -->
+
+<div id="modal-perfil-publico" class="modal modal-grande">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="pp-modal-titulo">Perfil</h3>
+    <button class="modal-cerrar" onclick="cerrarModalPerfilPublico()">✕</button>
+  </div>
+ 
+  <div class="modal-body">
+ 
+    <!-- ESTADO: cargando -->
+    <div id="pp-cargando" class="cargando-container">
+      <div class="spinner"></div>
+      <p>Cargando perfil...</p>
+    </div>
+ 
+    <!-- ESTADO: error -->
+    <div id="pp-error" class="estado-vacio" style="display:none;">
+      <p class="estado-vacio-icono">😕</p>
+      <p class="estado-vacio-texto">No se pudo cargar el perfil.</p>
+    </div>
+ 
+    <!-- ── CABECERA COMÚN (visible en autor y reseñador) ── -->
+    <!-- Se pinta siempre que hay datos; queda dentro de cada bloque para no acoplar -->
+ 
+    <!-- BLOQUE AUTOR -->
+   <div id="pp-bloque-autor" style="display:none;">
+
+      <!-- Cabecera -->
+      <div class="pp-cabecera">
+        <img id="pp-avatar" src="" alt="Avatar" class="pp-avatar" />
+  <div class="pp-cabecera-info">
+    <p id="pp-alias"     class="pp-alias"></p>
+    <button id="pp-btn-denunciar-autor" class="pp-btn-denunciar" onclick="abrirModalDenuncia('usuario_autor', _idAutorPerfilActual)" title="Denunciar">🚩 Denunciar</button>
+    <p id="pp-ubicacion" class="pp-ubicacion"></p>
+    <p id="pp-autor-miembro-desde" class="pp-miembro-desde"></p>
+    <div id="pp-redes"   class="pp-redes"></div>
+  </div>
+</div>
+
+  <!-- Gamificación del autor -->
+      <div class="pp-bloque" id="pp-autor-gamificacion-cont" style="display:none;">
+        <div id="pp-autor-gamificacion"></div>
+      </div>
+
+ 
+      <!-- Libros -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Mis libros</p>
+        <div id="pp-autor-libros" class="estante-fila"></div>
+        <button class="btn-secundario btn-full" id="pp-btn-ver-libros-autor" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+          Ver todos mis libros →
+        </button>
+      </div>
+ 
+      <!-- Campañas activas -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Campañas activas</p>
+        <div id="pp-autor-campanas" class="pp-libros-goodreads-grid"></div>
+      </div>
+ 
+    </div>
+    <!-- /BLOQUE AUTOR -->
+ 
+ 
+    <!-- BLOQUE RESEÑADOR -->
+    <div id="pp-bloque-reseñador" style="display:none;">
+ 
+      <!-- Cabecera -->
+<div class="pp-cabecera">
+  <img id="pp-avatar-r" src="" alt="Avatar" class="pp-avatar" />
+  <div class="pp-cabecera-info">
+    <p id="pp-alias-r"     class="pp-alias"></p>
+    <button id="pp-btn-denunciar-r" class="pp-btn-denunciar" onclick="abrirModalDenuncia('usuario_resenador', _idReseñadorPerfilActual)" title="Denunciar">🚩 Denunciar</button>
+    <p id="pp-ubicacion-r" class="pp-ubicacion"></p>
+    <div id="pp-redes-r"   class="pp-redes"></div>
+  </div>
+</div>
+
+<!-- Badge histórico + miembro desde -->
+<div class="pp-bloque pp-encabezado-historico">
+  <div id="pp-r-badge-historico" class="pp-badges-fila"></div>
+  <p id="pp-r-miembro-desde" class="pp-miembro-desde"></p>
+</div>
+
+<!-- Estadísticas históricas como reseñador -->
+<div class="pp-bloque">
+  <p class="pp-bloque-titulo">Estadísticas como reseñad@r</p>
+  <div id="pp-r-stats" class="pp-stats-grid"></div>
+</div>
+
+<!-- Insignias -->
+<div class="pp-bloque">
+  <p class="pp-bloque-titulo">Insignias</p>
+  <div id="pp-r-insignias"></div>
+</div>
+
+    
+      <!-- Géneros favoritos -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Géneros favoritos</p>
+        <div id="pp-reseñador-generos"></div>
+      </div>
+
+    <div class="pp-bloque" id="pp-bloque-descripcion">
+  <p class="pp-bloque-titulo">Sobre mí</p>
+  <p id="pp-reseñador-descripcion" class="pp-texto-truncado"></p>
+  <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion" onclick="_toggleVerMas('descripcion')" style="display:none;">Ver más</button>
+</div>
+ 
+     <!-- Tropes favoritos -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Tropes favoritos</p>
+        <div id="pp-reseñador-tropes" class="pp-tropes-lista pp-tropes-truncado"></div>
+        <button class="pp-btn-vermas" id="pp-btn-vermas-tropes" onclick="_toggleVerMas('tropes')" style="display:none;">Ver más</button>
+      </div>
+ 
+     <!-- Últimos libros reseñados -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Últimos libros reseñados</p>
+        <div id="pp-r-ultimos-libros" class="pp-libros-goodreads-grid"></div>
+        <button class="btn-secundario btn-full" id="pp-btn-ver-biblioteca" style="margin-top:12px;" onclick="abrirBiblioteca()">
+          Ver biblioteca completa →
+        </button>
+      </div>
+ 
+   </div>
+    <!-- /BLOQUE RESEÑADOR -->
+
+    <!-- BLOQUE EDITORIAL -->
+    <div id="pp-bloque-editorial" style="display:none;">
+
+      <!-- Cabecera -->
+      <div class="pp-cabecera">
+        <img id="pp-avatar-ed" src="" alt="Avatar" class="pp-avatar" />
+        <div class="pp-cabecera-info">
+          <p id="pp-alias-ed"     class="pp-alias"></p>
+          <button id="pp-btn-denunciar-ed" class="pp-btn-denunciar" onclick="abrirModalDenuncia('usuario_autor', _idEditorialPerfilActual)" title="Denunciar">🚩 Denunciar</button>
+          <p id="pp-ubicacion-ed" class="pp-ubicacion"></p>
+<p id="pp-editorial-miembro-desde" class="pp-miembro-desde"></p>
+          <div id="pp-redes-ed"   class="pp-redes"></div>
+        </div>
+      </div>
+
+      <!-- Gamificación -->
+      <div class="pp-bloque" id="pp-editorial-gamificacion-cont" style="display:none;">
+        <div id="pp-editorial-gamificacion"></div>
+      </div>
+
+      <!-- Presentación -->
+      <div class="pp-bloque" id="pp-bloque-editorial-descripcion" style="display:none;">
+        <p class="pp-bloque-titulo">Presentación</p>
+        <p id="pp-editorial-descripcion" class="pp-texto-truncado"></p>
+      </div>
+
+      <!-- Géneros que trabajamos -->
+      <div class="pp-bloque" id="pp-bloque-editorial-generos" style="display:none;">
+        <p class="pp-bloque-titulo">Géneros que trabajamos</p>
+        <p id="pp-editorial-generos" class="pp-etiquetas"></p>
+      </div>
+
+      <!-- Libros -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Libros publicados</p>
+        <div id="pp-editorial-libros" class="estante-fila"></div>
+        <button class="btn-secundario btn-full" id="pp-btn-ver-libros-editorial" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
+          Ver todos los libros →
+        </button>
+      </div>
+
+      <!-- Campañas activas -->
+      <div class="pp-bloque">
+        <p class="pp-bloque-titulo">Campañas activas</p>
+        <div id="pp-editorial-campanas" class="pp-libros-goodreads-grid"></div>
+      </div>
+
+    </div>
+    <!-- /BLOQUE EDITORIAL -->
+ 
+  </div>
+  <!-- /modal-body -->
+ 
+</div>
+<!-- /modal-perfil-publico -->
+  
+  <!-- FOOTER -->
+  <footer id="footer">
+  <div class="footer-inner">
+    <p class="footer-texto">Indómita Love Club &copy; 2026 — Todos los derechos reservados</p>
+   <p class="footer-texto">¿Necesitás ayuda? Escribinos a <a href="mailto:soporteindomitaloveclub@gmail.com" style="color: rgba(245,236,215,0.8);">soporteindomitaloveclub@gmail.com</a></p>
+</footer>
+
+ <!-- SCRIPTS -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/config.js"></script>
+<script src="js/tropes.js"></script>
+<script src="js/ui.js?v=2"></script>
+<script src="js/calendario.js"></script>
+<script src="js/admin-impersonar.js"></script>
+<script src="js/auth.js?v=2"></script>
+<script src="EVENTOS/eventos.js"></script>
+<script src="js/notificaciones.js"></script>
+<script src="js/feed.js"></script>
+<script src="js/buscador-perfiles.js"></script>
+<script src="js/autor.js"></script>
+<script src="js/colaboraciones-fisicas.js"></script>
+<script src="js/resenador.js?v=2"></script>
+<script src="js/admin.js?v=2"></script>
+<script src="js/perfil.js"></script>
+<script src="js/visor.js"></script>
+<script src="js/soporte.js"></script>
+<script src="js/denuncias.js"></script>
+<script src="js/faq-autor.js"></script>
+<script src="js/banners-admin.js"></script>
+<script src="js/eventos-admin.js"></script>
+<script src="js/perfil-publico.js"></script>
+<script src="js/tutorial.js"></script>
+</body>
+</html>
+</html>
