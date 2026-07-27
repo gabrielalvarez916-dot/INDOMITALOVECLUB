@@ -1,6 +1,10 @@
 {
   "rewrites": [
     { "source": "/pago-exitoso", "destination": "/pago-exitoso.html" },
-    { "source": "/pago-cancelado", "destination": "/pago-cancelado.html" }
+    { "source": "/pago-cancelado", "destination": "/pago-cancelado.html" },
+    { "source": "/app", "destination": "/app.html" }
+  ],
+  "redirects": [
+    { "source": "/app/", "destination": "/app", "permanent": false }
   ]
 }
