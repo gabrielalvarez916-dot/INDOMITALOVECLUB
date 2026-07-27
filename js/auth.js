@@ -252,7 +252,10 @@ async function verificarSesionActiva() {
 
   if (perfil.rol !== 'admin' && !perfilEstaCompleto(perfil)) {
     mostrarGatePerfilObligatorio(perfil);
+    return;
   }
+
+  if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(perfil);
 }
 
 // ────────────────────────────────────────────────────────────
