@@ -279,6 +279,25 @@ function cerrarModales() {
 
   // Restaura el scroll
   document.body.style.overflow = '';
+
+  // Si se cerró un modal (ej: "Editar perfil") mientras el tutorial tenía un
+  // paso con gate pendiente, resincronizamos el puntero ya mismo: si el botón
+  // al que había que volver sigue visible, lo volvemos a señalar; si no
+  // (el usuario navegó a otra sección), mostramos el mensaje de qué falta
+  // en la tarjeta del tutorial en vez de dejar el puntero apuntando a algo viejo.
+  if (typeof _TutorialState !== 'undefined' && _TutorialState.activo && !_TutorialState.enIntro
+      && !_TutorialState.minimizado && _TutorialState.gateBloqueando) {
+    const config = TUTORIAL_PASOS_CONFIG[_TutorialState.rol];
+    const pasoConfigActual = config?.[_TutorialState.indice];
+    if (pasoConfigActual?.destino) {
+      setTimeout(() => {
+        _posicionarGloboTutorial(pasoConfigActual.destino);
+        if (!_elementoTutorialVisible(document.getElementById(pasoConfigActual.destino))) {
+          _mostrarMensajeBloqueoTutorial(pasoConfigActual.mensajeBloqueo);
+        }
+      }, 300);
+    }
+  }
 }
 
 /**

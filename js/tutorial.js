@@ -432,6 +432,12 @@ function _asegurarWidgetGloboTutorial() {
   }
 }
 
+function _elementoTutorialVisible(el) {
+  if (!el || !el.isConnected) return false;
+  const rect = el.getBoundingClientRect();
+  return rect.width > 0 || rect.height > 0;
+}
+
 function _posicionarGloboTutorial(idElementoDestino) {
   const globo = document.getElementById('tutorial-globo');
   const destino = document.getElementById(idElementoDestino);
@@ -442,7 +448,7 @@ function _posicionarGloboTutorial(idElementoDestino) {
 
   _quitarListenerScrollTutorial();
 
-  if (!globo || !destino) {
+  if (!globo || !_elementoTutorialVisible(destino)) {
     if (globo) globo.style.display = 'none';
     return;
   }
@@ -450,6 +456,15 @@ function _posicionarGloboTutorial(idElementoDestino) {
   destino.scrollIntoView({ behavior: 'auto', block: 'center' });
 
   const actualizarPosicionGlobo = () => {
+    // Si el elemento dejó de estar visible (cambio de sección, modal cerrado,
+    // etc.) mientras el globo lo seguía, lo ocultamos en vez de dejarlo
+    // clavado en una posición vieja apuntando a cualquier cosa.
+    if (!_elementoTutorialVisible(destino)) {
+      globo.style.display = 'none';
+      destino.classList.remove('tutorial-destino-resaltado');
+      _quitarListenerScrollTutorial();
+      return;
+    }
     const rect = destino.getBoundingClientRect();
     globo.style.top = `${rect.top + rect.height / 2 - 17}px`;
     globo.style.left = `${rect.left + rect.width / 2 - 17}px`;
