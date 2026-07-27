@@ -1,0 +1,209 @@
+/* ============================================================
+   landing.css — Indómita Love Club
+   Hoja liviana y propia de la landing pública.
+   Reutiliza la paleta de marca de css/styles.css pero no depende
+   de ese archivo (evita cargar los estilos de la plataforma logueada).
+   ============================================================ */
+
+:root {
+  --bordo:         #8B1A2B;
+  --bordo-oscuro:  #5C0F1A;
+  --bordo-claro:   #B03048;
+  --bordo-suave:   rgba(139, 26, 43, 0.08);
+  --rosa:          #F2C4CE;
+  --rosa-claro:    #FAE8EC;
+  --crema:         #F5ECD7;
+  --crema-oscura:  #E8D9BE;
+  --crema-suave:   #FAF7F4;
+  --blanco:        #FFFFFF;
+  --gris-texto:    #2A2A2A;
+  --gris-medio:    #666666;
+  --gris-suave:    #999999;
+  --gris-borde:    #E5E0D8;
+
+  --fuente-titulo: 'Playfair Display', Georgia, serif;
+  --fuente-texto:  'Lato', sans-serif;
+
+  --radio:         10px;
+  --radio-grande:  18px;
+  --radio-pill:    999px;
+  --sombra:        0 2px 20px rgba(139, 26, 43, 0.08);
+  --sombra-fuerte: 0 8px 40px rgba(139, 26, 43, 0.15);
+  --transicion:    all 0.22s ease;
+}
+
+/* Oculto hasta que el chequeo de sesión resuelva si hay que redirigir a /app */
+html {
+  visibility: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fuente-texto);
+  color: var(--gris-texto);
+  background: var(--crema-suave);
+}
+
+/* HEADER */
+#header-landing {
+  background: var(--blanco);
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.header-landing-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-landing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-landing img {
+  height: 36px;
+}
+
+.logo-landing span {
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--bordo);
+}
+
+.btn-ingresar {
+  font-family: var(--fuente-texto);
+  font-weight: 600;
+  color: var(--bordo);
+  text-decoration: none;
+  padding: 8px 18px;
+  border: 1.5px solid var(--bordo);
+  border-radius: var(--radio-pill);
+  transition: var(--transicion);
+}
+
+.btn-ingresar:hover {
+  background: var(--bordo);
+  color: var(--blanco);
+}
+
+/* HERO */
+#hero {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 56px 24px 72px;
+  text-align: center;
+}
+
+.rol-toggle {
+  display: inline-flex;
+  background: var(--crema);
+  border-radius: var(--radio-pill);
+  padding: 4px;
+  margin-bottom: 36px;
+  gap: 4px;
+}
+
+.rol-tab {
+  font-family: var(--fuente-texto);
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radio-pill);
+  cursor: pointer;
+  color: var(--gris-medio);
+  transition: var(--transicion);
+}
+
+.rol-tab.activo {
+  background: var(--bordo);
+  color: var(--blanco);
+}
+
+.rol-panel {
+  display: none;
+}
+
+.rol-panel.activo {
+  display: block;
+  animation: aparecer 0.25s ease;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#hero h1 {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  color: var(--bordo-oscuro);
+  margin: 0 0 16px;
+  line-height: 1.15;
+}
+
+.bajada {
+  font-size: 1.1rem;
+  color: var(--gris-medio);
+  max-width: 560px;
+  margin: 0 auto 28px;
+  line-height: 1.5;
+}
+
+.ganchos {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ganchos li {
+  background: var(--rosa-claro);
+  color: var(--bordo-oscuro);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+}
+
+.btn-cta {
+  display: inline-block;
+  font-family: var(--fuente-texto);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--blanco);
+  background: var(--bordo);
+  text-decoration: none;
+  padding: 14px 36px;
+  border-radius: var(--radio-pill);
+  box-shadow: var(--sombra);
+  transition: var(--transicion);
+}
+
+.btn-cta:hover {
+  background: var(--bordo-oscuro);
+  box-shadow: var(--sombra-fuerte);
+}
+
+/* FOOTER */
+#footer-landing {
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--gris-suave);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--gris-borde);
+}
