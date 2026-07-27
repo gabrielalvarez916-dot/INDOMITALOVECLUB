@@ -5118,16 +5118,16 @@ img { max-width: 100%; display: block; }
 
 @media (max-width: 768px) {
   #modal-tutorial-mascota {
-    top: 0;
+    top: 50%;
     bottom: auto;
-    right: 0;
+    right: 12px;
     left: auto;
-    transform: none;
-    width: 86%;
-    max-width: 300px;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
+    transform: translateY(-50%);
+    width: 82%;
+    max-width: 280px;
+    height: auto;
+    max-height: 80vh;
+    border-radius: var(--radio-grande);
     overflow-y: auto;
   }
 }
