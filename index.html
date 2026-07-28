@@ -112,29 +112,78 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       CÓMO FUNCIONA — pasos numerados, fondo bordó
+ <!-- ============================================================
+       CÓMO FUNCIONA — pasos numerados, fondo bordó, por rol
        ============================================================ -->
   <section id="como-funciona">
     <h2 class="seccion-titulo">✦ Tres pasos y arrancas. ✦</h2>
-    <div class="pasos">
-      <div class="paso paso-clara">
-        <span class="paso-numero">1</span>
-        <span class="paso-icono">👤</span>
-        <h3>Elegí tu rol</h3>
-        <p>Sumate como reseñador/a, autor/a o editorial y armá tu perfil en minutos.</p>
+
+    <div class="pasos-panel activo" data-pasos-rol="resenador">
+      <div class="pasos">
+        <div class="paso paso-clara">
+          <span class="paso-numero">1</span>
+          <span class="paso-icono">👤</span>
+          <h3>Elegí qué leer (y qué no)</h3>
+          <p>Explorá libros disponibles y postulate solo a los que realmente te interesan. Nada de asignaciones forzadas.</p>
+        </div>
+        <div class="paso paso-oscura">
+          <span class="paso-numero">2</span>
+          <span class="paso-icono">🤝</span>
+          <h3>Entrá en campañas activas</h3>
+          <p>Conectate con autores que buscan lectores reales. Vos elegís dónde participar y cuándo.</p>
+        </div>
+        <div class="paso paso-clara">
+          <span class="paso-numero">3</span>
+          <span class="paso-icono">📖</span>
+          <h3>Leé, reseñá y construí tu perfil</h3>
+          <p>Cada reseña suma a tu historial. Cuanto más cumplís, más acceso y visibilidad ganás dentro de la comunidad.</p>
+        </div>
       </div>
-      <div class="paso paso-oscura">
-        <span class="paso-numero">2</span>
-        <span class="paso-icono">🤝</span>
-        <h3>Conectate</h3>
-        <p>Descubrí campañas activas o publicá la tuya y encontrá la contraparte ideal.</p>
+    </div>
+
+    <div class="pasos-panel" data-pasos-rol="autor">
+      <div class="pasos">
+        <div class="paso paso-clara">
+          <span class="paso-numero">1</span>
+          <span class="paso-icono">👤</span>
+          <h3>Elegí tu rol</h3>
+          <p>Sumate como reseñador/a, autor/a o editorial y armá tu perfil en minutos.</p>
+        </div>
+        <div class="paso paso-oscura">
+          <span class="paso-numero">2</span>
+          <span class="paso-icono">🤝</span>
+          <h3>Conectate</h3>
+          <p>Descubrí campañas activas o publicá la tuya y encontrá la contraparte ideal.</p>
+        </div>
+        <div class="paso paso-clara">
+          <span class="paso-numero">3</span>
+          <span class="paso-icono">📖</span>
+          <h3>Cumplí tu parte</h3>
+          <p>Leé y reseñá, o recibí reseñas reales para tu libro. Todo queda registrado en tu historial.</p>
+        </div>
       </div>
-      <div class="paso paso-clara">
-        <span class="paso-numero">3</span>
-        <span class="paso-icono">📖</span>
-        <h3>Cumplí tu parte</h3>
-        <p>Leé y reseñá, o recibí reseñas reales para tu libro. Todo queda registrado en tu historial.</p>
+    </div>
+
+    <div class="pasos-panel" data-pasos-rol="editorial">
+      <div class="pasos">
+        <div class="paso paso-clara">
+          <span class="paso-numero">1</span>
+          <span class="paso-icono">👤</span>
+          <h3>Elegí tu rol</h3>
+          <p>Sumate como reseñador/a, autor/a o editorial y armá tu perfil en minutos.</p>
+        </div>
+        <div class="paso paso-oscura">
+          <span class="paso-numero">2</span>
+          <span class="paso-icono">🤝</span>
+          <h3>Conectate</h3>
+          <p>Descubrí campañas activas o publicá la tuya y encontrá la contraparte ideal.</p>
+        </div>
+        <div class="paso paso-clara">
+          <span class="paso-numero">3</span>
+          <span class="paso-icono">📖</span>
+          <h3>Cumplí tu parte</h3>
+          <p>Leé y reseñá, o recibí reseñas reales para tu libro. Todo queda registrado en tu historial.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -211,6 +260,9 @@
         tab.setAttribute('aria-selected', 'true');
         document.querySelectorAll('.rol-panel').forEach(function (panel) {
           panel.classList.toggle('activo', panel.getAttribute('data-rol-panel') === rol);
+        });
+        document.querySelectorAll('.pasos-panel').forEach(function (panel) {
+          panel.classList.toggle('activo', panel.getAttribute('data-pasos-rol') === rol);
         });
       });
     });
