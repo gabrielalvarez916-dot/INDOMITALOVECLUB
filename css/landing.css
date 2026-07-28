@@ -532,9 +532,132 @@ body {
 .faq-item p { color: var(--rosa-claro); line-height: 1.55; margin: 0 0 20px; }
 
 /* ============================================================
-   WORDMARK
+   FOOTER — borde decorativo + columnas + wordmark + barra inferior
    ============================================================ */
-#wordmark { background: var(--bordo-oscuro); padding: 56px 24px; text-align: center; overflow: hidden; }
+#footer-top {
+  background: var(--bordo-oscuro);
+  padding-bottom: 8px;
+}
+
+.footer-borde-decorativo {
+  height: 10px;
+  width: 100%;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--rosa-claro) 0 20px,
+    transparent 20px 32px
+  );
+  opacity: 0.55;
+}
+
+.footer-cols {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 52px 32px 12px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.2fr 1fr;
+  gap: 36px;
+}
+
+.footer-col h3 {
+  font-family: var(--fuente-titulo);
+  color: var(--rosa-claro);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+  opacity: 0.85;
+}
+
+.footer-marca {
+  font-family: var(--fuente-display);
+  font-size: 1.7rem;
+  color: var(--crema);
+  margin: 0 0 14px;
+  line-height: 1.1;
+}
+
+.footer-marca em {
+  font-style: italic;
+}
+
+.footer-marca span {
+  display: block;
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--rosa-claro);
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
+.footer-tagline {
+  color: var(--rosa-claro);
+  opacity: 0.75;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.footer-social,
+.footer-contacto-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--crema);
+  text-decoration: none;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  transition: var(--transicion);
+  word-break: break-word;
+}
+
+.footer-social:hover,
+.footer-contacto-item:hover {
+  color: var(--rosa-claro);
+}
+
+.footer-social svg,
+.footer-contacto-item svg {
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  opacity: 0.9;
+}
+
+.footer-col-explora ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-col-explora li {
+  margin-bottom: 10px;
+}
+
+.footer-col-explora a {
+  color: var(--crema);
+  text-decoration: none;
+  font-size: 0.9rem;
+  opacity: 0.85;
+  transition: var(--transicion);
+}
+
+.footer-col-explora a:hover {
+  color: var(--rosa-claro);
+  opacity: 1;
+}
+
+/* WORDMARK — bloque tipográfico gigante */
+#wordmark {
+  background: var(--bordo-oscuro);
+  padding: 24px 24px 56px;
+  text-align: center;
+  overflow: hidden;
+}
+
 #wordmark span {
   display: block;
   font-family: var(--fuente-display);
@@ -547,8 +670,27 @@ body {
   white-space: nowrap;
 }
 
-/* FOOTER */
-#footer-landing { text-align: center; padding: 32px 24px; color: var(--gris-suave); font-size: 0.85rem; background: var(--crema-suave); }
+/* BARRA INFERIOR */
+#footer-landing {
+  background: var(--crema-suave);
+  padding: 18px 24px;
+}
+
+.footer-inferior-inner {
+  max-width: 1160px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.footer-inferior-inner p {
+  margin: 0;
+  color: var(--gris-suave);
+  font-size: 0.8rem;
+}
 
 /* ============================================================
    RESPONSIVE
@@ -558,6 +700,32 @@ body {
   .badges-confianza { grid-template-columns: repeat(2, 1fr); }
   #carrusel-portadas { flex-wrap: wrap; }
   .portada { min-width: 100px; }
+  .footer-cols {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 24px;
+  }
+  .footer-col-marca {
+    grid-column: 1 / -1;
+  }
+  .footer-tagline {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-cols {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 44px 24px 8px;
+  }
+  .footer-social,
+  .footer-contacto-item {
+    justify-content: center;
+  }
+  .footer-inferior-inner {
+    justify-content: center;
+    text-align: center;
+  }
 }
 @media (max-width: 460px) {
   .badges-confianza { grid-template-columns: 1fr; }
