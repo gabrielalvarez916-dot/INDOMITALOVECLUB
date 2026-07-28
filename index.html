@@ -13,7 +13,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Fraunces:ital,wght@0,600;0,700;1,600;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Fraunces:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/landing.css" />
 
   <!-- TODO SEO: schema.org Organization -->
@@ -22,8 +22,6 @@
 
   <!-- ============================================================
        CHEQUEO DE SESIÓN
-       Si hay sesión activa, redirige a /app preservando ?query y #hash
-       (para no romper links de "compartir campaña" tipo ?campana=ID)
        ============================================================ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/supabase-client.js"></script>
@@ -38,19 +36,10 @@
           document.documentElement.style.visibility = 'visible';
         }
       } catch (e) {
-        // Si falla el chequeo de sesión, no bloqueamos la landing.
         document.documentElement.style.visibility = 'visible';
       }
     })();
   </script>
-
-  <!-- BANDA TICKER -->
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-      <span>Libros gratis</span><span>Reseñas reales, no bots</span><span>Autores y editoriales</span><span>Comunidad de lectoras y lectores</span>
-      <span>Libros gratis</span><span>Reseñas reales, no bots</span><span>Autores y editoriales</span><span>Comunidad de lectoras y lectores</span>
-    </div>
-  </div>
 
   <!-- HEADER -->
   <header id="header-landing">
@@ -64,7 +53,18 @@
   </header>
 
   <!-- ============================================================
-       HERO — toggle de 3 roles: reseñador / autor / editorial
+       CARRUSEL DE PORTADAS
+       ============================================================ -->
+  <section id="carrusel-portadas" aria-hidden="true">
+    <div class="portada portada-1"><span class="portada-autor">L. JIMENA G. R.</span><span class="portada-titulo">Amanda<br>el mundo rojo</span></div>
+    <div class="portada portada-2"><span class="portada-kicker">Priesthood · Libro 3</span><span class="portada-titulo">Ardiendo<br>por un<br>rumano</span><span class="portada-autor">Rosibel Sequera</span></div>
+    <div class="portada portada-3"><span class="portada-titulo">Susurros<br>de una<br>Lycoris</span><span class="portada-autor">Alejandro Vera</span></div>
+    <div class="portada portada-4"><span class="portada-kicker">Serie Mundos Paralelos · Era del Pacto I</span><span class="portada-titulo">La sortija<br>de Médora</span><span class="portada-autor">Valeria Carolina Caraballo</span></div>
+    <div class="portada portada-5"><span class="portada-titulo">XOXO,<br>con ♥</span><span class="portada-autor">L. Jimena G. R.</span></div>
+  </section>
+
+  <!-- ============================================================
+       HERO — fondo bordó, toggle de 3 roles
        ============================================================ -->
   <section id="hero">
     <div class="rol-toggle" role="tablist" aria-label="Elegí tu rol">
@@ -74,69 +74,65 @@
     </div>
 
     <div class="rol-panel activo" data-rol-panel="resenador">
-      <h1>Leé antes que nadie, y siempre gratis.</h1>
-      <p class="bajada">Descubrí autores nuevos y recibí libros antes de que salgan a la venta, a cambio de tu reseña honesta.</p>
+      <h1>Descubrí autores nuevos y recibí libros antes de que salgan a la venta, <span class="resalte">a cambio de tu reseña honesta.</span></h1>
       <ul class="ganchos">
-        <li>Libros gratis</li>
-        <li>Autores nuevos</li>
-        <li>Eventos, ranking y comunidad</li>
+        <li><span class="gancho-icono">🎁</span> Libros gratis</li>
+        <li><span class="gancho-icono">🖋️</span> Autores nuevos</li>
+        <li><span class="gancho-icono">👥</span> Eventos, ranking y comunidad</li>
       </ul>
-      <a href="/app" class="btn-cta">Quiero ser reseñador/a</a>
+      <a href="/app" class="btn-cta">✎ &nbsp;quiero ser reseñador/a</a>
     </div>
 
     <div class="rol-panel" data-rol-panel="autor">
-      <h1>Conseguí reseñas reales para tu libro, nuevo o de hace tiempo.</h1>
-      <p class="bajada">Conectate con reseñadores reales, ganá visibilidad en redes e impulsá tus ventas en Amazon.</p>
+      <h1>Conseguí reseñas reales para tu libro, <span class="resalte">nuevo o de hace tiempo.</span></h1>
       <ul class="ganchos">
-        <li>Reseñadores reales, no bots</li>
-        <li>Más visibilidad en redes</li>
-        <li>Impulso real en Amazon</li>
+        <li><span class="gancho-icono">✅</span> Reseñadores reales, no bots</li>
+        <li><span class="gancho-icono">📣</span> Más visibilidad en redes</li>
+        <li><span class="gancho-icono">📈</span> Impulso real en Amazon</li>
       </ul>
-      <a href="/app" class="btn-cta">Quiero publicar mi libro</a>
+      <a href="/app" class="btn-cta">✎ &nbsp;quiero publicar mi libro</a>
     </div>
 
     <div class="rol-panel" data-rol-panel="editorial">
-      <h1>Todo tu catálogo, todas tus reseñas, en un solo lugar.</h1>
-      <p class="bajada">Gestioná todo tu catálogo desde un solo panel y elegí reseñadores por su historial real de cumplimiento, no solo por su bio.</p>
+      <h1>Todo tu catálogo, todas tus reseñas, <span class="resalte">en un solo lugar.</span></h1>
       <ul class="ganchos">
-        <li>Catálogo completo en un panel</li>
-        <li>Elegí por redes del reseñador</li>
-        <li>Sistema de confiabilidad exclusivo</li>
+        <li><span class="gancho-icono">📚</span> Catálogo completo en un panel</li>
+        <li><span class="gancho-icono">🔎</span> Elegí por historial real</li>
+        <li><span class="gancho-icono">🛡️</span> Sistema de confiabilidad exclusivo</li>
       </ul>
-      <a href="/app" class="btn-cta">Quiero sumar mi editorial</a>
+      <a href="/app" class="btn-cta">✎ &nbsp;quiero sumar mi editorial</a>
     </div>
   </section>
 
-  <!-- ============================================================
-       PROBLEMA — bloque de color con statement grande
-       ============================================================ -->
-  <section id="problema">
-    <div class="problema-inner">
-      <span class="kicker">El problema</span>
-      <p class="problema-statement">No todas las reseñas nacen de una lectura real. <strong>Acá sí.</strong> Conectamos autores, editoriales y reseñadores que de verdad leen, opinan y se comprometen.</p>
+  <!-- BANDA DIAGONAL -->
+  <div id="cinta-diagonal" aria-hidden="true">
+    <div class="cinta-track">
+      <span>INDÓMITA LOVE CLUB</span><span>✦</span><span>INDÓMITA LOVE CLUB</span><span>✦</span><span>INDÓMITA LOVE CLUB</span><span>✦</span>
+      <span>INDÓMITA LOVE CLUB</span><span>✦</span><span>INDÓMITA LOVE CLUB</span><span>✦</span><span>INDÓMITA LOVE CLUB</span><span>✦</span>
     </div>
-  </section>
+  </div>
 
   <!-- ============================================================
-       CÓMO FUNCIONA — pasos numerados
+       CÓMO FUNCIONA — pasos numerados, fondo bordó
        ============================================================ -->
   <section id="como-funciona">
-    <span class="kicker">Cómo funciona</span>
-    <h2 class="seccion-titulo">Tres pasos, sin vueltas</h2>
-    <p class="seccion-bajada">Ya seas reseñador/a, autor/a o editorial, el camino es simple.</p>
+    <h2 class="seccion-titulo">✦ Tres pasos y arrancas. ✦</h2>
     <div class="pasos">
-      <div class="paso">
+      <div class="paso paso-clara">
         <span class="paso-numero">1</span>
+        <span class="paso-icono">👤</span>
         <h3>Elegí tu rol</h3>
         <p>Sumate como reseñador/a, autor/a o editorial y armá tu perfil en minutos.</p>
       </div>
-      <div class="paso">
+      <div class="paso paso-oscura">
         <span class="paso-numero">2</span>
+        <span class="paso-icono">🤝</span>
         <h3>Conectate</h3>
         <p>Descubrí campañas activas o publicá la tuya y encontrá la contraparte ideal.</p>
       </div>
-      <div class="paso">
+      <div class="paso paso-clara">
         <span class="paso-numero">3</span>
+        <span class="paso-icono">📖</span>
         <h3>Cumplí tu parte</h3>
         <p>Leé y reseñá, o recibí reseñas reales para tu libro. Todo queda registrado en tu historial.</p>
       </div>
@@ -149,7 +145,7 @@
   <section id="diferenciadores">
     <div class="diferenciadores-inner">
       <span class="kicker">Qué nos diferencia</span>
-      <h2 class="seccion-titulo">Confianza de punta a punta</h2>
+      <h2 class="seccion-titulo-clara">Confianza de punta a punta</h2>
       <div class="badges-confianza">
         <div class="badge-confianza">
           <span class="icono">🚫</span>
@@ -180,7 +176,7 @@
        ============================================================ -->
   <section id="faq">
     <span class="kicker">Preguntas frecuentes</span>
-    <h2 class="seccion-titulo">Lo que más nos preguntan</h2>
+    <h2 class="seccion-titulo-clara">Lo que más nos preguntan</h2>
     <div class="faq-lista">
       <details class="faq-item">
         <summary>¿Cuánto cuesta sumarme como reseñador/a?</summary>
@@ -197,9 +193,7 @@
     </div>
   </section>
 
-  <!-- ============================================================
-       WORDMARK gigante
-       ============================================================ -->
+  <!-- WORDMARK gigante -->
   <div id="wordmark"><span>Indómita Love Club</span></div>
 
   <footer id="footer-landing">
@@ -207,18 +201,15 @@
   </footer>
 
   <script>
-    // Toggle de rol en el hero
     document.querySelectorAll('.rol-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
         const rol = tab.getAttribute('data-rol');
-
         document.querySelectorAll('.rol-tab').forEach(function (t) {
           t.classList.remove('activo');
           t.setAttribute('aria-selected', 'false');
         });
         tab.classList.add('activo');
         tab.setAttribute('aria-selected', 'true');
-
         document.querySelectorAll('.rol-panel').forEach(function (panel) {
           panel.classList.toggle('activo', panel.getAttribute('data-rol-panel') === rol);
         });

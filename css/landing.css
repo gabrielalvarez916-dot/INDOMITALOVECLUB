@@ -1,20 +1,19 @@
 /* ============================================================
    landing.css — Indómita Love Club
-   Hoja liviana y propia de la landing pública.
-   Reutiliza la paleta de marca pero no depende de css/styles.css
-   (evita cargar los estilos de la plataforma logueada).
    ============================================================ */
 
 :root {
   --bordo:         #8B1A2B;
-  --bordo-oscuro:  #5C0F1A;
+  --bordo-oscuro:  #4A0E17;
   --bordo-claro:   #B03048;
   --bordo-suave:   rgba(139, 26, 43, 0.08);
   --rosa:          #F2C4CE;
   --rosa-claro:    #FAE8EC;
+  --coral:         #E68A72;
   --crema:         #F5ECD7;
   --crema-oscura:  #E8D9BE;
   --crema-suave:   #FAF7F4;
+  --crema-header:  #F5EFE6;
   --blanco:        #FFFFFF;
   --gris-texto:    #2A2A2A;
   --gris-medio:    #666666;
@@ -22,8 +21,8 @@
   --gris-borde:    #E5E0D8;
 
   --fuente-titulo:  'Playfair Display', Georgia, serif;
-  --fuente-display: 'Fraunces', 'Playfair Display', Georgia, serif;
-  --fuente-texto:   'Lato', sans-serif;
+  --fuente-display: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --fuente-texto:   'DM Sans', 'Lato', sans-serif;
 
   --radio:         10px;
   --radio-grande:  18px;
@@ -33,158 +32,162 @@
   --transicion:    all 0.22s ease;
 }
 
-/* Oculto hasta que el chequeo de sesión resuelva si hay que redirigir a /app */
-html {
-  visibility: hidden;
-}
-
-* {
-  box-sizing: border-box;
-}
+html { visibility: hidden; }
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: var(--fuente-texto);
   color: var(--gris-texto);
-  background: var(--crema-suave);
+  background: var(--bordo-oscuro);
   overflow-x: hidden;
-}
-
-/* ============================================================
-   TICKER — banda de texto en movimiento continuo
-   ============================================================ */
-.ticker {
-  background: var(--bordo);
-  color: var(--rosa-claro);
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 9px 0;
-}
-
-.ticker-track {
-  display: inline-flex;
-  animation: mover-ticker 26s linear infinite;
-}
-
-.ticker-track span {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--fuente-texto);
-  font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0 22px;
-}
-
-.ticker-track span::after {
-  content: '\2726';
-  margin-left: 22px;
-  opacity: 0.6;
-}
-
-@keyframes mover-ticker {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track { animation: none; }
 }
 
 /* HEADER */
 #header-landing {
-  background: var(--blanco);
-  border-bottom: 1px solid var(--gris-borde);
+  background: var(--crema-header);
   position: relative;
   z-index: 5;
 }
 
 .header-landing-inner {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 16px 24px;
+  padding: 18px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.logo-landing {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-landing img {
-  height: 36px;
-}
-
+.logo-landing { display: flex; align-items: center; gap: 10px; }
+.logo-landing img { height: 34px; }
 .logo-landing span {
   font-family: var(--fuente-titulo);
   font-weight: 700;
-  font-size: 1.2rem;
-  color: var(--bordo);
+  font-size: 1.3rem;
+  color: var(--bordo-oscuro);
 }
 
 .btn-ingresar {
   font-family: var(--fuente-texto);
   font-weight: 600;
-  color: var(--bordo);
+  color: var(--bordo-oscuro);
   text-decoration: none;
-  padding: 8px 18px;
-  border: 1.5px solid var(--bordo);
+  padding: 9px 22px;
+  border: 1.5px solid var(--bordo-oscuro);
   border-radius: var(--radio-pill);
   transition: var(--transicion);
 }
+.btn-ingresar:hover { background: var(--bordo-oscuro); color: var(--blanco); }
 
-.btn-ingresar:hover {
-  background: var(--bordo);
-  color: var(--blanco);
+/* ============================================================
+   CARRUSEL DE PORTADAS
+   ============================================================ */
+#carrusel-portadas {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 14px;
+  background: var(--bordo-oscuro);
+  padding: 28px 20px 0;
+  overflow: hidden;
+  flex-wrap: nowrap;
 }
 
-/* HERO */
+.portada {
+  position: relative;
+  width: 15%;
+  min-width: 130px;
+  max-width: 190px;
+  aspect-ratio: 3 / 4.6;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px 12px;
+  color: var(--crema-suave);
+  overflow: hidden;
+}
+
+.portada::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.75) 100%);
+}
+
+.portada-kicker, .portada-titulo, .portada-autor {
+  position: relative;
+  z-index: 1;
+}
+
+.portada-kicker {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.portada-titulo {
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+
+.portada-autor {
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  opacity: 0.9;
+}
+
+.portada-1 { background: linear-gradient(160deg, #7a2020, #2c0d0d); transform: translateY(10px); }
+.portada-2 { background: linear-gradient(160deg, #1a1a1a, #3a0a0a); transform: translateY(-6px); }
+.portada-3 { background: linear-gradient(160deg, #2c3a5c, #14192b); transform: translateY(-16px); z-index: 2; }
+.portada-4 { background: linear-gradient(160deg, #3a3a3a, #161616); transform: translateY(-4px); }
+.portada-5 { background: linear-gradient(160deg, #6b1420, #2c0a0e); transform: translateY(12px); }
+
+/* ============================================================
+   HERO — fondo bordó
+   ============================================================ */
 #hero {
-  max-width: 780px;
+  background: var(--bordo-oscuro);
+  max-width: 820px;
   margin: 0 auto;
-  padding: 56px 24px 72px;
+  padding: 28px 24px 72px;
   text-align: center;
+  position: relative;
 }
 
 .rol-toggle {
   display: inline-flex;
-  background: var(--crema);
+  background: var(--crema-header);
+  border: 1px solid rgba(139,26,43,0.3);
   border-radius: var(--radio-pill);
-  padding: 4px;
-  margin-bottom: 36px;
+  padding: 5px;
+  margin-bottom: 44px;
   gap: 4px;
 }
 
 .rol-tab {
   font-family: var(--fuente-texto);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   background: transparent;
   border: none;
   padding: 10px 20px;
   border-radius: var(--radio-pill);
   cursor: pointer;
-  color: var(--gris-medio);
+  color: var(--bordo-oscuro);
   transition: var(--transicion);
 }
+.rol-tab.activo { background: var(--bordo-oscuro); color: var(--crema-suave); }
 
-.rol-tab.activo {
-  background: var(--bordo);
-  color: var(--blanco);
-}
-
-.rol-panel {
-  display: none;
-}
-
-.rol-panel.activo {
-  display: block;
-  animation: aparecer 0.25s ease;
-}
+.rol-panel { display: none; }
+.rol-panel.activo { display: block; animation: aparecer 0.25s ease; }
 
 @keyframes aparecer {
   from { opacity: 0; transform: translateY(6px); }
@@ -194,63 +197,194 @@ body {
 #hero h1 {
   font-family: var(--fuente-display);
   font-weight: 700;
-  font-size: clamp(2rem, 5vw, 3.1rem);
-  color: var(--bordo-oscuro);
-  margin: 0 0 16px;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  font-size: clamp(2.1rem, 5.2vw, 3.3rem);
+  color: var(--crema-suave);
+  margin: 0 0 36px;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
 }
 
-.bajada {
-  font-size: 1.1rem;
-  color: var(--gris-medio);
-  max-width: 560px;
-  margin: 0 auto 28px;
-  line-height: 1.5;
-}
+#hero h1 .resalte { color: var(--coral); display: inline; }
 
 .ganchos {
   list-style: none;
   padding: 0;
-  margin: 0 0 32px;
+  margin: 0 0 36px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .ganchos li {
-  background: var(--rosa-claro);
-  color: var(--bordo-oscuro);
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 8px 16px;
+  background: transparent;
+  color: var(--crema-suave);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 12px 20px;
   border-radius: var(--radio-pill);
-  border: 1px solid rgba(139, 26, 43, 0.12);
+  border: 1.5px solid rgba(245, 236, 215, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
+.gancho-icono { font-size: 1rem; }
 
 .btn-cta {
   display: inline-block;
   font-family: var(--fuente-texto);
   font-weight: 700;
   font-size: 1.05rem;
-  color: var(--blanco);
-  background: var(--bordo);
+  color: var(--bordo-oscuro);
+  background: var(--crema-header);
   text-decoration: none;
-  padding: 14px 36px;
+  padding: 16px 40px;
   border-radius: var(--radio-pill);
-  box-shadow: var(--sombra);
+  box-shadow: var(--sombra-fuerte);
   transition: var(--transicion);
 }
+.btn-cta:hover { background: var(--blanco); transform: translateY(-1px); }
 
-.btn-cta:hover {
+/* ============================================================
+   CINTA DIAGONAL
+   ============================================================ */
+#cinta-diagonal {
+  background: var(--bordo);
+  border-top: 1.5px solid rgba(245,236,215,0.4);
+  border-bottom: 1.5px solid rgba(245,236,215,0.4);
+  overflow: hidden;
+  white-space: nowrap;
+  transform: rotate(-1.2deg) scale(1.03);
+  margin: -8px 0 -8px;
+}
+
+.cinta-track {
+  display: inline-flex;
+  padding: 10px 0;
+  animation: mover-cinta 22s linear infinite;
+}
+
+.cinta-track span {
+  font-family: var(--fuente-texto);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  color: var(--crema-oscura);
+  padding: 0 14px;
+}
+
+@keyframes mover-cinta {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) { .cinta-track { animation: none; } }
+
+/* ============================================================
+   CÓMO FUNCIONA — pasos, fondo bordó
+   ============================================================ */
+#como-funciona {
   background: var(--bordo-oscuro);
-  box-shadow: var(--sombra-fuerte);
-  transform: translateY(-1px);
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px 24px 88px;
+  text-align: center;
+}
+
+.seccion-titulo {
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--crema-suave);
+  margin: 0 0 48px;
+}
+
+.seccion-titulo-clara {
+  font-family: var(--fuente-display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+  color: var(--bordo-oscuro);
+  margin: 0 0 44px;
+}
+
+.pasos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: left;
+}
+
+.paso {
+  position: relative;
+  border-radius: var(--radio-grande);
+  padding: 46px 26px 28px;
+  border: 1px solid rgba(245,236,215,0.25);
+}
+
+.paso-clara { background: var(--crema-header); }
+.paso-clara h3, .paso-clara p { color: var(--bordo-oscuro); }
+.paso-clara p { color: var(--gris-medio); }
+
+.paso-oscura { background: var(--bordo); border-color: rgba(245,236,215,0.4); }
+.paso-oscura h3 { color: var(--crema-suave); }
+.paso-oscura p { color: rgba(245,236,215,0.85); }
+
+.paso-numero {
+  position: absolute;
+  top: -18px;
+  left: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bordo-oscuro);
+  color: var(--crema-suave);
+  border: 2px solid var(--crema-header);
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.paso-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 1.4rem;
+  margin-bottom: 18px;
+}
+
+.paso h3 {
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin: 0 0 10px;
+}
+
+.paso p {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+.paso::after {
+  content: '✦';
+  display: block;
+  text-align: center;
+  opacity: 0.6;
+  border-top: 1px solid currentColor;
+  padding-top: 14px;
 }
 
 /* ============================================================
-   ETIQUETA DE SECCIÓN (kicker chico arriba de cada título)
+   ETIQUETA DE SECCIÓN
    ============================================================ */
 .kicker {
   display: inline-block;
@@ -267,145 +401,14 @@ body {
 }
 
 /* ============================================================
-   PROBLEMA — bloque de color con statement grande (estilo cita)
-   ============================================================ */
-#problema {
-  background: var(--bordo);
-  color: var(--crema);
-  padding: 72px 24px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-#problema::before,
-#problema::after {
-  content: 'RESEÑAS REALES';
-  position: absolute;
-  font-family: var(--fuente-display);
-  font-weight: 700;
-  font-size: 7rem;
-  color: rgba(255, 255, 255, 0.04);
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-#problema::before { top: -20px; left: -40px; }
-#problema::after   { bottom: -50px; right: -40px; }
-
-.problema-inner {
-  max-width: 760px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 1;
-}
-
-.problema-inner .kicker {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--crema);
-}
-
-.problema-statement {
-  font-family: var(--fuente-display);
-  font-weight: 600;
-  font-style: italic;
-  font-size: clamp(1.5rem, 3.4vw, 2.3rem);
-  line-height: 1.35;
-  margin: 0;
-}
-
-.problema-statement strong {
-  font-style: normal;
-  color: var(--rosa-claro);
-}
-
-/* ============================================================
-   CÓMO FUNCIONA — pasos numerados (estilo Step 1/2/3)
-   ============================================================ */
-#como-funciona {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 88px 24px 64px;
-  text-align: center;
-}
-
-.seccion-titulo {
-  font-family: var(--fuente-display);
-  font-weight: 700;
-  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
-  color: var(--bordo-oscuro);
-  margin: 0 0 12px;
-}
-
-.seccion-bajada {
-  color: var(--gris-medio);
-  max-width: 520px;
-  margin: 0 auto 48px;
-  line-height: 1.5;
-}
-
-.pasos {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  text-align: left;
-}
-
-.paso {
-  background: var(--blanco);
-  border: 1px solid var(--gris-borde);
-  border-radius: var(--radio-grande);
-  padding: 28px 24px;
-  transition: var(--transicion);
-}
-
-.paso:hover {
-  box-shadow: var(--sombra-fuerte);
-  transform: translateY(-3px);
-}
-
-.paso-numero {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--bordo);
-  color: var(--blanco);
-  font-family: var(--fuente-titulo);
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 16px;
-}
-
-.paso h3 {
-  font-family: var(--fuente-texto);
-  font-size: 1.05rem;
-  margin: 0 0 8px;
-  color: var(--gris-texto);
-}
-
-.paso p {
-  color: var(--gris-medio);
-  font-size: 0.92rem;
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* ============================================================
-   DIFERENCIADORES — grilla de badges de confianza
+   DIFERENCIADORES
    ============================================================ */
 #diferenciadores {
   background: var(--crema);
   padding: 64px 24px 80px;
 }
 
-.diferenciadores-inner {
-  max-width: 1080px;
-  margin: 0 auto;
-  text-align: center;
-}
+.diferenciadores-inner { max-width: 1080px; margin: 0 auto; text-align: center; }
 
 .badges-confianza {
   display: grid;
@@ -421,12 +424,7 @@ body {
   box-shadow: var(--sombra);
 }
 
-.badge-confianza .icono {
-  font-size: 1.8rem;
-  margin-bottom: 10px;
-  display: block;
-}
-
+.badge-confianza .icono { font-size: 1.8rem; margin-bottom: 10px; display: block; }
 .badge-confianza strong {
   display: block;
   font-family: var(--fuente-titulo);
@@ -434,39 +432,16 @@ body {
   color: var(--bordo-oscuro);
   margin-bottom: 6px;
 }
-
-.badge-confianza span {
-  font-size: 0.85rem;
-  color: var(--gris-medio);
-  line-height: 1.4;
-  display: block;
-}
+.badge-confianza span { font-size: 0.85rem; color: var(--gris-medio); line-height: 1.4; display: block; }
 
 /* ============================================================
    FAQ
    ============================================================ */
-#faq {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 24px 24px 96px;
-  text-align: center;
-}
+#faq { max-width: 720px; margin: 0 auto; padding: 24px 24px 96px; text-align: center; background: var(--crema-suave); }
 
-.faq-lista {
-  text-align: left;
-  margin-top: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.faq-lista { text-align: left; margin-top: 40px; display: flex; flex-direction: column; gap: 12px; }
 
-.faq-item {
-  background: var(--blanco);
-  border: 1px solid var(--gris-borde);
-  border-radius: var(--radio);
-  padding: 4px 22px;
-}
-
+.faq-item { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: var(--radio); padding: 4px 22px; }
 .faq-item summary {
   cursor: pointer;
   font-family: var(--fuente-titulo);
@@ -479,39 +454,15 @@ body {
   align-items: center;
   justify-content: space-between;
 }
-
-.faq-item summary::-webkit-details-marker {
-  display: none;
-}
-
-.faq-item summary::after {
-  content: '+';
-  font-size: 1.4rem;
-  color: var(--bordo);
-  font-weight: 400;
-  transition: var(--transicion);
-}
-
-.faq-item[open] summary::after {
-  transform: rotate(45deg);
-}
-
-.faq-item p {
-  color: var(--gris-medio);
-  line-height: 1.55;
-  margin: 0 0 20px;
-}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after { content: '+'; font-size: 1.4rem; color: var(--bordo); font-weight: 400; transition: var(--transicion); }
+.faq-item[open] summary::after { transform: rotate(45deg); }
+.faq-item p { color: var(--gris-medio); line-height: 1.55; margin: 0 0 20px; }
 
 /* ============================================================
-   WORDMARK — bloque tipográfico gigante antes del footer
+   WORDMARK
    ============================================================ */
-#wordmark {
-  background: var(--bordo-oscuro);
-  padding: 56px 24px;
-  text-align: center;
-  overflow: hidden;
-}
-
+#wordmark { background: var(--bordo-oscuro); padding: 56px 24px; text-align: center; overflow: hidden; }
 #wordmark span {
   display: block;
   font-family: var(--fuente-display);
@@ -525,28 +476,17 @@ body {
 }
 
 /* FOOTER */
-#footer-landing {
-  text-align: center;
-  padding: 32px 24px;
-  color: var(--gris-suave);
-  font-size: 0.85rem;
-  background: var(--crema-suave);
-}
+#footer-landing { text-align: center; padding: 32px 24px; color: var(--gris-suave); font-size: 0.85rem; background: var(--crema-suave); }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 760px) {
-  .pasos {
-    grid-template-columns: 1fr;
-  }
-  .badges-confianza {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .pasos { grid-template-columns: 1fr; }
+  .badges-confianza { grid-template-columns: repeat(2, 1fr); }
+  #carrusel-portadas { flex-wrap: wrap; }
+  .portada { min-width: 100px; }
 }
-
 @media (max-width: 460px) {
-  .badges-confianza {
-    grid-template-columns: 1fr;
-  }
+  .badges-confianza { grid-template-columns: 1fr; }
 }
