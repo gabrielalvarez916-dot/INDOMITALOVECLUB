@@ -407,8 +407,24 @@ body {
    DIFERENCIADORES
    ============================================================ */
 #diferenciadores {
-  background: var(--crema);
-  padding: 64px 24px 80px;
+  position: relative;
+  background: var(--crema-suave);
+  padding: 88px 24px 80px;
+}
+
+#diferenciadores::before {
+  content: '';
+  position: absolute;
+  top: -19px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background-image:
+    linear-gradient(135deg, var(--crema-suave) 10px, transparent 0),
+    linear-gradient(-135deg, var(--crema-suave) 10px, transparent 0);
+  background-position: left top;
+  background-repeat: repeat-x;
+  background-size: 20px 20px;
 }
 
 .diferenciadores-inner { max-width: 1080px; margin: 0 auto; text-align: center; }
@@ -421,36 +437,87 @@ body {
 }
 
 .badge-confianza {
-  background: var(--blanco);
+  background: var(--crema-suave);
+  border: 1px solid var(--gris-borde);
   border-radius: var(--radio-grande);
-  padding: 26px 18px;
-  box-shadow: var(--sombra);
+  padding: 32px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.badge-confianza .icono { font-size: 1.8rem; margin-bottom: 10px; display: block; }
+.badge-confianza .icono { font-size: 2.1rem; margin-bottom: 14px; display: block; color: var(--bordo-oscuro); }
 .badge-confianza strong {
   display: block;
   font-family: var(--fuente-titulo);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   color: var(--bordo-oscuro);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
-.badge-confianza span { font-size: 0.85rem; color: var(--gris-medio); line-height: 1.4; display: block; }
+.badge-confianza span { font-size: 0.9rem; color: var(--gris-medio); line-height: 1.5; display: block; margin-bottom: 18px; }
+.badge-confianza::after {
+  content: '✦';
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: var(--bordo);
+  opacity: 0.6;
+  border-top: 1px solid var(--gris-borde);
+  padding-top: 14px;
+  margin-top: auto;
+}
 
 /* ============================================================
    FAQ
    ============================================================ */
-#faq { max-width: 720px; margin: 0 auto; padding: 24px 24px 96px; text-align: center; background: var(--crema-suave); }
+#faq {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 88px 24px 96px;
+  text-align: center;
+  background: var(--bordo-oscuro);
+}
+
+#faq::before {
+  content: '';
+  position: absolute;
+  top: -19px;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  height: 20px;
+  background-image:
+    linear-gradient(135deg, var(--bordo-oscuro) 10px, transparent 0),
+    linear-gradient(-135deg, var(--bordo-oscuro) 10px, transparent 0);
+  background-position: left top;
+  background-repeat: repeat-x;
+  background-size: 20px 20px;
+}
+
+.kicker-oscura {
+  background: transparent;
+  border: 1px solid var(--bordo-claro);
+  color: var(--coral);
+}
+
+.seccion-titulo-oscura {
+  font-family: var(--fuente-display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+  color: var(--crema-suave);
+  margin: 0 0 44px;
+}
 
 .faq-lista { text-align: left; margin-top: 40px; display: flex; flex-direction: column; gap: 12px; }
 
-.faq-item { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: var(--radio); padding: 4px 22px; }
+.faq-item { background: transparent; border: 1px solid var(--bordo-claro); border-radius: var(--radio); padding: 4px 22px; }
 .faq-item summary {
   cursor: pointer;
   font-family: var(--fuente-titulo);
   font-weight: 700;
   font-size: 1rem;
-  color: var(--gris-texto);
+  color: var(--crema-suave);
   padding: 18px 0;
   list-style: none;
   display: flex;
@@ -458,9 +525,9 @@ body {
   justify-content: space-between;
 }
 .faq-item summary::-webkit-details-marker { display: none; }
-.faq-item summary::after { content: '+'; font-size: 1.4rem; color: var(--bordo); font-weight: 400; transition: var(--transicion); }
+.faq-item summary::after { content: '+'; font-size: 1.4rem; color: var(--coral); font-weight: 400; transition: var(--transicion); }
 .faq-item[open] summary::after { transform: rotate(45deg); }
-.faq-item p { color: var(--gris-medio); line-height: 1.55; margin: 0 0 20px; }
+.faq-item p { color: var(--rosa-claro); line-height: 1.55; margin: 0 0 20px; }
 
 /* ============================================================
    WORDMARK
