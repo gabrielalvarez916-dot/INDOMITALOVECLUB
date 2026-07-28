@@ -685,7 +685,7 @@ async function cargarEstadisticasAdmin() {
 
     <div class="form-separador">Ratio de entrega por campaña</div>
     <p style="font-size:12px; color:#888; margin:0 0 12px;">
-      Por cada campaña: cuántas postulaciones aprobadas (incluye abandonadas) terminaron en una reseña entregada. Ordenado de menor a mayor ratio, para detectar rápido las campañas con peor cumplimiento.
+      Por cada campaña: cuántas postulaciones aprobadas (incluye abandonadas) terminaron en una reseña entregada, y cuántas ya están vencidas (deadline pasado, sin reseña). Ordenado de menor a mayor ratio, para detectar rápido las campañas con peor cumplimiento.
     </p>
     ${ratioPorCampaña.length === 0
       ? `<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay campañas con postulaciones aprobadas.</p></div>`
@@ -697,6 +697,7 @@ async function cargarEstadisticasAdmin() {
               <th>Autor</th>
               <th>Aprobadas</th>
               <th>Entregadas</th>
+              <th>Vencidas</th>
               <th>Ratio</th>
             </tr>
           </thead>
@@ -712,7 +713,7 @@ async function cargarEstadisticasAdmin() {
 /**
  * Construye la fila de una campaña para la tabla de ratio de entrega.
  *
- * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, entregadas, ratio }
+ * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, entregadas, vencidas, ratio }
  * @returns {string} HTML de la fila
  */
 function construirFilaRatioCampañaAdmin(c) {
@@ -722,6 +723,7 @@ function construirFilaRatioCampañaAdmin(c) {
       <td style="font-size:12px;">${c.nombre_autor}</td>
       <td>${c.aprobadas}</td>
       <td>${c.entregadas}</td>
+      <td style="${c.vencidas > 0 ? 'color:#c0392b;' : ''}">${c.vencidas}</td>
       <td>${c.ratio}%</td>
     </tr>
   `;
