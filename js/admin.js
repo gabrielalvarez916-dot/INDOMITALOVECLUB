@@ -1048,6 +1048,20 @@ function abrirModalNuevoTicketAdmin() {
     </div>
   `;
   document.body.appendChild(overlay);
+  asegurarUsuariosAdminCargados();
+}
+
+/**
+ * Garantiza que window._usuariosAdmin esté disponible antes de buscar,
+ * sin depender de que la pestaña Usuarios se haya cargado antes.
+ */
+async function asegurarUsuariosAdminCargados() {
+  if (window._usuariosAdmin && window._usuariosAdmin.length > 0) return;
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_usuarios');
+  if (!error && resultado && !resultado.error) {
+    window._usuariosAdmin = resultado.usuarios || [];
+  }
 }
 
 function cerrarModalNuevoTicketAdmin() {
