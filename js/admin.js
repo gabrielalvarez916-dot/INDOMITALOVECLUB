@@ -1028,8 +1028,13 @@ function abrirModalNuevoTicketAdmin() {
         <h3 style="margin:0; font-size:16px;">Nuevo ticket de soporte</h3>
         <button onclick="cerrarModalNuevoTicketAdmin()" style="background:none; border:none; font-size:20px; cursor:pointer; line-height:1;">×</button>
       </div>
-      <label style="font-size:12px; color:#888;">Email del usuario</label>
-      <input type="email" id="nuevo-ticket-email" placeholder="usuario@email.com" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box; margin:4px 0 10px;" />
+      <label style="font-size:12px; color:#888;">Usuario (buscar por email o alias)</label>
+      <div style="position:relative;">
+        <input type="text" id="nuevo-ticket-busqueda" autocomplete="off" placeholder="Escribí para buscar..." oninput="buscarUsuarioNuevoTicket()" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box; margin:4px 0 0;" />
+        <div id="nuevo-ticket-resultados" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ddd; border-top:none; border-radius:0 0 8px 8px; max-height:160px; overflow-y:auto; z-index:10;"></div>
+      </div>
+      <input type="hidden" id="nuevo-ticket-email" />
+      <div id="nuevo-ticket-info-usuario" style="font-size:12px; color:#888; margin:6px 0 10px;"></div>
       <label style="font-size:12px; color:#888;">Asunto</label>
       <input type="text" id="nuevo-ticket-asunto" placeholder="Asunto del mensaje" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box; margin:4px 0 10px;" />
       <label style="font-size:12px; color:#888;">Mensaje</label>
@@ -1047,6 +1052,70 @@ function abrirModalNuevoTicketAdmin() {
 
 function cerrarModalNuevoTicketAdmin() {
   document.getElementById('modal-nuevo-ticket-soporte')?.remove();
+}
+
+function buscarUsuarioNuevoTicket() {
+  // cualquier edición en el texto invalida la selección anterior
+  document.getElementById('nuevo-ticket-email').value = '';
+  document.getElementById('nuevo-ticket-info-usuario').innerHTML = '';
+
+  const texto = (document.getElementById('nuevo-ticket-busqueda')?.value || '').trim().toLowerCase();
+  const resultados = document.getElementById('nuevo-ticket-resultados');
+
+  if (!texto) {
+    resultados.style.display = 'none';
+    resultados.innerHTML = '';
+    return;
+  }
+
+  const coincidencias = (window._usuariosAdmin || [])
+    .filter(u => u.email.toLowerCase().includes(texto) || (u.alias || '').toLowerCase().includes(texto))
+    .slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    resultados.innerHTML = '<div style="padding:8px; font-size:12px; color:#888;">Sin coincidencias.</div>';
+    resultados.style.display = 'block';
+    return;
+  }
+
+  resultados.innerHTML = coincidencias.map(u => `
+    <div onclick='seleccionarUsuarioNuevoTicket(${JSON.stringify(u.email)})' style="padding:8px; font-size:12px; cursor:pointer; border-bottom:1px solid #f0f0f0;" onmouseover="this.style.background='#f7f7f7'" onmouseout="this.style.background='transparent'">
+      <strong>${u.email}</strong>${u.alias ? ` — ${u.alias}` : ''} <span style="color:#888;">(${u.rol || '—'})</span>
+    </div>
+  `).join('');
+  resultados.style.display = 'block';
+}
+
+async function seleccionarUsuarioNuevoTicket(email) {
+  document.getElementById('nuevo-ticket-email').value = email;
+  document.getElementById('nuevo-ticket-busqueda').value = email;
+  const resultados = document.getElementById('nuevo-ticket-resultados');
+  resultados.style.display = 'none';
+  resultados.innerHTML = '';
+
+  const infoDiv = document.getElementById('nuevo-ticket-info-usuario');
+  infoDiv.innerHTML = 'Cargando...';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_info_soporte_usuario', { p_email: email });
+
+  if (error || !resultado || resultado.error) {
+    infoDiv.innerHTML = '';
+    return;
+  }
+
+  const { rol, items } = resultado;
+
+  if (rol === 'autor') {
+    infoDiv.innerHTML = !items || items.length === 0
+      ? 'Autor sin campañas activas.'
+      : `Campañas activas: ${items.map(i => i.nombreLibro).join(', ')}.`;
+  } else if (rol === 'reseñador') {
+    infoDiv.innerHTML = !items || items.length === 0
+      ? 'Reseñador sin aprobaciones activas.'
+      : `Aprobado en: ${items.map(i => i.nombreLibro).join(', ')}.`;
+  } else {
+    infoDiv.innerHTML = '';
+  }
 }
 
 async function enviarNuevoTicketAdmin() {
