@@ -458,8 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnLoginHeader.addEventListener('click', () => mostrarSeccion('login'));
   }
 
-  if (Sesion.activa()) {
-    verificarSesionActiva();
+  verificarSesionActiva(); 
   }
 });
 // ────────────────────────────────────────────────────────────
