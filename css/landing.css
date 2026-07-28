@@ -108,6 +108,9 @@ body {
   padding: 16px 12px;
   color: var(--crema-suave);
   overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-color: #1a1a1a;
 }
 
 .portada::before {
@@ -144,11 +147,11 @@ body {
   opacity: 0.9;
 }
 
-.portada-1 { background: linear-gradient(160deg, #7a2020, #2c0d0d); transform: translateY(10px); }
-.portada-2 { background: linear-gradient(160deg, #1a1a1a, #3a0a0a); transform: translateY(-6px); }
-.portada-3 { background: linear-gradient(160deg, #2c3a5c, #14192b); transform: translateY(-16px); z-index: 2; }
-.portada-4 { background: linear-gradient(160deg, #3a3a3a, #161616); transform: translateY(-4px); }
-.portada-5 { background: linear-gradient(160deg, #6b1420, #2c0a0e); transform: translateY(12px); }
+.portada-1 { transform: translateY(10px); }
+.portada-2 { transform: translateY(-6px); }
+.portada-3 { transform: translateY(-16px); z-index: 2; }
+.portada-4 { transform: translateY(-4px); }
+.portada-5 { transform: translateY(12px); }
 
 /* ============================================================
    HERO — fondo bordó
