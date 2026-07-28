@@ -191,6 +191,8 @@ body {
 
 .rol-panel { display: none; }
 .rol-panel.activo { display: block; animation: aparecer 0.25s ease; }
+.pasos-panel { display: none; }
+.pasos-panel.activo { display: block; animation: aparecer 0.25s ease; }
 
 @keyframes aparecer {
   from { opacity: 0; transform: translateY(6px); }
