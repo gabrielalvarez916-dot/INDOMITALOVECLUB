@@ -459,7 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   verificarSesionActiva(); 
-  }
 });
 // ────────────────────────────────────────────────────────────
 // MODAL DE ACTUALIZACIONES
