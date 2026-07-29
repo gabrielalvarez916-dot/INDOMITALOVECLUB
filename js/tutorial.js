@@ -173,6 +173,11 @@ async function inicializarTutorialBienvenida(usuario) {
     document.getElementById('btn-soporte-flotante')?.style.setProperty('display', 'none');
     document.getElementById('evento-widget-flotante')?.style.setProperty('display', 'none');
     _mostrarIntroTutorial();
+
+    // Métrica de "vio el tutorial" (distinta de "lo terminó"): se marca una
+    // sola vez, la primera vez que el tutorial realmente se dispara en pantalla.
+    try { await supabaseClient.rpc('marcar_tutorial_bienvenida_iniciado'); }
+    catch (e) { console.error('Error marcando tutorial como iniciado:', e); }
   } catch (e) {
     console.error('Error inicializando tutorial de bienvenida:', e);
   }
@@ -199,6 +204,7 @@ function _mostrarIntroTutorial() {
   const btnSiguiente = document.getElementById('btn-tutorial-siguiente');
   if (btnAnterior) btnAnterior.style.display = 'none';
   if (btnSiguiente) btnSiguiente.textContent = 'Empezar tutorial';
+  document.getElementById('btn-tutorial-cerrar-x')?.style.setProperty('display', 'none');
 
   mostrarModal('modal-tutorial-mascota');
 }
@@ -236,6 +242,12 @@ async function _mostrarPasoTutorial() {
   // (se corrige apenas resuelve el chequeo real contra Supabase más abajo).
   _TutorialState.gateBloqueando = !!pasoConfig.gate;
   _ocultarMensajeBloqueoTutorial();
+
+  // La X para salir solo puede aparecer una vez que YA quedaron atrás todos
+  // los pasos con gate de este rol (o sea, ya cumplió todo lo obligatorio:
+  // postularse/completar perfil, o avatar/libro/campaña según el rol).
+  // Antes de eso, nunca hay forma de salir sin cumplir.
+  _actualizarBotonCerrarTutorial(config);
 
   mostrarModal('modal-tutorial-mascota');
 
@@ -312,6 +324,25 @@ function pasoAnteriorTutorial() {
 // ────────────────────────────────────────────────────────────
 // GATES — mensaje de bloqueo
 // ────────────────────────────────────────────────────────────
+
+// ────────────────────────────────────────────────────────────
+// BOTÓN X — permite salir del tutorial ANTES de terminar los
+// pasos informativos finales, pero solo si ya pasó todos los
+// pasos con gate (o sea, ya cumplió lo obligatorio). Nunca se
+// muestra si todavía queda un gate pendiente por delante.
+// ────────────────────────────────────────────────────────────
+
+function _actualizarBotonCerrarTutorial(config) {
+  const btnCerrar = document.getElementById('btn-tutorial-cerrar-x');
+  if (!btnCerrar) return;
+
+  const indiceUltimoGate = config.reduce(
+    (max, paso, i) => (paso.gate ? i : max), -1
+  );
+
+  const yaPasoTodosLosGates = _TutorialState.indice > indiceUltimoGate;
+  btnCerrar.style.display = yaPasoTodosLosGates ? 'inline-block' : 'none';
+}
 
 function _mostrarMensajeBloqueoTutorial(mensaje) {
   const el = document.getElementById('tutorial-mascota-bloqueo');
