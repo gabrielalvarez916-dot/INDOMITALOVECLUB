@@ -263,6 +263,19 @@ async function cargarCampañasAutor(idUsuario) {
 }
 
 /**
+ * Determina si una campaña todavía está dentro de la ventana permitida
+ * para ser cancelada por el autor (5 días desde su creación).
+ *
+ * @param {string} creadoEn — timestamp ISO de creación de la campaña
+ * @returns {boolean}
+ */
+function _puedeCancelarCampana(creadoEn) {
+  if (!creadoEn) return true;
+  const limiteMs = 5 * 24 * 60 * 60 * 1000; // 5 días
+  return (Date.now() - new Date(creadoEn).getTime()) <= limiteMs;
+}
+
+/**
  * Construye la card de una campaña activa para el panel del autor.
  *
  * @param {Object} c — datos de la campaña
@@ -298,7 +311,9 @@ function construirCardCampañaAutor(c) {
           <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
           <button class="btn-secundario btn-sm btn-full" onclick="compartirCampana('${c.id}', '${c.nombreLibro}')">📤 Compartir</button>
           <button class="btn-secundario btn-sm btn-full" onclick="abrirEditarCampana('${c.id}')">✏️ Editar campaña</button>
-          <button class="btn-secundario btn-sm btn-full btn-peligro" onclick="confirmarCancelarCampana('${c.id}', '${c.nombreLibro}')">Cancelar campaña</button>
+          ${_puedeCancelarCampana(c.creadoEn)
+            ? `<button class="btn-secundario btn-sm btn-full btn-peligro" onclick="confirmarCancelarCampana('${c.id}', '${c.nombreLibro}')">Cancelar campaña</button>`
+            : ''}
         </div>
       </div>
     </div>
