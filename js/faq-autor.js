@@ -7,19 +7,19 @@
 const FAQ_AUTOR_DATA = [
   {
     pregunta: '¿Por qué no se ve la portada de mi libro?',
-    respuesta: 'Casi siempre es un tema de permisos en Google Drive. Cuando subís el link de portada (o de EPUB/PDF), el archivo tiene que estar compartido como "Cualquier persona con el enlace puede ver". Para revisarlo: abrí el archivo en Drive → botón "Compartir" → en "Acceso general" elegí "Cualquier usuario con el enlace" → Lector. Si lo tenías en "Restringido", por eso no carga.'
+    respuesta: 'Ya no se usa link de Google Drive: la portada se sube como archivo directo desde el formulario (acepta JPG, PNG o WEBP). Si no se ve, lo más común es que la subida no haya terminado antes de guardar, o que el archivo no tenga uno de esos tres formatos. Volvé a subirla desde "Editar libro" o "Editar campaña".'
   },
   {
     pregunta: '¿Qué formato tienen que tener el EPUB y el PDF para funcionar?',
-    respuesta: 'Tienen que ser links de Google Drive con el archivo compartido públicamente (mismo permiso que la portada: "Cualquier usuario con el enlace"). Subís el archivo a tu Drive, lo compartís así, y pegás ese link al crear tu campaña.'
+    respuesta: 'Ya no hace falta Google Drive: subís el EPUB (.epub) y el PDF (.pdf) como archivo directo desde el formulario de la campaña. Con que respeten esa extensión alcanza, no necesitás compartir ni dar permisos en ningún lado.'
   },
   {
-    pregunta: '¿Puedo editar mi libro después de cargarlo?',
-    respuesta: 'Sí, desde tu biblioteca en "Mi perfil" podés modificar los datos de cualquier libro que hayas agregado.'
+    pregunta: '¿Puedo editar mi libro o mi campaña después de cargarlos?',
+    respuesta: 'Sí, pero son dos cosas distintas. Desde "Mi perfil → Biblioteca" editás los datos generales del libro (título, sinopsis, tropes). Desde el panel de campañas, con "Editar campaña", actualizás la sinopsis, los tropes, la portada, o reemplazás el EPUB o el PDF de esa campaña puntual — dejando el campo de archivo vacío si no querés cambiarlo.'
   },
   {
     pregunta: '¿El sistema de campañas siempre es mensual?',
-    respuesta: 'Sí, todas las campañas duran un mes. Por eso la fecha límite que elijas al crear una campaña no puede superar el mes en curso.'
+    respuesta: 'Sí: toda campaña dura 30 días desde que la creás. La fecha límite ya no la elegís vos, se calcula sola (hoy + 30 días) apenas confirmás la campaña.'
   },
   {
     pregunta: '¿Qué diferencia hay entre "solo visor" y "permite descarga"?',
@@ -31,7 +31,7 @@ const FAQ_AUTOR_DATA = [
   },
   {
     pregunta: '¿Puedo cancelar una campaña ya creada? ¿Qué pasa con las postulaciones?',
-    respuesta: 'Sí, podés cancelarla desde tu panel en cualquier momento. Al cancelarla, la campaña deja de estar activa y las postulaciones pendientes quedan cerradas.'
+    respuesta: 'Podés cancelarla solo dentro de los primeros 5 días desde que la creaste — pasado ese plazo, el botón de cancelar ya no aparece. Además, tenés un máximo de 3 cancelaciones por mes. Al cancelarla, la campaña deja de estar activa y las postulaciones pendientes quedan cerradas.'
   },
   {
     pregunta: '¿Dónde veo las reseñas que me entregaron?',
@@ -56,6 +56,10 @@ const FAQ_AUTOR_DATA = [
   {
     pregunta: '¿Cuánto tarda en activarse mi plan después de pagar?',
     respuesta: 'Es automático. Apenas se aprueba el pago del lado de Mercado Pago o PayPal, tu cuenta pasa a estar activa en el plan elegido — no hay revisión manual de por medio.'
+  },
+  {
+    pregunta: '¿Qué son los cupos de regalo por reconexión?',
+    respuesta: 'Si volviste a la plataforma después de un tiempo inactiva/o, puede que tengas reseñadores de regalo 🎁 disponibles: se suman al límite de tu plan en tu próxima campaña. Si tenés cupos disponibles, te avisamos al momento de crear la campaña.'
   }
 ];
 
