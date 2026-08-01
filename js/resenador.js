@@ -927,7 +927,11 @@ async function cargarRankingLibros(mesAño) {
     <div style="margin-bottom:28px;">
       <h4 class="ranking-seccion-titulo">🏆 Top 5</h4>
       ${top5.length === 0
-        ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
+        ? `<div class="estado-vacio">
+            <p class="estado-vacio-icono">🌱</p>
+            <p class="estado-vacio-texto">El ranking de ${mes} recién está arrancando</p>
+            <p class="estado-vacio-sub">Todavía no hay suficientes reseñas cargadas este mes para armar el podio. En unos días vas a ver acá los libros mejor puntuados.</p>
+          </div>`
         : `<div class="ranking-podio-wrap">
             ${ORDEN_PODIO_LIBROS.filter(i => top5[i]).map(i => {
               const l = top5[i];
@@ -956,7 +960,11 @@ async function cargarRankingLibros(mesAño) {
       <h4 class="ranking-seccion-titulo">⭐ Recomendados por lectores</h4>
       <div class="ranking-slider">
         ${recomendados.length === 0
-          ? '<p class="estado-vacio-sub">Sin datos suficientes todavía.</p>'
+          ? `<div class="estado-vacio">
+              <p class="estado-vacio-icono">⭐</p>
+              <p class="estado-vacio-texto">Todavía no hay recomendados este mes</p>
+              <p class="estado-vacio-sub">En cuanto los lectores sumen más reseñas, van a aparecer acá los libros mejor valorados.</p>
+            </div>`
           : recomendados.map(l => construirSliderCard(l, 'recomendado')).join('')}
       </div>
     </div>
