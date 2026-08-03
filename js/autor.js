@@ -534,7 +534,7 @@ async function accionPostulacion(idPostulacion, accion) {
     .eq('id', idPostulacion);
 
   if (error) {
-    mostrarToast('Error al procesar la postulación.', 'error');
+    mostrarToast(error.message || 'Error al procesar la postulación.', 'error');
     return;
   }
 
