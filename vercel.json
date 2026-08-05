@@ -4,6 +4,7 @@
     { "source": "/pago-cancelado", "destination": "/pago-cancelado.html" },
     { "source": "/privacidad", "destination": "/privacidad.html" },
     { "source": "/eliminar-cuenta", "destination": "/eliminar-cuenta.html" },
+    { "source": "/terminos", "destination": "/terminos.html" },
     { "source": "/app", "destination": "/app.html" }
   ],
   "redirects": [
