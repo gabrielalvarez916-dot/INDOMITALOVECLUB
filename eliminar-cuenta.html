@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliminar mi cuenta — Indómita Love Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bordo: #8B1A2B;
+    --bordo-oscuro: #4A0E17;
+    --crema-suave: #FAF7F4;
+    --gris-texto: #2A2A2A;
+    --gris-medio: #666666;
+    --gris-borde: #E5E0D8;
+    --error: #C0392B;
+    --fuente-titulo: 'Playfair Display', Georgia, serif;
+    --fuente-texto: 'DM Sans', 'Lato', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--crema-suave);
+    color: var(--gris-texto);
+    font-family: var(--fuente-texto);
+    line-height: 1.7;
+  }
+  .contenedor { max-width: 560px; margin: 0 auto; padding: 56px 24px 90px; }
+  .volver {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--bordo); text-decoration: none; font-weight: 500; font-size: 14px;
+    margin-bottom: 28px;
+  }
+  h1 { font-family: var(--fuente-titulo); font-style: italic; font-size: 30px; color: var(--bordo); margin-bottom: 6px; }
+  p { font-size: 15px; }
+  .caja {
+    background: #fff; border: 1px solid var(--gris-borde); border-radius: 14px;
+    padding: 28px; margin-top: 28px;
+  }
+  .btn-google {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 13px 20px; border-radius: 10px; border: 1px solid var(--gris-borde);
+    background: #fff; color: var(--gris-texto); font-family: var(--fuente-texto); font-weight: 600;
+    font-size: 15px; cursor: pointer;
+  }
+  .btn-google:hover { background: #faf7f4; }
+  .cuenta-detectada {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--crema-suave); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
+  }
+  .cuenta-detectada img { width: 40px; height: 40px; border-radius: 50%; }
+  .cuenta-detectada .nombre { font-weight: 700; font-size: 14px; }
+  .cuenta-detectada .email { color: var(--gris-medio); font-size: 13px; }
+  .aviso {
+    background: #fff3f0; border: 1px solid #e8b8ae; border-radius: 10px;
+    padding: 14px 16px; font-size: 13px; color: #7a2e22; margin-bottom: 20px;
+  }
+  .aviso ul { margin: 8px 0 0; padding-left: 18px; }
+  .btn-eliminar {
+    width: 100%; padding: 13px 20px; border-radius: 10px; border: none;
+    background: var(--error); color: #fff; font-family: var(--fuente-texto); font-weight: 700;
+    font-size: 15px; cursor: pointer;
+  }
+  .btn-eliminar:disabled { opacity: 0.6; cursor: default; }
+  .btn-cancelar {
+    width: 100%; padding: 12px 20px; border-radius: 10px; border: 1px solid var(--gris-borde);
+    background: transparent; color: var(--gris-medio); font-family: var(--fuente-texto); font-weight: 500;
+    font-size: 14px; cursor: pointer; margin-top: 10px;
+  }
+  .mensaje-error { color: var(--error); font-size: 13px; margin-top: 12px; }
+  .mensaje-ok { text-align: center; }
+  .mensaje-ok .icono { font-size: 40px; margin-bottom: 8px; }
+  .oculto { display: none; }
+  .paso-confirmar p { font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+
+  <a class="volver" href="/">← Volver a Indómita Love Club</a>
+
+  <h1>Eliminar mi cuenta</h1>
+  <p>
+    Desde acá podés pedir la eliminación de tu cuenta de Indómita Love Club sin necesidad de
+    instalar la app ni iniciar sesión desde el celular. Este proceso es <strong>irreversible</strong>.
+  </p>
+
+  <div class="caja">
+
+    <!-- Paso 1: identificarse -->
+    <div id="paso-login">
+      <p style="margin-top:0;">Para continuar, identificate con la cuenta de Google que usás en Indómita Love Club:</p>
+      <div id="google-btn-container"></div>
+      <p id="error-login" class="mensaje-error oculto"></p>
+    </div>
+
+    <!-- Paso 2: confirmar -->
+    <div id="paso-confirmar" class="paso-confirmar oculto">
+      <div class="cuenta-detectada">
+        <img id="cd-avatar" src="" alt="">
+        <div>
+          <div class="nombre" id="cd-nombre"></div>
+          <div class="email" id="cd-email"></div>
+        </div>
+      </div>
+
+      <div class="aviso">
+        Al eliminar tu cuenta:
+        <ul>
+          <li>Tus datos personales (nombre, email, fotos, redes, ciudad/país) se borran.</li>
+          <li>No vas a poder volver a entrar con esta cuenta.</li>
+          <li>Tus campañas, reseñas y postulaciones quedan (aparecen como "Usuario eliminado"), porque otras personas de la comunidad dependen de esa información.</li>
+        </ul>
+      </div>
+
+      <button class="btn-eliminar" id="btn-confirmar-eliminar">Eliminar mi cuenta definitivamente</button>
+      <button class="btn-cancelar" id="btn-cancelar">Cancelar</button>
+      <p id="error-eliminar" class="mensaje-error oculto"></p>
+    </div>
+
+    <!-- Paso 3: listo -->
+    <div id="paso-listo" class="mensaje-ok oculto">
+      <div class="icono">✓</div>
+      <p><strong>Tu cuenta fue eliminada.</strong></p>
+      <p style="font-size:13px;color:var(--gris-medio);">
+        Si tenías la app instalada, ya no vas a poder volver a entrar con esta cuenta de Google.
+      </p>
+    </div>
+
+  </div>
+
+  <p style="font-size:13px;color:var(--gris-medio);margin-top:24px;">
+    ¿Preferís que lo hagamos nosotros por vos, o tenés dudas? Escribinos a
+    <a href="mailto:contacto@indomitastudioeditorial.com.ar" style="color:var(--bordo);">contacto@indomitastudioeditorial.com.ar</a>.
+    Más info en nuestra <a href="/privacidad" style="color:var(--bordo);">política de privacidad</a>.
+  </p>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zthimkucjtuffzcmdbtf.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_oBo4s0ATMUI-GG3Q86J_4A_wdkBOLfS';
+  const GOOGLE_CLIENT_ID = '431980349307-jej7h0sfqdu88k5arl3atp8891jduk55.apps.googleusercontent.com';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function mostrarPaso(id) {
+    ['paso-login', 'paso-confirmar', 'paso-listo'].forEach((p) => {
+      document.getElementById(p).classList.toggle('oculto', p !== id);
+    });
+  }
+
+  function decodificarJWT(token) {
+    try { return JSON.parse(atob(token.split('.')[1])); } catch { return null; }
+  }
+
+  async function manejarRespuestaGoogle(respuesta) {
+    const errEl = document.getElementById('error-login');
+    errEl.classList.add('oculto');
+    if (!respuesta.credential) return;
+
+    const { data, error } = await supabaseClient.auth.signInWithIdToken({
+      provider: 'google',
+      token: respuesta.credential,
+    });
+
+    if (error || !data?.user) {
+      errEl.textContent = 'No pudimos verificar tu cuenta. Probá de nuevo.';
+      errEl.classList.remove('oculto');
+      return;
+    }
+
+    const datosGoogle = decodificarJWT(respuesta.credential);
+    document.getElementById('cd-avatar').src = datosGoogle?.picture || '';
+    document.getElementById('cd-nombre').textContent = datosGoogle?.name || data.user.email;
+    document.getElementById('cd-email').textContent = data.user.email;
+
+    mostrarPaso('paso-confirmar');
+  }
+
+  window.addEventListener('load', () => {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: manejarRespuestaGoogle,
+    });
+    google.accounts.id.renderButton(document.getElementById('google-btn-container'), {
+      theme: 'outline', size: 'large', text: 'signin_with', width: 280,
+    });
+  });
+
+  document.getElementById('btn-cancelar').addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    mostrarPaso('paso-login');
+  });
+
+  document.getElementById('btn-confirmar-eliminar').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-confirmar-eliminar');
+    const errEl = document.getElementById('error-eliminar');
+    errEl.classList.add('oculto');
+    btn.disabled = true;
+    btn.textContent = 'Eliminando...';
+
+    try {
+      const { data: sesion } = await supabaseClient.auth.getSession();
+      const token = sesion?.session?.access_token;
+      if (!token) throw new Error('Se venció la sesión, volvé a identificarte.');
+
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/eliminar-cuenta`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      const resultado = await resp.json();
+      if (!resp.ok || resultado?.error) {
+        throw new Error(resultado?.error || 'No se pudo eliminar la cuenta.');
+      }
+
+      await supabaseClient.auth.signOut();
+      mostrarPaso('paso-listo');
+    } catch (e) {
+      errEl.textContent = e.message || 'Ocurrió un error. Probá de nuevo o escribinos.';
+      errEl.classList.remove('oculto');
+      btn.disabled = false;
+      btn.textContent = 'Eliminar mi cuenta definitivamente';
+    }
+  });
+</script>
+</body>
+</html>
