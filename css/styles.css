@@ -326,6 +326,11 @@ img { max-width: 100%; display: block; }
   margin-top: 8px;
 }
 
+.login-info a {
+  color: var(--bordo);
+  text-decoration: underline;
+}
+
 .login-pregunta {
   font-family: var(--fuente-titulo);
   font-size: 20px;
