@@ -730,11 +730,11 @@ function abrirResenaInternaAutor(idResena) {
  * la calificación no se puede cambiar después de enviada.
  */
 function confirmarCalificarDirecto(idResena, puntuacion, boton, alias) {
-  const ok = window.confirm(
-    `¿Le querés dar ${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'} a la reseña de ${alias}? Una vez enviada no se puede cambiar.`
+  mostrarConfirmacion(
+    `Estás por darle ${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'} a la reseña de <strong>${alias}</strong>. Una vez enviada no se puede cambiar.`,
+    () => calificarDirecto(idResena, puntuacion, boton),
+    { titulo: `¿${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'}?`, textoConfirmar: 'Sí, confirmar' }
   );
-  if (!ok) return;
-  calificarDirecto(idResena, puntuacion, boton);
 }
 
 async function calificarDirecto(idResena, puntuacion, boton) {

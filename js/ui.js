@@ -222,6 +222,61 @@ function mostrarHeaderDeslogueado() {
 }
 
 
+/**
+ * Muestra un modal de confirmación con el estilo del sitio (no el confirm()
+ * nativo del navegador, que no se puede stylear y muestra la URL del sitio).
+ * Se crea y destruye dinámicamente, así que no requiere nada en el HTML.
+ *
+ * @param {string} mensaje — texto de la pregunta
+ * @param {Function} onConfirmar — se ejecuta solo si el usuario acepta
+ * @param {Object} [opciones]
+ * @param {string} [opciones.titulo='¿Confirmás?']
+ * @param {string} [opciones.textoConfirmar='Sí, confirmar']
+ * @param {string} [opciones.textoCancelar='Cancelar']
+ * @param {boolean} [opciones.peligro=false] — si es true, el botón de confirmar se pinta como acción destructiva
+ */
+function mostrarConfirmacion(mensaje, onConfirmar, opciones = {}) {
+  const {
+    titulo = '¿Confirmás?',
+    textoConfirmar = 'Sí, confirmar',
+    textoCancelar = 'Cancelar',
+    peligro = false,
+  } = opciones;
+
+  document.getElementById('confirmacion-global')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'confirmacion-global';
+  overlay.className = 'confirmacion-overlay';
+  overlay.innerHTML = `
+    <div class="confirmacion-caja">
+      <p class="confirmacion-titulo">${titulo}</p>
+      <p class="confirmacion-texto">${mensaje}</p>
+      <div class="confirmacion-acciones">
+        <button type="button" class="btn-secundario btn-sm" id="confirmacion-btn-cancelar">${textoCancelar}</button>
+        <button type="button" class="btn-primario btn-sm${peligro ? ' btn-peligro' : ''}" id="confirmacion-btn-aceptar">${textoConfirmar}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(() => overlay.classList.add('activo'));
+
+  function cerrar() {
+    overlay.classList.remove('activo');
+    document.body.style.overflow = '';
+    setTimeout(() => overlay.remove(), 180);
+  }
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(); });
+  overlay.querySelector('#confirmacion-btn-cancelar').addEventListener('click', cerrar);
+  overlay.querySelector('#confirmacion-btn-aceptar').addEventListener('click', () => {
+    cerrar();
+    onConfirmar();
+  });
+}
+
 // ────────────────────────────────────────────────────────────
 // MODALES
 // ────────────────────────────────────────────────────────────
