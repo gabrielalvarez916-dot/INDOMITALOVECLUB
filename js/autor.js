@@ -344,7 +344,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
   const { data, error } = await supabaseClient
     .from('postulaciones')
     .select(`
-     id, estado, motivo_abandono,
+     id, estado, motivo_abandono, fecha_limite_entrega,
       usuarios!postulaciones_id_usuario_resenador_fkey (
         id, alias, pais, ciudad, instagram, tiktok, amazon, tropes_favoritos, descripcion_lector,
         avatares ( imagen_url )
@@ -381,6 +381,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
       idCampana,
       estado: p.estado,
       motivoAbandonoPrivado: p.motivo_abandono,
+      fechaLimiteEntrega: p.fecha_limite_entrega,
       descripcionLector: u?.descripcion_lector,
       reseñador: u ? {
         id: u.id,
@@ -432,6 +433,10 @@ function construirCardPostulacion(p) {
     <div class="postulacion-acciones">
       <button class="btn-primario btn-sm" onclick="accionPostulacion('${p.idPostulacion}', 'aprobar')">Aprobar</button>
       <button class="btn-secundario btn-sm btn-peligro" onclick="accionPostulacion('${p.idPostulacion}', 'rechazar')">Rechazar</button>
+    </div>
+  ` : p.estado === 'aprobada' && p.fechaLimiteEntrega ? `
+    <div style="background:var(--rosa-claro); border-left:4px solid var(--bordo); padding:10px 16px; margin-top:12px; border-radius:0 4px 4px 0;">
+      <p style="font-size:13px; color:#2A2A2A; margin:0;">📅 Fecha límite de entrega de ${r?.alias || 'este reseñador'}: <strong>${formatearFechaAmigable(p.fechaLimiteEntrega)}</strong></p>
     </div>
   ` : p.estado === 'abandonada' ? `
     <div style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px 16px; margin-top:12px; border-radius:0 4px 4px 0;">
