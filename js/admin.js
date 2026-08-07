@@ -749,6 +749,7 @@ async function cargarTicketsAdmin() {
 
   const tickets = resultado.tickets || [];
   window._ticketsAdmin = tickets; // guardamos para poder usar asunto/email en el modal
+  window._ticketsSeleccionadosAdmin = new Set(); // reseteamos selección al recargar
 
   if (tickets.length === 0) {
     contenedor.innerHTML = `
@@ -761,12 +762,14 @@ async function cargarTicketsAdmin() {
   }
 
   contenedor.innerHTML = `
-    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-      <button class="btn-secundario btn-sm" onclick="abrirModalNuevoTicketAdmin()">+ Nuevo ticket</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
+      <button id="admin-btn-cerrar-seleccionados" class="btn-secundario btn-sm btn-peligro" style="display:none;" onclick="cerrarTicketsSeleccionadosAdmin()">Cerrar seleccionados (0)</button>
+      <button class="btn-secundario btn-sm" style="margin-left:auto;" onclick="abrirModalNuevoTicketAdmin()">+ Nuevo ticket</button>
     </div>
     <table class="admin-tabla">
       <thead>
         <tr>
+          <th style="width:30px;"><input type="checkbox" id="admin-ticket-check-todos" onchange="toggleSeleccionarTodosTicketsAdmin(this.checked)" /></th>
           <th>Email</th>
           <th>Rol</th>
           <th>Asunto</th>
@@ -797,8 +800,12 @@ function construirFilaTicketAdmin(t) {
     <button class="btn-secundario btn-sm" onclick="abrirModalTicketAdmin('${t.idTicket}')">Ver / Responder</button>
     ${t.estado !== 'cerrado' ? `<button class="btn-secundario btn-sm btn-peligro" onclick="cerrarTicketAdmin('${t.idTicket}')">Cerrar</button>` : ''}
   `;
+  const checkbox = t.estado !== 'cerrado'
+    ? `<input type="checkbox" class="admin-ticket-checkbox" onchange="toggleSeleccionTicketAdmin('${t.idTicket}', this.checked)" />`
+    : '';
   return `
     <tr>
+      <td style="text-align:center;">${checkbox}</td>
       <td style="font-size:12px;">${t.email}</td>
       <td><span class="badge badge-nivel">${t.rol || '—'}</span></td>
       <td>${tipoBadge || t.asunto || ''} ${t.adjuntoKey ? '📎' : ''}</td>
@@ -808,6 +815,96 @@ function construirFilaTicketAdmin(t) {
       <td style="display:flex; gap:6px;">${botones}</td>
     </tr>
   `;
+}
+
+// ────────────────────────────────────────────────────────────
+// SELECCIÓN MÚLTIPLE Y CIERRE MASIVO DE TICKETS
+// ────────────────────────────────────────────────────────────
+
+function toggleSeleccionTicketAdmin(idTicket, marcado) {
+  if (!window._ticketsSeleccionadosAdmin) window._ticketsSeleccionadosAdmin = new Set();
+  if (marcado) {
+    window._ticketsSeleccionadosAdmin.add(idTicket);
+  } else {
+    window._ticketsSeleccionadosAdmin.delete(idTicket);
+    // si desmarcan uno a mano, el checkbox "todos" deja de estar en estado marcado
+    const checkTodos = document.getElementById('admin-ticket-check-todos');
+    if (checkTodos) checkTodos.checked = false;
+  }
+  actualizarBotonCerrarSeleccionadosAdmin();
+}
+
+function toggleSeleccionarTodosTicketsAdmin(marcarTodos) {
+  if (!window._ticketsSeleccionadosAdmin) window._ticketsSeleccionadosAdmin = new Set();
+  const checkboxes = document.querySelectorAll('.admin-ticket-checkbox');
+  checkboxes.forEach(cb => {
+    cb.checked = marcarTodos;
+    const fila = cb.closest('tr');
+    const idTicket = fila?.querySelector('[onclick^="abrirModalTicketAdmin"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if (!idTicket) return;
+    if (marcarTodos) window._ticketsSeleccionadosAdmin.add(idTicket);
+    else window._ticketsSeleccionadosAdmin.delete(idTicket);
+  });
+  actualizarBotonCerrarSeleccionadosAdmin();
+}
+
+function actualizarBotonCerrarSeleccionadosAdmin() {
+  const boton = document.getElementById('admin-btn-cerrar-seleccionados');
+  if (!boton) return;
+  const cantidad = window._ticketsSeleccionadosAdmin?.size || 0;
+  if (cantidad === 0) {
+    boton.style.display = 'none';
+  } else {
+    boton.style.display = 'inline-block';
+    boton.textContent = `Cerrar seleccionados (${cantidad})`;
+  }
+}
+
+async function cerrarTicketsSeleccionadosAdmin() {
+  const ids = Array.from(window._ticketsSeleccionadosAdmin || []);
+  if (ids.length === 0) return;
+
+  if (!confirm(`¿Cerrar ${ids.length} ticket${ids.length > 1 ? 's' : ''} de soporte?`)) return;
+
+  const token = await obtenerTokenFresco();
+  if (!token) {
+    mostrarToast('No se pudo autenticar la sesión de admin.', 'error');
+    return;
+  }
+
+  const boton = document.getElementById('admin-btn-cerrar-seleccionados');
+  if (boton) {
+    boton.disabled = true;
+    boton.textContent = 'Cerrando...';
+  }
+
+  let exitosos = 0;
+  let fallidos = 0;
+
+  for (const idTicket of ids) {
+    try {
+      const { data, error } = await supabaseClient.functions.invoke('soporte-cerrar-ticket', {
+        body: { id_ticket: idTicket },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (error || data?.error) {
+        fallidos++;
+      } else {
+        exitosos++;
+      }
+    } catch (e) {
+      fallidos++;
+    }
+  }
+
+  if (fallidos === 0) {
+    mostrarToast(`${exitosos} ticket${exitosos > 1 ? 's' : ''} cerrado${exitosos > 1 ? 's' : ''}.`, 'ok');
+  } else {
+    mostrarToast(`${exitosos} cerrado${exitosos > 1 ? 's' : ''}, ${fallidos} falló${fallidos > 1 ? 'ron' : ''}.`, exitosos > 0 ? 'ok' : 'error');
+  }
+
+  window._ticketsSeleccionadosAdmin = new Set();
+  await cargarTicketsAdmin();
 }
 
 // ────────────────────────────────────────────────────────────
