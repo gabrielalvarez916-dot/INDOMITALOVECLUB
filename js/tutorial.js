@@ -95,6 +95,9 @@ const _PASOS_AUTOR_EDITORIAL = [
     gate: _tutGateCampanaAutor,
     mensajeBloqueo: 'Creá tu primera campaña para poder continuar.' },
   { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed') },
+  // Paso agregado después ("Así ven tu libro los reseñadores 👀", numero_paso 5
+  // en Supabase) — sin destino propio, se queda mirando el feed del paso anterior.
+  { destino: null, abrir: () => mostrarSeccion('feed') },
   { destino: 'tabbtn-campanas-activas', abrir: () => mostrarPanelRol() },
   { destino: 'tabbtn-postulaciones-autor', abrir: () => {
       mostrarPanelRol();
@@ -113,6 +116,9 @@ const TUTORIAL_PASOS_CONFIG = {
     { destino: 'nav-campanas', abrir: () => mostrarSeccion('feed'),
       gate: _tutGatePostulacionReseñador,
       mensajeBloqueo: 'Postulate a un libro desde acá para poder continuar.' },
+    // Paso agregado después ("Acá están todos los libros 📚", numero_paso 2
+    // en Supabase) — sin destino propio, se queda mirando el feed del paso anterior.
+    { destino: null, abrir: () => mostrarSeccion('feed') },
     { destino: 'btn-editar-perfil', abrir: () => {
         mostrarSeccion('perfil');
         setTimeout(() => {
