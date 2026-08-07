@@ -1212,7 +1212,7 @@
     <div class="modal-body">
       <input type="hidden" id="calificar-id-resena" />
       <p class="form-info" id="calificar-nombre-resenador"></p>
-      <p class="form-info">Marcá SI o NO para cada afirmación. Cada SI suma una estrella.</p>
+      <p class="form-info">Marcá SI o NO para cada afirmación.</p>
       <div class="calificar-afirmaciones" id="calificar-afirmaciones">
         <div class="calificar-afirmacion-fila" data-pregunta="1">
           <span class="calificar-afirmacion-texto">Fue entregada antes de la fecha límite</span>
@@ -1251,6 +1251,8 @@
         </div>
       </div>
       <p class="estrellas-label" id="estrellas-label">0 de 5 respondidas</p>
+      <!-- Nota: esta etiqueta solo muestra progreso ("X de 5 respondidas"), nunca la conversión a estrellas. Ver autor.js:responderAfirmacion -->
+
       <input type="hidden" id="calificar-puntuacion" value="" />
       <div id="calificar-error" class="mensaje-error" style="display:none;"></div>
       <div id="calificar-ok" class="mensaje-ok" style="display:none;"></div>

@@ -762,12 +762,12 @@ function responderAfirmacion(pregunta, valor, boton) {
   const respondidas = Object.keys(_respuestasCalificacion).length;
   const puntuacion  = Object.values(_respuestasCalificacion).filter(v => v === true).length;
 
+  // La puntuación se calcula y se guarda igual que siempre (cada SI = 1 estrella),
+  // pero no se muestra esa conversión acá: solo el progreso de respuestas.
   document.getElementById('calificar-puntuacion').value = puntuacion;
   const label = document.getElementById('estrellas-label');
   if (label) {
-    label.textContent = respondidas < 5
-      ? `${respondidas} de 5 respondidas`
-      : `${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'}`;
+    label.textContent = `${respondidas} de 5 respondidas`;
   }
 }
 
