@@ -1212,15 +1212,45 @@
     <div class="modal-body">
       <input type="hidden" id="calificar-id-resena" />
       <p class="form-info" id="calificar-nombre-resenador"></p>
-      <p class="form-info">¿Cómo calificás la reseña? Considerá la calidad, puntualidad y dedicación.</p>
-      <div class="estrellas-container">
-        <button class="estrella" data-valor="1" onclick="seleccionarEstrella(1)">★</button>
-        <button class="estrella" data-valor="2" onclick="seleccionarEstrella(2)">★</button>
-        <button class="estrella" data-valor="3" onclick="seleccionarEstrella(3)">★</button>
-        <button class="estrella" data-valor="4" onclick="seleccionarEstrella(4)">★</button>
-        <button class="estrella" data-valor="5" onclick="seleccionarEstrella(5)">★</button>
+      <p class="form-info">Marcá SI o NO para cada afirmación. Cada SI suma una estrella.</p>
+      <div class="calificar-afirmaciones" id="calificar-afirmaciones">
+        <div class="calificar-afirmacion-fila" data-pregunta="1">
+          <span class="calificar-afirmacion-texto">Fue entregada antes de la fecha límite</span>
+          <div class="calificar-si-no">
+            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(1, true, this)">SI</button>
+            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(1, false, this)">NO</button>
+          </div>
+        </div>
+        <div class="calificar-afirmacion-fila" data-pregunta="2">
+          <span class="calificar-afirmacion-texto">Respetó el formato elegido por el autor (Amazon, Instagram, etc)</span>
+          <div class="calificar-si-no">
+            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(2, true, this)">SI</button>
+            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(2, false, this)">NO</button>
+          </div>
+        </div>
+        <div class="calificar-afirmacion-fila" data-pregunta="3">
+          <span class="calificar-afirmacion-texto">Evidencia lectura completa de la obra</span>
+          <div class="calificar-si-no">
+            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(3, true, this)">SI</button>
+            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(3, false, this)">NO</button>
+          </div>
+        </div>
+        <div class="calificar-afirmacion-fila" data-pregunta="4">
+          <span class="calificar-afirmacion-texto">Presenta una opinión propia argumentada</span>
+          <div class="calificar-si-no">
+            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(4, true, this)">SI</button>
+            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(4, false, this)">NO</button>
+          </div>
+        </div>
+        <div class="calificar-afirmacion-fila" data-pregunta="5">
+          <span class="calificar-afirmacion-texto">Mantiene un tono respetuoso</span>
+          <div class="calificar-si-no">
+            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(5, true, this)">SI</button>
+            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(5, false, this)">NO</button>
+          </div>
+        </div>
       </div>
-      <p class="estrellas-label" id="estrellas-label">Seleccioná una puntuación</p>
+      <p class="estrellas-label" id="estrellas-label">0 de 5 respondidas</p>
       <input type="hidden" id="calificar-puntuacion" value="" />
       <div id="calificar-error" class="mensaje-error" style="display:none;"></div>
       <div id="calificar-ok" class="mensaje-ok" style="display:none;"></div>

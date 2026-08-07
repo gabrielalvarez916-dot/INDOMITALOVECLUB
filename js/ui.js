@@ -426,39 +426,9 @@ function cerrarSesion() {
 
 
 // ────────────────────────────────────────────────────────────
-// ESTRELLAS (calificación de reseñas)
+// CALIFICACIÓN DE RESEÑAS (afirmaciones SI/NO → estrellas)
+// Ver responderAfirmacion() y abrirModalCalificar() en autor.js
 // ────────────────────────────────────────────────────────────
-
-/**
- * Maneja la selección de estrellas en el modal de calificación.
- * Colorea las estrellas hasta la seleccionada.
- *
- * @param {number} valor — del 1 al 5
- */
-function seleccionarEstrella(valor) {
-  const estrellas = document.querySelectorAll('.estrella');
-  const label = document.getElementById('estrellas-label');
-  const inputPuntuacion = document.getElementById('calificar-puntuacion');
-
-  const labels = {
-    1: 'Necesita mejorar',
-    2: 'Regular',
-    3: 'Buena',
-    4: 'Muy buena',
-    5: 'Excelente'
-  };
-
-  estrellas.forEach((estrella, index) => {
-    if (index < valor) {
-      estrella.classList.add('activa');
-    } else {
-      estrella.classList.remove('activa');
-    }
-  });
-
-  if (label) label.textContent = labels[valor] || '';
-  if (inputPuntuacion) inputPuntuacion.value = valor;
-}
 
 
 // ────────────────────────────────────────────────────────────

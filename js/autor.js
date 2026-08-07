@@ -664,8 +664,8 @@ function construirCardResenaCarpeta(r, linkPortada) {
 
   const ratingHtml = r.puntuacion
     ? `<div class="resena-carpeta-estrellas" id="resena-rating-${r.idReseña}">${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)}</div>`
-    : `<div class="resena-carpeta-estrellas-interactivas" id="resena-rating-${r.idReseña}">
-        ${[1,2,3,4,5].map(n => `<button class="resena-carpeta-estrella-btn" onclick="confirmarCalificarDirecto('${r.idReseña}', ${n}, this, '${(r.reseñador?.alias || 'este reseñador').replace(/'/g, "\\'")}')">★</button>`).join('')}
+    : `<div id="resena-rating-${r.idReseña}">
+        <button type="button" class="btn-secundario btn-sm btn-full" onclick="abrirModalCalificar('${r.idReseña}', '${(r.reseñador?.alias || 'este reseñador').replace(/'/g, "\\'")}')">Calificar reseña</button>
       </div>`;
 
   return `
@@ -726,25 +726,69 @@ function abrirResenaInternaAutor(idResena) {
 }
 
 /**
- * Pide confirmación antes de calificar una reseña con estrellas, ya que
- * la calificación no se puede cambiar después de enviada.
+ * Abre el modal de calificación por afirmaciones SI/NO para una reseña.
+ * Cada SI suma una estrella (0 a 5).
  */
-function confirmarCalificarDirecto(idResena, puntuacion, boton, alias) {
-  mostrarConfirmacion(
-    `Estás por darle ${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'} a la reseña de <strong>${alias}</strong>. Una vez enviada no se puede cambiar.`,
-    () => calificarDirecto(idResena, puntuacion, boton),
-    { titulo: `¿${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'}?`, textoConfirmar: 'Sí, confirmar' }
-  );
+function abrirModalCalificar(idResena, alias) {
+  document.getElementById('calificar-id-resena').value = idResena;
+  const nombreEl = document.getElementById('calificar-nombre-resenador');
+  if (nombreEl) nombreEl.textContent = `Reseña de ${alias}`;
+
+  // Reset de respuestas
+  _respuestasCalificacion = {};
+  document.querySelectorAll('#calificar-afirmaciones .btn-si-no').forEach(b => b.classList.remove('activo'));
+  const label = document.getElementById('estrellas-label');
+  if (label) label.textContent = '0 de 5 respondidas';
+  document.getElementById('calificar-puntuacion').value = '';
+  ocultarMensajes('calificar-error', 'calificar-ok');
+
+  mostrarModal('modal-calificar-resena');
 }
 
-async function calificarDirecto(idResena, puntuacion, boton) {
+let _respuestasCalificacion = {};
+
+/**
+ * Registra la respuesta SI/NO de una afirmación y recalcula la puntuación.
+ * @param {number} pregunta — número de afirmación (1 a 5)
+ * @param {boolean} valor — true = SI, false = NO
+ */
+function responderAfirmacion(pregunta, valor, boton) {
+  _respuestasCalificacion[pregunta] = valor;
+
+  const fila = boton.closest('.calificar-afirmacion-fila');
+  fila.querySelectorAll('.btn-si-no').forEach(b => b.classList.remove('activo'));
+  boton.classList.add('activo');
+
+  const respondidas = Object.keys(_respuestasCalificacion).length;
+  const puntuacion  = Object.values(_respuestasCalificacion).filter(v => v === true).length;
+
+  document.getElementById('calificar-puntuacion').value = puntuacion;
+  const label = document.getElementById('estrellas-label');
+  if (label) {
+    label.textContent = respondidas < 5
+      ? `${respondidas} de 5 respondidas`
+      : `${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'}`;
+  }
+}
+
+async function enviarCalificacion() {
+  const idResena  = document.getElementById('calificar-id-resena')?.value;
+  const respondidas = Object.keys(_respuestasCalificacion).length;
+
+  if (respondidas < 5) {
+    mostrarMensajeError('calificar-error', 'Respondé las 5 afirmaciones antes de confirmar.');
+    return;
+  }
+
+  const puntuacion = Object.values(_respuestasCalificacion).filter(v => v === true).length;
+
   const { error } = await supabaseClient
     .from('resenas')
     .update({ puntuacion_autor: puntuacion, fecha_puntuacion: new Date().toISOString() })
     .eq('id', idResena);
 
   if (error) {
-    mostrarToast('Error al calificar.', 'error');
+    mostrarMensajeError('calificar-error', error.message);
     return;
   }
 
@@ -752,31 +796,8 @@ async function calificarDirecto(idResena, puntuacion, boton) {
   if (contenedor) {
     contenedor.outerHTML = `<div class="resena-carpeta-estrellas" id="resena-rating-${idResena}">${'★'.repeat(puntuacion)}${'☆'.repeat(5 - puntuacion)}</div>`;
   }
-
   const r = (_reseñasCampanaActual || []).find(x => x.idReseña === idResena);
   if (r) r.puntuacion = puntuacion;
-
-  mostrarToast('¡Reseña calificada!', 'ok');
-}
-
-async function enviarCalificacion() {
-  const idResena    = document.getElementById('calificar-id-resena')?.value;
-  const puntuacion  = document.getElementById('calificar-puntuacion')?.value;
-
-  if (!puntuacion) {
-    mostrarMensajeError('calificar-error', 'Seleccioná una puntuación antes de confirmar.');
-    return;
-  }
-
-  const { error } = await supabaseClient
-    .from('resenas')
-    .update({ puntuacion_autor: parseInt(puntuacion), fecha_puntuacion: new Date().toISOString() })
-    .eq('id', idResena);
-
-  if (error) {
-    mostrarMensajeError('calificar-error', error.message);
-    return;
-  }
 
   mostrarMensajeOk('calificar-ok', '¡Reseña calificada!');
   setTimeout(() => cerrarModales(), 1500);

@@ -4688,6 +4688,61 @@ img { max-width: 100%; display: block; }
 
 .resena-carpeta-estrella-btn:hover { color: #C9A84C; }
 
+.calificar-afirmaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.calificar-afirmacion-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--crema);
+  border-radius: var(--radio-chico, 8px);
+}
+
+.calificar-afirmacion-texto {
+  font-size: 13px;
+  color: var(--bordo);
+  flex: 1;
+}
+
+.calificar-si-no {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-si-no {
+  border: 1.5px solid var(--gris-borde);
+  background: var(--blanco);
+  color: var(--gris-suave);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--transicion);
+}
+
+.btn-si-no:hover { border-color: #C9A84C; }
+
+.btn-si-no.activo[data-valor="si"] {
+  background: #C9A84C;
+  border-color: #C9A84C;
+  color: var(--blanco);
+}
+
+.btn-si-no.activo[data-valor="no"] {
+  background: var(--bordo);
+  border-color: var(--bordo);
+  color: var(--blanco);
+}
+
 /* ════════════════════════════════════════════════════════════
    CALENDARIO — Indómita Love Club
    Agregar al final de css/styles.css
