@@ -665,7 +665,7 @@ function construirCardResenaCarpeta(r, linkPortada) {
   const ratingHtml = r.puntuacion
     ? `<div class="resena-carpeta-estrellas" id="resena-rating-${r.idReseña}">${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)}</div>`
     : `<div class="resena-carpeta-estrellas-interactivas" id="resena-rating-${r.idReseña}">
-        ${[1,2,3,4,5].map(n => `<button class="resena-carpeta-estrella-btn" onclick="calificarDirecto('${r.idReseña}', ${n}, this)">★</button>`).join('')}
+        ${[1,2,3,4,5].map(n => `<button class="resena-carpeta-estrella-btn" onclick="confirmarCalificarDirecto('${r.idReseña}', ${n}, this, '${(r.reseñador?.alias || 'este reseñador').replace(/'/g, "\\'")}')">★</button>`).join('')}
       </div>`;
 
   return `
@@ -723,6 +723,18 @@ function abrirResenaInternaAutor(idResena) {
       goodreads: r.linkGoodreads
     }
   });
+}
+
+/**
+ * Pide confirmación antes de calificar una reseña con estrellas, ya que
+ * la calificación no se puede cambiar después de enviada.
+ */
+function confirmarCalificarDirecto(idResena, puntuacion, boton, alias) {
+  const ok = window.confirm(
+    `¿Le querés dar ${puntuacion} ${puntuacion === 1 ? 'estrella' : 'estrellas'} a la reseña de ${alias}? Una vez enviada no se puede cambiar.`
+  );
+  if (!ok) return;
+  calificarDirecto(idResena, puntuacion, boton);
 }
 
 async function calificarDirecto(idResena, puntuacion, boton) {

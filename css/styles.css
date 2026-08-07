@@ -4601,20 +4601,20 @@ img { max-width: 100%; display: block; }
 }
 
 .resena-carpeta-estrellas {
-  font-size: 16px;
+  font-size: 22px;
   color: #C9A84C;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 }
 
 .resena-carpeta-estrellas-interactivas {
   display: flex;
-  gap: 3px;
+  gap: 6px;
 }
 
 .resena-carpeta-estrella-btn {
   background: none;
   border: none;
-  font-size: 19px;
+  font-size: 28px;
   cursor: pointer;
   padding: 0;
   color: var(--gris-borde);
