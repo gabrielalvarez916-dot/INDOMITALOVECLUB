@@ -912,13 +912,13 @@ const LABELS_ESTADO_LECTURA = {
 // Colores replicados exactos de COLORES_ESTADO en SeguimientoLecturaModal.js
 // (mobile), para que el seguimiento se vea igual en ambas plataformas.
 const COLORES_ESTADO_LECTURA = {
-  no_empezado: '#999999',
-  leyendo: '#B03048',
-  mitad: '#8B1A2B',
-  finalizado: '#5B7FDE',
-  entregada: '#27AE60',
-  vencida: '#C0392B',
-  abandonada: '#7F8C8D'
+  no_empezado: '#999999',   // gris
+  leyendo: '#3498DB',       // celeste
+  mitad: '#2E4C9E',         // azul
+  finalizado: '#8E44AD',    // violeta
+  entregada: '#27AE60',     // verde
+  vencida: '#C0392B',       // rojo
+  abandonada: '#8B1A2B'     // bordo
 };
 
 /**
