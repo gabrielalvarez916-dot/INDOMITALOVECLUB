@@ -59,17 +59,19 @@ async function cargarFeed() {
   cargarTickerEvento();
   poblarFiltroGenero();
 
+  // impulsos_campana tiene RLS que solo deja leer al autor dueño del
+  // impulso (auth.uid() = id_usuario_autor) — un reseñador consultando la
+  // tabla directo siempre recibía 0 filas, así que el boost pagado nunca
+  // se veía en el feed de lectores. Se usa el RPC obtener_campanas_impulsadas
+  // (security definer) que expone solo id_campana + fecha_fin_slider de los
+  // impulsos vigentes, sin abrir el resto de la tabla.
   const [{ data: campanas, error }, { data: impulsosVigentes }] = await Promise.all([
     supabaseClient
       .from('campanas')
       .select('*')
       .eq('estado', 'activa')
       .order('creado_en', { ascending: false }),
-    supabaseClient
-      .from('impulsos_campana')
-      .select('id_campana, fecha_fin_slider')
-      .eq('estado', 'pagado')
-      .gt('fecha_fin_slider', new Date().toISOString())
+    supabaseClient.rpc('obtener_campanas_impulsadas')
   ]);
   const idsCampanasImpulsadas = new Set((impulsosVigentes || []).map(i => i.id_campana));
 
