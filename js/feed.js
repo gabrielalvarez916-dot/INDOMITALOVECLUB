@@ -123,14 +123,14 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
 
-  let coincidenciaTropes;
+  let match;
   if (usuario?.rol === 'reseñador' && usuario.id) {
     const { data, error } = await supabaseClient
-      .rpc('calcular_coincidencia_tropes', {
+      .rpc('calcular_match_resenador_campana', {
         p_id_usuario: usuario.id,
         p_id_campana: c.id
       });
-    if (!error) coincidenciaTropes = data;
+    if (!error) match = data;
   }
 
   const etiquetaGenero = await obtenerEtiquetaGeneroMulti(c.id_genero, idsSubgenero && idsSubgenero.length > 0 ? idsSubgenero : (c.id_subgenero ? [c.id_subgenero] : []));
@@ -156,7 +156,10 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
     estaVencida: fechaLimite < hoy,
     modalidadLectura: c.modalidad_lectura,
     plataformasReseña: c.plataformas_resena || [],
-    coincidenciaTropes,
+    matchScore: match?.score,
+    matchEmoji: match?.emoji,
+    matchLabel: match?.label,
+    matchDestacado: match?.destacado,
     linkEpub: archivo?.link_epub || null,
     linkPdf: archivo?.link_pdf || null,
     tieneArchivo: !!(archivo?.link_epub || archivo?.link_pdf),
@@ -304,13 +307,13 @@ let botonHtml = '';
 </p>
         <h3 class="campana-titulo">${c.nombreLibro}</h3>
         ${c.genero ? `<span class="campana-genero">${c.genero}</span>` : ''}
-        ${c.coincidenciaTropes !== undefined ? `
+        ${c.matchScore !== undefined ? `
         <div style="margin:6px 0;">
           <span style="font-size:12px; font-weight:600; color:var(--bordo);">
-            🎯 ${c.coincidenciaTropes}% coincidencia
+            ${c.matchEmoji} ${c.matchLabel} · ${c.matchScore}%
           </span>
           <div style="background:var(--crema-oscura); border-radius:20px; height:5px; margin-top:3px;">
-            <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:5px; border-radius:20px;"></div>
+            <div style="background:var(--bordo); width:${c.matchScore}%; height:5px; border-radius:20px;"></div>
           </div>
         </div>` : ''}
        <div class="campana-tropes">
@@ -412,13 +415,13 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
        📋 <strong>Requisitos:</strong> Contar con cuenta activa en ${c.plataformasReseña.join(' y ')}
      </p>`
   : ''}
-      ${Sesion.rol() === 'reseñador' && c.coincidenciaTropes !== undefined ? `
+      ${Sesion.rol() === 'reseñador' && c.matchScore !== undefined ? `
         <div style="margin:12px 0;">
           <p style="font-size:13px; font-weight:600; color:var(--bordo); margin-bottom:4px;">
-            🎯 ${c.coincidenciaTropes}% de coincidencia con tus tropes favoritos
+            ${c.matchEmoji} ${c.matchLabel} · ${c.matchScore}% de coincidencia
           </p>
           <div style="background:var(--crema-oscura); border-radius:20px; height:6px;">
-            <div style="background:var(--bordo); width:${c.coincidenciaTropes}%; height:6px; border-radius:20px;"></div>
+            <div style="background:var(--bordo); width:${c.matchScore}%; height:6px; border-radius:20px;"></div>
           </div>
         </div>` : ''}
       <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--crema-oscura);">
@@ -562,7 +565,7 @@ async function confirmarPostulacion(idCampaña) {
   }
 
   mostrarToast('¡Te postulaste exitosamente! El autor revisará tu perfil.', 'ok');
-if (campaña?.coincidenciaTropes >= 70 && typeof registrarAccionEventoSiCorresponde === 'function') {
+if (campaña?.matchScore >= 70 && typeof registrarAccionEventoSiCorresponde === 'function') {
     registrarAccionEventoSiCorresponde('postular_alta_coincidencia');
   }
 }

@@ -361,14 +361,14 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
  const idsResenadores = (data || []).map(p => p.usuarios?.id).filter(Boolean);
   const mesActual = _mesActual();
 
-  const [{ data: rankings }, { data: insignias }, confiabilidades, coincidenciasTropes] = await Promise.all([
+  const [{ data: rankings }, { data: insignias }, confiabilidades, matches] = await Promise.all([
     supabaseClient.from('ranking').select('id_usuario_resenador, posicion, puntos_mensuales, categoria').in('id_usuario_resenador', idsResenadores).eq('mes_año', mesActual),
     supabaseClient.from('insignias').select('id_usuario, tipo, codigo').in('id_usuario', idsResenadores),
     Promise.all(idsResenadores.map(id =>
       supabaseClient.rpc('calcular_confiabilidad', { p_usuario: id }).then(r => ({ id, confiabilidad: r.data }))
     )),
     Promise.all(idsResenadores.map(id =>
-      supabaseClient.rpc('calcular_coincidencia_tropes', { p_id_usuario: id, p_id_campana: idCampana }).then(r => ({ id, valor: r.data }))
+      supabaseClient.rpc('calcular_match_resenador_campana', { p_id_usuario: id, p_id_campana: idCampana }).then(r => ({ id, valor: r.data }))
     ))
   ]);
 
@@ -393,7 +393,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
         amazon: u.amazon,
         fotoPerfil: u.avatares?.imagen_url || null,
         labelNivel: rankingUsuario ? _labelLiga(rankingUsuario.categoria) : null,
-        coincidenciaTropes: (coincidenciasTropes || []).find(ct => ct.id === u?.id)?.valor ?? null,
+        match: (matches || []).find(m => m.id === u?.id)?.valor ?? null,
         ranking: rankingUsuario ? {
           posicion: rankingUsuario.posicion,
           puntaje: rankingUsuario.puntos_mensuales
@@ -499,8 +499,8 @@ const avatarHtml = r?.fotoPerfil
             ${badgeEstado(p.estado)}
           </div>
           <p class="postulacion-meta">${r?.pais || ''}${r?.ciudad ? `, ${r.ciudad}` : ''} · Nivel: ${r?.labelNivel || '—'}</p>
-          ${p.reseñador?.coincidenciaTropes != null ? `
-            <p class="postulacion-tropes-match">🎯 <strong>${p.reseñador.coincidenciaTropes}%</strong> coincidencia de tropes</p>
+          ${p.reseñador?.match != null ? `
+            <p class="postulacion-tropes-match">${p.reseñador.match.emoji} <strong>${p.reseñador.match.score}%</strong> · ${p.reseñador.match.label}</p>
           ` : ''}
         </div>
       </div>
