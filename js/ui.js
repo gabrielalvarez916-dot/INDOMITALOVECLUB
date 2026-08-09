@@ -36,6 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => verDetalleCampaña(idCampanaURL), 300);
   }
 
+  // Si el link trae ?ir=panel-autor (ej: botón "Impulsar campaña" de la app
+  // mobile), lleva directo al panel de autor — la tab "Campañas activas" ya
+  // es la que está activa por defecto ahí. Si además trae ?impulsar=ID,
+  // abre directamente el modal de impulsar esa campaña puntual.
+  const irA = params.get('ir');
+  if (irA === 'panel-autor' && usuario) {
+    setTimeout(() => {
+      mostrarSeccion('panel-autor');
+      const idImpulsarURL = params.get('impulsar');
+      if (idImpulsarURL && typeof abrirModalImpulsarCampana === 'function') {
+        // Espera a que cargarCampañasAutor() (disparada por mostrarSeccion)
+        // termine de traer _campañasAutor antes de abrir el modal.
+        setTimeout(() => abrirModalImpulsarCampana(idImpulsarURL), 900);
+      }
+    }, 300);
+  }
+
   // Si el link trae ?reconexion=..., avisa si se reclamó el regalo por reingresar
   const reconexion = params.get('reconexion');
   if (reconexion) {
