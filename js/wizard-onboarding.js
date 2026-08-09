@@ -15,6 +15,19 @@
 // entra retoma en el primer paso que le falte, no arranca de cero.
 // ============================================================
 
+// ────────────────────────────────────────────────────────────
+// FECHA DE CORTE — el wizard nuevo (con género/tropes obligatorios
+// para reseñador y link obligatorio para todos) SOLO aplica a cuentas
+// creadas a partir de esta fecha. Los usuarios que ya existían quedan
+// afuera por ahora; eso se resuelve aparte, no acá.
+// ────────────────────────────────────────────────────────────
+const _WIZARD_FECHA_CORTE = new Date('2026-08-09T00:00:00Z');
+
+function _esCuentaNueva(usuario) {
+  if (!usuario.fecha_registro) return false; // sin fecha registrada = cuenta vieja, no la tocamos
+  return new Date(usuario.fecha_registro) >= _WIZARD_FECHA_CORTE;
+}
+
 function _pasosWizardSegunRol(rol) {
   return rol === 'reseñador' ? ['datos', 'generos', 'links'] : ['datos', 'links'];
 }
@@ -50,6 +63,7 @@ async function _pasoWizardCompleto(paso, usuario) {
  */
 async function obtenerPasoWizardPendiente(usuario) {
   if (!usuario) return 'datos';
+  if (!_esCuentaNueva(usuario)) return null; // usuario existente: no lo tocamos por ahora
   const pasos = _pasosWizardSegunRol(usuario.rol);
   for (const paso of pasos) {
     if (!(await _pasoWizardCompleto(paso, usuario))) return paso;
