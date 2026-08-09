@@ -211,6 +211,7 @@ async function completarLogin(usuario) {
   redirigirSegunRol(usuario);
   mostrarToast(`¡Bienvenida, ${usuario.alias || usuario.nombre}!`, 'ok');
   if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(usuario);
+  if (typeof verificarAvisoPerfilIncompleto === 'function') verificarAvisoPerfilIncompleto(usuario);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -256,6 +257,7 @@ async function verificarSesionActiva() {
   }
 
   if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(perfil);
+  if (typeof verificarAvisoPerfilIncompleto === 'function') verificarAvisoPerfilIncompleto(perfil);
 }
 
 // ────────────────────────────────────────────────────────────

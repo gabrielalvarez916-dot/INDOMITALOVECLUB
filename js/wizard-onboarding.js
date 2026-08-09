@@ -489,3 +489,81 @@ function _wizFinalizar(usuario) {
   mostrarToast(`¡Bienvenida, ${usuario.alias}!`, 'ok');
   if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(usuario);
 }
+
+// ============================================================
+// AVISO DE PERFIL INCOMPLETO — solo para usuarios EXISTENTES
+// (cuentas anteriores a _WIZARD_FECHA_CORTE, que el wizard de arriba
+// no gatea). No bloquea nada: es un modal informativo que explica
+// qué le falta y por qué, con un botón que abre el modal de
+// "Editar perfil" de siempre. El usuario completa ahí, no en un wizard
+// aparte. Se puede cerrar y seguir usando la plataforma normal.
+// Se vuelve a mostrar en el próximo login mientras siga incompleto.
+// ============================================================
+
+async function _faltantesPerfilExistente(usuario) {
+  const faltan = [];
+
+  if (!(usuario.alias && usuario.pais && usuario.ciudad)) {
+    faltan.push('Alias, país y ciudad');
+  }
+
+  if (usuario.rol === 'reseñador') {
+    const generoTropeOk = await _pasoWizardCompleto('generos', usuario);
+    if (!generoTropeOk) faltan.push('Géneros y tropes favoritos (esto es lo que usa el sistema de coincidencia para armar tus matches)');
+  }
+
+  if (!(usuario.instagram || usuario.tiktok || usuario.amazon)) {
+    faltan.push('Al menos un link (Instagram, TikTok o Amazon)');
+  }
+
+  return faltan;
+}
+
+async function verificarAvisoPerfilIncompleto(usuario) {
+  if (!usuario || usuario.rol === 'admin') return;
+  if (_esCuentaNueva(usuario)) return; // a las cuentas nuevas ya las cubrió el wizard bloqueante
+
+  const faltantes = await _faltantesPerfilExistente(usuario);
+  if (faltantes.length === 0) return;
+
+  _mostrarAvisoPerfilIncompleto(faltantes);
+}
+
+function _mostrarAvisoPerfilIncompleto(faltantes) {
+  let overlay = document.getElementById('aviso-perfil-incompleto-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'aviso-perfil-incompleto-overlay';
+    overlay.style.cssText = `
+      position:fixed; inset:0; background:rgba(0,0,0,0.5);
+      display:flex; align-items:center; justify-content:center;
+      z-index:99998; padding:20px;
+    `;
+    overlay.onclick = (e) => { if (e.target === overlay) _cerrarAvisoPerfilIncompleto(); };
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div style="background:#fff; border-radius:12px; padding:28px; max-width:440px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
+      <button type="button" onclick="_cerrarAvisoPerfilIncompleto()" aria-label="Cerrar"
+        style="position:absolute; top:14px; right:14px; background:none; border:none; font-size:20px; cursor:pointer; color:#999;">×</button>
+      <h2 style="margin-bottom:8px;">Completá tu perfil</h2>
+      <p style="font-size:13px; color:#777; margin-bottom:14px;">Te falta cargar esto para que tu perfil funcione bien en la plataforma:</p>
+      <ul style="margin:0 0 18px 18px; padding:0; font-size:14px; color:#333; line-height:1.6;">
+        ${faltantes.map(f => `<li>${f}</li>`).join('')}
+      </ul>
+      <button type="button" class="btn-primario btn-full" onclick="_irACompletarPerfilExistente()">Completar mi perfil</button>
+    </div>
+  `;
+}
+
+function _cerrarAvisoPerfilIncompleto() {
+  const overlay = document.getElementById('aviso-perfil-incompleto-overlay');
+  if (overlay) overlay.remove();
+}
+
+function _irACompletarPerfilExistente() {
+  _cerrarAvisoPerfilIncompleto();
+  mostrarModal('modal-editar-perfil');
+  if (typeof cargarFormularioEdicionPerfil === 'function') cargarFormularioEdicionPerfil();
+}
