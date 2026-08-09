@@ -10,42 +10,248 @@ let _notifCache = [];
 // TEXTOS POR TIPO (diferenciados autor / reseñador)
 // ────────────────────────────────────────────────────────────
 
+// Mismo sistema de variantes que notificacionesApi.js (mobile) y la Edge
+// Function enviar-push-notificacion: 3 opciones de copy por tipo, emoji fijo
+// por categoría. La variante se elige con un hash estable del id de la
+// notificación, así el push (mobile) y la campanita (acá) siempre muestran
+// el mismo texto para la misma notificación.
+function _hashSeed(str) {
+  let h = 0;
+  const s = String(str || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+const VARIANTES = {
+  // AUTOR
+  postulacion_nueva: {
+    emoji: '😏',
+    textos: [
+      (d) => `${d.aliasReseñador || 'Alguien'} se postuló a "${d.nombreLibro || 'tu campaña'}". Después no digas que nadie quiere leerte.`,
+      (d) => `ALERTA: alguien quiere leer "${d.nombreLibro || 'tu campaña'}". Se llama ${d.aliasReseñador || 'alguien'}. Hacé algo.`,
+      (d) => `${d.aliasReseñador || 'Alguien'} se postuló a "${d.nombreLibro || 'tu campaña'}". Elegí sabiamente, criatura.`,
+    ],
+  },
+  resena_cargada: {
+    emoji: '🫣',
+    textos: [
+      (d) => `Hay una reseña nueva de "${d.nombreLibro || ''}". Que sea lo que Dios quiera.`,
+      (d) => `Tenemos una reseña nueva de "${d.nombreLibro || ''}". Proceda con cautela.`,
+      (d) => `No queremos meter presión, pero ${d.aliasReseñador || 'alguien'} ya reseñó "${d.nombreLibro || ''}".`,
+    ],
+  },
+  campaña_finalizada: {
+    emoji: '🏁',
+    textos: [
+      (d) => `"${d.nombreLibro || ''}" llegó al final. ¿Y ahora qué hacemos con nuestras vidas?`,
+      (d) => `Se terminó la campaña de "${d.nombreLibro || ''}". Nosotras ya tenemos el pochoclo.`,
+      (d) => `Campaña finalizada. "${d.nombreLibro || ''}" hizo lo suyo. Ahora te toca a vos.`,
+    ],
+  },
+  pago_aprobado: {
+    emoji: '💅',
+    textos: [
+      (d) => `Pago aprobado. Qué buen gusto tenés: elegiste ${d.plan || 'tu plan'}.`,
+      () => `Tu pago pasó. Una decisión cuestionable, pero nos encanta.`,
+      () => `Pago aprobado. Ahora sí, oficialmente sos de los nuestros.`,
+    ],
+  },
+  pago_rechazado: {
+    emoji: '😭',
+    textos: [
+      () => `Houston, tenemos un problema: tu pago fue rechazado.`,
+      () => `Casi. Pero tu pago fue rechazado.`,
+      () => `Indómita te quiere. Tu banco, aparentemente, no — te rechazó el plan.`,
+    ],
+  },
+  postulacion_abandono: {
+    emoji: '💔',
+    textos: [
+      (d) => `${d.aliasReseñador || 'Una reseñadora'} abandonó "${d.nombreLibro || ''}". La relación no funcionó.`,
+      (d) => `No funcionó: ${d.aliasReseñador || 'una reseñadora'} abandonó "${d.nombreLibro || ''}".`,
+      (d) => `Se terminó el romance: ${d.aliasReseñador || 'una reseñadora'} abandonó "${d.nombreLibro || ''}".`,
+    ],
+  },
+
+  // RESEÑADOR
+  campaña_cancelada_autor: {
+    emoji: '🚨',
+    textos: [
+      (d) => `El autor canceló "${d.nombreLibro || ''}". Tu reseña queda oficialmente perdonada.`,
+      (d) => `Cancelaron "${d.nombreLibro || ''}". Podés volver a tu vida.`,
+      (d) => `El autor canceló la campaña de "${d.nombreLibro || ''}". Sí, podés respirar.`,
+    ],
+  },
+  postulacion_aprobada: {
+    emoji: '👀',
+    textos: [
+      (d) => `¡Entraste a "${d.nombreLibro || ''}"! Ahora demostrá que te lo merecías.`,
+      (d) => `Buenas noticias: te aprobaron "${d.nombreLibro || ''}". Malas noticias: ahora hay que leerlo.`,
+      (d) => `Te aprobaron "${d.nombreLibro || ''}". Qué lindo. Ahora leé.`,
+    ],
+  },
+  postulacion_rechazada: {
+    emoji: '💀',
+    textos: [
+      (d) => `Te rechazaron en "${d.nombreLibro || ''}". Dignidad ante todo.`,
+      (d) => `Rechazada/o. "${d.nombreLibro || ''}" no sabe lo que se pierde.`,
+      (d) => `No fue match: tu postulación a "${d.nombreLibro || ''}" fue rechazada.`,
+    ],
+  },
+  resena_calificada: {
+    emoji: '🤭',
+    textos: [
+      (d) => `Tu reseña pasó por el tribunal. ${d.puntuacion || '?'} estrellas.`,
+      (d) => `¿Nervios? El autor ya calificó tu reseña: ${d.puntuacion || '?'}.`,
+      (d) => `Tanto opinar… ahora te tocó recibir nota: ${d.puntuacion || '?'}.`,
+    ],
+  },
+  recordatorio_resena: {
+    emoji: '🫠',
+    textos: [
+      (d) => `Faltan pocos días. ¿Vas a reseñar "${d.nombreLibro || ''}" o vamos a fingir que no vimos nada?`,
+      (d) => `Pssst… quedan pocos días para entregar "${d.nombreLibro || ''}".`,
+      (d) => `Quedan pocos días para "${d.nombreLibro || ''}". ¿Todo bajo control? Porque parece que no.`,
+    ],
+  },
+  resena_no_entregada: {
+    emoji: '🔍',
+    textos: [
+      (d) => `Tu reseña de "${d.nombreLibro || ''}" quedó oficialmente atrasada.`,
+      (d) => `¿Te acordabas de "${d.nombreLibro || ''}"? Porque el plazo sí se acordó de vos.`,
+      (d) => `El tiempo pasó. La reseña no. Hablemos de "${d.nombreLibro || ''}".`,
+    ],
+  },
+  nueva_campana_disponible: {
+    emoji: '📖',
+    textos: [
+      (d) => `Nueva campaña desbloqueada: "${d.nombreLibro || ''}". Corré antes de que vuelen.`,
+      (d) => `Tenemos algo nuevo para vos: "${d.nombreLibro || ''}" acaba de abrir campaña.`,
+      (d) => `Nuevo candidato a obsesión desbloqueado: "${d.nombreLibro || ''}".`,
+    ],
+  },
+  resena_compatible_impulso: {
+    emoji: '❤️‍🔥',
+    textos: [
+      (d) => `No queremos meternos en tu vida, pero "${d.nombreLibro || ''}" tiene mucha compatibilidad con vos.`,
+      (d) => `Tu algoritmo te conoce mejor que vos. "${d.nombreLibro || ''}" es para vos.`,
+      (d) => `No te estamos diciendo qué leer, pero "${d.nombreLibro || ''}" te queda demasiado bien.`,
+    ],
+  },
+
+  // AUTOR (nuevas)
+  cupos_llenos: {
+    emoji: '😜',
+    textos: [
+      (d) => `"${d.nombreLibro || ''}" agotó sus cupos. Algo estás haciendo bien.`,
+      (d) => `Cupos completos de "${d.nombreLibro || ''}". No aceptamos más fans… por ahora.`,
+      (d) => `Todos quieren leer "${d.nombreLibro || ''}". Cupos llenos. La presión empieza ahora.`,
+    ],
+  },
+
+  // TODOS LOS ROLES
+  ticket_actualizado: {
+    emoji: '🔔',
+    textos: [
+      (d) => `Tu ticket "${d.asunto || ''}" tiene novedades.`,
+      (d) => `Hay novedades en tu ticket "${d.asunto || ''}". Vení a ver.`,
+      (d) => `Actualizamos tu ticket "${d.asunto || ''}". Ya podés revisarlo.`,
+    ],
+  },
+  completar_subgenero_perfil: {
+    emoji: '🫦',
+    textos: [
+      () => `¿Fantasía? ¿Thriller? ¿Romance? Ahora decinos qué tipo te vuelve loco/a.`,
+      () => `No te hagas el/la misterioso/a. Decinos qué subgéneros leés.`,
+      () => `No podés decir "me gusta todo". Elegí tus subgéneros.`,
+    ],
+  },
+  evento_reto_completado: {
+    emoji: '👑',
+    textos: [
+      (d) => `¿Quién acaba de sumar +${d.puntosGanados || 0}? Vos. "${d.nombreReto || ''}" está hecho.`,
+      (d) => `Otro reto mordió el polvo: "${d.nombreReto || ''}". +${d.puntosGanados || 0} puntos.`,
+      (d) => `Completaste "${d.nombreReto || ''}". Ahora queremos ver si podés con el siguiente.`,
+    ],
+  },
+  evento_completado: {
+    emoji: '🎉',
+    textos: [
+      (d) => `"${d.nombreEvento || ''}" cayó. +${d.puntosGanados || 0} puntos. Siguiente víctima.`,
+      (d) => `"${d.nombreEvento || ''}" completado. No te vamos a decir que sos mejor que los demás… pero.`,
+      (d) => `Completaste "${d.nombreEvento || ''}". +${d.puntosGanados || 0} puntos. ¿Quién te para ahora?`,
+    ],
+  },
+};
+
+// INSIGNIAS: mismo criterio de variantes, elegidas por subtipo (d.tipo)
+// dentro de insignia_obtenida.
+const INSIGNIA_VARIANTES = {
+  liga: {
+    emoji: '🏆',
+    textos: [
+      () => `Subiste de liga. Mirá quién se nos puso competitivo/a.`,
+      () => `Subiste de liga. No te pongas insoportable.`,
+      () => `Ascendiste. ¿Hasta dónde pensás llegar?`,
+    ],
+  },
+  completion: {
+    emoji: '⭐',
+    textos: [
+      () => `100% este mes. No sabemos qué te pasó, pero nos encanta.`,
+      () => `Todo hecho. 100%. Absolutamente nada que reclamarte.`,
+      () => `¿100%? Bueno, alguien se tomó esto demasiado en serio.`,
+    ],
+  },
+  top5: {
+    emoji: '🔥',
+    textos: [
+      () => `Top 5 desbloqueado. El resto que se ponga las pilas.`,
+      () => `TOP 5. Sí, estás entre los mejores. Bajá un cambio.`,
+      () => `Entraste al Top 5. Ahora todos te tienen en la mira.`,
+    ],
+  },
+  top20: {
+    emoji: '🥇',
+    textos: [
+      () => `Top 20 desbloqueado. Ahora queremos verte subir.`,
+      () => `Top 20. Bueno, bueno… alguien viene con ganas.`,
+      () => `Entraste al Top 20. Nada mal, criatura.`,
+    ],
+  },
+};
+
+// Tipos sin variantes (copy fijo)
 const NOTIF_TEXTOS = {
-  // Para AUTOR
-  postulacion_nueva: (d) => `${d.aliasReseñador || 'Alguien'} se postuló a "${d.nombreLibro || 'tu campaña'}".`,
-  resena_cargada: (d) => `${d.aliasReseñador || 'Una reseñadora'} cargó su reseña de "${d.nombreLibro || ''}".`,
-  campaña_finalizada: (d) => `Tu campaña "${d.nombreLibro || ''}" finalizó.`,
   campaña_cancelada_admin: (d) => `Tu campaña "${d.nombreLibro || ''}" fue cancelada por el equipo de Indómita.`,
-  pago_aprobado: (d) => `Tu pago del plan ${d.plan || ''} fue aprobado.`,
-  pago_rechazado: (d) => `Tu pago fue rechazado. ${d.motivo ? 'Motivo: ' + d.motivo : ''}`,
-  postulacion_abandono: (d) => `${d.aliasReseñador || 'Una reseñadora'} abandonó la campaña "${d.nombreLibro || ''}".`,
-
-  // Para RESEÑADOR
-  postulacion_aprobada: (d) => `¡Te aprobaron en "${d.nombreLibro || 'una campaña'}"! Ya podés acceder al libro.`,
-  postulacion_rechazada: (d) => `Tu postulación a "${d.nombreLibro || ''}" fue rechazada.`,
-  resena_calificada: (d) => `El autor calificó tu reseña de "${d.nombreLibro || ''}" con ${d.puntuacion || '?'} estrellas.`,
-  campaña_cancelada_autor: (d) => `La campaña "${d.nombreLibro || ''}" en la que participabas fue cancelada.`,
-  recordatorio_resena: (d) => `Te quedan pocos días para entregar tu reseña de "${d.nombreLibro || ''}".`,
-  ticket_actualizado: (d) => `Tu ticket de soporte "${d.asunto || ''}" cambió de estado.`,
-  completar_subgenero_perfil: () => `Actualizamos el sistema de géneros: entrá a tu perfil y elegí tu subgénero favorito de Romance (ej. Dark Romance, Paranormal) para no perderte recomendaciones.`,
-
-  // Para EVENTOS
-  evento_reto_completado: (d) => `¡Completaste el reto "${d.nombreReto || ''}" de "${d.nombreEvento || ''}"! +${d.puntosGanados || 0} puntos.`,
-  evento_completado: (d) => `¡Completaste el evento "${d.nombreEvento || ''}"! Ganaste +${d.puntosGanados || 0} puntos en total.`,
-
-  // Para INSIGNIAS (varía el mensaje según datosExtra.tipo)
-  insignia_obtenida: (d) => {
-    const mensajes = {
-      liga: '¡Subiste de liga! 🏆',
-      completion: '¡Lograste 100% de completion este mes! ✅',
-      top5: '¡Entraste al Top 5 del ranking! 🥇',
-      top20: '¡Entraste al Top 20 del ranking! 🎖️'
-    };
-    return mensajes[d.tipo] || 'Ganaste una nueva insignia.';
-  }
 };
 
 function _textoNotificacion(notif) {
+  const seed = notif.idNotificacion || `${notif.tipo}:${notif.referenciaId || ''}`;
+
+  if (notif.tipo === 'insignia_obtenida') {
+    const variante = INSIGNIA_VARIANTES[notif.datosExtra?.tipo];
+    if (variante) {
+      try {
+        const idx = _hashSeed(seed) % variante.textos.length;
+        return `${variante.emoji} ${variante.textos[idx](notif.datosExtra || {})}`;
+      } catch (e) {
+        return 'Ganaste una nueva insignia.';
+      }
+    }
+    return 'Ganaste una nueva insignia.';
+  }
+
+  const variante = VARIANTES[notif.tipo];
+  if (variante) {
+    try {
+      const idx = _hashSeed(seed) % variante.textos.length;
+      return `${variante.emoji} ${variante.textos[idx](notif.datosExtra || {})}`;
+    } catch (e) {
+      return 'Tenés una notificación nueva.';
+    }
+  }
+
   const fn = NOTIF_TEXTOS[notif.tipo];
   if (!fn) return 'Tenés una notificación nueva.';
   try {
@@ -248,7 +454,9 @@ function _navegarPorNotificacion(notif) {
     'postulacion_nueva', 'resena_cargada', 'campaña_finalizada',
     'campaña_cancelada_admin', 'postulacion_abandono',
     'postulacion_aprobada', 'postulacion_rechazada',
-    'campaña_cancelada_autor', 'recordatorio_resena'
+    'campaña_cancelada_autor', 'recordatorio_resena',
+    'resena_no_entregada', 'nueva_campana_disponible',
+    'resena_compatible_impulso', 'cupos_llenos'
   ];
 
   if (tiposCampaña.includes(notif.tipo) && notif.referenciaId) {
