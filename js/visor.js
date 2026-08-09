@@ -21,6 +21,32 @@ var _visorPdf  = null;
 var _visorEpub = null;
 var _pdfPaginaActual = 1;
 var _pdfTotalPaginas = 0;
+var _visorIdPostulacion = null; // para el tracker automático de seguimiento de lectura
+var _timeoutProgresoLectura = null;
+
+
+// ────────────────────────────────────────────────────────────
+// TRACKER AUTOMÁTICO DE PROGRESO DE LECTURA
+// (para el panel "Seguimiento de reseñadores" del autor — ver
+// progreso_lectura / actualizar_progreso_lectura_auto en Supabase)
+// ────────────────────────────────────────────────────────────
+
+function avisarProgresoLecturaAuto(posicionActual, posicionTotal) {
+  if (!_visorIdPostulacion) return; // se abrió el visor sin postulación asociada
+  if (_timeoutProgresoLectura) clearTimeout(_timeoutProgresoLectura);
+  _timeoutProgresoLectura = setTimeout(async () => {
+    try {
+      await supabaseClient.rpc('actualizar_progreso_lectura_auto', {
+        p_id_postulacion: _visorIdPostulacion,
+        p_posicion_actual: posicionActual ?? null,
+        p_posicion_total: posicionTotal ?? null,
+      });
+    } catch (e) {
+      // silencioso: no debe interrumpir la lectura si falla la red
+      console.error('Error mandando progreso de lectura:', e);
+    }
+  }, 400);
+}
 
 
 // ────────────────────────────────────────────────────────────
@@ -85,8 +111,9 @@ async function descargarLibro(idCampana, tituloLibro, formato) {
 // ────────────────────────────────────────────────────────────
 // ABRIR VISOR EPUB
 // ────────────────────────────────────────────────────────────
-async function abrirVisorEpub(idCampana, tituloLibro) {
+async function abrirVisorEpub(idCampana, tituloLibro, idPostulacion) {
   if (!idCampana) { mostrarToast('No hay archivo EPUB disponible.', 'error'); return; }
+  _visorIdPostulacion = idPostulacion || null;
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'epub');
   mostrarModal('modal-visor');
@@ -101,8 +128,9 @@ await cargarLibreriaEpub();
 // ABRIR VISOR PDF
 // ────────────────────────────────────────────────────────────
 
-async function abrirVisorPdf(idCampana, tituloLibro) {
+async function abrirVisorPdf(idCampana, tituloLibro, idPostulacion) {
   if (!idCampana) { mostrarToast('No hay archivo PDF disponible.', 'error'); return; }
+  _visorIdPostulacion = idPostulacion || null;
 
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'pdf');
@@ -147,6 +175,17 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
       height: '100%',
       spread: 'none',
       flow:   'paginated'
+    });
+
+    // Tracker automático: capítulo actual / total de capítulos (spine).
+    // No es un % exacto de páginas leídas, pero alcanza para ubicar
+    // "no empezado / leyendo / por la mitad / finalizado" sin generar el
+    // índice pesado de locations de epub.js.
+    rendicion.on('relocated', function (loc) {
+      if (loc && loc.start) {
+        const totalCapitulos = (_visorEpub.spine && _visorEpub.spine.length) || 0;
+        avisarProgresoLecturaAuto(loc.start.index, totalCapitulos);
+      }
     });
 
     await rendicion.display();
@@ -231,6 +270,8 @@ async function renderizarPaginaPdf(numero) {
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   await pagina.render({ canvasContext: context, viewport: vp }).promise;
+
+  avisarProgresoLecturaAuto(numero, _pdfTotalPaginas);
 }
 
 async function pdfPaginaAnterior() {
@@ -345,6 +386,8 @@ function cerrarVisor() {
   if (_visorPdf)  { try { _visorPdf.destroy();  } catch {} _visorPdf  = null; }
   _pdfPaginaActual = 1;
   _pdfTotalPaginas = 0;
+  _visorIdPostulacion = null;
+  if (_timeoutProgresoLectura) { clearTimeout(_timeoutProgresoLectura); _timeoutProgresoLectura = null; }
   const canvas  = document.getElementById('visor-canvas');
   const epubDiv = document.getElementById('visor-epub');
   if (canvas)  { const ctx = canvas.getContext('2d'); if (ctx) ctx.clearRect(0,0,canvas.width,canvas.height); }

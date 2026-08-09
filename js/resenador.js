@@ -215,8 +215,8 @@ function construirCardPostulacionReseñador(p) {
 
   const linksLibro = !campañaCancelada && p.estado === 'aprobada' && (c.linkEpub || c.linkPdf) ? `
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-      ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">📖 Leer EPUB</button>` : ''}
-      ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}')">📄 Leer PDF</button>`   : ''}
+      ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">📖 Leer EPUB</button>` : ''}
+      ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">📄 Leer PDF</button>`   : ''}
       ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
       ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
     </div>
@@ -344,8 +344,8 @@ function construirCardArcActivo(p) {
 </p>
         <p class="arc-card-fecha"${yaVencio ? ' style="color:#c0392b;font-weight:600;"' : ''}>${textoFecha}</p>
         <div class="arc-card-acciones">
- ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}')">Leer EPUB</button>` : ''}
-  ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}')">Leer PDF</button>`   : ''}
+ ${c.linkEpub ? `<button class="btn-primario btn-full" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">Leer EPUB</button>` : ''}
+  ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">Leer PDF</button>`   : ''}
   ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
   ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
   <button class="btn-secundario btn-full arc-btn-resena" onclick="abrirCargarResena('${c.id}')">✓ Entregar reseña</button>
