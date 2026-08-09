@@ -49,8 +49,16 @@ const _EventosState = {
   idUsuario: null,        // ID_Usuario actual (Sesion.obtener().id)
   timerSecreto: null,     // Fase 7: id del setTimeout del secreto flotante
   timerCountdown: null,    // id del setInterval del contador días/horas/minutos
-  timerPolling: null   //
+  timerPolling: null,   //
+  promesaInit: null,       // promesa de inicializarEventos(), para poder esperarla desde el orquestador de onboarding
+  modalPendiente: false,   // true si hay un modal de inicio de evento sin ver, pendiente de mostrarse en la secuencia de onboarding
+  eventoParaModal: null    // datos del evento a mostrar en el modal pendiente
 };
+
+// Callback del orquestador de onboarding (auth.js) que hay que avisar
+// cuando el modal de inicio de evento se cierra (o cuando no había nada
+// que mostrar). Ver mostrarModalEventoSiCorrespondeYAvanzar().
+let _EventosOnFinalizarCallback = null;
 
 // ────────────────────────────────────────────────────────────
 // 1. DETECCIÓN AL CARGAR LA APP
@@ -84,6 +92,8 @@ if (error || !resultado || !resultado.activo) {
       _detenerTimerCountdownEvento();
       _detenerPollingEventoGlobal();   // ← LÍNEA NUEVA
       _restablecerColorTemaEvento();
+      _EventosState.modalPendiente = false;
+      _EventosState.eventoParaModal = null;
       return;
     }
 
@@ -97,12 +107,44 @@ if (error || !resultado || !resultado.activo) {
     _iniciarTimerCountdownEvento();
     _iniciarPollingEventoGlobal();   // ← LÍNEA NUEVA
 
-    if (!resultado.modalVisto) {
-      _mostrarModalInicioEvento(resultado.evento);
-    }
+    // IMPORTANTE: ya NO se muestra el modal acá directamente. Antes esto
+    // disparaba el modal apenas terminaba esta llamada (sin esperar a que
+    // el wizard/tutorial terminaran), y como el modal de evento usa el
+    // sistema genérico de modales (z-index bajo), quedaba abierto "de
+    // fondo" tapado por el wizard/tutorial y aparecía de golpe después,
+    // fuera de orden. Ahora solo guardamos que está pendiente; quien
+    // decide CUÁNDO mostrarlo es el orquestador de onboarding en auth.js,
+    // vía mostrarModalEventoSiCorrespondeYAvanzar().
+    _EventosState.modalPendiente = !resultado.modalVisto;
+    _EventosState.eventoParaModal = resultado.evento;
 
   } catch (e) {
     console.error('Error al inicializar eventos:', e);
+    _EventosState.modalPendiente = false;
+    _EventosState.eventoParaModal = null;
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// PASO "EVENTO" DE LA SECUENCIA DE ONBOARDING
+// Llamado por el orquestador (auth.js) cuando le toca el turno al
+// evento. Espera a que inicializarEventos() haya terminado (por si
+// la RPC todavía no volvió), muestra el modal si corresponde, y
+// avisa a onFinalizar cuando termina (se cierra el modal, o de una
+// si no había nada que mostrar).
+// ────────────────────────────────────────────────────────────
+async function mostrarModalEventoSiCorrespondeYAvanzar(onFinalizar) {
+  try {
+    if (_EventosState.promesaInit) await _EventosState.promesaInit;
+  } catch (e) {
+    console.error('Error esperando inicialización de eventos:', e);
+  }
+
+  if (_EventosState.modalPendiente && _EventosState.eventoParaModal) {
+    _EventosOnFinalizarCallback = onFinalizar || null;
+    _mostrarModalInicioEvento(_EventosState.eventoParaModal);
+  } else {
+    onFinalizar?.();
   }
 }
 
@@ -160,9 +202,14 @@ function _mostrarModalInicioEvento(evento) {
       p_usuario: _EventosState.idUsuario,
       p_id_evento: evento.id
     });
+    _EventosState.modalPendiente = false;
     cerrarModales();
     _detenerAnimacionBesosCayendo();
     mostrarSeccion('evento');
+
+    const cb = _EventosOnFinalizarCallback;
+    _EventosOnFinalizarCallback = null;
+    cb?.();
   };
 }
 

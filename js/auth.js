@@ -197,21 +197,71 @@ async function completarLogin(usuario) {
 
   mostrarHeaderLogueado(usuario);
   iniciarNotificaciones();
-  if (typeof inicializarEventos === 'function') inicializarEventos();
+  if (typeof inicializarEventos === 'function' && typeof _EventosState !== 'undefined') {
+    _EventosState.promesaInit = inicializarEventos();
+  }
 
   _tokenGooglePendiente = null;
   _emailGooglePendiente = null;
 
   if (usuario.rol !== 'admin' && !(await perfilEstaCompleto(usuario))) {
-    mostrarGatePerfilObligatorio(usuario);
+    if (typeof mostrarGatePerfilObligatorio === 'function') {
+      mostrarGatePerfilObligatorio(usuario, () => _continuarOnboarding(usuario));
+    }
     return;
   }
 
   verificarModalActualizacion();
   redirigirSegunRol(usuario);
   mostrarToast(`¡Bienvenida, ${usuario.alias || usuario.nombre}!`, 'ok');
-  if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(usuario);
-  if (typeof verificarAvisoPerfilIncompleto === 'function') verificarAvisoPerfilIncompleto(usuario);
+  _continuarOnboarding(usuario);
+}
+
+// ────────────────────────────────────────────────────────────
+// ORQUESTADOR DE ONBOARDING — evita que Wizard, Tutorial, Modal de
+// Evento Nuevo y Aviso de Completar Perfil se superpongan o se
+// disparen "de fondo" (el bug de siempre). Un solo lugar decide el
+// orden y cada paso solo avanza al siguiente cuando el anterior
+// realmente se cerró.
+//
+// Orden:
+//   - Usuarios NUEVOS (con wizard pendiente): Wizard → Tutorial → Evento
+//     (el wizard ya llama a _continuarOnboarding cuando termina, ver
+//     mostrarGatePerfilObligatorio más arriba)
+//   - Usuarios VIEJOS / con perfil ya completo: Tutorial → Evento →
+//     Aviso de completar perfil (este último va al final a propósito:
+//     tiene un botón que saca al usuario a editar su perfil, así que no
+//     tiene sentido meterlo en medio del tutorial o antes del evento).
+// ────────────────────────────────────────────────────────────
+
+function _continuarOnboarding(usuario) {
+  if (!usuario || usuario.rol === 'admin') return;
+  _pasoTutorialOnboarding(usuario);
+}
+
+function _pasoTutorialOnboarding(usuario) {
+  if (typeof inicializarTutorialBienvenida === 'function') {
+    inicializarTutorialBienvenida(usuario, () => _pasoEventoOnboarding(usuario));
+  } else {
+    _pasoEventoOnboarding(usuario);
+  }
+}
+
+function _pasoEventoOnboarding(usuario) {
+  if (typeof mostrarModalEventoSiCorrespondeYAvanzar === 'function') {
+    mostrarModalEventoSiCorrespondeYAvanzar(() => _pasoAvisoPerfilOnboarding(usuario));
+  } else {
+    _pasoAvisoPerfilOnboarding(usuario);
+  }
+}
+
+function _pasoAvisoPerfilOnboarding(usuario) {
+  const esCuentaNueva = typeof _esCuentaNueva === 'function' && _esCuentaNueva(usuario);
+  // A las cuentas nuevas ya las cubrió el wizard bloqueante: no les
+  // mostramos también el aviso de "completar perfil".
+  if (!esCuentaNueva && typeof verificarAvisoPerfilIncompleto === 'function') {
+    verificarAvisoPerfilIncompleto(usuario);
+  }
 }
 
 // ────────────────────────────────────────────────────────────
@@ -249,15 +299,18 @@ async function verificarSesionActiva() {
 
   mostrarHeaderLogueado(perfil);
   iniciarNotificaciones();
-  if (typeof inicializarEventos === 'function') inicializarEventos();
+  if (typeof inicializarEventos === 'function' && typeof _EventosState !== 'undefined') {
+    _EventosState.promesaInit = inicializarEventos();
+  }
 
   if (perfil.rol !== 'admin' && !(await perfilEstaCompleto(perfil))) {
-    mostrarGatePerfilObligatorio(perfil);
+    if (typeof mostrarGatePerfilObligatorio === 'function') {
+      mostrarGatePerfilObligatorio(perfil, () => _continuarOnboarding(perfil));
+    }
     return;
   }
 
-  if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(perfil);
-  if (typeof verificarAvisoPerfilIncompleto === 'function') verificarAvisoPerfilIncompleto(perfil);
+  _continuarOnboarding(perfil);
 }
 
 // ────────────────────────────────────────────────────────────

@@ -276,9 +276,14 @@ const _WIZ_TITULOS = {
   links:    'Sumá al menos un link'
 };
 
-async function mostrarGatePerfilObligatorio(usuario) {
+// Callback del orquestador de onboarding (auth.js) que hay que avisar
+// cuando el wizard termina (paso final guardado, o nada pendiente).
+let _wizOnFinalizarCallback = null;
+
+async function mostrarGatePerfilObligatorio(usuario, onFinalizar) {
   _wizUsuarioActual = { ...usuario };
   _wizPasosActuales = _pasosWizardSegunRol(usuario.rol);
+  _wizOnFinalizarCallback = onFinalizar || null;
 
   const pasoPendiente = await obtenerPasoWizardPendiente(_wizUsuarioActual);
   if (pasoPendiente === null) {
@@ -505,7 +510,19 @@ function _wizFinalizar(usuario) {
   verificarModalActualizacion();
   redirigirSegunRol(usuario);
   mostrarToast(`¡Bienvenida, ${usuario.alias}!`, 'ok');
-  if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(usuario);
+
+  // Le pasamos la posta al orquestador de onboarding (auth.js), que sigue
+  // con Tutorial → Evento. Si por algún motivo no hay callback (llamada
+  // suelta desde otro lado), fallback al comportamiento viejo.
+  const cb = _wizOnFinalizarCallback;
+  _wizOnFinalizarCallback = null;
+  if (cb) {
+    cb();
+  } else if (typeof _continuarOnboarding === 'function') {
+    _continuarOnboarding(usuario);
+  } else if (typeof inicializarTutorialBienvenida === 'function') {
+    inicializarTutorialBienvenida(usuario);
+  }
 }
 
 // ============================================================
@@ -543,10 +560,13 @@ async function verificarAvisoPerfilIncompleto(usuario) {
   if (!usuario || usuario.rol === 'admin') return;
   if (_esCuentaNueva(usuario)) return; // a las cuentas nuevas ya las cubrió el wizard bloqueante
 
-  // El tutorial de bienvenida tiene prioridad: si todavía no lo vio, no le
-  // superponemos este aviso encima (el aviso tapa toda la pantalla). Se
-  // muestra recién en un login posterior, una vez que ya vio el tutorial.
-  if (!usuario.tutorial_bienvenida_visto) return;
+  // NOTA: antes acá se chequeaba `usuario.tutorial_bienvenida_visto` para
+  // no superponerse con el tutorial, y si todavía no lo había visto se
+  // pateaba el aviso al próximo login. Eso ya no hace falta: ahora esta
+  // función la llama el orquestador de onboarding (auth.js) recién
+  // DESPUÉS de que el tutorial y el modal de evento ya terminaron en esta
+  // misma sesión, así que el orden queda garantizado sin tener que
+  // esperar a un login futuro.
 
   const faltantes = await _faltantesPerfilExistente(usuario);
   if (faltantes.length === 0) return;

@@ -157,17 +157,24 @@ const _TutorialState = {
 // INICIO — llamar desde completarLogin() en auth.js
 // ────────────────────────────────────────────────────────────
 
-async function inicializarTutorialBienvenida(usuario) {
+// Callback del orquestador de onboarding (auth.js) que hay que avisar
+// cuando el tutorial termina (se cierra) o cuando no correspondía
+// mostrarlo (ya visto, rol sin tutorial, sin pasos configurados, etc).
+let _tutOnFinalizarCallback = null;
+
+async function inicializarTutorialBienvenida(usuario, onFinalizar) {
   try {
-    if (!usuario || usuario.rol === 'admin') return;
-    if (usuario.tutorial_bienvenida_visto) return;
-    if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador' && usuario.rol !== 'editorial') return;
+    if (!usuario || usuario.rol === 'admin') { onFinalizar?.(); return; }
+    if (usuario.tutorial_bienvenida_visto) { onFinalizar?.(); return; }
+    if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador' && usuario.rol !== 'editorial') { onFinalizar?.(); return; }
 
     const { data: pasos, error } = await supabaseClient.rpc('obtener_tutorial_bienvenida', {
       p_rol: usuario.rol
     });
 
-    if (error || !pasos || pasos.length === 0) return;
+    if (error || !pasos || pasos.length === 0) { onFinalizar?.(); return; }
+
+    _tutOnFinalizarCallback = onFinalizar || null;
 
     _TutorialState.activo = true;
     _TutorialState.rol = usuario.rol;
@@ -186,6 +193,7 @@ async function inicializarTutorialBienvenida(usuario) {
     catch (e) { console.error('Error marcando tutorial como iniciado:', e); }
   } catch (e) {
     console.error('Error inicializando tutorial de bienvenida:', e);
+    onFinalizar?.();
   }
 }
 
@@ -377,6 +385,12 @@ async function cerrarTutorialBienvenida() {
   } catch (e) {
     console.error('Error marcando tutorial como visto:', e);
   }
+
+  // Le avisamos al orquestador de onboarding (auth.js) que el tutorial
+  // terminó, para que siga con el paso del evento.
+  const cb = _tutOnFinalizarCallback;
+  _tutOnFinalizarCallback = null;
+  cb?.();
 }
 
 // ────────────────────────────────────────────────────────────
