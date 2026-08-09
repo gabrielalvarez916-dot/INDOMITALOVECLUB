@@ -182,7 +182,7 @@ function renderizarSoloParaVos() {
         : `<div class="solo-para-vos-portada-placeholder">📖</div>`}
       <p class="solo-para-vos-card-titulo">${c.nombreLibro}</p>
       <p class="solo-para-vos-card-match">${c.matchEmoji} ${c.matchLabel} · ${c.matchScore}%</p>
-      ${botonSoloParaVosHtml(c)}
+      <div class="solo-para-vos-card-boton-wrap">${botonSoloParaVosHtml(c)}</div>
     </div>
   `).join('');
 

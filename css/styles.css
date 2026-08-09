@@ -2203,12 +2203,20 @@ img { max-width: 100%; display: block; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* Siempre reserva el espacio de 2 líneas, aunque el título sea corto,
+     para que el botón de Postularme quede a la misma altura en todas las cards */
+  min-height: calc(12.5px * 1.25 * 2);
 }
 
 .solo-para-vos-card-match {
   font-size: 11px;
   font-weight: 600;
   color: var(--bordo);
+}
+
+.solo-para-vos-card-boton-wrap {
+  margin-top: auto;
+  padding-top: 2px;
 }
 
 .ranking-seccion-titulo {
