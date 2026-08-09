@@ -1044,6 +1044,12 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     return;
   }
 
+  if (seleccionTropes.idsTropes.length === 0) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', 'Elegí al menos un trope para la campaña.');
+    return;
+  }
+
   const datos = {
     nombreLibro:       document.getElementById('nc-nombre-libro')?.value?.trim(),
     nombreAutor:       document.getElementById('nc-nombre-autor')?.value?.trim(),
@@ -1804,6 +1810,11 @@ async function guardarEditarCampana(idCampana) {
 
   if (!seleccionTropes.id_genero) {
     mostrarMensajeError('ec-error', 'Elegí un género para la campaña.');
+    return;
+  }
+
+  if (seleccionTropes.idsTropes.length === 0) {
+    mostrarMensajeError('ec-error', 'Elegí al menos un trope para la campaña.');
     return;
   }
 
