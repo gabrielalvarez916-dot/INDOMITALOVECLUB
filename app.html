@@ -589,6 +589,7 @@
         <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-usuarios')">Usuarios</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-impulsos'); cargarImpulsosAdmin()">Impulsos</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-tickets'); cargarTicketsAdmin(Sesion.email())">Soporte</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-incumplimientos'); cargarIncumplimientosAdmin()">Incumplimientos</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-tropes-propuestos'); cargarTropesPropuestosAdmin()">Tropes propuestos</button>
@@ -607,6 +608,9 @@
       </div>
       <div id="tab-admin-pagos" class="tab-contenido">
         <div id="admin-pagos-lista"></div>
+      </div>
+      <div id="tab-admin-impulsos" class="tab-contenido">
+        <div id="admin-impulsos-lista"></div>
       </div>
      <div id="tab-admin-tickets" class="tab-contenido">
   <div id="admin-tickets-lista"></div>

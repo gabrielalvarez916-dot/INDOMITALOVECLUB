@@ -17,6 +17,7 @@ async function cargarAdmin() {
     cargarUsuariosAdmin(),
     cargarCampañasAdmin(),
     cargarSuscripcionesAdmin(),
+    cargarImpulsosAdmin(),
     cargarTicketsAdmin()
   ]);
 }
@@ -535,6 +536,151 @@ function construirFilaSuscripcionAdmin(s) {
       <td style="font-size:12px;">${ultimoPagoTexto}</td>
     </tr>
   `;
+}
+
+
+// ────────────────────────────────────────────────────────────
+// IMPULSOS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Carga y muestra la lista de solicitudes de "Impulsar campaña" en el panel admin.
+ * Separado por completo de Suscripciones: no toca ni depende del webhook de pagos.
+ */
+async function cargarImpulsosAdmin() {
+  const contenedor = document.getElementById('admin-impulsos-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_impulsos');
+
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar los impulsos.'}</p>`;
+    return;
+  }
+
+  const impulsos = resultado.impulsos || [];
+
+  if (impulsos.length === 0) {
+    contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay solicitudes de impulso.</p></div>`;
+    return;
+  }
+
+  contenedor.innerHTML = `
+    <p class="form-info" style="margin-bottom:14px;">
+      El autor arma la solicitud y queda "pendiente". Mandale vos el link de pago por fuera del sistema
+      (Mercado Pago / PayPal) y, cuando confirme el pago, tocá "Activar impulso": eso manda las notificaciones
+      a los reseñadores de alta coincidencia y mete la campaña en el slider por los días configurados.
+    </p>
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Libro</th>
+          <th>Autor</th>
+          <th>Cupos libres</th>
+          <th>Precio lista</th>
+          <th>Créditos aplicados</th>
+          <th>A pagar</th>
+          <th>Estado</th>
+          <th>Solicitado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${impulsos.map(i => construirFilaImpulsoAdmin(i)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+/**
+ * Construye la fila de una solicitud de impulso para la tabla admin.
+ *
+ * @param {Object} i — datos del impulso
+ * @returns {string} HTML de la fila
+ */
+function construirFilaImpulsoAdmin(i) {
+  const estadoBadge = {
+    pendiente: '<span class="badge badge-pendiente">Pendiente</span>',
+    pagado: '<span class="badge badge-aprobada">Activo</span>',
+    rechazado: '<span class="badge badge-cancelada">Rechazado</span>'
+  }[i.estado] || i.estado;
+
+  const simbolo = i.moneda === 'ARS' ? '$' : 'USD ';
+
+  const botones = i.estado === 'pendiente' ? `
+    <button class="btn-primario btn-sm" onclick="activarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Activar impulso</button>
+    <button class="btn-secundario btn-sm btn-peligro" onclick="rechazarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Rechazar</button>
+  ` : (i.estado === 'pagado' && i.fechaFinSlider
+      ? `<span style="font-size:12px;">En slider hasta ${String(i.fechaFinSlider).split('T')[0]}</span>`
+      : '');
+
+  return `
+    <tr>
+      <td>${i.nombreLibro}</td>
+      <td style="font-size:12px;">${i.aliasAutor || '—'}<br><span style="opacity:.7;">${i.emailAutor}</span></td>
+      <td>${i.cuposDisponibles ?? '—'}</td>
+      <td>${simbolo}${Number(i.precioLista).toLocaleString('es-AR')}</td>
+      <td>${Number(i.creditosAplicados || 0).toLocaleString('es-AR')}</td>
+      <td><strong>${simbolo}${Number(i.montoAPagar).toLocaleString('es-AR')}</strong></td>
+      <td>${estadoBadge}</td>
+      <td style="font-size:12px;">${i.fechaSolicitud ? String(i.fechaSolicitud).split('T')[0] : '—'}</td>
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">${botones}</td>
+    </tr>
+  `;
+}
+
+/**
+ * Activa un impulso: dispara la notificación (mail + notificación in-app) a los
+ * reseñadores de alta coincidencia y marca la campaña para entrar al slider.
+ * Se hace desde una única función RPC (admin_activar_impulso) para que sea
+ * un único click atómico, tal como está pensado el flujo.
+ *
+ * @param {string} idImpulso
+ * @param {string} nombreLibro
+ */
+async function activarImpulsoAdmin(idImpulso, nombreLibro) {
+  if (!confirm(`¿Confirmás que ya se cobró el impulso de "${nombreLibro}"?\n\nEsto va a notificar a los reseñadores de alta coincidencia y va a meter la campaña en el slider.`)) return;
+
+  const resultado = await _ejecutarAccionImpulsoAdmin('admin_activar_impulso', { p_id_impulso: idImpulso });
+  if (!resultado) return;
+
+  mostrarToast(`Impulso activado. Se notificó a ${resultado.notificados ?? 0} reseñador(es).`, 'ok');
+  await cargarImpulsosAdmin();
+}
+
+/**
+ * Rechaza una solicitud de impulso pendiente (por ejemplo, si el autor nunca pagó).
+ * Devuelve automáticamente los créditos que se hubieran aplicado como descuento.
+ *
+ * @param {string} idImpulso
+ * @param {string} nombreLibro
+ */
+async function rechazarImpulsoAdmin(idImpulso, nombreLibro) {
+  const motivo = prompt(`¿Motivo del rechazo del impulso de "${nombreLibro}"?`) || '';
+  if (motivo === null) return;
+
+  const resultado = await _ejecutarAccionImpulsoAdmin('admin_rechazar_impulso', { p_id_impulso: idImpulso, p_motivo: motivo });
+  if (!resultado) return;
+
+  mostrarToast('Impulso rechazado.', 'ok');
+  await cargarImpulsosAdmin();
+}
+
+/**
+ * Helper interno para llamar a las RPC de impulsos y mostrar el error en un toast
+ * si algo falla, sin repetir el mismo boilerplate en cada acción.
+ */
+async function _ejecutarAccionImpulsoAdmin(nombreFuncion, params) {
+  const { data: resultado, error } = await supabaseClient.rpc(nombreFuncion, params);
+
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || error?.message || 'No se pudo completar la acción.', 'error');
+    return null;
+  }
+
+  return resultado;
 }
 
 
