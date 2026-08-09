@@ -359,6 +359,7 @@ function construirCardCampañaAutor(c) {
         <p class="campana-panel-cupos">${c.cuposTotal - c.cuposDisponibles} / ${c.cuposTotal} reseñad@res</p>
         <div class="campana-panel-acciones">
           <button class="btn-secundario btn-sm btn-full" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
+          ${c.estado === 'activa' ? `<button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>` : ''}
           <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
           ${botonImpulsarCampanaHtml(c)}
           <button class="btn-secundario btn-sm btn-full" onclick="compartirCampana('${c.id}', '${c.nombreLibro}')">📤 Compartir</button>
@@ -875,6 +876,128 @@ async function verReseñasCampana(idCampana, nombreLibro) {
       </div>
     `;
   }
+}
+
+// ────────────────────────────────────────────────────────────
+// SEGUIMIENTO DE LECTURA
+// Lista de reseñadores aprobados en una campaña con su progreso de
+// lectura (fecha límite, estado, última actividad). Usa el RPC
+// obtener_seguimiento_lectura (ver migración crear_progreso_lectura /
+// rpc_seguimiento_lectura_campana en Supabase); combina el tracker
+// automático del visor (EPUB/PDF) con el reporte manual de campañas de
+// descarga (botón "Anunciar avances" del reseñador).
+// ────────────────────────────────────────────────────────────
+
+// Aviso temporal: la función es nueva (lanzada 09/08/2026), así que va a
+// haber reseñadores que ya estén leyendo pero todavía figuren en "No
+// empezado" hasta que abran el visor de nuevo o manden un aviso manual.
+// Se autodesactiva sola pasada una semana, no hace falta tocar nada acá.
+// (Misma fecha de corte que en la app mobile, ver SeguimientoLecturaModal.js.)
+const FECHA_LIMITE_AVISO_SEGUIMIENTO = new Date('2026-08-16T00:00:00Z');
+
+const LABELS_ESTADO_LECTURA = {
+  no_empezado: 'No empezado',
+  leyendo: 'Leyendo',
+  mitad: 'Por la mitad',
+  finalizado: 'Finalizado'
+};
+
+const COLORES_ESTADO_LECTURA = {
+  no_empezado: '#999999',
+  leyendo: '#B03048',
+  mitad: '#8B1A2B',
+  finalizado: '#27AE60'
+};
+
+/**
+ * "Hace X" relativo simple para la última actividad de lectura — no hace
+ * falta más precisión que días/horas acá.
+ * @param {string|null} fechaStr
+ */
+function _haceTiempoLectura(fechaStr) {
+  if (!fechaStr) return 'Sin actividad todavía';
+  const diffMs = Date.now() - new Date(fechaStr).getTime();
+  const horas = Math.floor(diffMs / 3_600_000);
+  if (horas < 1) return 'Hace menos de una hora';
+  if (horas < 24) return `Hace ${horas} hora${horas !== 1 ? 's' : ''}`;
+  const dias = Math.floor(horas / 24);
+  return `Hace ${dias} día${dias !== 1 ? 's' : ''}`;
+}
+
+/**
+ * Abre el modal de "Seguimiento de reseñadores" para una campaña activa.
+ * Reutiliza el modal genérico modal-detalle-campana (mismo patrón que
+ * verReseñasCampana / verPostulacionesCampana).
+ * @param {string} idCampana
+ * @param {string} nombreLibro
+ */
+async function verSeguimientoLectura(idCampana, nombreLibro) {
+  mostrarModal('modal-detalle-campana');
+
+  const titulo = document.getElementById('modal-detalle-titulo');
+  const body   = document.getElementById('modal-detalle-body');
+  const footer = document.getElementById('modal-detalle-footer');
+
+  if (titulo) titulo.textContent = `Seguimiento de reseñadores — ${nombreLibro}`;
+  if (body)   body.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+  if (footer) footer.innerHTML = '';
+
+  const { data, error } = await supabaseClient.rpc('obtener_seguimiento_lectura', {
+    p_id_campana: idCampana
+  });
+
+  if (error) {
+    if (body) body.innerHTML = `<p class="mensaje-error">${error.message || 'No se pudo cargar el seguimiento.'}</p>`;
+    return;
+  }
+
+  const lista = data || [];
+
+  const avisoHtml = new Date() < FECHA_LIMITE_AVISO_SEGUIMIENTO ? `
+    <div style="background:var(--rosa-claro); border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+      <p style="font-size:12px; color:var(--bordo); line-height:1.5; margin:0;">
+        ℹ️ Esta función es nueva: recién está empezando a captar avances. Que alguien figure
+        "No empezado" no significa que no esté leyendo — va a actualizarse solo a medida que
+        abran el libro o manden un aviso.
+      </p>
+    </div>
+  ` : '';
+
+  if (lista.length === 0) {
+    if (body) body.innerHTML = `
+      ${avisoHtml}
+      <div class="estado-vacio">
+        <p class="estado-vacio-texto">Todavía no tenés reseñadores aprobados en esta campaña.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const filasHtml = lista.map(r => {
+    const vencida = r.fecha_limite_entrega && new Date() > new Date(r.fecha_limite_entrega);
+    const avatarHtml = r.avatar_url
+      ? `<img src="${r.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'" />`
+      : `<div style="width:40px;height:40px;border-radius:50%;background:var(--crema);display:flex;align-items:center;justify-content:center;">👤</div>`;
+    const estado = r.estado || 'no_empezado';
+
+    return `
+      <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--gris-borde); padding:12px 0;">
+        ${avatarHtml}
+        <div style="flex:1;">
+          <p style="font-size:13px; font-weight:700; color:var(--gris-texto); margin:0;">${r.alias || ''}</p>
+          <p style="font-size:11px; color:${vencida ? 'var(--error)' : 'var(--gris-medio)'}; font-weight:${vencida ? '700' : '400'}; margin:2px 0 0;">
+            📅 Vence ${formatearFechaAmigable(r.fecha_limite_entrega)}
+          </p>
+          <p style="font-size:11px; color:var(--gris-suave); margin:2px 0 0;">${_haceTiempoLectura(r.ultima_actividad)}</p>
+        </div>
+        <span style="background:${COLORES_ESTADO_LECTURA[estado] || '#999999'}; color:#fff; font-size:10px; font-weight:700; border-radius:999px; padding:4px 10px; white-space:nowrap;">
+          ${LABELS_ESTADO_LECTURA[estado] || estado}
+        </span>
+      </div>
+    `;
+  }).join('');
+
+  if (body) body.innerHTML = `${avisoHtml}<div>${filasHtml}</div>`;
 }
 
 /**
