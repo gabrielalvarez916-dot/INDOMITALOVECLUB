@@ -59,11 +59,19 @@ async function cargarFeed() {
   cargarTickerEvento();
   poblarFiltroGenero();
 
-  const { data: campanas, error } = await supabaseClient
-    .from('campanas')
-    .select('*')
-    .eq('estado', 'activa')
-    .order('creado_en', { ascending: false });
+  const [{ data: campanas, error }, { data: impulsosVigentes }] = await Promise.all([
+    supabaseClient
+      .from('campanas')
+      .select('*')
+      .eq('estado', 'activa')
+      .order('creado_en', { ascending: false }),
+    supabaseClient
+      .from('impulsos_campana')
+      .select('id_campana, fecha_fin_slider')
+      .eq('estado', 'pagado')
+      .gt('fecha_fin_slider', new Date().toISOString())
+  ]);
+  const idsCampanasImpulsadas = new Set((impulsosVigentes || []).map(i => i.id_campana));
 
   toggleElemento('feed-cargando', false);
 
@@ -125,7 +133,7 @@ async function cargarFeed() {
   }
 
   _campañasTodas = await Promise.all(
-    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id]))
+    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id], idsCampanasImpulsadas.has(c.id)))
   );
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
@@ -209,7 +217,7 @@ function botonSoloParaVosHtml(c) {
   return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Sin cupos</button>`;
 }
 
-async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero) {
+async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero, impulsada = false) {
   const usuario = Sesion.obtener();
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
@@ -240,6 +248,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
     idsSubgeneros: idsSubgenero || [],
     linkPortada: c.link_portada,
     portadaValida: !!c.link_portada,
+    impulsada,
     linkAmazon: c.link_amazon_libro,
     cuposDisponibles: c.cupos_disponibles,
     cuposTotal: c.cupos_total,
@@ -678,8 +687,16 @@ const Slider = (() => {
     if (!sliderEl || !navEl) return;
 
     const conPortada = _campañasTodas.filter(c => c.portadaValida);
-    mezclar(conPortada);
-    const campañasSlider = conPortada.slice(0, 5);
+
+    // Las campañas con impulso vigente entran SIEMPRE al slider (no compiten
+    // por el sorteo al azar). El resto de los slots hasta completar 5 se
+    // sortea igual que siempre entre las que no están impulsadas.
+    const impulsadas = conPortada.filter(c => c.impulsada);
+    const resto = conPortada.filter(c => !c.impulsada);
+    mezclar(impulsadas);
+    mezclar(resto);
+    const campañasSlider = [...impulsadas, ...resto].slice(0, 5);
+
     if (campañasSlider.length === 0) return;
 
     const slidesHtml = campañasSlider.map(c => construirSlide(c)).join('');
@@ -748,6 +765,7 @@ const Slider = (() => {
         </div>
         <div class="slide-info">
           ${c.genero ? `<span class="slide-genero">${c.genero}</span>` : ''}
+          ${c.impulsada ? `<span class="badge" style="background:#FFF3CD;color:#7A5B00;margin-left:6px;">🚀 Impulsada</span>` : ''}
           <h2 class="slide-titulo">${c.nombreLibro}</h2>
           <p class="slide-autor">por ${c.nombreAutor}</p>
           ${tropesHtml ? `<div class="slide-tropes">${tropesHtml}</div>` : ''}
