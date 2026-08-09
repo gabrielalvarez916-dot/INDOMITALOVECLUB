@@ -903,14 +903,22 @@ const LABELS_ESTADO_LECTURA = {
   no_empezado: 'No empezado',
   leyendo: 'Leyendo',
   mitad: 'Por la mitad',
-  finalizado: 'Finalizado'
+  finalizado: 'Finalizado',
+  entregada: 'Reseña entregada',
+  vencida: 'Vencida sin entrega',
+  abandonada: 'Abandonó (DNF)'
 };
 
+// Colores replicados exactos de COLORES_ESTADO en SeguimientoLecturaModal.js
+// (mobile), para que el seguimiento se vea igual en ambas plataformas.
 const COLORES_ESTADO_LECTURA = {
   no_empezado: '#999999',
   leyendo: '#B03048',
   mitad: '#8B1A2B',
-  finalizado: '#27AE60'
+  finalizado: '#5B7FDE',
+  entregada: '#27AE60',
+  vencida: '#C0392B',
+  abandonada: '#7F8C8D'
 };
 
 /**
