@@ -35,6 +35,8 @@ async function cargarFeed() {
   toggleElemento('feed-vacio', false);
   toggleElemento('feed-lista-titulo', false);
   toggleElemento('feed-ticker', false);
+  const soloParaVosWrapper = document.getElementById('solo-para-vos-wrapper');
+  if (soloParaVosWrapper) soloParaVosWrapper.style.display = 'none';
   cargarBannerPublicitario();
   cargarTickerEvento();
   poblarFiltroGenero();
@@ -116,6 +118,45 @@ async function cargarFeed() {
 
   renderizarFeed(_campañasTodas);
   Slider.init();
+  renderizarSoloParaVos();
+}
+
+// ────────────────────────────────────────────────────────────
+// SOLO PARA VOS
+// ────────────────────────────────────────────────────────────
+
+function renderizarSoloParaVos() {
+  const wrapper = document.getElementById('solo-para-vos-wrapper');
+  const scroll = document.getElementById('solo-para-vos-scroll');
+  if (!wrapper || !scroll) return;
+
+  if (Sesion.rol() !== 'reseñador') {
+    wrapper.style.display = 'none';
+    return;
+  }
+
+  // Nunca entran campañas sin química (matchScore <= 50, tier 👎)
+  const candidatas = _campañasTodas
+    .filter(c => typeof c.matchScore === 'number' && c.matchScore > 50)
+    .sort((a, b) => b.matchScore - a.matchScore)
+    .slice(0, 5);
+
+  if (candidatas.length === 0) {
+    wrapper.style.display = 'none';
+    return;
+  }
+
+  scroll.innerHTML = candidatas.map(c => `
+    <div class="solo-para-vos-card" onclick="verDetalleCampaña('${c.id}')">
+      ${c.linkPortada
+        ? `<img class="solo-para-vos-portada" src="${c.linkPortada}" alt="${c.nombreLibro}" />`
+        : `<div class="solo-para-vos-portada-placeholder">📖</div>`}
+      <p class="solo-para-vos-card-titulo">${c.nombreLibro}</p>
+      <p class="solo-para-vos-card-match">${c.matchEmoji} ${c.matchScore}%</p>
+    </div>
+  `).join('');
+
+  wrapper.style.display = 'block';
 }
 
 async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero) {
