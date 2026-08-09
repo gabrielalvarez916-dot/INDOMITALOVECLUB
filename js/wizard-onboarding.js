@@ -32,21 +32,33 @@ function _pasosWizardSegunRol(rol) {
   return rol === 'reseñador' ? ['datos', 'generos', 'links'] : ['datos', 'links'];
 }
 
+async function _wizGeneroSubgeneroTropeStatus(idUsuario) {
+  const [{ data: generos, error: errGeneros }, { data: subgeneros, error: errSub }, { data: tropes, error: errTropes }] = await Promise.all([
+    supabaseClient.from('usuario_generos').select('generos ( tiene_subgenero )').eq('id_usuario', idUsuario),
+    supabaseClient.from('usuario_subgeneros').select('id_subgenero').eq('id_usuario', idUsuario).limit(1),
+    supabaseClient.from('usuario_tropes').select('id_trope').eq('id_usuario', idUsuario).limit(1)
+  ]);
+  if (errGeneros || errSub || errTropes) {
+    console.error('Error chequeando género/subgénero/tropes del wizard:', errGeneros || errSub || errTropes);
+    return { tieneGenero: false, necesitaSubgenero: false, tieneSubgenero: false, tieneTrope: false };
+  }
+  const tieneGenero = !!(generos && generos.length);
+  const necesitaSubgenero = (generos || []).some(r => r.generos?.tiene_subgenero);
+  const tieneSubgenero = !!(subgeneros && subgeneros.length);
+  const tieneTrope = !!(tropes && tropes.length);
+  return { tieneGenero, necesitaSubgenero, tieneSubgenero, tieneTrope };
+}
+
 async function _pasoWizardCompleto(paso, usuario) {
   switch (paso) {
     case 'datos':
       return !!(usuario.alias && usuario.pais && usuario.ciudad);
 
     case 'generos': {
-      const [{ data: generos, error: errGeneros }, { data: tropes, error: errTropes }] = await Promise.all([
-        supabaseClient.from('usuario_generos').select('id_genero').eq('id_usuario', usuario.id).limit(1),
-        supabaseClient.from('usuario_tropes').select('id_trope').eq('id_usuario', usuario.id).limit(1)
-      ]);
-      if (errGeneros || errTropes) {
-        console.error('Error chequeando paso género/tropes del wizard:', errGeneros || errTropes);
-        return false;
-      }
-      return !!(generos && generos.length && tropes && tropes.length);
+      const { tieneGenero, necesitaSubgenero, tieneSubgenero, tieneTrope } = await _wizGeneroSubgeneroTropeStatus(usuario.id);
+      if (!tieneGenero || !tieneTrope) return false;
+      if (necesitaSubgenero && !tieneSubgenero) return false;
+      return true;
     }
 
     case 'links':
@@ -423,6 +435,12 @@ async function _wizGuardarPasoActual(event) {
       _wizMostrarError('Elegí al menos un género favorito.');
       return;
     }
+    const generosConSubgeneroSinElegir = _wizGenerosCatalogo
+      .filter(g => g.tiene_subgenero && _wizGenerosSel.includes(g.id));
+    if (generosConSubgeneroSinElegir.length > 0 && _wizSubgenerosSel.length === 0) {
+      _wizMostrarError('Elegí al menos un subgénero.');
+      return;
+    }
     if (_wizTropesSel.length === 0) {
       _wizMostrarError('Elegí al menos un trope favorito.');
       return;
@@ -503,13 +521,15 @@ function _wizFinalizar(usuario) {
 async function _faltantesPerfilExistente(usuario) {
   const faltan = [];
 
-  if (!(usuario.alias && usuario.pais && usuario.ciudad)) {
-    faltan.push('Alias, país y ciudad');
-  }
+  if (!usuario.alias)  faltan.push('Alias');
+  if (!usuario.pais)   faltan.push('País');
+  if (!usuario.ciudad) faltan.push('Ciudad');
 
   if (usuario.rol === 'reseñador') {
-    const generoTropeOk = await _pasoWizardCompleto('generos', usuario);
-    if (!generoTropeOk) faltan.push('Géneros y tropes favoritos (esto es lo que usa el sistema de coincidencia para armar tus matches)');
+    const { tieneGenero, necesitaSubgenero, tieneSubgenero, tieneTrope } = await _wizGeneroSubgeneroTropeStatus(usuario.id);
+    if (!tieneGenero) faltan.push('Género');
+    if (necesitaSubgenero && !tieneSubgenero) faltan.push('Subgénero');
+    if (!tieneTrope) faltan.push('Tropes favoritos');
   }
 
   if (!(usuario.instagram || usuario.tiktok || usuario.amazon)) {
@@ -522,6 +542,11 @@ async function _faltantesPerfilExistente(usuario) {
 async function verificarAvisoPerfilIncompleto(usuario) {
   if (!usuario || usuario.rol === 'admin') return;
   if (_esCuentaNueva(usuario)) return; // a las cuentas nuevas ya las cubrió el wizard bloqueante
+
+  // El tutorial de bienvenida tiene prioridad: si todavía no lo vio, no le
+  // superponemos este aviso encima (el aviso tapa toda la pantalla). Se
+  // muestra recién en un login posterior, una vez que ya vio el tutorial.
+  if (!usuario.tutorial_bienvenida_visto) return;
 
   const faltantes = await _faltantesPerfilExistente(usuario);
   if (faltantes.length === 0) return;
@@ -548,7 +573,7 @@ function _mostrarAvisoPerfilIncompleto(faltantes) {
       <button type="button" onclick="_cerrarAvisoPerfilIncompleto()" aria-label="Cerrar"
         style="position:absolute; top:14px; right:14px; background:none; border:none; font-size:20px; cursor:pointer; color:#999;">×</button>
       <h2 style="margin-bottom:8px;">Completá tu perfil</h2>
-      <p style="font-size:13px; color:#777; margin-bottom:14px;">Te falta cargar esto para que tu perfil funcione bien en la plataforma:</p>
+      <p style="font-size:13px; color:#777; margin-bottom:14px;">Estamos mejorando el sistema de coincidencia por tropes. Para que tu perfil entre bien en los matches, necesitamos que cargues:</p>
       <ul style="margin:0 0 18px 18px; padding:0; font-size:14px; color:#333; line-height:1.6;">
         ${faltantes.map(f => `<li>${f}</li>`).join('')}
       </ul>
