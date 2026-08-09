@@ -8,6 +8,8 @@
 // ────────────────────────────────────────────────────────────
 
 let _campañasTodas = [];
+let _intervaloVariabilidadFeed = null;
+const INTERVALO_VARIABILIDAD_FEED_MS = 3 * 60 * 1000; // cada 3 minutos se reordenan al azar
 
 function mezclarArray(arr) {
   const copia = [...arr];
@@ -22,10 +24,26 @@ function mezclarArray(arr) {
 // CARGAR FEED
 // ────────────────────────────────────────────────────────────
 
+// "Todas las campañas" NUNCA se ordena por coincidencia: es puro azar
+// (se reparte de nuevo cada tanto tiempo), lo único fijo es que las
+// campañas sin cupo quedan siempre debajo de todo.
 function ordenarFeed(campañas) {
   const conCupo = mezclarArray(campañas.filter(c => c.cuposDisponibles > 0));
   const sinCupo = mezclarArray(campañas.filter(c => c.cuposDisponibles <= 0));
   return [...conCupo, ...sinCupo];
+}
+
+// Variabilidad: cada tanto tiempo se vuelve a barajar "Todas las campañas"
+// (sin tocar "Solo para vos", que se rige por coincidencia + cupo).
+function iniciarVariabilidadFeed() {
+  if (_intervaloVariabilidadFeed) clearInterval(_intervaloVariabilidadFeed);
+  _intervaloVariabilidadFeed = setInterval(() => {
+    const seccionFeed = document.getElementById('seccion-feed');
+    if (!seccionFeed || seccionFeed.style.display === 'none') return;
+    if (!_campañasTodas || _campañasTodas.length === 0) return;
+    _campañasTodas = ordenarFeed(_campañasTodas);
+    filtrarFeed();
+  }, INTERVALO_VARIABILIDAD_FEED_MS);
 }
 
 async function cargarFeed() {
@@ -119,6 +137,7 @@ async function cargarFeed() {
   renderizarFeed(_campañasTodas);
   Slider.init();
   renderizarSoloParaVos();
+  iniciarVariabilidadFeed();
 }
 
 // ────────────────────────────────────────────────────────────
@@ -135,11 +154,21 @@ function renderizarSoloParaVos() {
     return;
   }
 
-  // Nunca entran campañas sin química (matchScore <= 50, tier 👎)
-  const candidatas = _campañasTodas
-    .filter(c => typeof c.matchScore === 'number' && c.matchScore > 50)
-    .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, 5);
+  // Nunca entran campañas sin química (matchScore <= 50, tier 👎).
+  // Prioridad: primero las que tienen cupo (por mayor coincidencia).
+  // Si con eso no se llegan a 5, se completa con las que no tienen cupo
+  // (también ordenadas por mayor coincidencia).
+  const conChimica = c => typeof c.matchScore === 'number' && c.matchScore > 50;
+
+  const conCupo = _campañasTodas
+    .filter(c => conChimica(c) && c.cuposDisponibles > 0)
+    .sort((a, b) => b.matchScore - a.matchScore);
+
+  const sinCupo = _campañasTodas
+    .filter(c => conChimica(c) && c.cuposDisponibles <= 0)
+    .sort((a, b) => b.matchScore - a.matchScore);
+
+  const candidatas = [...conCupo, ...sinCupo].slice(0, 5);
 
   if (candidatas.length === 0) {
     wrapper.style.display = 'none';
@@ -153,10 +182,31 @@ function renderizarSoloParaVos() {
         : `<div class="solo-para-vos-portada-placeholder">📖</div>`}
       <p class="solo-para-vos-card-titulo">${c.nombreLibro}</p>
       <p class="solo-para-vos-card-match">${c.matchEmoji} ${c.matchLabel} · ${c.matchScore}%</p>
+      ${botonSoloParaVosHtml(c)}
     </div>
   `).join('');
 
   wrapper.style.display = 'block';
+}
+
+/**
+ * Botón "Postularme" para las cards del slider Solo para vos.
+ * Misma lógica que en las cards de "Todas las campañas": si está vencida
+ * o sin archivo válido queda deshabilitado, si no tiene cupo se avisa,
+ * y si todo está OK dispara el mismo flujo de postulación de siempre
+ * (iniciarPostulacion), sin abrir el modal (el click en la card sí lo abre).
+ */
+function botonSoloParaVosHtml(c) {
+  if (c.estaVencida) {
+    return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Campaña cerrada</button>`;
+  }
+  if (!c.tieneArchivo) {
+    return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Postularme</button>`;
+  }
+  if (c.cuposDisponibles > 0) {
+    return `<button class="btn-primario btn-sm" style="width:100%;" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`;
+  }
+  return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Sin cupos</button>`;
 }
 
 async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero) {
