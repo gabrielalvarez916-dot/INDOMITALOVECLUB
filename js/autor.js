@@ -229,12 +229,11 @@ async function cargarCampañasAutor(idUsuario) {
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const { data, error } = await supabaseClient
-    .from('campanas')
-    .select('*')
-    .eq('id_usuario_autor', idUsuario)
-    .eq('estado', 'activa')
-    .order('creado_en', { ascending: false });
+  // Se mantiene en "Activas" mientras estado='activa' O todavía tenga
+  // seguimiento pendiente (postulación aprobada, sin reseña, con plazo
+  // vigente) — así no desaparece del panel apenas cierra el feed, aunque
+  // sigan quedando reseñadores leyendo dentro de su propio plazo.
+  const { data, error } = await supabaseClient.rpc('obtener_campanas_activas_autor');
 
   if (error) {
     contenedor.innerHTML = `<p class="mensaje-error">${error.message}</p>`;
@@ -359,9 +358,9 @@ function construirCardCampañaAutor(c) {
         <p class="campana-panel-cupos">${c.cuposTotal - c.cuposDisponibles} / ${c.cuposTotal} reseñad@res</p>
         <div class="campana-panel-acciones">
           <button class="btn-secundario btn-sm btn-full" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
-          ${c.estado === 'activa' ? `<button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>` : ''}
+          <button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>
           <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
-          ${botonImpulsarCampanaHtml(c)}
+          ${c.estado === 'activa' ? botonImpulsarCampanaHtml(c) : ''}
           <button class="btn-secundario btn-sm btn-full" onclick="compartirCampana('${c.id}', '${c.nombreLibro}')">📤 Compartir</button>
           <button class="btn-secundario btn-sm btn-full" onclick="abrirEditarCampana('${c.id}')">✏️ Editar campaña</button>
           ${_puedeCancelarCampana(c.creadoEn)
@@ -899,20 +898,14 @@ const LABELS_ESTADO_LECTURA = {
   no_empezado: 'No empezado',
   leyendo: 'Leyendo',
   mitad: 'Por la mitad',
-  finalizado: 'Finalizado',
-  entregada: 'Reseña entregada',
-  vencida: 'Vencida sin entrega',
-  abandonada: 'Abandonó (DNF)'
+  finalizado: 'Finalizado'
 };
 
 const COLORES_ESTADO_LECTURA = {
   no_empezado: '#999999',
   leyendo: '#B03048',
   mitad: '#8B1A2B',
-  finalizado: '#5B7FDE',
-  entregada: '#27AE60',
-  vencida: '#E74C3C',
-  abandonada: '#7F8C8D'
+  finalizado: '#27AE60'
 };
 
 /**
