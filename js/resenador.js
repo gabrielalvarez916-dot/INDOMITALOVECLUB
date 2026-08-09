@@ -348,6 +348,7 @@ function construirCardArcActivo(p) {
   ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">Leer PDF</button>`   : ''}
   ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
   ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
+  ${c.modalidadLectura === 'descarga' ? `<button class="btn-secundario btn-full" onclick="abrirModalAnunciarAvance('${p.idPostulacion}', '${c.nombreLibro}')">📣 Anunciar avances</button>` : ''}
   <button class="btn-secundario btn-full arc-btn-resena" onclick="abrirCargarResena('${c.id}')">✓ Entregar reseña</button>
   <button class="btn-peligro btn-full" onclick="abrirModalDNF('${p.idPostulacion}', '${c.nombreLibro}', '${c.nombreAutor}')">Abandonar libro (DNF)</button>
 </div>
@@ -1145,4 +1146,45 @@ if (error || data?.error) {
   await cargarArcsActivos(Sesion.email());
   await cargarHistorialReseñador(Sesion.email());
   await cargarEstadisticasReseñador(Sesion.email());
+}
+
+// ────────────────────────────────────────────────────────────
+// ANUNCIAR AVANCE DE LECTURA (campañas de descarga)
+// Reporte manual del reseñador — para campañas con visor, el progreso ya
+// se manda solo (ver avisarProgresoLecturaAuto en visor.js).
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Abre el modal para reportar manualmente el avance de lectura.
+ * @param {string} idPostulacion
+ * @param {string} nombreLibro
+ */
+function abrirModalAnunciarAvance(idPostulacion, nombreLibro) {
+  document.getElementById('avance-id-postulacion').value = idPostulacion;
+  document.getElementById('avance-nombre-libro').textContent = nombreLibro || '';
+  ocultarMensajes('avance-error');
+  mostrarModal('modal-anunciar-avance');
+}
+
+/**
+ * Confirma el avance elegido y lo manda al backend. Se llama desde los
+ * 3 botones de opción del modal.
+ * @param {'leyendo'|'mitad'|'finalizado'} estado
+ */
+async function confirmarAnunciarAvance(estado) {
+  ocultarMensajes('avance-error');
+  const idPostulacion = document.getElementById('avance-id-postulacion')?.value;
+
+  const { error } = await supabaseClient.rpc('actualizar_progreso_lectura_manual', {
+    p_id_postulacion: idPostulacion,
+    p_estado: estado,
+  });
+
+  if (error) {
+    mostrarMensajeError('avance-error', error.message || 'No se pudo enviar tu avance.');
+    return;
+  }
+
+  cerrarModales();
+  mostrarToast('¡Gracias por avisar! Le llegó al autor.', 'ok');
 }

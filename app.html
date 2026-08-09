@@ -1213,6 +1213,32 @@
     </div>
   </div>
   
+  <!-- Modal: anunciar avance de lectura (campañas de descarga) -->
+  <div id="modal-anunciar-avance" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">¿Por dónde vas ahora?</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="avance-id-postulacion" />
+      <p class="form-info" style="font-weight:700; color:var(--gris-texto); margin-bottom:16px;">
+        <span id="avance-nombre-libro"></span>
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button type="button" class="btn-secundario btn-full" style="justify-content:flex-start; text-align:left;" onclick="confirmarAnunciarAvance('leyendo')">📖 Empezando / avanzando</button>
+        <button type="button" class="btn-secundario btn-full" style="justify-content:flex-start; text-align:left;" onclick="confirmarAnunciarAvance('mitad')">📚 Por la mitad</button>
+        <button type="button" class="btn-secundario btn-full" style="justify-content:flex-start; text-align:left;" onclick="confirmarAnunciarAvance('finalizado')">✅ Finalizado</button>
+      </div>
+
+      <div id="avance-error" class="mensaje-error" style="display:none; margin-top:14px;"></div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: calificar reseña -->
   <div id="modal-calificar-resena" class="modal">
     <div class="modal-header">
@@ -1736,7 +1762,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/resenador.js?v=2"></script>
+<script src="js/resenador.js?v=3"></script>
 <script src="js/admin.js?v=2"></script>
 <script src="js/perfil.js"></script>
 <script src="js/visor.js"></script>
