@@ -126,7 +126,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
   let match;
   if (usuario?.rol === 'reseñador' && usuario.id) {
     const { data, error } = await supabaseClient
-      .rpc('calcular_match_resenador_campana', {
+      .rpc('obtener_match_resenador_campana', {
         p_id_usuario: usuario.id,
         p_id_campana: c.id
       });

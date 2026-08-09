@@ -368,7 +368,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
       supabaseClient.rpc('calcular_confiabilidad', { p_usuario: id }).then(r => ({ id, confiabilidad: r.data }))
     )),
     Promise.all(idsResenadores.map(id =>
-      supabaseClient.rpc('calcular_match_resenador_campana', { p_id_usuario: id, p_id_campana: idCampana }).then(r => ({ id, valor: r.data }))
+      supabaseClient.rpc('obtener_match_resenador_campana', { p_id_usuario: id, p_id_campana: idCampana }).then(r => ({ id, valor: r.data }))
     ))
   ]);
 
