@@ -202,7 +202,7 @@ async function completarLogin(usuario) {
   _tokenGooglePendiente = null;
   _emailGooglePendiente = null;
 
-  if (usuario.rol !== 'admin' && !perfilEstaCompleto(usuario)) {
+  if (usuario.rol !== 'admin' && !(await perfilEstaCompleto(usuario))) {
     mostrarGatePerfilObligatorio(usuario);
     return;
   }
@@ -250,7 +250,7 @@ async function verificarSesionActiva() {
   iniciarNotificaciones();
   if (typeof inicializarEventos === 'function') inicializarEventos();
 
-  if (perfil.rol !== 'admin' && !perfilEstaCompleto(perfil)) {
+  if (perfil.rol !== 'admin' && !(await perfilEstaCompleto(perfil))) {
     mostrarGatePerfilObligatorio(perfil);
     return;
   }
@@ -338,12 +338,15 @@ function decodificarJWT(token) {
 }
 
 // ────────────────────────────────────────────────────────────
-// GATE OBLIGATORIO DE PERFIL COMPLETO
+// GATE OBLIGATORIO DE PERFIL COMPLETO (wizard por pasos)
+// La lógica de pasos, render y guardado vive en js/wizard-onboarding.js.
+// Acá solo queda el chequeo de si falta algo, reusado por completarLogin()
+// y verificarSesionActiva().
 // ────────────────────────────────────────────────────────────
 
-function perfilEstaCompleto(usuario) {
+async function perfilEstaCompleto(usuario) {
   if (!usuario) return false;
-  return !!(usuario.alias && usuario.pais && usuario.ciudad);
+  return (await obtenerPasoWizardPendiente(usuario)) === null;
 }
 
 function redirigirSegunRol(usuario) {
@@ -365,83 +368,8 @@ function redirigirSegunRol(usuario) {
   }
 }
 
-function mostrarGatePerfilObligatorio(usuario) {
-  let overlay = document.getElementById('gate-perfil-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'gate-perfil-overlay';
-    overlay.style.cssText = `
-      position:fixed; inset:0; background:rgba(0,0,0,0.6);
-      display:flex; align-items:center; justify-content:center;
-      z-index:99999; padding:20px;
-    `;
-    document.body.appendChild(overlay);
-  }
-
-  overlay.innerHTML = `
-    <div style="background:#fff; border-radius:12px; padding:28px; max-width:420px; width:100%; max-height:90vh; overflow-y:auto;">
-      <h2 style="margin-bottom:8px;">Completá tu perfil</h2>
-      <p style="font-size:13px; color:#777; margin-bottom:16px;">Necesitamos estos datos antes de que puedas seguir usando la plataforma.</p>
-      <form id="form-gate-perfil">
-        <div class="form-grupo">
-          <label class="form-label">Alias</label>
-          <input type="text" id="gate-alias" class="form-input" required />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">País</label>
-          <input type="text" id="gate-pais" class="form-input" required />
-        </div>
-        <div class="form-grupo">
-          <label class="form-label">Ciudad</label>
-          <input type="text" id="gate-ciudad" class="form-input" required />
-        </div>
-        <div id="gate-perfil-error" class="mensaje-error" style="display:none;"></div>
-        <button type="submit" class="btn-primario btn-full" style="margin-top:12px;">Guardar y continuar</button>
-      </form>
-    </div>
-  `;
-
-  document.body.style.overflow = 'hidden';
-
-  const form = document.getElementById('form-gate-perfil');
-  form.onsubmit = (e) => guardarPerfilObligatorio(e, usuario);
-}
-
-async function guardarPerfilObligatorio(event, usuario) {
-  event.preventDefault();
-  _ocultarMensajes('gate-perfil-error');
-
-  const alias  = document.getElementById('gate-alias')?.value.trim();
-  const pais   = document.getElementById('gate-pais')?.value.trim();
-  const ciudad = document.getElementById('gate-ciudad')?.value.trim();
-
-  if (!alias || !pais || !ciudad) {
-    _mostrarMensajeError('gate-perfil-error', 'Todos los campos son obligatorios.');
-    return;
-  }
-
-  const { data: perfilActualizado, error } = await supabaseClient
-    .from('usuarios')
-    .update({ alias, pais, ciudad })
-    .eq('id', usuario.id)
-    .select()
-    .single();
-
-  if (error) {
-    _mostrarMensajeError('gate-perfil-error', error.message);
-    return;
-  }
-
-  const overlay = document.getElementById('gate-perfil-overlay');
-  if (overlay) overlay.remove();
-  document.body.style.overflow = '';
-
-  Sesion.guardar(perfilActualizado);
-  verificarModalActualizacion();
-  redirigirSegunRol(perfilActualizado);
-  mostrarToast(`¡Bienvenida, ${perfilActualizado.alias}!`, 'ok');
-  if (typeof inicializarTutorialBienvenida === 'function') inicializarTutorialBienvenida(perfilActualizado);
-}
+// mostrarGatePerfilObligatorio(usuario) ahora vive en js/wizard-onboarding.js
+// y arma el wizard de pasos en vez de un formulario único.
 
 // ────────────────────────────────────────────────────────────
 // CONECTAR BOTÓN DE LOGIN AL HTML
