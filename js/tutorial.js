@@ -179,13 +179,29 @@ async function inicializarTutorialBienvenida(usuario, onFinalizar) {
     _TutorialState.activo = true;
     _TutorialState.rol = usuario.rol;
     _TutorialState.pasos = pasos.sort((a, b) => a.numero_paso - b.numero_paso);
-    _TutorialState.indice = 0;
-    _TutorialState.enIntro = true;
+
+    // Si el usuario había abandonado el tutorial a mitad de camino (cerró la
+    // app/pestaña sin terminarlo ni tocar la X), retomamos en el paso exacto
+    // donde se quedó en vez de arrancar de nuevo desde el principio. El paso
+    // se guarda en la base (tutorial_paso_actual), no en el navegador, así
+    // que funciona igual sin importar desde qué dispositivo vuelva a entrar.
+    const configPasos = TUTORIAL_PASOS_CONFIG[usuario.rol];
+    const pasoGuardado = usuario.tutorial_paso_actual;
+    const hayPasoGuardadoValido = Number.isInteger(pasoGuardado) && pasoGuardado >= 0
+      && Array.isArray(configPasos) && pasoGuardado < configPasos.length;
+
+    _TutorialState.indice = hayPasoGuardadoValido ? pasoGuardado : 0;
+    _TutorialState.enIntro = !hayPasoGuardadoValido;
 
    _asegurarWidgetGloboTutorial();
     document.getElementById('btn-soporte-flotante')?.style.setProperty('display', 'none');
     document.getElementById('evento-widget-flotante')?.style.setProperty('display', 'none');
-    _mostrarIntroTutorial();
+
+    if (hayPasoGuardadoValido) {
+      await _mostrarPasoTutorial();
+    } else {
+      _mostrarIntroTutorial();
+    }
 
     // Métrica de "vio el tutorial" (distinta de "lo terminó"): se marca una
     // sola vez, la primera vez que el tutorial realmente se dispara en pantalla.
@@ -232,6 +248,10 @@ async function _mostrarPasoTutorial() {
     cerrarTutorialBienvenida();
     return;
   }
+
+  // Guardamos en la base en qué paso está, para poder retomar acá si
+  // abandona sin terminar. No bloquea el render (fire-and-forget).
+  _tutGuardarPasoActual(_TutorialState.indice);
 
   // 1. Cierra cualquier modal que haya quedado abierto de un paso anterior
   //    (ej: "Editar perfil"), sin cerrar el modal del tutorial (ya protegido en cerrarModales()).
@@ -370,6 +390,21 @@ function _ocultarMensajeBloqueoTutorial() {
   if (el) el.style.display = 'none';
 }
 
+// ────────────────────────────────────────────────────────────
+// PERSISTENCIA DEL PASO ACTUAL — para poder retomar si abandona
+// a mitad de camino, en vez de arrancar de nuevo desde el paso 1.
+// ────────────────────────────────────────────────────────────
+
+async function _tutGuardarPasoActual(indice) {
+  try {
+    const idUsuario = Sesion.obtener()?.id;
+    if (!idUsuario) return;
+    await supabaseClient.from('usuarios').update({ tutorial_paso_actual: indice }).eq('id', idUsuario);
+  } catch (e) {
+    console.error('Error guardando paso actual del tutorial:', e);
+  }
+}
+
 async function cerrarTutorialBienvenida() {
   _TutorialState.activo = false;
   _TutorialState.minimizado = false;
@@ -384,6 +419,15 @@ async function cerrarTutorialBienvenida() {
     await supabaseClient.rpc('marcar_tutorial_bienvenida_visto');
   } catch (e) {
     console.error('Error marcando tutorial como visto:', e);
+  }
+
+  // Ya no hace falta el paso guardado (tutorial_bienvenida_visto ya cubre
+  // que no se vuelva a mostrar), lo limpiamos por prolijidad.
+  try {
+    const idUsuario = Sesion.obtener()?.id;
+    if (idUsuario) await supabaseClient.from('usuarios').update({ tutorial_paso_actual: null }).eq('id', idUsuario);
+  } catch (e) {
+    console.error('Error limpiando paso guardado del tutorial:', e);
   }
 
   // Le avisamos al orquestador de onboarding (auth.js) que el tutorial
