@@ -103,8 +103,50 @@ async function cargarPanelAutor() {
     cargarCampañasAutor(user.id),
     cargarHistorialAutor(user.id),
     cargarPlanAutor(user.id),
-    cargarBibliotecaPanel(user.id)
+    cargarBibliotecaPanel(user.id),
+    cargarCreditosAutor(user.id)
   ]);
+}
+
+
+// ────────────────────────────────────────────────────────────
+// CRÉDITOS (por bajo rendimiento — se descuentan en Impulsar campaña)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Muestra, chico y en una sola línea arriba de las cards de campañas activas,
+ * el total de créditos vigentes del autor (otorgados por bajo rendimiento).
+ * No se muestra en ningún otro lado del panel.
+ */
+async function cargarCreditosAutor(idUsuario) {
+  const contenedor = document.getElementById('autor-creditos-banner');
+  if (!contenedor) return;
+
+  const { data, error } = await supabaseClient
+    .from('creditos_autor')
+    .select('monto, monto_usado, fecha_vencimiento')
+    .eq('id_usuario_autor', idUsuario)
+    .eq('estado', 'vigente')
+    .order('fecha_vencimiento', { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  const disponibles = data.reduce((acc, c) => acc + (Number(c.monto) - Number(c.monto_usado || 0)), 0);
+  if (disponibles <= 0) {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  const proximoVencimiento = formatearFechaAmigable(data[0].fecha_vencimiento);
+
+  contenedor.innerHTML = `
+    <div class="creditos-autor-banner">
+      🎁 Tenés <strong>${Math.round(disponibles).toLocaleString('es-AR')} créditos</strong> disponibles · vencen el ${proximoVencimiento}
+    </div>
+  `;
 }
 
 
@@ -246,6 +288,15 @@ async function cargarCampañasAutor(idUsuario) {
       c.postulacionesPendientes = (postulacionesPend || []).filter(p => p.id_campana === c.id).length;
       c.reseñasEntregadas = (resenasEnt || []).filter(r => r.id_campana === c.id).length;
     });
+
+    const { data: impulsosRows } = await supabaseClient
+      .from('impulsos_campana')
+      .select('id_campana, estado')
+      .in('id_campana', ids);
+
+    _campañasAutor.forEach(c => {
+      c.impulso = (impulsosRows || []).find(i => i.id_campana === c.id) || null;
+    });
   }
 
   if (_campañasAutor.length === 0) {
@@ -309,6 +360,7 @@ function construirCardCampañaAutor(c) {
         <div class="campana-panel-acciones">
           <button class="btn-secundario btn-sm btn-full" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
           <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+          ${botonImpulsarCampanaHtml(c)}
           <button class="btn-secundario btn-sm btn-full" onclick="compartirCampana('${c.id}', '${c.nombreLibro}')">📤 Compartir</button>
           <button class="btn-secundario btn-sm btn-full" onclick="abrirEditarCampana('${c.id}')">✏️ Editar campaña</button>
           ${_puedeCancelarCampana(c.creadoEn)
@@ -318,6 +370,186 @@ function construirCardCampañaAutor(c) {
       </div>
     </div>
   `;
+}
+
+/**
+ * Arma el botón (o badge de estado) de "Impulsar campaña" para una card.
+ * Solo se puede impulsar una vez por campaña.
+ */
+function botonImpulsarCampanaHtml(c) {
+  if (!c.impulso) {
+    return `<button class="btn-primario btn-sm btn-full btn-impulsar-campana" onclick="abrirModalImpulsarCampana('${c.id}')">🚀 Impulsar campaña</button>`;
+  }
+  const textos = {
+    pendiente: '🚀 Impulso pendiente de pago',
+    pagado: '🚀 Impulso activo',
+    rechazado: 'Impulso no aprobado'
+  };
+  return `<span class="badge-impulso-estado">${textos[c.impulso.estado] || 'Impulso solicitado'}</span>`;
+}
+
+/**
+ * Abre el modal explicativo de "Impulsar campaña" (reutiliza el modal
+ * genérico modal-detalle-campana) con el texto comercial, el precio
+ * según configuración y el descuento por créditos disponibles.
+ */
+async function abrirModalImpulsarCampana(idCampana) {
+  const campana = _campañasAutor.find(c => c.id === idCampana);
+  if (!campana || campana.impulso) return;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  mostrarModal('modal-detalle-campana');
+  const titulo = document.getElementById('modal-detalle-titulo');
+  const body = document.getElementById('modal-detalle-body');
+  const footer = document.getElementById('modal-detalle-footer');
+  if (titulo) titulo.textContent = `Impulsar campaña — ${campana.nombreLibro}`;
+  if (footer) footer.innerHTML = '';
+  if (body) body.innerHTML = `<p class="form-hint">Cargando...</p>`;
+
+  const { data: config } = await supabaseClient
+    .from('configuracion')
+    .select('clave, valor')
+    .in('clave', ['IMPULSO_PRECIO_ARS', 'IMPULSO_PRECIO_USD', 'IMPULSO_DURACION_DIAS_SLIDER', 'IMPULSO_COMPATIBILIDAD_MINIMA']);
+  const val = (clave, fallback) => (config || []).find(c => c.clave === clave)?.valor ?? fallback;
+  const precioArs = parseInt(val('IMPULSO_PRECIO_ARS', '6000'));
+  const precioUsd = parseFloat(val('IMPULSO_PRECIO_USD', '4'));
+  const dias = val('IMPULSO_DURACION_DIAS_SLIDER', '7');
+  const compatMin = val('IMPULSO_COMPATIBILIDAD_MINIMA', '70');
+
+  const creditos = await _obtenerCreditosDisponiblesAutor(user.id);
+  const creditosTotales = creditos.reduce((acc, c) => acc + c.disponible, 0);
+
+  if (body) body.innerHTML = `
+    <div class="impulsar-campana-intro">
+      <p style="margin-bottom:10px;">Dale a <strong>${campana.nombreLibro}</strong> la visibilidad que se merece. <strong>Impulsar campaña</strong> es la forma más rápida de completar tus cupos, y hace tres cosas por vos en un solo paso:</p>
+      <ul style="margin:0 0 14px 0; padding-left:20px; line-height:1.6;">
+        <li>📌 <strong>Portada destacada:</strong> tu libro pasa al slider principal de la app durante ${dias} días, lo primero que ven los reseñadores al entrar.</li>
+        <li>📣 <strong>Difusión en redes:</strong> publicitamos tu campaña una vez en las redes oficiales de Indómita Love Club.</li>
+        <li>💌 <strong>Notificación directa:</strong> avisamos a los reseñadores con mejor compatibilidad con tu libro (${compatMin}% o más) — tantos como cupos libres tengas — para que se postulen enseguida.</li>
+      </ul>
+      <p class="form-hint" style="margin-bottom:14px;">Cada campaña puede impulsarse una única vez, así que elegí bien el momento.</p>
+      <div class="creditos-autor-banner" style="margin-bottom:10px;">
+        Precio del impulso: <strong>$${precioArs.toLocaleString('es-AR')} ARS</strong> (autores nacionales) o <strong>USD ${precioUsd}</strong> (internacionales)
+      </div>
+      ${creditosTotales > 0
+        ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — se descuentan automáticamente del precio.</div>`
+        : ''}
+      <p class="form-hint" style="margin-top:10px;">⏳ El impulso no se activa al instante: en breve te enviamos el link de pago para coordinarlo y, una vez confirmado, lo activamos.</p>
+      <div id="impulsar-error" class="mensaje-error" style="display:none; margin-top:10px;"></div>
+      <div id="impulsar-ok" class="mensaje-ok" style="display:none; margin-top:10px;"></div>
+    </div>
+  `;
+  if (footer) footer.innerHTML = `
+    <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+    <button type="button" class="btn-primario" id="btn-confirmar-impulso" onclick="confirmarImpulsarCampana('${idCampana}', ${precioArs}, ${precioUsd})">Confirmar impulso</button>
+  `;
+}
+
+/**
+ * Suma los créditos vigentes (no vencidos) de un autor, con su saldo disponible cada uno.
+ */
+async function _obtenerCreditosDisponiblesAutor(idUsuario) {
+  const { data } = await supabaseClient
+    .from('creditos_autor')
+    .select('id, monto, monto_usado, fecha_vencimiento')
+    .eq('id_usuario_autor', idUsuario)
+    .eq('estado', 'vigente')
+    .order('fecha_vencimiento', { ascending: true });
+
+  return (data || [])
+    .map(c => ({
+      id: c.id,
+      monto: Number(c.monto),
+      montoUsado: Number(c.monto_usado || 0),
+      disponible: Number(c.monto) - Number(c.monto_usado || 0)
+    }))
+    .filter(c => c.disponible > 0);
+}
+
+/**
+ * Confirma el impulso: pregunta la moneda (mismo patrón que la suscripción de plan),
+ * aplica el descuento de créditos disponibles y deja la solicitud pendiente de pago
+ * para que el admin la active manualmente desde el panel.
+ */
+async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd) {
+  const btn = document.getElementById('btn-confirmar-impulso');
+  ocultarMensajes('impulsar-error', 'impulsar-ok');
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Pesos argentinos (ARS)\nCancelar = Dólares (USD)')
+    ? 'ARS' : 'USD';
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
+
+  try {
+    const { data: config } = await supabaseClient
+      .from('configuracion')
+      .select('clave, valor')
+      .in('clave', ['VALOR_CREDITO_ARS', 'VALOR_CREDITO_USD']);
+    const val = (clave, fallback) => (config || []).find(c => c.clave === clave)?.valor ?? fallback;
+    const valorCredito = parseFloat(val(moneda === 'ARS' ? 'VALOR_CREDITO_ARS' : 'VALOR_CREDITO_USD', moneda === 'ARS' ? '1' : '0.67'));
+
+    const precioLista = moneda === 'ARS' ? precioArs : precioUsd;
+    const creditosDisponibles = await _obtenerCreditosDisponiblesAutor(user.id);
+    const totalDisponible = creditosDisponibles.reduce((acc, c) => acc + c.disponible, 0);
+
+    const creditosNecesarios = Math.min(totalDisponible, precioLista / valorCredito);
+    const descuento = creditosNecesarios * valorCredito;
+    const montoAPagar = Math.max(0, Math.round((precioLista - descuento) * 100) / 100);
+
+    // Descuenta los créditos consumidos (FIFO por vencimiento más próximo).
+    let restante = creditosNecesarios;
+    for (const c of creditosDisponibles) {
+      if (restante <= 0) break;
+      const usar = Math.min(c.disponible, restante);
+      restante -= usar;
+      const nuevoMontoUsado = c.montoUsado + usar;
+      await supabaseClient
+        .from('creditos_autor')
+        .update({
+          monto_usado: nuevoMontoUsado,
+          estado: nuevoMontoUsado >= c.monto ? 'usado' : 'vigente'
+        })
+        .eq('id', c.id);
+    }
+
+    const { error } = await supabaseClient
+      .from('impulsos_campana')
+      .insert({
+        id_campana: idCampana,
+        id_usuario_autor: user.id,
+        moneda,
+        precio_lista: precioLista,
+        creditos_aplicados: Math.round(creditosNecesarios * 100) / 100,
+        monto_a_pagar: montoAPagar,
+        estado: 'pendiente'
+      });
+
+    if (error) throw error;
+
+    const ok = document.getElementById('impulsar-ok');
+    if (ok) {
+      ok.textContent = `¡Listo! Tu solicitud quedó registrada. Esto no se activa automáticamente: en breve te vamos a enviar el link de pago de ${moneda === 'ARS' ? '$' : 'USD '}${montoAPagar.toLocaleString('es-AR')} para coordinar la activación del impulso.`;
+      ok.style.display = 'block';
+    }
+
+    setTimeout(async () => {
+      cerrarModales();
+      await cargarCampañasAutor(user.id);
+      await cargarCreditosAutor(user.id);
+    }, 2000);
+  } catch (err) {
+    const errDiv = document.getElementById('impulsar-error');
+    if (errDiv) {
+      errDiv.textContent = 'No pudimos registrar el impulso: ' + (err.message || 'intentá de nuevo.');
+      errDiv.style.display = 'block';
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirmar impulso'; }
+  }
 }
 
 // ────────────────────────────────────────────────────────────

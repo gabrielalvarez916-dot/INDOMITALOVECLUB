@@ -1131,6 +1131,39 @@ img { max-width: 100%; display: block; }
   gap: 14px;
 }
 
+/* Banner chico de créditos por bajo rendimiento — Impulsar campaña */
+.creditos-autor-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--crema-suave);
+  border: 1px solid var(--crema-oscura);
+  border-radius: var(--radio-pill);
+  padding: 7px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--gris-texto);
+  width: fit-content;
+}
+.creditos-autor-banner strong { color: var(--bordo); }
+
+/* Botón / badge de Impulsar campaña en la card del autor */
+.btn-impulsar-campana {
+  background: linear-gradient(90deg, var(--bordo) 0%, var(--bordo-claro) 100%);
+  color: var(--blanco);
+  border: none;
+}
+.badge-impulso-estado {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: var(--radio);
+  background: var(--rosa-claro);
+  color: var(--bordo);
+  font-weight: 600;
+}
+
 .lista-item {
   background: var(--blanco);
   border: 1px solid var(--gris-borde);
