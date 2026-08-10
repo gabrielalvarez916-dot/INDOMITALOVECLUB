@@ -522,7 +522,7 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd) {
         .eq('id', c.id);
     }
 
-    const { error } = await supabaseClient
+    const { data: impulsoCreado, error } = await supabaseClient
       .from('impulsos_campana')
       .insert({
         id_campana: idCampana,
@@ -532,12 +532,34 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd) {
         creditos_aplicados: Math.round(creditosNecesarios * 100) / 100,
         monto_a_pagar: montoAPagar,
         estado: 'pendiente'
-      });
+      })
+      .select('id')
+      .single();
 
     if (error) throw error;
 
     const ok = document.getElementById('impulsar-ok');
-    if (ok) {
+
+    // Si es ARS y queda un saldo a pagar, la Edge Function genera el link
+    // de Mercado Pago y le manda el mail al autor automáticamente. Para USD
+    // (o si el monto quedó en $0 por créditos) sigue el flujo manual de siempre.
+    if (moneda === 'ARS' && montoAPagar > 0) {
+      const { error: errLink } = await supabaseClient.functions.invoke('crear-link-campana', {
+        body: { id_impulso: impulsoCreado.id }
+      });
+
+      if (errLink) {
+        const detalle = await _leerErrorEdgeFunction(errLink, 'No pudimos generar el link de pago automáticamente.');
+        console.error('Error generando link de pago del impulso:', detalle);
+        if (ok) {
+          ok.textContent = `Tu solicitud quedó registrada, pero no pudimos generarte el link de pago automáticamente. En breve te lo mandamos por mail para coordinar la activación.`;
+          ok.style.display = 'block';
+        }
+      } else if (ok) {
+        ok.textContent = `¡Listo! Te enviamos un mail con el link de pago de $${montoAPagar.toLocaleString('es-AR')} ARS. Una vez que se acredite el pago, activamos el impulso.`;
+        ok.style.display = 'block';
+      }
+    } else if (ok) {
       ok.textContent = `¡Listo! Tu solicitud quedó registrada. Esto no se activa automáticamente: en breve te vamos a enviar el link de pago de ${moneda === 'ARS' ? '$' : 'USD '}${montoAPagar.toLocaleString('es-AR')} para coordinar la activación del impulso.`;
       ok.style.display = 'block';
     }
