@@ -115,37 +115,35 @@ const VARIANTES = {
     ],
   },
   toque_no_empezado: {
-    emoji: '🔔',
+    emoji: '👉',
     textos: [
-      (d) => `Tu autor te dio un toque: "${d.nombreLibro || 'tu campaña'}" te está esperando y todavía no la abriste.`,
-      (d) => `TOQUE. Alguien de "${d.nombreLibro || 'tu campaña'}" se está preguntando si existís.`,
-      (d) => `Te tocaron el hombro: ¿arrancamos con "${d.nombreLibro || 'tu campaña'}" o seguimos ignorándonos?`,
+      (d) => `El autor de "${d.nombreLibro || ''}" te está mirando. Todavía no arrancaste.`,
+      (d) => `Toque suave: "${d.nombreLibro || ''}" sigue esperando que lo abras.`,
+      (d) => `Alguien se acordó de vos: falta que empieces "${d.nombreLibro || ''}".`,
     ],
   },
   toque_leyendo: {
-    emoji: '🔔',
+    emoji: '👀',
     textos: [
-      (d) => `Tu autor te dio un toque: ¿cómo vas con "${d.nombreLibro || 'tu campaña'}"? Contale por dónde estás.`,
-      (d) => `TOQUE. Van a querer saber cómo va "${d.nombreLibro || 'tu campaña'}".`,
-      (d) => `Te tocaron el hombro para que cuentes tus avances de "${d.nombreLibro || 'tu campaña'}".`,
+      (d) => `El autor de "${d.nombreLibro || ''}" pasó a ver cómo vas.`,
+      (d) => `Toque: seguís leyendo "${d.nombreLibro || ''}"… ¿cómo va?`,
+      (d) => `Te tocaron el hombro. "${d.nombreLibro || ''}" sigue en curso.`,
     ],
   },
-  // Mismos textos que "leyendo": misma urgencia, no hace falta un tercer
-  // set de frases (así está también en el Edge Function enviar-push-notificacion).
   toque_mitad: {
-    emoji: '🔔',
+    emoji: '📖',
     textos: [
-      (d) => `Tu autor te dio un toque: ¿cómo vas con "${d.nombreLibro || 'tu campaña'}"? Contale por dónde estás.`,
-      (d) => `TOQUE. Van a querer saber cómo va "${d.nombreLibro || 'tu campaña'}".`,
-      (d) => `Te tocaron el hombro para que cuentes tus avances de "${d.nombreLibro || 'tu campaña'}".`,
+      (d) => `Vas por la mitad de "${d.nombreLibro || ''}" y el autor lo sabe.`,
+      (d) => `Toque: ya casi. Falta la otra mitad de "${d.nombreLibro || ''}".`,
+      (d) => `El autor de "${d.nombreLibro || ''}" te manda ánimo para que termines.`,
     ],
   },
   toque_finalizado: {
-    emoji: '🔔',
+    emoji: '✍️',
     textos: [
-      (d) => `Tu autor te dio un toque: terminaste "${d.nombreLibro || 'tu campaña'}", ¿subimos esa reseña?`,
-      (d) => `TOQUE. Ya leíste "${d.nombreLibro || 'tu campaña'}". Falta la reseña, nomás.`,
-      (d) => `Te tocaron el hombro: "${d.nombreLibro || 'tu campaña'}" quedó terminado. Hora de escribir.`,
+      (d) => `Terminaste "${d.nombreLibro || ''}"… ¿y la reseña?`,
+      (d) => `Toque: falta lo último. Escribí la reseña de "${d.nombreLibro || ''}".`,
+      (d) => `El autor de "${d.nombreLibro || ''}" espera tu reseña, ya leíste todo.`,
     ],
   },
   resena_no_entregada: {
