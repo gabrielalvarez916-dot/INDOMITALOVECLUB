@@ -636,7 +636,7 @@ async function confirmarPostulacion(idCampaña) {
   const campaña = _campañasTodas.find(c => c.id === idCampaña);
 
   if (campaña && !campaña.tieneArchivo) {
-    mostrarToast('Este autor aún no ha cargado el libro correctamente.', 'error');
+    mostrarToast('😭 El libro todavía no llegó. Estamos tan confundidos como vos.', 'error');
     return;
   }
 
@@ -652,7 +652,7 @@ async function confirmarPostulacion(idCampaña) {
       .filter(p => !mapeo[p]);
 
     if (faltantes.length > 0) {
-      mostrarToast(`Para postularte necesitás cargar tu perfil de ${faltantes.join(' y ')} en tu perfil.`, 'error');
+      mostrarToast(`👀 Te falta ${faltantes.join(' y ')}. No podemos mandarte a la batalla así.`, 'error');
       return;
     }
   }
@@ -662,11 +662,11 @@ async function confirmarPostulacion(idCampaña) {
   });
 
   if (error) {
-    mostrarToast(error.message || 'Error al postularse.', 'error');
+    mostrarToast(error.message || '😈 La postulación dijo "hoy no". Probá de nuevo.', 'error');
     return;
   }
 
-  mostrarToast('¡Te postulaste exitosamente! El autor revisará tu perfil.', 'ok');
+  mostrarToast(`💅 Te postulaste a "${campaña?.nombreLibro || 'la campaña'}". Ahora que el autor decida tu destino.`, 'ok');
 if (campaña?.matchScore >= 70 && typeof registrarAccionEventoSiCorresponde === 'function') {
     registrarAccionEventoSiCorresponde('postular_alta_coincidencia');
   }
