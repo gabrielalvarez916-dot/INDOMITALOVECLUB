@@ -57,9 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const reconexion = params.get('reconexion');
   if (reconexion) {
     const mensajesReconexion = {
-      puntos20: '🎉 ¡Reclamaste tus 20 puntos de regalo!',
-      cupos5: '🎁 ¡Reclamaste tus 5 reseñadores de regalo para tu próxima campaña!',
-      ya_canjeado: 'Ya habías reclamado este regalo anteriormente.'
+      puntos20: '💋 ¡Te llevaste 20 puntos! Y ni siquiera tuviste que rogar.',
+      cupos5: '💋 ¡5 reseñadores para vos! Sí, así de fácil te consentimos.',
+      ya_canjeado: '💅 Ese ya te lo dimos. No somos tan fáciles.'
     };
     const mensaje = mensajesReconexion[reconexion];
     if (mensaje) {
