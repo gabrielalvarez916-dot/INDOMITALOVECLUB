@@ -381,11 +381,11 @@ async function guardarTropePropuesto(prefijo) {
   const nombre = input?.value.trim();
 
   if (!estado.idGenero) {
-    mostrarToast('Elegí primero un género.', 'error');
+    mostrarToast('🫠 Te falta un pequeño detalle: elegir el género.', 'error');
     return;
   }
   if (!nombre) {
-    mostrarToast('Escribí el nombre del trope que querés proponer.', 'error');
+    mostrarToast('👀 ¿Y el nombre? No podemos bautizar un trope por telepatía.', 'error');
     return;
   }
 
@@ -404,7 +404,7 @@ async function guardarTropePropuesto(prefijo) {
 
   if (errorBusqueda) {
     console.error('Error buscando propuesta existente:', errorBusqueda);
-    mostrarToast('No se pudo guardar la propuesta.', 'error');
+    mostrarToast('💀 La propuesta hizo el intento. El sistema dijo que no.', 'error');
     return;
   }
 
@@ -419,7 +419,7 @@ async function guardarTropePropuesto(prefijo) {
 
     if (errorInsert) {
       console.error('Error creando propuesta de trope:', errorInsert);
-      mostrarToast('No se pudo guardar la propuesta.', 'error');
+      mostrarToast('💀 La propuesta hizo el intento. El sistema dijo que no.', 'error');
       return;
     }
     idPropuesta = nueva.id;
@@ -435,11 +435,11 @@ async function guardarTropePropuesto(prefijo) {
 
   if (errorAutor) {
     console.error('Error vinculando propuesta de trope:', errorAutor);
-    mostrarToast('No se pudo guardar la propuesta.', 'error');
+    mostrarToast('💀 La propuesta hizo el intento. El sistema dijo que no.', 'error');
     return;
   }
 
-  mostrarToast('¡Gracias! Tu propuesta va a ser revisada por el equipo.', 'ok');
+  mostrarToast('😈 Propuesta enviada. Si la aprobamos, diremos que fue idea nuestra.', 'ok');
   cancelarProponerTrope(prefijo); // deja todo listo para cargar otra, de a una por vez
 }
 
