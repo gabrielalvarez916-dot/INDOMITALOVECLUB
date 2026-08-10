@@ -798,11 +798,12 @@ async function accionPostulacion(idPostulacion, accion) {
     .eq('id', idPostulacion);
 
   if (error) {
-    mostrarToast(error.message || 'Error al procesar la postulación.', 'error');
+    mostrarToast(error.message || '👀 La decisión quedó en suspenso. Algo salió mal.', 'error');
     return;
   }
 
-  mostrarToast(accion === 'aprobar' ? 'Postulación aprobada.' : 'Postulación rechazada.', 'ok');
+  const aliasReseñadorPostulacion = postulacionActual?.alias || 'El/la reseñador(a)';
+  mostrarToast(accion === 'aprobar' ? `😈 ${aliasReseñadorPostulacion} está dentro. Ahora esperemos que haga lo suyo.` : '💅 Esta vez dijiste que no. Decisiones difíciles.', 'ok');
 
   // Recarga las postulaciones
   const postulacion = _postulacionesAutor.find(p => p.id === idPostulacion);
@@ -1068,12 +1069,12 @@ async function darToqueSeguimiento(idPostulacion, btn) {
   });
 
   if (error || !resultado?.ok) {
-    mostrarToast(resultado?.error || error?.message || 'No se pudo dar el toque.', 'error');
+    mostrarToast(resultado?.error || error?.message || '❌ Ni el toque quiso llegar. Qué desastre.', 'error');
     if (btn) { btn.disabled = false; btn.textContent = '👉 Dar un toque'; }
     return;
   }
 
-  mostrarToast('Toque enviado 👉', 'ok');
+  mostrarToast('🔔 Toque enviado. A ver si aparece esa reseña…', 'ok');
   if (btn) {
     btn.outerHTML = '<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Ya le diste un toque · esperá 10 días</span>';
   }
@@ -1341,11 +1342,11 @@ async function cancelarCampanaAutor(idCampana) {
   });
 
   if (error) {
-    mostrarToast(error.message || 'Error al cancelar la campaña.', 'error');
+    mostrarToast(error.message || '😏 La campaña se niega a morir. Probá de nuevo.', 'error');
     return;
   }
 
-  mostrarToast('Campaña cancelada.', 'ok');
+  mostrarToast('💅 Listo. La campaña pasó oficialmente a mejor vida.', 'ok');
   await cargarCampañasAutor(user.id);
   await cargarEstadisticasAutor(user.id);
 }
@@ -1747,7 +1748,7 @@ async function iniciarPago(plan) {
     payerEmail = payerEmail?.trim();
 
     if (!payerEmail || !regexEmail.test(payerEmail)) {
-      mostrarToast('Necesitamos un mail válido de Mercado Pago para continuar.', 'error');
+      mostrarToast('👀 ¿Y tu mail de Mercado Pago? Lo necesitamos para seguir.', 'error');
       return;
     }
 
@@ -1756,7 +1757,7 @@ async function iniciarPago(plan) {
 
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
-    mostrarToast('Tu sesión expiró. Volvé a iniciar sesión e intentá de nuevo.', 'error');
+    mostrarToast('💅 Tu sesión decidió tomarse un descanso. Iniciá sesión de nuevo.', 'error');
     return;
   }
 
@@ -1971,7 +1972,7 @@ async function agregarLibro(event) {
 
   document.getElementById('form-nuevo-libro')?.reset();
   cerrarModales();
-  mostrarToast('Libro agregado a tu biblioteca.', 'ok');
+  mostrarToast('👀 Libro agregado. Ahora queremos verlo en una campaña.', 'ok');
   await cargarBibliotecaPanel(user.id);
   if (typeof cargarBibliotecaAutorSeccion === 'function') await cargarBibliotecaAutorSeccion();
 }
@@ -1993,11 +1994,11 @@ async function eliminarLibroAutor(idLibro, titulo) {
     .eq('id', idLibro);
 
   if (error) {
-    mostrarToast('Error al eliminar el libro.', 'error');
+    mostrarToast('🫠 El libro no se quiso ir. Qué insistente.', 'error');
     return;
   }
 
-mostrarToast('Libro eliminado.', 'ok');
+mostrarToast('😈 Libro eliminado. Lo que pasó con ese libro queda entre vos y vos.', 'ok');
   await cargarBibliotecaPanel(user.id);
   if (typeof cargarBibliotecaAutorSeccion === 'function') await cargarBibliotecaAutorSeccion();
 }
@@ -2150,12 +2151,12 @@ async function compartirCampana(idCampana, nombreLibro) {
   // En computadora: copia al portapapeles
   try {
     await navigator.clipboard.writeText(`${texto} ${url}`);
-    mostrarToast('¡Link copiado! Pegalo donde quieras.', 'ok');
+    mostrarToast('🔥 Link copiado. Ahora a hacer ruido.', 'ok');
     if (typeof registrarAccionEventoSiCorresponde === 'function') {
       registrarAccionEventoSiCorresponde('compartir_campana');
     }
   } catch (e) {
-    mostrarToast('No se pudo copiar el link. Copialo manualmente: ' + url, 'error');
+    mostrarToast('😈 El link se rebeló. Copialo manualmente: ' + url, 'error');
   }
 }
 
