@@ -85,14 +85,14 @@ async function descargarLibro(idCampana, tituloLibro, formato) {
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
     const token = session?.access_token;
-    if (!token) { mostrarToast('Tu sesión expiró. Volvé a iniciar sesión y probá de nuevo.', 'error'); return; }
+    if (!token) { mostrarToast('💅 Tu sesión decidió tomarse un descanso. Iniciá sesión de nuevo.', 'error'); return; }
 
     const { data, error } = await supabaseClient.functions.invoke('obtener-url-libro', {
       body: { id_campana: idCampana, formato, modo: 'descarga' }
     });
 
     if (error || !data?.url) {
-      mostrarToast((data && data.error) || 'No se pudo generar el link de descarga.', 'error');
+      mostrarToast((data && data.error) || '🫣 Tenemos el libro. Nos falta que el link coopere.', 'error');
       return;
     }
 
@@ -104,7 +104,7 @@ async function descargarLibro(idCampana, tituloLibro, formato) {
     a.remove();
   } catch (e) {
     console.error('Error descargando el libro:', e);
-    mostrarToast('No se pudo generar el link de descarga.', 'error');
+    mostrarToast('🫣 Tenemos el libro. Nos falta que el link coopere.', 'error');
   }
 }
 
@@ -112,7 +112,7 @@ async function descargarLibro(idCampana, tituloLibro, formato) {
 // ABRIR VISOR EPUB
 // ────────────────────────────────────────────────────────────
 async function abrirVisorEpub(idCampana, tituloLibro, idPostulacion) {
-  if (!idCampana) { mostrarToast('No hay archivo EPUB disponible.', 'error'); return; }
+  if (!idCampana) { mostrarToast('💀 El EPUB decidió no colaborar. Qué inoportuno.', 'error'); return; }
   _visorIdPostulacion = idPostulacion || null;
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'epub');
@@ -129,7 +129,7 @@ await cargarLibreriaEpub();
 // ────────────────────────────────────────────────────────────
 
 async function abrirVisorPdf(idCampana, tituloLibro, idPostulacion) {
-  if (!idCampana) { mostrarToast('No hay archivo PDF disponible.', 'error'); return; }
+  if (!idCampana) { mostrarToast('😈 El PDF no apareció. Y sin PDF, no hacemos magia.', 'error'); return; }
   _visorIdPostulacion = idPostulacion || null;
 
   crearModalVisor();
