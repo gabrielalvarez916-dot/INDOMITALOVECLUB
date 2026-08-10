@@ -27,6 +27,7 @@
         <a href="#" class="nav-link" id="nav-campanas" onclick="mostrarSeccion('feed')">Campañas</a>
         <a href="#" class="nav-link" id="nav-panel" style="display:none;" onclick="mostrarPanelRol()">Panel</a>
         <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
+        <a href="#" class="nav-link" id="nav-guia-resenador" style="display:none;" onclick="mostrarSeccion('guia-resenador')">Guía</a>
        <a href="#" class="nav-link" id="nav-faq-autor" style="display:none;" onclick="mostrarSeccion('faq-autor')">Dudas</a>
         <a href="#" class="nav-link" id="nav-admin" style="display:none;" onclick="mostrarSeccion('admin')">Admin</a>
         <a href="#" class="nav-link" id="nav-evento" style="display:none;" onclick="mostrarSeccion('evento')">💋 Evento</a>
@@ -564,7 +565,20 @@
     </div>
   </section>
 
-<!-- SECCIÓN: FAQ AUTORES -->
+<!-- SECCIÓN: GUÍA RESEÑADOR -->
+  <section id="seccion-guia-resenador" class="seccion" style="display:none;">
+    <div class="seccion-inner seccion-angosta">
+      <h2 class="panel-titulo">Guía del reseñador</h2>
+      <p class="faq-intro">
+        Normas de reseña, cómo entregar tu reseña paso a paso y las dudas más comunes.
+        Si tu pregunta no está acá, escribinos por el botón de soporte (💬)
+        o a soporteindomitaloveclub@gmail.com.
+      </p>
+      <div id="guia-resenador-contenedor" class="faq-lista"></div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: FAQ AUTORES -->
   <section id="seccion-faq-autor" class="seccion" style="display:none;">
     <div class="seccion-inner seccion-angosta">
       <h2 class="panel-titulo">Preguntas frecuentes</h2>
@@ -1769,6 +1783,7 @@
 <script src="js/soporte.js"></script>
 <script src="js/denuncias.js"></script>
 <script src="js/faq-autor.js"></script>
+<script src="js/guia-resenador.js"></script>
 <script src="js/banners-admin.js"></script>
 <script src="js/eventos-admin.js"></script>
 <script src="js/perfil-publico.js"></script>

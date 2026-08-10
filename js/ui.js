@@ -93,6 +93,7 @@ function mostrarSeccion(nombre) {
     'panel-autor',
     'panel-resenador',
     'perfil',
+    'guia-resenador',
     'faq-autor',
     'admin',
     'biblioteca-resenador',
@@ -132,6 +133,9 @@ function mostrarSeccion(nombre) {
       break;
     case 'perfil':
       if (typeof cargarPerfil === 'function') cargarPerfil();
+      break;
+    case 'guia-resenador':
+      if (typeof cargarGuiaResenador === 'function') cargarGuiaResenador();
       break;
     case 'faq-autor':                                                    // ← AGREGAR
       if (typeof cargarFaqAutor === 'function') cargarFaqAutor();        // ← AGREGAR
@@ -203,6 +207,12 @@ function mostrarHeaderLogueado(usuario) {
     navFaqAutor.style.display = usuario.rol === 'autor' ? 'inline-block' : 'none';
   }
 
+  // Muestra botón Guía solo si es reseñador
+  const navGuiaResenador = document.getElementById('nav-guia-resenador');
+  if (navGuiaResenador) {
+    navGuiaResenador.style.display = usuario.rol === 'reseñador' ? 'inline-block' : 'none';
+  }
+
   // Muestra botón Admin solo si es admin
   const navAdmin = document.getElementById('nav-admin');
   if (navAdmin) {
@@ -230,6 +240,9 @@ function mostrarHeaderDeslogueado() {
 
   const navFaqAutor = document.getElementById('nav-faq-autor');
   if (navFaqAutor) navFaqAutor.style.display = 'none';
+
+  const navGuiaResenador = document.getElementById('nav-guia-resenador');
+  if (navGuiaResenador) navGuiaResenador.style.display = 'none';
 
  const navAdmin = document.getElementById('nav-admin');
   if (navAdmin) navAdmin.style.display = 'none';

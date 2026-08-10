@@ -3156,6 +3156,64 @@ img { max-width: 100%; display: block; }
   line-height: 1.6;
 }
  
+/* ── GUÍA RESEÑADOR: contenido dentro de cada acordeón ── */
+.guia-item.abierta .faq-item-body {
+  max-height: none;
+}
+
+.guia-item-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.guia-item.abierta .guia-item-body {
+  max-height: 4000px;
+}
+
+.guia-item-contenido {
+  padding: 0 20px 20px;
+  font-size: 14px;
+  color: var(--gris-texto);
+  line-height: 1.65;
+}
+
+.guia-item-contenido h4 {
+  font-family: var(--fuente-titulo);
+  font-size: 15px;
+  color: var(--bordo);
+  margin: 16px 0 6px;
+}
+
+.guia-item-contenido h4:first-child {
+  margin-top: 0;
+}
+
+.guia-item-contenido p {
+  margin: 0 0 10px;
+}
+
+.guia-item-contenido ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+.guia-item-contenido li {
+  margin-bottom: 6px;
+}
+
+.guia-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  text-decoration: none;
+}
+
+.faq-lista--anidada {
+  margin-top: 4px;
+}
+
 .faq-footer-soporte {
   margin-top: 28px;
   padding: 18px 20px;
