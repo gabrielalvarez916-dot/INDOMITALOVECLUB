@@ -622,7 +622,7 @@ async function guardarAvatar() {
   if (fotoEl && avatarElegido) fotoEl.src = avatarElegido.imagen_url;
   Sesion.guardar({ ...usuario, fotoPerfil: avatarElegido?.imagen_url });
   cerrarModales();
-  mostrarToast('¡Avatar actualizado!', 'ok');
+  mostrarToast('Nuevo look desbloqueado. Te queda bien. 👀', 'ok');
 
   if (typeof registrarAccionEventoSiCorresponde === 'function') {
     registrarAccionEventoSiCorresponde('cambiar_avatar');
@@ -698,7 +698,7 @@ async function guardarPerfilYPostularse(event) {
   }
 
   cerrarModales();
-  mostrarToast('¡Perfil completado y postulación enviada!', 'ok');
+  mostrarToast('😈 Perfil completo y primera postulación enviada. Ahora cruzá los dedos, criatura.', 'ok');
 
   if (typeof cargarFeed === 'function') cargarFeed();
 }
