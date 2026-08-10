@@ -213,7 +213,7 @@ async function completarLogin(usuario) {
 
   verificarModalActualizacion();
   redirigirSegunRol(usuario);
-  mostrarToast(`¡Bienvenida, ${usuario.alias || usuario.nombre}!`, 'ok');
+  mostrarToast(`👀 Mirá quién volvió. Bienvenida, ${usuario.alias || usuario.nombre}.`, 'ok');
   _continuarOnboarding(usuario);
 }
 
