@@ -3157,8 +3157,9 @@ img { max-width: 100%; display: block; }
 }
  
 /* ── GUÍA RESEÑADOR: contenido dentro de cada acordeón ── */
-.guia-item {
-  border: none;
+#guia-resenador-contenedor.faq-lista {
+  gap: 20px;
+  margin-top: 6px;
 }
 
 .guia-item-header {
