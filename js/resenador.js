@@ -547,7 +547,7 @@ async function enviarResena(event) {
 
   setTimeout(async () => {
     cerrarModales();
-    mostrarToast('¡Reseña enviada! Ganaste +100 puntos ⭐', 'ok');
+    mostrarToast('💅 Reseña enviada. +100 puntos. Mirá cómo cumplís.', 'ok');
     await cargarArcsActivos(Sesion.email());
     await cargarHistorialReseñador(Sesion.email());
     await cargarEstadisticasReseñador(Sesion.email());
@@ -1141,7 +1141,7 @@ if (error || data?.error) {
 }
 
   cerrarModales();
-  mostrarToast('Campaña abandonada correctamente.', 'ok');
+  mostrarToast('💅 DNF confirmado. A veces simplemente no hay química.', 'ok');
 
   await cargarArcsActivos(Sesion.email());
   await cargarHistorialReseñador(Sesion.email());
@@ -1186,5 +1186,5 @@ async function confirmarAnunciarAvance(estado) {
   }
 
   cerrarModales();
-  mostrarToast('¡Gracias por avisar! Le llegó al autor.', 'ok');
+  mostrarToast('👀 Le llegó el aviso al autor. Que sepa que no lo tenés juntando polvo.', 'ok');
 }
