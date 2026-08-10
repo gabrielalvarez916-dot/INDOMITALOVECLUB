@@ -9,68 +9,108 @@
 // CONTENIDO — NORMAS DE RESEÑA
 // ────────────────────────────────────────────────────────────
 const NORMAS_RESENA_HTML = `
-  <p>En Indómita Love Club las reseñas negativas son bienvenidas — lo que no es negociable
-  es que la crítica sea sobre el libro, no sobre la persona que lo escribió. Estas normas
-  existen para que la reseñadora sepa exactamente qué se espera, y para que autoras/es
-  sepan qué protecciones tienen.</p>
+  <p class="guia-parrafo-intro">En Indómita Love Club las reseñas negativas son bienvenidas — lo que no es
+  negociable es que la crítica sea sobre el libro, no sobre la persona que lo escribió. Estas normas
+  existen para que la reseñadora sepa exactamente qué se espera, y para que autoras/es sepan qué
+  protecciones tienen.</p>
 
-  <h4>1. Qué debe tener toda reseña</h4>
-  <ul>
-    <li>Evidencia de lectura real y completa (comentarios, o vía los links de Amazon/Goodreads/redes que ya pedimos al entregar).</li>
-    <li>Argumentos concretos sobre el libro: trama, personajes, ritmo, prosa, ambientación, coherencia, final. Un puntaje sin ningún argumento que lo sostenga puede ser ocultado y devuelto para revisión.</li>
-    <li>Si no vas a poder terminar el libro, usá la opción de abandono de la postulación en vez de reseñarlo a medias o sin haberlo terminado.</li>
-  </ul>
+  <div class="norma-card">
+    <div class="norma-card-cabecera">
+      <span class="norma-card-numero">1</span>
+      <h4 class="norma-card-titulo">Qué debe tener toda reseña</h4>
+    </div>
+    <ul class="norma-card-lista">
+      <li>Evidencia de lectura real y completa (comentarios, o vía los links de Amazon/Goodreads/redes que ya pedimos al entregar).</li>
+      <li>Argumentos concretos sobre el libro: trama, personajes, ritmo, prosa, ambientación, coherencia, final. Un puntaje sin ningún argumento que lo sostenga puede ser ocultado y devuelto para revisión.</li>
+      <li>Si no vas a poder terminar el libro, usá la opción de abandono de la postulación en vez de reseñarlo a medias o sin haberlo terminado.</li>
+    </ul>
+  </div>
 
-  <h4>2. El límite: libro sí, persona no</h4>
-  <p>La reseña puede criticar duramente decisiones narrativas, ejecución técnica, o
-  elecciones editoriales ("el autor eligió ambientar esto en X y no funciona porque...").
-  Deja de ser válida cuando el foco pasa de la obra a la persona autora: su identidad,
-  aspecto, vida personal, otras publicaciones, comportamiento en redes, o cualquier cosa
-  ajena al libro entregado. Si el contenido de la reseña gira mayormente en torno al autor
-  y no al libro, se retira de circulación aunque no contenga insultos.</p>
+  <div class="norma-card">
+    <div class="norma-card-cabecera">
+      <span class="norma-card-numero">2</span>
+      <h4 class="norma-card-titulo">El límite: libro sí, persona no</h4>
+    </div>
+    <p class="norma-card-texto">La reseña puede criticar duramente decisiones narrativas, ejecución técnica, o
+    elecciones editoriales ("el autor eligió ambientar esto en X y no funciona porque..."). Deja de ser
+    válida cuando el foco pasa de la obra a la persona autora: su identidad, aspecto, vida personal, otras
+    publicaciones, comportamiento en redes, o cualquier cosa ajena al libro entregado. Si el contenido de
+    la reseña gira mayormente en torno al autor y no al libro, se retira de circulación aunque no contenga
+    insultos.</p>
+  </div>
 
-  <h4>3. Tolerancia cero (oculta la reseña y puede derivar en suspensión de cuenta)</h4>
-  <ul>
-    <li>Discurso de odio o lenguaje discriminatorio.</li>
-    <li>Acoso o lenguaje abusivo dirigido a la persona autora.</li>
-    <li>Difamación: afirmaciones falsas que dañen la reputación de alguien.</li>
-    <li>Plagio de otra reseña o contenido ajeno.</li>
-    <li>Autopromoción dentro del texto de la reseña (venta de servicios, links ajenos al libro).</li>
-    <li>Reseñas generadas por IA sin lectura ni redacción propia.</li>
-  </ul>
+  <div class="norma-card norma-card--alerta">
+    <div class="norma-card-cabecera">
+      <span class="norma-card-numero norma-card-numero--alerta">3</span>
+      <h4 class="norma-card-titulo">Tolerancia cero <span class="norma-card-etiqueta">oculta la reseña · puede derivar en suspensión</span></h4>
+    </div>
+    <ul class="norma-card-lista">
+      <li>Discurso de odio o lenguaje discriminatorio.</li>
+      <li>Acoso o lenguaje abusivo dirigido a la persona autora.</li>
+      <li>Difamación: afirmaciones falsas que dañen la reputación de alguien.</li>
+      <li>Plagio de otra reseña o contenido ajeno.</li>
+      <li>Autopromoción dentro del texto de la reseña (venta de servicios, links ajenos al libro).</li>
+      <li>Reseñas generadas por IA sin lectura ni redacción propia.</li>
+    </ul>
+  </div>
 
-  <h4>4. Cosas que no van en la reseña (van por soporte)</h4>
-  <p>Problemas técnicos (visor, descarga, formato del archivo) no son parte de la reseña —
-  repórtalos directamente a soporte para que se resuelvan aparte.</p>
+  <div class="norma-card">
+    <div class="norma-card-cabecera">
+      <span class="norma-card-numero">4</span>
+      <h4 class="norma-card-titulo">Cosas que no van en la reseña</h4>
+    </div>
+    <p class="norma-card-texto">Problemas técnicos (visor, descarga, formato del archivo) no son parte de
+    la reseña — repórtalos directamente a soporte para que se resuelvan aparte.</p>
+  </div>
 
-  <h4>5. Detección de patrones anómalos</h4>
-  <p>Igual que en otras plataformas de reseñas, monitoreamos comportamiento inusual: picos
-  de actividad coordinada, cuentas nuevas calificando en bloque, o patrones que sugieran
-  mala fe más allá del contenido de una reseña individual. Esto es aparte de la evaluación
-  caso por caso de cada reseña.</p>
+  <div class="norma-card">
+    <div class="norma-card-cabecera">
+      <span class="norma-card-numero">5</span>
+      <h4 class="norma-card-titulo">Detección de patrones anómalos</h4>
+    </div>
+    <p class="norma-card-texto">Igual que en otras plataformas de reseñas, monitoreamos comportamiento
+    inusual: picos de actividad coordinada, cuentas nuevas calificando en bloque, o patrones que sugieran
+    mala fe más allá del contenido de una reseña individual. Esto es aparte de la evaluación caso por caso
+    de cada reseña.</p>
+  </div>
 
-  <h4>6. Consecuencias graduales</h4>
-  <p>No toda infracción es igual: contenido "desalentado" (vago, sin evidencia de lectura,
-  quejas técnicas) puede resultar en ocultamiento + pedido de revisión. Contenido de
-  "tolerancia cero" resulta en ocultamiento inmediato y puede incluir suspensión de la
-  cuenta, dependiendo de la gravedad y el historial de la usuaria.</p>
+  <div class="norma-card">
+    <div class="norma-card-cabecera">
+      <span class="norma-card-numero">6</span>
+      <h4 class="norma-card-titulo">Consecuencias graduales</h4>
+    </div>
+    <p class="norma-card-texto">No toda infracción es igual: contenido "desalentado" (vago, sin evidencia
+    de lectura, quejas técnicas) puede resultar en ocultamiento + pedido de revisión. Contenido de
+    "tolerancia cero" resulta en ocultamiento inmediato y puede incluir suspensión de la cuenta, dependiendo
+    de la gravedad y el historial de la usuaria.</p>
+  </div>
 
-  <h4>7. ¿Viste algo que no cumple estas normas?</h4>
-  <p>Escribinos al correo de soporte con el título del libro y un link o captura de la
-  reseña en cuestión. La evaluamos y, si corresponde, se oculta.</p>
+  <div class="norma-card norma-card--soporte">
+    <div class="norma-card-cabecera">
+      <span class="norma-card-numero">7</span>
+      <h4 class="norma-card-titulo">¿Viste algo que no cumple estas normas?</h4>
+    </div>
+    <p class="norma-card-texto">Escribinos al correo de soporte con el título del libro y un link o
+    captura de la reseña en cuestión. La evaluamos y, si corresponde, se oculta.</p>
+  </div>
 `;
 
 // ────────────────────────────────────────────────────────────
 // CONTENIDO — ¿CÓMO SE HACE UNA RESEÑA?
 // ────────────────────────────────────────────────────────────
 const COMO_HACER_RESENA_HTML = `
-  <p>Armamos una guía completa sobre cómo escribir una reseña literaria efectiva: qué evaluar
-  de un libro (trama, personajes, estilo, temas, impacto personal), cómo estructurarla —tanto
-  en formato escrito como en video—, ejemplos reales de reseñadoras de Indómita, y el paso a
-  paso para cargarla en la plataforma. Descargala y tenela a mano las primeras veces.</p>
-  <a href="/assets/guia-como-hacer-una-resena.pdf" target="_blank" rel="noopener"
-     class="btn-primario guia-pdf-btn" download>
-    📄 Descargar guía completa (PDF)
+  <p class="guia-parrafo-intro">Armamos una guía completa sobre cómo escribir una reseña literaria
+  efectiva: qué evaluar de un libro (trama, personajes, estilo, temas, impacto personal), cómo
+  estructurarla —tanto en formato escrito como en video—, ejemplos reales de reseñadoras de Indómita,
+  y el paso a paso para cargarla en la plataforma.</p>
+
+  <a href="/assets/guia-como-hacer-una-resena.pdf" target="_blank" rel="noopener" download class="guia-pdf-card">
+    <span class="guia-pdf-card-icono">📄</span>
+    <span class="guia-pdf-card-info">
+      <span class="guia-pdf-card-titulo">Guía para reseñar en Indómita Love Club</span>
+      <span class="guia-pdf-card-sub">PDF descargable</span>
+    </span>
+    <span class="guia-pdf-card-flecha">⬇</span>
   </a>
 `;
 
@@ -112,9 +152,9 @@ const FAQ_RESENADOR_DATA = [
 // RENDER — 3 bloques en acordeón (Normas / Cómo se hace / FAQ)
 // ────────────────────────────────────────────────────────────
 const GUIA_RESENADOR_BLOQUES = [
-  { id: 'normas', titulo: 'Normas de Reseña', tipo: 'html', contenido: NORMAS_RESENA_HTML },
-  { id: 'como-hacer', titulo: '¿Cómo se hace una Reseña?', tipo: 'html', contenido: COMO_HACER_RESENA_HTML },
-  { id: 'faq', titulo: 'FAQ / Dudas', tipo: 'faq' }
+  { id: 'normas', icono: '📋', titulo: 'Normas de Reseña', tipo: 'html', contenido: NORMAS_RESENA_HTML },
+  { id: 'como-hacer', icono: '✍️', titulo: '¿Cómo se hace una Reseña?', tipo: 'html', contenido: COMO_HACER_RESENA_HTML },
+  { id: 'faq', icono: '💬', titulo: 'FAQ / Dudas', tipo: 'faq' }
 ];
 
 /**
@@ -127,8 +167,8 @@ function cargarGuiaResenador() {
 
   contenedor.innerHTML = GUIA_RESENADOR_BLOQUES.map((bloque, i) => `
     <div class="faq-item guia-item" id="guia-item-${i}">
-      <button type="button" class="faq-item-header" onclick="toggleGuiaItem(${i})">
-        <span class="faq-item-pregunta">${bloque.titulo}</span>
+      <button type="button" class="faq-item-header guia-item-header" onclick="toggleGuiaItem(${i})">
+        <span class="faq-item-pregunta guia-item-titulo"><span class="guia-item-icono">${bloque.icono}</span>${bloque.titulo}</span>
         <span class="faq-item-chevron" id="guia-chevron-${i}">▾</span>
       </button>
       <div class="faq-item-body guia-item-body" id="guia-body-${i}">
