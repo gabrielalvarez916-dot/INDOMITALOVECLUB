@@ -1014,6 +1014,22 @@ async function verSeguimientoLectura(idCampana, nombreLibro) {
       : `<div style="width:40px;height:40px;border-radius:50%;background:var(--crema);display:flex;align-items:center;justify-content:center;">👤</div>`;
     const estado = r.estado || 'no_empezado';
 
+    // Botón "Dar un toque": solo tiene sentido si todavía no entregó la
+    // reseña (dar_toque_seguimiento ya valida esto server-side, pero acá
+    // evitamos mostrarlo directamente en esos casos). Respeta el cooldown
+    // de 10 días que aplica la función.
+    const puedeToque = !['entregada', 'abandonada'].includes(estado);
+    const enCooldown = r.ultimo_toque && (new Date() - new Date(r.ultimo_toque)) < (10 * 24 * 60 * 60 * 1000);
+    const diasRestantes = enCooldown
+      ? Math.ceil((new Date(r.ultimo_toque).getTime() + 10 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000))
+      : 0;
+
+    const toqueHtml = puedeToque
+      ? (enCooldown
+          ? `<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Ya le diste un toque · esperá ${diasRestantes} día${diasRestantes === 1 ? '' : 's'}</span>`
+          : `<button class="btn-secundario btn-sm" style="white-space:nowrap;" onclick="darToqueSeguimiento('${r.id_postulacion}', this)">👉 Dar un toque</button>`)
+      : '';
+
     return `
       <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--gris-borde); padding:12px 0;">
         ${avatarHtml}
@@ -1027,11 +1043,40 @@ async function verSeguimientoLectura(idCampana, nombreLibro) {
         <span style="background:${COLORES_ESTADO_LECTURA[estado] || '#999999'}; color:#fff; font-size:10px; font-weight:700; border-radius:999px; padding:4px 10px; white-space:nowrap;">
           ${LABELS_ESTADO_LECTURA[estado] || estado}
         </span>
+        ${toqueHtml}
       </div>
     `;
   }).join('');
 
   if (body) body.innerHTML = `${avisoHtml}<div>${filasHtml}</div>`;
+}
+
+/**
+ * Le da un "toque" a un reseñador desde el modal de seguimiento: manda una
+ * notificación de recordatorio (con texto según su estado de lectura actual).
+ * Limitado a un toque cada 10 días por postulación, validado en el server
+ * (dar_toque_seguimiento) — acá solo reflejamos el resultado.
+ *
+ * @param {string} idPostulacion
+ * @param {HTMLElement} btn — botón clickeado, para deshabilitarlo mientras corre
+ */
+async function darToqueSeguimiento(idPostulacion, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+
+  const { data: resultado, error } = await supabaseClient.rpc('dar_toque_seguimiento', {
+    p_id_postulacion: idPostulacion
+  });
+
+  if (error || !resultado?.ok) {
+    mostrarToast(resultado?.error || error?.message || 'No se pudo dar el toque.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '👉 Dar un toque'; }
+    return;
+  }
+
+  mostrarToast('Toque enviado 👉', 'ok');
+  if (btn) {
+    btn.outerHTML = '<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Ya le diste un toque · esperá 10 días</span>';
+  }
 }
 
 /**

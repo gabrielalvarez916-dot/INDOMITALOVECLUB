@@ -114,6 +114,38 @@ const VARIANTES = {
       (d) => `Quedan pocos días para "${d.nombreLibro || ''}". ¿Todo bajo control? Porque parece que no.`,
     ],
   },
+  toque_no_empezado: {
+    emoji: '👉',
+    textos: [
+      (d) => `El autor de "${d.nombreLibro || ''}" te está mirando. Todavía no arrancaste.`,
+      (d) => `Toque suave: "${d.nombreLibro || ''}" sigue esperando que lo abras.`,
+      (d) => `Alguien se acordó de vos: falta que empieces "${d.nombreLibro || ''}".`,
+    ],
+  },
+  toque_leyendo: {
+    emoji: '👀',
+    textos: [
+      (d) => `El autor de "${d.nombreLibro || ''}" pasó a ver cómo vas.`,
+      (d) => `Toque: seguís leyendo "${d.nombreLibro || ''}"… ¿cómo va?`,
+      (d) => `Te tocaron el hombro. "${d.nombreLibro || ''}" sigue en curso.`,
+    ],
+  },
+  toque_mitad: {
+    emoji: '📖',
+    textos: [
+      (d) => `Vas por la mitad de "${d.nombreLibro || ''}" y el autor lo sabe.`,
+      (d) => `Toque: ya casi. Falta la otra mitad de "${d.nombreLibro || ''}".`,
+      (d) => `El autor de "${d.nombreLibro || ''}" te manda ánimo para que termines.`,
+    ],
+  },
+  toque_finalizado: {
+    emoji: '✍️',
+    textos: [
+      (d) => `Terminaste "${d.nombreLibro || ''}"… ¿y la reseña?`,
+      (d) => `Toque: falta lo último. Escribí la reseña de "${d.nombreLibro || ''}".`,
+      (d) => `El autor de "${d.nombreLibro || ''}" espera tu reseña, ya leíste todo.`,
+    ],
+  },
   resena_no_entregada: {
     emoji: '🔍',
     textos: [
@@ -456,7 +488,8 @@ function _navegarPorNotificacion(notif) {
     'postulacion_aprobada', 'postulacion_rechazada',
     'campaña_cancelada_autor', 'recordatorio_resena',
     'resena_no_entregada', 'nueva_campana_disponible',
-    'resena_compatible_impulso', 'cupos_llenos'
+    'resena_compatible_impulso', 'cupos_llenos',
+    'toque_no_empezado', 'toque_leyendo', 'toque_mitad', 'toque_finalizado'
   ];
 
   if (tiposCampaña.includes(notif.tipo) && notif.referenciaId) {
