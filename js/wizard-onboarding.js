@@ -509,7 +509,7 @@ function _wizFinalizar(usuario) {
   Sesion.guardar(usuario);
   verificarModalActualizacion();
   redirigirSegunRol(usuario);
-  mostrarToast(`¡Bienvenida, ${usuario.alias}!`, 'ok');
+  mostrarToast(`Bienvenida, ${usuario.alias}. Acá empieza el vicio. 🔥`, 'ok');
 
   // Le pasamos la posta al orquestador de onboarding (auth.js), que sigue
   // con Tutorial → Evento. Si por algún motivo no hay callback (llamada
