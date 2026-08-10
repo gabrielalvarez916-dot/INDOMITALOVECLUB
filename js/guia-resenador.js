@@ -64,11 +64,10 @@ const NORMAS_RESENA_HTML = `
 // CONTENIDO — ¿CÓMO SE HACE UNA RESEÑA?
 // ────────────────────────────────────────────────────────────
 const COMO_HACER_RESENA_HTML = `
-  <p>Preparamos una guía paso a paso, desde que te aprueban en una campaña hasta que
-  entregás la reseña: cómo acceder al libro, qué significan "solo visor" y "permite
-  descarga", cómo completar el formulario de carga (estrellas, moods, frase favorita,
-  extra ratings, links de reseña), una estructura sugerida para escribir tu opinión sin
-  spoilers, y los plazos de entrega. Descargala y tenela a mano las primeras veces.</p>
+  <p>Armamos una guía completa sobre cómo escribir una reseña literaria efectiva: qué evaluar
+  de un libro (trama, personajes, estilo, temas, impacto personal), cómo estructurarla —tanto
+  en formato escrito como en video—, ejemplos reales de reseñadoras de Indómita, y el paso a
+  paso para cargarla en la plataforma. Descargala y tenela a mano las primeras veces.</p>
   <a href="/assets/guia-como-hacer-una-resena.pdf" target="_blank" rel="noopener"
      class="btn-primario guia-pdf-btn" download>
     📄 Descargar guía completa (PDF)
@@ -106,10 +105,6 @@ const FAQ_RESENADOR_DATA = [
   {
     pregunta: '¿Qué pasa si abandono la reseña?',
     respuesta: 'Podés abandonar una campaña en cualquier momento desde el botón correspondiente en "Mis ARCs activos" — te vamos a pedir que cuentes brevemente el motivo. Es la opción correcta si sabés que no vas a poder terminar el libro, en vez de dejar que la campaña venza sin avisar.'
-  },
-  {
-    pregunta: '¿Cómo puedo formar parte del programa Reseñadores Select?',
-    respuesta: 'Estamos terminando de definir los criterios de este programa — apenas esté activo, lo vas a ver anunciado acá y en la plataforma.'
   }
 ];
 
