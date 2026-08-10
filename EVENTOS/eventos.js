@@ -567,7 +567,7 @@ function _mostrarAnimacionEventoCompletado(evento, progreso) {
   const contenedor = document.getElementById('modal-evento-completado-contenido'); // TODO ID HTML
 
   if (!document.getElementById('modal-evento-completado') || !contenedor) {
-    mostrarToast(`¡Completaste el evento ${evento.nombre}! +${progreso.puntosAcumulados} puntos`, 'ok');
+    mostrarToast(`💅 Completaste "${evento.nombre}". +${progreso.puntosAcumulados} puntos. Nos gusta esta versión tuya.`, 'ok');
     return;
   }
 
@@ -1008,7 +1008,7 @@ async function _clickSecretoEvento() {
       p_accion: 'secreto_encontrado'
     });
 
-    mostrarToast(`¡Encontraste el secreto! +${evento.tema.secreto.puntos} puntos`, 'ok');
+    mostrarToast(`😏 No deberías haber encontrado esto. Pero bueno... +${evento.tema.secreto.puntos} puntos.`, 'ok');
 
     const seccionEvento = document.getElementById('seccion-evento');
     if (seccionEvento && seccionEvento.style.display !== 'none') {
