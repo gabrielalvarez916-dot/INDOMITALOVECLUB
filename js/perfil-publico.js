@@ -760,7 +760,16 @@ avatarEl.src = _resolverAvatar(perfil.avatarUrl);
   }
 
   const aliasEl = document.getElementById('pp-alias' + sufijo);
-  if (aliasEl) aliasEl.textContent = perfil.alias || '—';
+  if (aliasEl) {
+    aliasEl.textContent = perfil.alias || '—';
+    if (perfil.seguidoresVerificados) {
+      const badge = document.createElement('span');
+      badge.className = 'pp-badge-verificado';
+      badge.title = 'Seguidores verificados (+2000)';
+      badge.textContent = ' ✔';
+      aliasEl.appendChild(badge);
+    }
+  }
 
   const ubicacionEl = document.getElementById('pp-ubicacion' + sufijo);
   if (ubicacionEl) {

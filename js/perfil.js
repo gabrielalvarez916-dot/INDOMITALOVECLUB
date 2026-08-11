@@ -42,6 +42,7 @@ async function cargarPerfil() {
       _bibliotecaEsPropia = true;
     }
     await _cargarPerfilReseñador(_idReseñadorPerfilActual, '-propio');
+    cargarEstadoVerificacionSeguidores();
 
   } else if (rol === 'editorial') {
     if (!_idEditorialPerfilActual) {

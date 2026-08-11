@@ -5590,3 +5590,141 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 0 0 4px var(--color-primario, #ff4d8d);
   transition: box-shadow 0.3s ease;
 }
+
+/* ============================================================
+   Verificación de seguidores (reseñador propio + admin)
+   ============================================================ */
+.pp-badge-verificado {
+  color: #1DA1F2;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.verificacion-seguidores-texto {
+  font-size: 0.9rem;
+  color: var(--texto-secundario, #6b5b52);
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+.verificacion-seguidores-inputs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.verificacion-seguidores-inputs label {
+  flex: 1 1 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--texto-principal, #2C1810);
+}
+
+.verificacion-seguidores-inputs input {
+  padding: 10px 12px;
+  border: 1px solid var(--borde, #e5d9d2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.verificacion-seguidores-msg {
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+/* Tabs secundarios (mini) — usados dentro de la pestaña admin Verificación */
+.admin-verificacion-filtros {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab-mini {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--borde, #e5d9d2);
+  background: transparent;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--texto-principal, #2C1810);
+}
+
+.tab-mini.activo {
+  background: var(--color-primario, #7B1C2E);
+  border-color: var(--color-primario, #7B1C2E);
+  color: #fff;
+}
+
+.admin-verificacion-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--borde, #e5d9d2);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: #fff;
+  flex-wrap: wrap;
+}
+
+.admin-verificacion-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.admin-verificacion-datos {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.admin-verificacion-alias {
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.admin-verificacion-email {
+  font-size: 0.8rem;
+  color: var(--texto-secundario, #6b5b52);
+  margin: 0 0 6px;
+}
+
+.admin-verificacion-numeros {
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+}
+
+.admin-verificacion-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-verificacion-acciones {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.admin-verificacion-estado {
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.admin-verificacion-estado-aprobado {
+  background: #e3f7e8;
+  color: #1c7c3c;
+}
+
+.admin-verificacion-estado-rechazado {
+  background: #fbe4e4;
+  color: #a32424;
+}

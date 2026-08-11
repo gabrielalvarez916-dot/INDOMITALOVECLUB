@@ -470,6 +470,35 @@
           <p id="pp-r-miembro-desde-propio" class="pp-miembro-desde"></p>
         </div>
 
+        <!-- Verificación de seguidores (privado, solo visible para el propio reseñador) -->
+        <div class="pp-bloque" id="bloque-verificacion-seguidores" style="display:none;">
+          <p class="pp-bloque-titulo">Verificación de seguidores</p>
+
+          <div id="verificacion-seguidores-form">
+            <p class="verificacion-seguidores-texto">
+              Cargá tu cantidad actual de seguidores en Instagram y TikTok. Si superás los 2000 seguidores en al menos una red, tu perfil queda verificado con una insignia visible para autor@s.
+            </p>
+            <div class="verificacion-seguidores-inputs">
+              <label>
+                Seguidores en Instagram
+                <input type="number" min="0" id="input-ig-seguidores" placeholder="Ej: 3500" />
+              </label>
+              <label>
+                Seguidores en TikTok
+                <input type="number" min="0" id="input-tiktok-seguidores" placeholder="Ej: 1200" />
+              </label>
+            </div>
+            <button class="btn-primario btn-full" id="btn-solicitar-verificacion-seguidores" onclick="solicitarVerificacionSeguidores()">
+              Enviar para verificación
+            </button>
+            <p id="verificacion-seguidores-msg" class="verificacion-seguidores-msg" style="display:none;"></p>
+          </div>
+
+          <div id="verificacion-seguidores-pendiente" style="display:none;">
+            <p class="verificacion-seguidores-texto">⏳ Tu solicitud está en revisión. Te avisamos apenas la evaluemos.</p>
+          </div>
+        </div>
+
         <!-- Estadísticas históricas como reseñador -->
         <div class="pp-bloque">
           <p class="pp-bloque-titulo">Estadísticas como reseñad@r</p>
@@ -613,6 +642,7 @@
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-modales'); cargarModalesAdmin()">Modales</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-eventos'); cargarEventosAdmin()">Eventos</button>
 <button class="tab" onclick="cambiarTab(this, 'tab-admin-tutoriales'); cargarTutorialesAdmin()">Tutoriales</button>
+<button class="tab" onclick="cambiarTab(this, 'tab-admin-verificacion'); cargarVerificacionesAdmin()">Verificación</button>
       </div>
       <div id="tab-admin-usuarios" class="tab-contenido activo">
         <div id="admin-usuarios-lista"></div>
@@ -655,6 +685,14 @@
       </div>
       <div id="tab-admin-tutoriales" class="tab-contenido">
         <div id="admin-tutoriales-contenedor"></div>
+      </div>
+      <div id="tab-admin-verificacion" class="tab-contenido">
+        <div class="admin-verificacion-filtros">
+          <button class="tab-mini activo" onclick="cambiarFiltroVerificacionAdmin(this, 'pendiente')">Pendientes</button>
+          <button class="tab-mini" onclick="cambiarFiltroVerificacionAdmin(this, 'aprobado')">Aprobadas</button>
+          <button class="tab-mini" onclick="cambiarFiltroVerificacionAdmin(this, 'rechazado')">Rechazadas</button>
+        </div>
+        <div id="admin-verificacion-lista"></div>
       </div>
     </div>
   </section>
@@ -1779,6 +1817,7 @@
 <script src="js/resenador.js?v=3"></script>
 <script src="js/admin.js?v=2"></script>
 <script src="js/perfil.js"></script>
+<script src="js/verificacion-seguidores.js"></script>
 <script src="js/visor.js"></script>
 <script src="js/soporte.js"></script>
 <script src="js/denuncias.js"></script>
