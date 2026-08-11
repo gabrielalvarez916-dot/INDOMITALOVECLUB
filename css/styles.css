@@ -5816,6 +5816,7 @@ img { max-width: 100%; display: block; }
 .resenas-obtenidas-moods {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   margin-bottom: 8px;
 }

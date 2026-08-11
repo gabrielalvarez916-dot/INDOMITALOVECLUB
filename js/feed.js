@@ -518,16 +518,17 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
     }
   }
 
-  const { data, error } = await supabaseClient
-    .from('resenas')
-    .select(`
-      puntuacion_libro, comentarios, moods,
-      rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
-      usuarios!resenas_id_usuario_resenador_fkey ( id, alias, avatares ( imagen_url ) )
-    `)
-    .in('id_campana', idsCampanas);
+  // RPC segura (SECURITY DEFINER): la lectura directa a `resenas` + join a
+  // `usuarios` se recortaba por RLS para cualquiera que no fuera el autor
+  // dueño de la campaña o el propio reseñador — por eso antes solo se veía
+  // 1 reseña (la propia) y el alias llegaba vacío. Esta función devuelve
+  // solo los campos públicos ya armados en JSON.
+  const { data: dataRpc, error } = await supabaseClient
+    .rpc('obtener_resenas_publicas_libro', { p_ids_campana: idsCampanas });
 
-  if (error || !data || data.length === 0) {
+  const data = dataRpc || [];
+
+  if (error || data.length === 0) {
     return `
       <div class="resenas-obtenidas-bloque">
         <p class="resenas-obtenidas-titulo">Reseñas obtenidas</p>
@@ -536,18 +537,26 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
     `;
   }
 
-  const conValoracion = data.filter(r => r.puntuacion_libro != null);
+  const conValoracion = data.filter(r => r.puntuacionLibro != null);
   const total = conValoracion.length;
-  const promedio = total > 0 ? conValoracion.reduce((s, r) => s + r.puntuacion_libro, 0) / total : 0;
+  const promedio = total > 0 ? conValoracion.reduce((s, r) => s + r.puntuacionLibro, 0) / total : 0;
 
   const conteos = {};
-  conValoracion.forEach(r => { conteos[r.puntuacion_libro] = (conteos[r.puntuacion_libro] || 0) + 1; });
+  conValoracion.forEach(r => { conteos[r.puntuacionLibro] = (conteos[r.puntuacionLibro] || 0) + 1; });
 
   // Promedio de los 7 ratings decorativos (mismos que la reseña interna: romance, spice, drama, estilo, tension, ritmo, worldbuilding)
   const CATEGORIAS_RATING = ['romance', 'spice', 'drama', 'estilo', 'tension', 'ritmo', 'worldbuilding'];
+  const LABELS_RATING = {
+    romance: 'Romance', spice: 'Spice', drama: 'Drama', estilo: 'Estilo de escritura',
+    tension: 'Tensión', ritmo: 'Ritmo', worldbuilding: 'Creación de mundos'
+  };
+  const CAMPO_RATING = {
+    romance: 'ratingRomance', spice: 'ratingSpice', drama: 'ratingDrama', estilo: 'ratingEstilo',
+    tension: 'ratingTension', ritmo: 'ratingRitmo', worldbuilding: 'ratingWorldbuilding'
+  };
   const promediosRating = {};
   CATEGORIAS_RATING.forEach(cat => {
-    const campo = 'rating_' + cat;
+    const campo = CAMPO_RATING[cat];
     const conValor = data.filter(r => r[campo] != null);
     promediosRating[cat] = conValor.length > 0 ? conValor.reduce((s, r) => s + r[campo], 0) / conValor.length : null;
   });
@@ -572,20 +581,29 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
         ${_barraDesgloseEstrellas(conteos, total)}
       </div>
 
-      ${(moodsOrdenados.length > 0 || hayRatings) ? `
+      ${moodsOrdenados.length > 0 ? `
         <div class="resenas-obtenidas-extras">
-          ${moodsOrdenados.length > 0 ? `
-            <div class="resenas-obtenidas-moods">
-              ${moodsOrdenados.map(([m, c]) => `<span class="badge-mood">${_esc(_LABELS_MOODS[m] || m)} · ${c}</span>`).join('')}
-            </div>
-          ` : ''}
-          ${hayRatings ? `
-            <div class="resenas-obtenidas-ratings-internos">
-              ${CATEGORIAS_RATING.filter(cat => promediosRating[cat] !== null).map(cat => `
-                <span class="rating-interno">${_ICONOS_RATING_DECORATIVO[cat]} ${cat[0].toUpperCase() + cat.slice(1)}: <strong>${promediosRating[cat].toFixed(1)}</strong></span>
-              `).join('')}
-            </div>
-          ` : ''}
+          <div class="resenas-obtenidas-moods">
+            ${moodsOrdenados.map(([m, c]) => `<span class="badge-mood">${_esc(_LABELS_MOODS[m] || m)} · ${c}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${hayRatings ? `
+        <div class="resenas-obtenidas-extras">
+          ${CATEGORIAS_RATING.filter(cat => promediosRating[cat] !== null).map(cat => {
+            const valorRedondeado = Math.round(promediosRating[cat]);
+            const icono = _ICONOS_RATING_DECORATIVO[cat];
+            return `
+              <div class="rating-decorativo-fila">
+                <span class="rating-decorativo-label">${LABELS_RATING[cat]}</span>
+                <div class="rating-decorativo-container">
+                  ${Array.from({ length: 5 }, (_, i) => `<span class="rating-decorativo-btn${i < valorRedondeado ? ' activo' : ''}">${icono}</span>`).join('')}
+                </div>
+                <span style="font-size:0.75rem; color:var(--gris-suave); flex-shrink:0;">${promediosRating[cat].toFixed(1)}</span>
+              </div>
+            `;
+          }).join('')}
         </div>
       ` : ''}
 
@@ -593,10 +611,10 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
         <div class="resenas-obtenidas-lista">
           ${reseñasConComentario.map(r => `
             <div class="resenas-obtenidas-item">
-              <div class="resenas-obtenidas-item-header" ${r.usuarios?.id ? `onclick="abrirPerfilPublico('${r.usuarios.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
-                <img class="resenas-obtenidas-item-avatar" src="${r.usuarios?.avatares?.imagen_url || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="" onerror="this.style.visibility='hidden'" />
-                <span class="resenas-obtenidas-item-alias">${_esc(r.usuarios?.alias || 'Reseñador@')}</span>
-                <span class="resenas-obtenidas-item-estrellas">${'★'.repeat(r.puntuacion_libro || 0)}${'☆'.repeat(5 - (r.puntuacion_libro || 0))}</span>
+              <div class="resenas-obtenidas-item-header" ${r.usuarioId ? `onclick="abrirPerfilPublico('${r.usuarioId}', 'reseñador')" style="cursor:pointer;"` : ''}>
+                <img class="resenas-obtenidas-item-avatar" src="${r.avatarUrl || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="" onerror="this.style.visibility='hidden'" />
+                <span class="resenas-obtenidas-item-alias">${_esc(r.alias || 'Reseñador@')}</span>
+                <span class="resenas-obtenidas-item-estrellas">${'★'.repeat(r.puntuacionLibro || 0)}${'☆'.repeat(5 - (r.puntuacionLibro || 0))}</span>
               </div>
               <p class="resenas-obtenidas-item-comentario">${_esc(r.comentarios)}</p>
             </div>
@@ -657,7 +675,7 @@ async function verDetalleCampaña(idCampaña) {
     : '';
 
   const amazonHtml = c.linkAmazon
-    ? `<a href="${c.linkAmazon}" target="_blank" class="btn-secundario btn-sm" style="display:inline-block; margin-top:8px;">🛒 Ver en Amazon</a>`
+    ? `<div style="margin-top:20px; text-align:center;"><a href="${c.linkAmazon}" target="_blank" class="btn-secundario btn-sm" style="display:inline-block;">🛒 Ver en Amazon</a></div>`
     : '';
 
   const bloqueReseñasHtml = await _construirBloqueReseñasLibro(campanaRaw);
@@ -690,8 +708,8 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
         <p style="font-size:13px;"><strong>Fecha límite:</strong> ${formatearFechaAmigable(c.fechaLimite)}</p>
         <p style="font-size:13px;">${c.modalidadLectura === 'descarga' ? '⬇️ <strong>Aclaración:</strong> Se lee con descarga del archivo' : '📖 <strong>Aclaración:</strong> Se lee en el visor (sin descarga)'}</p>
       </div>
-      ${amazonHtml}
       ${bloqueReseñasHtml}
+      ${amazonHtml}
     `;
   }
 
