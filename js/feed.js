@@ -471,14 +471,29 @@ function _barraDesgloseEstrellas(conteos, total) {
   }).join('');
 }
 
-async function _construirBloqueReseñasLibro(idCampaña) {
+async function _construirBloqueReseñasLibro(idCampaña, idLibro) {
+  // Junta las reseñas de TODAS las campañas del mismo libro (id_libro),
+  // no solo de esta campaña puntual — para cuando el libro tuvo varios
+  // relanzamientos y la mayoría de las reseñas quedaron en campañas
+  // anteriores ya vencidas.
+  let idsCampanas = [idCampaña];
+  if (idLibro) {
+    const { data: campanasDelLibro } = await supabaseClient
+      .from('campanas')
+      .select('id')
+      .eq('id_libro', idLibro);
+    if (campanasDelLibro && campanasDelLibro.length > 0) {
+      idsCampanas = campanasDelLibro.map(c => c.id);
+    }
+  }
+
   const { data, error } = await supabaseClient
     .from('resenas')
     .select(`
       puntuacion_libro, comentarios, moods, rating_spice, rating_drama,
       usuarios!resenas_id_usuario_resenador_fkey ( alias )
     `)
-    .eq('id_campana', idCampaña);
+    .in('id_campana', idsCampanas);
 
   if (error || !data || data.length === 0) {
     return `
@@ -604,7 +619,7 @@ async function verDetalleCampaña(idCampaña) {
     ? `<a href="${c.linkAmazon}" target="_blank" class="btn-secundario btn-sm" style="display:inline-block; margin-top:8px;">🛒 Ver en Amazon</a>`
     : '';
 
-  const bloqueReseñasHtml = await _construirBloqueReseñasLibro(idCampaña);
+  const bloqueReseñasHtml = await _construirBloqueReseñasLibro(idCampaña, campanaRaw.id_libro);
 
   if (body) {
     body.innerHTML = `
