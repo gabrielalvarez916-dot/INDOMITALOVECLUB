@@ -472,19 +472,49 @@ function _barraDesgloseEstrellas(conteos, total) {
   }).join('');
 }
 
-async function _construirBloqueReseñasLibro(idCampaña, idLibro) {
-  // Junta las reseñas de TODAS las campañas del mismo libro (id_libro),
-  // no solo de esta campaña puntual — para cuando el libro tuvo varios
-  // relanzamientos y la mayoría de las reseñas quedaron en campañas
-  // anteriores ya vencidas.
+function _normalizarTituloLibro(str) {
+  // Saca tildes, pasa a minúsculas, recorta espacios de más — para poder
+  // comparar "El Amor Prohibido" con "el amor  prohibido" y que matcheen.
+  return (str || '')
+    .toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+async function _construirBloqueReseñasLibro(campanaRaw) {
+  // Junta las reseñas de TODAS las campañas del mismo libro, no solo de
+  // esta campaña puntual — para cuando el libro tuvo varios relanzamientos
+  // y la mayoría de las reseñas quedaron en campañas anteriores ya vencidas.
+  //
+  // id_libro casi nunca está cargado (la mayoría de los autores solo cargan
+  // la campaña, no un "libro" vinculado), así que si no está, agrupamos por
+  // mismo autor + mismo nombre de libro (normalizado) como método principal.
+  const idCampaña = campanaRaw.id;
   let idsCampanas = [idCampaña];
-  if (idLibro) {
+
+  if (campanaRaw.id_libro) {
     const { data: campanasDelLibro } = await supabaseClient
       .from('campanas')
       .select('id')
-      .eq('id_libro', idLibro);
+      .eq('id_libro', campanaRaw.id_libro);
     if (campanasDelLibro && campanasDelLibro.length > 0) {
       idsCampanas = campanasDelLibro.map(c => c.id);
+    }
+  } else if (campanaRaw.nombre_libro && campanaRaw.id_usuario_autor) {
+    const { data: campanasDelAutor } = await supabaseClient
+      .from('campanas')
+      .select('id, nombre_libro')
+      .eq('id_usuario_autor', campanaRaw.id_usuario_autor);
+    if (campanasDelAutor && campanasDelAutor.length > 0) {
+      const tituloNormalizado = _normalizarTituloLibro(campanaRaw.nombre_libro);
+      const coincidentes = campanasDelAutor.filter(
+        c => _normalizarTituloLibro(c.nombre_libro) === tituloNormalizado
+      );
+      if (coincidentes.length > 0) {
+        idsCampanas = coincidentes.map(c => c.id);
+      }
     }
   }
 
@@ -630,7 +660,7 @@ async function verDetalleCampaña(idCampaña) {
     ? `<a href="${c.linkAmazon}" target="_blank" class="btn-secundario btn-sm" style="display:inline-block; margin-top:8px;">🛒 Ver en Amazon</a>`
     : '';
 
-  const bloqueReseñasHtml = await _construirBloqueReseñasLibro(idCampaña, campanaRaw.id_libro);
+  const bloqueReseñasHtml = await _construirBloqueReseñasLibro(campanaRaw);
 
   if (body) {
     body.innerHTML = `
