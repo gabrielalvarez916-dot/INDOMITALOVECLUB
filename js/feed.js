@@ -621,8 +621,23 @@ async function verDetalleCampaña(idCampaña) {
   const c = await normalizarCampana(campanaRaw, undefined, archivoRaw, tropesCatalogoDetalle, idsSubgeneroDetalle);
   if (titulo) titulo.textContent = c.nombreLibro;
 
+  let posicionRanking = null;
+  if (campanaRaw.id_libro) {
+    const { data: rankingLibroRaw } = await supabaseClient
+      .from('ranking_libros_historico')
+      .select('pos_top')
+      .eq('id_libro', campanaRaw.id_libro)
+      .maybeSingle();
+    posicionRanking = rankingLibroRaw?.pos_top ?? null;
+  }
+
   const portadaHtml = c.linkPortada
-    ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; margin-bottom:20px;" onerror="this.style.display='none'" />`
+    ? `
+      <div style="position:relative; margin-bottom:20px;">
+        <img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; display:block;" onerror="this.style.display='none'" />
+        ${posicionRanking ? `<span class="tag-ranking-portada">🏆 #${posicionRanking}</span>` : ''}
+      </div>
+    `
     : '';
 
   const amazonHtml = c.linkAmazon

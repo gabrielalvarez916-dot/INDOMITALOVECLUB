@@ -5886,3 +5886,17 @@ img { max-width: 100%; display: block; }
   color: var(--texto-secundario, #6b5b52);
   margin: 0;
 }
+
+/* Tag de posición en el ranking, sobre la portada del modal de detalle de campaña */
+.tag-ranking-portada {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--bordo, #8B1A2B);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
