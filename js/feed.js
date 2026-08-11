@@ -490,8 +490,9 @@ async function _construirBloqueReseñasLibro(idCampaña, idLibro) {
   const { data, error } = await supabaseClient
     .from('resenas')
     .select(`
-      puntuacion_libro, comentarios, moods, rating_spice, rating_drama,
-      usuarios!resenas_id_usuario_resenador_fkey ( alias )
+      puntuacion_libro, comentarios, moods,
+      rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
+      usuarios!resenas_id_usuario_resenador_fkey ( id, alias, avatares ( imagen_url ) )
     `)
     .in('id_campana', idsCampanas);
 
@@ -511,10 +512,15 @@ async function _construirBloqueReseñasLibro(idCampaña, idLibro) {
   const conteos = {};
   conValoracion.forEach(r => { conteos[r.puntuacion_libro] = (conteos[r.puntuacion_libro] || 0) + 1; });
 
-  const conSpice = data.filter(r => r.rating_spice != null);
-  const promSpice = conSpice.length > 0 ? conSpice.reduce((s, r) => s + r.rating_spice, 0) / conSpice.length : null;
-  const conDrama = data.filter(r => r.rating_drama != null);
-  const promDrama = conDrama.length > 0 ? conDrama.reduce((s, r) => s + r.rating_drama, 0) / conDrama.length : null;
+  // Promedio de los 7 ratings decorativos (mismos que la reseña interna: romance, spice, drama, estilo, tension, ritmo, worldbuilding)
+  const CATEGORIAS_RATING = ['romance', 'spice', 'drama', 'estilo', 'tension', 'ritmo', 'worldbuilding'];
+  const promediosRating = {};
+  CATEGORIAS_RATING.forEach(cat => {
+    const campo = 'rating_' + cat;
+    const conValor = data.filter(r => r[campo] != null);
+    promediosRating[cat] = conValor.length > 0 ? conValor.reduce((s, r) => s + r[campo], 0) / conValor.length : null;
+  });
+  const hayRatings = Object.values(promediosRating).some(v => v !== null);
 
   const conteoMoods = {};
   data.forEach(r => (r.moods || []).forEach(m => { conteoMoods[m] = (conteoMoods[m] || 0) + 1; }));
@@ -535,17 +541,20 @@ async function _construirBloqueReseñasLibro(idCampaña, idLibro) {
         ${_barraDesgloseEstrellas(conteos, total)}
       </div>
 
-      ${(moodsOrdenados.length > 0 || promSpice !== null || promDrama !== null) ? `
+      ${(moodsOrdenados.length > 0 || hayRatings) ? `
         <div class="resenas-obtenidas-extras">
           ${moodsOrdenados.length > 0 ? `
             <div class="resenas-obtenidas-moods">
-              ${moodsOrdenados.map(([m, c]) => `<span class="badge-mood">${m} · ${c}</span>`).join('')}
+              ${moodsOrdenados.map(([m, c]) => `<span class="badge-mood">${_esc(_LABELS_MOODS[m] || m)} · ${c}</span>`).join('')}
             </div>
           ` : ''}
-          <div class="resenas-obtenidas-ratings-internos">
-            ${promSpice !== null ? `<span class="rating-interno">🌶️ Spice: <strong>${promSpice.toFixed(1)}</strong></span>` : ''}
-            ${promDrama !== null ? `<span class="rating-interno">🎭 Drama: <strong>${promDrama.toFixed(1)}</strong></span>` : ''}
-          </div>
+          ${hayRatings ? `
+            <div class="resenas-obtenidas-ratings-internos">
+              ${CATEGORIAS_RATING.filter(cat => promediosRating[cat] !== null).map(cat => `
+                <span class="rating-interno">${_ICONOS_RATING_DECORATIVO[cat]} ${cat[0].toUpperCase() + cat.slice(1)}: <strong>${promediosRating[cat].toFixed(1)}</strong></span>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
       ` : ''}
 
@@ -553,7 +562,8 @@ async function _construirBloqueReseñasLibro(idCampaña, idLibro) {
         <div class="resenas-obtenidas-lista">
           ${reseñasConComentario.map(r => `
             <div class="resenas-obtenidas-item">
-              <div class="resenas-obtenidas-item-header">
+              <div class="resenas-obtenidas-item-header" ${r.usuarios?.id ? `onclick="abrirPerfilPublico('${r.usuarios.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
+                <img class="resenas-obtenidas-item-avatar" src="${r.usuarios?.avatares?.imagen_url || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="" onerror="this.style.visibility='hidden'" />
                 <span class="resenas-obtenidas-item-alias">${_esc(r.usuarios?.alias || 'Reseñador@')}</span>
                 <span class="resenas-obtenidas-item-estrellas">${'★'.repeat(r.puntuacion_libro || 0)}${'☆'.repeat(5 - (r.puntuacion_libro || 0))}</span>
               </div>

@@ -5854,15 +5854,24 @@ img { max-width: 100%; display: block; }
 
 .resenas-obtenidas-item-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 4px;
+}
+
+.resenas-obtenidas-item-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .resenas-obtenidas-item-alias {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--texto-principal, #2C1810);
+  flex: 1;
 }
 
 .resenas-obtenidas-item-estrellas {
