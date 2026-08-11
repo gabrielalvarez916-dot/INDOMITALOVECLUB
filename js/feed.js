@@ -90,14 +90,47 @@ async function cargarFeed() {
     return;
   }
 
-  const idsLibros = [...new Set((campanas || []).map(c => c.id_libro).filter(Boolean))];
+  // clave_libro replica la lógica de calcular_ranking_libros_historico() en
+  // Supabase: usa id_libro si está, y si no arma una clave a partir del
+  // nombre del libro normalizado. PERO: la campaña activa (la que se ve en
+  // el feed) suele ser justo la que NO tiene id_libro cargado, mientras que
+  // las reseñas (y por lo tanto la fila de ranking) quedaron en campañas
+  // anteriores finalizadas que sí lo tienen. Por eso primero buscamos si
+  // alguna "campaña hermana" (mismo autor + mismo título) ya tiene un
+  // id_libro cargado, y usamos ese — así calzamos con la clave real que
+  // usó el backend al calcular el ranking.
+  const campanasSinIdLibro = (campanas || []).filter(c => !c.id_libro && c.nombre_libro && c.id_usuario_autor);
+  let idLibroPorAutorTitulo = {};
+  if (campanasSinIdLibro.length > 0) {
+    const autoresUnicos = [...new Set(campanasSinIdLibro.map(c => c.id_usuario_autor))];
+    const { data: hermanas } = await supabaseClient
+      .from('campanas')
+      .select('id_usuario_autor, nombre_libro, id_libro')
+      .in('id_usuario_autor', autoresUnicos)
+      .not('id_libro', 'is', null);
+    (hermanas || []).forEach(h => {
+      const clave = h.id_usuario_autor + '||' + _normalizarTituloLibro(h.nombre_libro);
+      if (!idLibroPorAutorTitulo[clave]) idLibroPorAutorTitulo[clave] = h.id_libro;
+    });
+  }
+
+  function _claveLibroCampana(c) {
+    if (c.id_libro) return c.id_libro;
+    if (c.nombre_libro && c.id_usuario_autor) {
+      const claveAutorTitulo = c.id_usuario_autor + '||' + _normalizarTituloLibro(c.nombre_libro);
+      if (idLibroPorAutorTitulo[claveAutorTitulo]) return idLibroPorAutorTitulo[claveAutorTitulo];
+    }
+    return 'sin_id_' + (c.nombre_libro || '').toLowerCase().replace(/\s+/g, '_');
+  }
+
+  const clavesLibros = [...new Set((campanas || []).map(c => _claveLibroCampana(c)))];
   let rankingsPorLibro = {};
-  if (idsLibros.length > 0) {
+  if (clavesLibros.length > 0) {
     const { data: rankings } = await supabaseClient
       .from('ranking_libros_historico')
       .select('*')
-      .in('id_libro', idsLibros);
-    (rankings || []).forEach(r => { rankingsPorLibro[r.id_libro] = r; });
+      .in('clave_libro', clavesLibros);
+    (rankings || []).forEach(r => { rankingsPorLibro[r.clave_libro] = r; });
   }
 
   const idsCampanas = (campanas || []).map(c => c.id);
@@ -135,7 +168,7 @@ async function cargarFeed() {
   }
 
   _campañasTodas = await Promise.all(
-    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[c.id_libro], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id], idsCampanasImpulsadas.has(c.id)))
+    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[_claveLibroCampana(c)], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id], idsCampanasImpulsadas.has(c.id)))
   );
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
