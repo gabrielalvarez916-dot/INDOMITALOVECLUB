@@ -188,7 +188,7 @@ function renderizarSoloParaVos() {
   scroll.innerHTML = candidatas.map(c => `
     <div class="solo-para-vos-card" onclick="verDetalleCampaña('${c.id}')">
       ${c.linkPortada
-        ? `<img class="solo-para-vos-portada" src="${c.linkPortada}" alt="${c.nombreLibro}" />`
+        ? `<div style="position:relative;"><img class="solo-para-vos-portada" src="${c.linkPortada}" alt="${c.nombreLibro}" />${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}</div>`
         : `<div class="solo-para-vos-portada-placeholder">📖</div>`}
       <p class="solo-para-vos-card-titulo">${c.nombreLibro}</p>
       <p class="solo-para-vos-card-match">${c.matchEmoji} ${c.matchLabel} · ${c.matchScore}%</p>
@@ -268,6 +268,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
     rankingLibro: ranking ? {
       esTop5: ranking.es_top5,
       esTop20: ranking.es_top20,
+      posicion: ranking.pos_top,
       promedio: ranking.promedio_puntuacion,
       totalReseñas: ranking.total_resenas
     } : undefined
@@ -359,7 +360,7 @@ function construirCardCampaña(c) {
   const rol = Sesion.rol();
 
   const portadaHtml = c.linkPortada
-  ? `<img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>`
+  ? `<div style="position:relative;width:100%;height:100%;"><img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}</div>`
   : `<div class="campana-portada-lista-placeholder">📖</div>`;
 
  const listaTropes = (c.tropesCatalogo && c.tropesCatalogo.length > 0)
@@ -621,23 +622,8 @@ async function verDetalleCampaña(idCampaña) {
   const c = await normalizarCampana(campanaRaw, undefined, archivoRaw, tropesCatalogoDetalle, idsSubgeneroDetalle);
   if (titulo) titulo.textContent = c.nombreLibro;
 
-  let posicionRanking = null;
-  if (campanaRaw.id_libro) {
-    const { data: rankingLibroRaw } = await supabaseClient
-      .from('ranking_libros_historico')
-      .select('pos_top')
-      .eq('id_libro', campanaRaw.id_libro)
-      .maybeSingle();
-    posicionRanking = rankingLibroRaw?.pos_top ?? null;
-  }
-
   const portadaHtml = c.linkPortada
-    ? `
-      <div style="position:relative; margin-bottom:20px;">
-        <img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; display:block;" onerror="this.style.display='none'" />
-        ${posicionRanking ? `<span class="tag-ranking-portada">🏆 #${posicionRanking}</span>` : ''}
-      </div>
-    `
+    ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; margin-bottom:20px;" onerror="this.style.display='none'" />`
     : '';
 
   const amazonHtml = c.linkAmazon
