@@ -5876,9 +5876,9 @@ img { max-width: 100%; display: block; }
 }
 
 .resenas-obtenidas-item-estrellas {
-  font-size: 0.85rem;
+  font-size: 1.15rem;
   color: var(--bordo, #8B1A2B);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 }
 
 .resenas-obtenidas-item-comentario {
