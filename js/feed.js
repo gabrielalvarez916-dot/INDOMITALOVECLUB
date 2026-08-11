@@ -126,9 +126,14 @@ async function cargarFeed() {
   const clavesLibros = [...new Set((campanas || []).map(c => _claveLibroCampana(c)))];
   let rankingsPorLibro = {};
   if (clavesLibros.length > 0) {
+    // Usamos el ranking MENSUAL (misma tabla y mismo mes que la pantalla
+    // pública de "Ranking de libros"), no el histórico de todos los
+    // tiempos — para que el badge de la card coincida con esa pantalla.
+    const mesActual = new Date().toISOString().slice(0, 7);
     const { data: rankings } = await supabaseClient
-      .from('ranking_libros_historico')
+      .from('ranking_libros')
       .select('*')
+      .eq('mes_año', mesActual)
       .in('clave_libro', clavesLibros);
     (rankings || []).forEach(r => { rankingsPorLibro[r.clave_libro] = r; });
   }
