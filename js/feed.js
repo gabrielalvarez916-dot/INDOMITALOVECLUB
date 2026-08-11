@@ -450,6 +450,107 @@ ${requisitosHtml}
 // DETALLE DE CAMPAÑA
 // ────────────────────────────────────────────────────────────
 
+// ────────────────────────────────────────────────────────────
+// BLOQUE "RESEÑAS OBTENIDAS" (estilo Amazon) — dentro del modal de
+// detalle de campaña (feed). Muestra promedio + desglose por estrella,
+// promedio de moods/spice/drama, y el listado de reseñas individuales
+// (alias + estrellas + comentario — solo si tiene comentario).
+// ────────────────────────────────────────────────────────────
+
+function _barraDesgloseEstrellas(conteos, total) {
+  return [5, 4, 3, 2, 1].map(n => {
+    const cant = conteos[n] || 0;
+    const pct = total > 0 ? Math.round((cant / total) * 100) : 0;
+    return `
+      <div class="resenas-barra-fila">
+        <span class="resenas-barra-label">${n} ★</span>
+        <div class="resenas-barra-fondo"><div class="resenas-barra-relleno" style="width:${pct}%;"></div></div>
+        <span class="resenas-barra-cant">${cant}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+async function _construirBloqueReseñasLibro(idCampaña) {
+  const { data, error } = await supabaseClient
+    .from('resenas')
+    .select(`
+      puntuacion_libro, comentarios, moods, rating_spice, rating_drama,
+      usuarios!resenas_id_usuario_resenador_fkey ( alias )
+    `)
+    .eq('id_campana', idCampaña);
+
+  if (error || !data || data.length === 0) {
+    return `
+      <div class="resenas-obtenidas-bloque">
+        <p class="resenas-obtenidas-titulo">Reseñas obtenidas</p>
+        <p class="estado-vacio-texto" style="font-size:13px;">Todavía no hay reseñas para este libro.</p>
+      </div>
+    `;
+  }
+
+  const conValoracion = data.filter(r => r.puntuacion_libro != null);
+  const total = conValoracion.length;
+  const promedio = total > 0 ? conValoracion.reduce((s, r) => s + r.puntuacion_libro, 0) / total : 0;
+
+  const conteos = {};
+  conValoracion.forEach(r => { conteos[r.puntuacion_libro] = (conteos[r.puntuacion_libro] || 0) + 1; });
+
+  const conSpice = data.filter(r => r.rating_spice != null);
+  const promSpice = conSpice.length > 0 ? conSpice.reduce((s, r) => s + r.rating_spice, 0) / conSpice.length : null;
+  const conDrama = data.filter(r => r.rating_drama != null);
+  const promDrama = conDrama.length > 0 ? conDrama.reduce((s, r) => s + r.rating_drama, 0) / conDrama.length : null;
+
+  const conteoMoods = {};
+  data.forEach(r => (r.moods || []).forEach(m => { conteoMoods[m] = (conteoMoods[m] || 0) + 1; }));
+  const moodsOrdenados = Object.entries(conteoMoods).sort((a, b) => b[1] - a[1]);
+
+  const reseñasConComentario = data.filter(r => r.comentarios && r.comentarios.trim() !== '');
+
+  return `
+    <div class="resenas-obtenidas-bloque">
+      <p class="resenas-obtenidas-titulo">Reseñas obtenidas</p>
+
+      <div class="resenas-obtenidas-resumen">
+        <span class="resenas-obtenidas-promedio">⭐ ${promedio.toFixed(1)}</span>
+        <span class="resenas-obtenidas-total">${total} valoraci${total === 1 ? 'ón' : 'ones'}</span>
+      </div>
+
+      <div class="resenas-obtenidas-desglose">
+        ${_barraDesgloseEstrellas(conteos, total)}
+      </div>
+
+      ${(moodsOrdenados.length > 0 || promSpice !== null || promDrama !== null) ? `
+        <div class="resenas-obtenidas-extras">
+          ${moodsOrdenados.length > 0 ? `
+            <div class="resenas-obtenidas-moods">
+              ${moodsOrdenados.map(([m, c]) => `<span class="badge-mood">${m} · ${c}</span>`).join('')}
+            </div>
+          ` : ''}
+          <div class="resenas-obtenidas-ratings-internos">
+            ${promSpice !== null ? `<span class="rating-interno">🌶️ Spice: <strong>${promSpice.toFixed(1)}</strong></span>` : ''}
+            ${promDrama !== null ? `<span class="rating-interno">🎭 Drama: <strong>${promDrama.toFixed(1)}</strong></span>` : ''}
+          </div>
+        </div>
+      ` : ''}
+
+      ${reseñasConComentario.length > 0 ? `
+        <div class="resenas-obtenidas-lista">
+          ${reseñasConComentario.map(r => `
+            <div class="resenas-obtenidas-item">
+              <div class="resenas-obtenidas-item-header">
+                <span class="resenas-obtenidas-item-alias">${_esc(r.usuarios?.alias || 'Reseñador@')}</span>
+                <span class="resenas-obtenidas-item-estrellas">${'★'.repeat(r.puntuacion_libro || 0)}${'☆'.repeat(5 - (r.puntuacion_libro || 0))}</span>
+              </div>
+              <p class="resenas-obtenidas-item-comentario">${_esc(r.comentarios)}</p>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
 async function verDetalleCampaña(idCampaña) {
   mostrarModal('modal-detalle-campana');
 
@@ -503,6 +604,8 @@ async function verDetalleCampaña(idCampaña) {
     ? `<a href="${c.linkAmazon}" target="_blank" class="btn-secundario btn-sm" style="display:inline-block; margin-top:8px;">🛒 Ver en Amazon</a>`
     : '';
 
+  const bloqueReseñasHtml = await _construirBloqueReseñasLibro(idCampaña);
+
   if (body) {
     body.innerHTML = `
       ${portadaHtml}
@@ -532,6 +635,7 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
         <p style="font-size:13px;">${c.modalidadLectura === 'descarga' ? '⬇️ <strong>Aclaración:</strong> Se lee con descarga del archivo' : '📖 <strong>Aclaración:</strong> Se lee en el visor (sin descarga)'}</p>
       </div>
       ${amazonHtml}
+      ${bloqueReseñasHtml}
     `;
   }
 

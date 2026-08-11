@@ -5728,3 +5728,152 @@ img { max-width: 100%; display: block; }
   background: #fbe4e4;
   color: #a32424;
 }
+
+/* ============================================================
+   Reseñas obtenidas (estilo Amazon) — modal detalle de campaña (feed)
+   ============================================================ */
+.resenas-obtenidas-bloque {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--crema-oscura, #E8D9BE);
+}
+
+.resenas-obtenidas-titulo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--texto-principal, #2C1810);
+}
+
+.resenas-obtenidas-resumen {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.resenas-obtenidas-promedio {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--bordo, #8B1A2B);
+}
+
+.resenas-obtenidas-total {
+  font-size: 0.85rem;
+  color: var(--gris-suave, #999);
+}
+
+.resenas-obtenidas-desglose {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 14px;
+}
+
+.resenas-barra-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resenas-barra-label {
+  font-size: 0.75rem;
+  color: var(--gris-suave, #999);
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.resenas-barra-fondo {
+  flex: 1;
+  height: 8px;
+  background: var(--crema-oscura, #E8D9BE);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.resenas-barra-relleno {
+  height: 100%;
+  background: var(--bordo, #8B1A2B);
+  border-radius: 20px;
+}
+
+.resenas-barra-cant {
+  font-size: 0.75rem;
+  color: var(--gris-suave, #999);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.resenas-obtenidas-extras {
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: var(--crema, #F5ECD7);
+  border-radius: 10px;
+}
+
+.resenas-obtenidas-moods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.badge-mood {
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  background: #fff;
+  border: 1px solid var(--crema-oscura, #E8D9BE);
+  border-radius: 20px;
+  color: var(--texto-principal, #2C1810);
+}
+
+.resenas-obtenidas-ratings-internos {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rating-interno {
+  font-size: 0.8rem;
+  color: var(--texto-principal, #2C1810);
+}
+
+.resenas-obtenidas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.resenas-obtenidas-item {
+  padding: 10px 0;
+  border-top: 1px solid var(--crema-oscura, #E8D9BE);
+}
+
+.resenas-obtenidas-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.resenas-obtenidas-item-alias {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--texto-principal, #2C1810);
+}
+
+.resenas-obtenidas-item-estrellas {
+  font-size: 0.85rem;
+  color: var(--bordo, #8B1A2B);
+  letter-spacing: 1px;
+}
+
+.resenas-obtenidas-item-comentario {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--texto-secundario, #6b5b52);
+  margin: 0;
+}
