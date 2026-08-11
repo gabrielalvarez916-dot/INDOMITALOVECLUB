@@ -765,7 +765,7 @@ avatarEl.src = _resolverAvatar(perfil.avatarUrl);
     if (perfil.seguidoresVerificados) {
       const badge = document.createElement('span');
       badge.className = 'pp-badge-verificado';
-      badge.title = 'Seguidores verificados (+2000)';
+      badge.title = 'Seguidores verificados (+1500)';
       badge.textContent = ' ✔';
       aliasEl.appendChild(badge);
     }
