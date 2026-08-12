@@ -1164,6 +1164,110 @@ img { max-width: 100%; display: block; }
   font-weight: 600;
 }
 
+/* ── Acordeón de planes (modal Impulsar campaña) ─────────────── */
+.planes-campana-acordeon {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.plan-campana-item {
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.plan-campana-item.abierto {
+  border-color: var(--bordo-claro);
+}
+
+.plan-campana-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--crema-suave);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transicion);
+}
+
+.plan-campana-header:hover { background: var(--rosa-claro); }
+
+.plan-campana-item.abierto .plan-campana-header {
+  background: var(--rosa-claro);
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.plan-campana-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bordo);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.plan-campana-subtitulo {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--gris-suave);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 1px;
+}
+
+.plan-campana-header-info {
+  flex: 1;
+}
+
+.plan-campana-precio {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gris-texto);
+  white-space: nowrap;
+}
+
+.plan-campana-chevron {
+  font-size: 11px;
+  color: var(--gris-suave);
+  transition: transform 0.2s ease;
+}
+
+.plan-campana-item.abierto .plan-campana-chevron {
+  transform: rotate(180deg);
+}
+
+.plan-campana-body {
+  padding: 14px;
+  background: var(--blanco);
+}
+
+.plan-campana-body p { margin: 0 0 10px 0; line-height: 1.55; }
+
+.plan-campana-body ul {
+  margin: 0 0 12px 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.plan-campana-precio-detalle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bordo);
+  margin-bottom: 12px;
+}
+
+.plan-campana-acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .lista-item {
   background: var(--blanco);
   border: 1px solid var(--gris-borde);

@@ -394,9 +394,74 @@ function botonImpulsarCampanaHtml(c) {
 }
 
 /**
- * Abre el modal explicativo de "Impulsar campaña" (reutiliza el modal
- * genérico modal-detalle-campana) con el texto comercial, el precio
- * según configuración y el descuento por créditos disponibles.
+ * Definición comercial de los planes de campaña (Select, Resistence y Complete
+ * todavía no están habilitados para compra — se muestran como "Próximamente").
+ * Impulso es el único con precio dinámico (tabla `configuracion`) y compra activa.
+ */
+const PLANES_CAMPANA_INFO = [
+  {
+    id: 'impulso',
+    nombre: 'Impulso',
+    subtitulo: 'Más reseñadores con match',
+    habilitado: true,
+    descripcion: (libro) => `Dale a <strong>${libro}</strong> los reseñadores que verdaderamente matchean con tu libro y tienen gustos en común. Impulso es la forma más rápida y confiable de encontrar reseñadores con 70% de match con tu campaña para asegurarte de que realmente van a disfrutar de tu libro.`,
+    incluye: (dias, compatMin) => [
+      `Portada destacada: tu libro en el slider principal ${dias === '7' ? 'una semana' : `${dias} días`}, lo primero que ven los reseñadores al entrar.`,
+      `Publicitamos tu campaña con un post en el Instagram de Indómita.`,
+      `Notificación directa: avisamos a los reseñadores con mejor compatibilidad con tu libro (${compatMin}% o más), tantos como cupos libres tenga, para que se postulen enseguida.`
+    ],
+    nota: 'Cada campaña puede impulsarse una sola vez, así que elegí sabiamente el momento.'
+  },
+  {
+    id: 'select',
+    nombre: 'Select',
+    subtitulo: 'Reseñadores con más visibilidad',
+    habilitado: false,
+    precioArs: 9000,
+    precioUsd: 6,
+    descripcion: (libro) => `Dale a <strong>${libro}</strong> reseñadores con más visibilidad en redes sociales. Select prioriza reseñadores con 50% o más de confiabilidad y más de 1.500 seguidores, para que tu campaña llegue a más lectores además de sumar cupos.`,
+    incluye: () => [
+      `Portada destacada: tu libro en el banner principal de la plataforma durante una semana.`,
+      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita (esa misma semana).`,
+      `Notificación directa: durante toda la semana avisamos a nuevos reseñadores que cumplan el perfil (50% o más de confiabilidad y más de 1.500 seguidores), buscando activamente candidatos con ese formato.`
+    ]
+  },
+  {
+    id: 'resistence',
+    nombre: 'Resistence',
+    subtitulo: 'Más reseñas entregadas',
+    habilitado: false,
+    precioArs: 12000,
+    precioUsd: 8,
+    descripcion: (libro) => `Dale a <strong>${libro}</strong> más reseñas entregadas, con reseñadores confiables y buen match. Resistence combina 70% o más de confiabilidad con un mínimo de 51% de match, para asegurar cupos que realmente se completen.`,
+    incluye: () => [
+      `Portada destacada: tu libro en banner y slider principal durante una semana.`,
+      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita por semana.`,
+      `Notificación directa: durante toda la semana avisamos a nuevos reseñadores que cumplan el perfil (70% o más de confiabilidad y mínimo 51% de match), buscando activamente candidatos con ese formato.`
+    ]
+  },
+  {
+    id: 'complete',
+    nombre: 'Complete',
+    subtitulo: 'Personalizado con auditoría',
+    habilitado: false,
+    precioArs: 15000,
+    precioUsd: 10,
+    descripcion: (libro) => `Dale a <strong>${libro}</strong> una estrategia 100% personalizada. Hacemos una auditoría de tu campaña para definir qué conviene priorizar —match, confiabilidad o seguidores— y armamos el orden de búsqueda de reseñadores a medida.`,
+    incluye: () => [
+      `Auditoría personalizada: analizamos tu campaña y te decimos qué priorizar.`,
+      `Portada destacada: tu libro en banner y slider principal durante dos semanas.`,
+      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita, durante dos semanas.`,
+      `Notificación directa en formato invitación: durante las dos semanas buscamos activamente nuevos reseñadores según la escala de tu auditoría (por ejemplo: primero 70% de confiabilidad, 2.000 seguidores y 70% de match; luego 70% de match y 70% de confiabilidad; luego 70% de match).`
+    ]
+  }
+];
+
+/**
+ * Abre el modal "Impulsar campaña" (reutiliza el modal genérico
+ * modal-detalle-campana) mostrando un acordeón con los 4 planes disponibles.
+ * Por ahora solo "Impulso" tiene precio dinámico (tabla `configuracion`) y
+ * botón de compra activo; los demás muestran "Próximamente".
  */
 async function abrirModalImpulsarCampana(idCampana) {
   const campana = _campañasAutor.find(c => c.id === idCampana);
@@ -409,8 +474,8 @@ async function abrirModalImpulsarCampana(idCampana) {
   const titulo = document.getElementById('modal-detalle-titulo');
   const body = document.getElementById('modal-detalle-body');
   const footer = document.getElementById('modal-detalle-footer');
-  if (titulo) titulo.textContent = `Impulsar campaña — ${campana.nombreLibro}`;
-  if (footer) footer.innerHTML = '';
+  if (titulo) titulo.textContent = `Elegí un plan — ${campana.nombreLibro}`;
+  if (footer) footer.innerHTML = `<button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>`;
   if (body) body.innerHTML = `<p class="form-hint">Cargando...</p>`;
 
   const { data: config } = await supabaseClient
@@ -418,37 +483,116 @@ async function abrirModalImpulsarCampana(idCampana) {
     .select('clave, valor')
     .in('clave', ['IMPULSO_PRECIO_ARS', 'IMPULSO_PRECIO_USD', 'IMPULSO_DURACION_DIAS_SLIDER', 'IMPULSO_COMPATIBILIDAD_MINIMA']);
   const val = (clave, fallback) => (config || []).find(c => c.clave === clave)?.valor ?? fallback;
-  const precioArs = parseInt(val('IMPULSO_PRECIO_ARS', '6000'));
-  const precioUsd = parseFloat(val('IMPULSO_PRECIO_USD', '4'));
+  const precioArsImpulso = parseInt(val('IMPULSO_PRECIO_ARS', '6000'));
+  const precioUsdImpulso = parseFloat(val('IMPULSO_PRECIO_USD', '4'));
   const dias = val('IMPULSO_DURACION_DIAS_SLIDER', '7');
   const compatMin = val('IMPULSO_COMPATIBILIDAD_MINIMA', '70');
 
   const creditos = await _obtenerCreditosDisponiblesAutor(user.id);
   const creditosTotales = creditos.reduce((acc, c) => acc + c.disponible, 0);
 
+  _ultimoContextoPlanesCampana = { idCampana, precioArsImpulso, precioUsdImpulso, dias, compatMin, creditosTotales, nombreLibro: campana.nombreLibro };
+
   if (body) body.innerHTML = `
-    <div class="impulsar-campana-intro">
-      <p style="margin-bottom:10px;">Dale a <strong>${campana.nombreLibro}</strong> la visibilidad que se merece. <strong>Impulsar campaña</strong> es la forma más rápida de completar tus cupos, y hace tres cosas por vos en un solo paso:</p>
-      <ul style="margin:0 0 14px 0; padding-left:20px; line-height:1.6;">
-        <li>📌 <strong>Portada destacada:</strong> tu libro pasa al slider principal de la app durante ${dias} días, lo primero que ven los reseñadores al entrar.</li>
-        <li>📣 <strong>Difusión en redes:</strong> publicitamos tu campaña una vez en las redes oficiales de Indómita Love Club.</li>
-        <li>💌 <strong>Notificación directa:</strong> avisamos a los reseñadores con mejor compatibilidad con tu libro (${compatMin}% o más) — tantos como cupos libres tengas — para que se postulen enseguida.</li>
-      </ul>
-      <p class="form-hint" style="margin-bottom:14px;">Cada campaña puede impulsarse una única vez, así que elegí bien el momento.</p>
-      <div class="creditos-autor-banner" style="margin-bottom:10px;">
-        Precio del impulso: <strong>$${precioArs.toLocaleString('es-AR')} ARS</strong> (autores nacionales) o <strong>USD ${precioUsd}</strong> (internacionales)
-      </div>
-      ${creditosTotales > 0
-        ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — se descuentan automáticamente del precio.</div>`
-        : ''}
-      <p class="form-hint" style="margin-top:10px;">⏳ El impulso no se activa al instante: en breve te enviamos el link de pago para coordinarlo y, una vez confirmado, lo activamos.</p>
-      <div id="impulsar-error" class="mensaje-error" style="display:none; margin-top:10px;"></div>
-      <div id="impulsar-ok" class="mensaje-ok" style="display:none; margin-top:10px;"></div>
+    <div class="planes-campana-acordeon">
+      ${PLANES_CAMPANA_INFO.map(p => _renderPlanCampanaItem(p, _ultimoContextoPlanesCampana)).join('')}
     </div>
   `;
-  if (footer) footer.innerHTML = `
-    <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
-    <button type="button" class="btn-primario" id="btn-confirmar-impulso" onclick="confirmarImpulsarCampana('${idCampana}', ${precioArs}, ${precioUsd})">Confirmar impulso</button>
+}
+
+let _ultimoContextoPlanesCampana = null;
+
+/**
+ * Arma el HTML de un item del acordeón de planes (colapsado por defecto).
+ */
+function _renderPlanCampanaItem(plan, ctx) {
+  const precioArs = plan.id === 'impulso' ? ctx.precioArsImpulso : plan.precioArs;
+  const precioUsd = plan.id === 'impulso' ? ctx.precioUsdImpulso : plan.precioUsd;
+
+  return `
+    <div class="plan-campana-item" id="plan-campana-item-${plan.id}">
+      <button type="button" class="plan-campana-header" onclick="toggleAcordeonPlanCampana('${plan.id}')">
+        <div class="plan-campana-header-info">
+          <span class="plan-campana-nombre">${plan.nombre}
+            <span class="plan-campana-subtitulo">${plan.subtitulo}</span>
+          </span>
+        </div>
+        <span class="plan-campana-precio">$${precioArs.toLocaleString('es-AR')} / USD ${precioUsd}</span>
+        <span class="plan-campana-chevron">▼</span>
+      </button>
+      <div class="plan-campana-body" id="plan-campana-body-${plan.id}" style="display:none;"></div>
+    </div>
+  `;
+}
+
+/**
+ * Despliega/colapsa un plan del acordeón (solo uno abierto a la vez) y,
+ * la primera vez que se abre, renderiza su contenido completo.
+ */
+function toggleAcordeonPlanCampana(idPlan) {
+  const ctx = _ultimoContextoPlanesCampana;
+  if (!ctx) return;
+
+  PLANES_CAMPANA_INFO.forEach(p => {
+    const item = document.getElementById(`plan-campana-item-${p.id}`);
+    const bodyEl = document.getElementById(`plan-campana-body-${p.id}`);
+    if (!item || !bodyEl) return;
+
+    if (p.id === idPlan) {
+      const yaAbierto = item.classList.contains('abierto');
+      if (yaAbierto) {
+        item.classList.remove('abierto');
+        bodyEl.style.display = 'none';
+      } else {
+        item.classList.add('abierto');
+        bodyEl.style.display = 'block';
+        bodyEl.innerHTML = _renderPlanCampanaDetalle(p, ctx);
+      }
+    } else {
+      item.classList.remove('abierto');
+      bodyEl.style.display = 'none';
+    }
+  });
+}
+
+/**
+ * Arma el detalle completo (descripción, incluye, precio y acciones) de un
+ * plan cuando se despliega dentro del acordeón.
+ */
+function _renderPlanCampanaDetalle(plan, ctx) {
+  const precioArs = plan.id === 'impulso' ? ctx.precioArsImpulso : plan.precioArs;
+  const precioUsd = plan.id === 'impulso' ? ctx.precioUsdImpulso : plan.precioUsd;
+  const incluye = plan.incluye(ctx.dias, ctx.compatMin);
+
+  const accionesHtml = plan.habilitado
+    ? `
+      <div class="creditos-autor-banner" style="margin-bottom:10px;">
+        Precio: <strong>$${precioArs.toLocaleString('es-AR')} ARS</strong> (autores nacionales) o <strong>USD ${precioUsd}</strong> (internacionales)
+      </div>
+      ${ctx.creditosTotales > 0
+        ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(ctx.creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — se descuentan automáticamente del precio.</div>`
+        : ''}
+      <p class="form-hint" style="margin-top:10px; margin-bottom:12px;">⏳ No se activa al instante: en breve te enviamos el link de pago para coordinarlo y, una vez confirmado, lo activamos.</p>
+      <div id="impulsar-error" class="mensaje-error" style="display:none; margin-bottom:10px;"></div>
+      <div id="impulsar-ok" class="mensaje-ok" style="display:none; margin-bottom:10px;"></div>
+      <div class="plan-campana-acciones">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-primario" id="btn-confirmar-impulso" onclick="confirmarImpulsarCampana('${ctx.idCampana}', ${precioArs}, ${precioUsd})">Comprar ahora</button>
+      </div>
+    `
+    : `
+      <div class="plan-campana-precio-detalle">$${precioArs.toLocaleString('es-AR')} ARS (autores nacionales) / USD ${precioUsd} (internacionales)</div>
+      <div class="plan-campana-acciones">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-sm" disabled style="background:rgba(0,0,0,0.08); color:var(--gris-suave); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Próximamente</button>
+      </div>
+    `;
+
+  return `
+    <p>${plan.descripcion(ctx.nombreLibro)}</p>
+    <ul>${incluye.map(i => `<li>${i}</li>`).join('')}</ul>
+    ${plan.nota ? `<p class="form-hint" style="margin-bottom:12px;">${plan.nota}</p>` : ''}
+    ${accionesHtml}
   `;
 }
 
