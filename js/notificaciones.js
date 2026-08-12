@@ -22,6 +22,18 @@ function _hashSeed(str) {
   return h;
 }
 
+// Traduce el código interno del badge histórico (columna gamificacion.badge_historico)
+// a un nombre legible para la notificación.
+function _nombreBadgeHistorico(codigo) {
+  const nombres = {
+    nuevo_miembro: 'Nueva/o miembro',
+    novato: 'Novato/a',
+    intermedio: 'Intermedio/a',
+    experto: 'Experto/a',
+  };
+  return nombres[codigo] || codigo || 'un nuevo nivel';
+}
+
 const VARIANTES = {
   // AUTOR
   postulacion_nueva: {
@@ -70,6 +82,38 @@ const VARIANTES = {
       (d) => `Tu impulso ${d.plan || ''} para "${d.nombreLibro || 'tu campaña'}" fue rechazado${d.motivo ? `: ${d.motivo}` : '.'}`,
       (d) => `No pudimos aprobar tu impulso ${d.plan || ''} de "${d.nombreLibro || 'tu campaña'}"${d.motivo ? `: ${d.motivo}` : '.'}`,
       (d) => `Rechazamos el impulso ${d.plan || ''} de "${d.nombreLibro || 'tu campaña'}"${d.motivo ? `. Motivo: ${d.motivo}` : '.'}`,
+    ],
+  },
+  ajuste_calificacion: {
+    emoji: '⚖️',
+    textos: [
+      (d) => `Tu calificación en "${d.nombreLibro || ''}" cambió de ${d.puntuacionAnterior ?? '?'} a ${d.puntuacionNueva ?? '?'}.`,
+      (d) => `El autor de "${d.nombreLibro || ''}" ajustó tu nota: ahora es ${d.puntuacionNueva ?? '?'}.`,
+      (d) => `Revisión de nota en "${d.nombreLibro || ''}": pasó de ${d.puntuacionAnterior ?? '?'} a ${d.puntuacionNueva ?? '?'}.`,
+    ],
+  },
+  campana_finalizada: {
+    emoji: '🏁',
+    textos: [
+      (d) => `"${d.nombreLibro || ''}" llegó al final. ¿Y ahora qué hacemos con nuestras vidas?`,
+      (d) => `Se terminó la campaña de "${d.nombreLibro || ''}". Nosotras ya tenemos el pochoclo.`,
+      (d) => `Campaña finalizada. "${d.nombreLibro || ''}" hizo lo suyo. Ahora te toca a vos.`,
+    ],
+  },
+  impulso_alta_coincidencia: {
+    emoji: '❤️‍🔥',
+    textos: [
+      (d) => `No queremos meternos en tu vida, pero "${d.nombreLibro || ''}" tiene ${Math.round(d.score || 0)}% de compatibilidad con vos.`,
+      (d) => `Tu algoritmo te conoce mejor que vos. "${d.nombreLibro || ''}" es para vos (${Math.round(d.score || 0)}% match).`,
+      (d) => `No te estamos diciendo qué leer, pero "${d.nombreLibro || ''}" te queda demasiado bien.`,
+    ],
+  },
+  badge_historico: {
+    emoji: '🏅',
+    textos: [
+      (d) => `Subiste de nivel: ahora sos "${_nombreBadgeHistorico(d.badge)}".`,
+      (d) => `Nuevo escalón desbloqueado: "${_nombreBadgeHistorico(d.badge)}".`,
+      (d) => `Tu trayectoria avanzó. Ya sos "${_nombreBadgeHistorico(d.badge)}".`,
     ],
   },
   postulacion_abandono: {
