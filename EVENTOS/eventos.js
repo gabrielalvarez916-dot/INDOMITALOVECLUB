@@ -346,7 +346,7 @@ async function renderPaginaEvento(datosFrescos) {
   const evento = _EventosState.eventoActivo;
   const progreso = _EventosState.progreso;
 
-  const tieneMapaVisual = !!(evento.tema?.mapa?.fondo && Array.isArray(evento.tema?.mapa?.nodos) && evento.tema.mapa.nodos.length === 4);
+  const tieneMapaVisual = !!(evento.tema?.mapa?.fondo && Array.isArray(evento.tema?.mapa?.nodos) && evento.tema.mapa.nodos.length > 0);
   const bloqueInsignia = `
     <div class="evento-insignia-preview">
       <img src="${progreso.eventoCompleto ? evento.imagenes.insigniaColor : evento.imagenes.insigniaGris}" alt="Insignia ${evento.nombre}" />
@@ -425,7 +425,7 @@ function _renderCardReto(reto) {
  */
 function _renderMapaOListaRetos(evento, progreso) {
   const nodos = evento.tema?.mapa?.nodos;
-  const tieneMapa = evento.tema?.mapa?.fondo && Array.isArray(nodos) && nodos.length === 4;
+  const tieneMapa = evento.tema?.mapa?.fondo && Array.isArray(nodos) && nodos.length > 0;
 
   if (!tieneMapa) {
     return `<div class="evento-retos-lista">${progreso.retos.map(reto => _renderCardReto(reto)).join('')}</div>`;

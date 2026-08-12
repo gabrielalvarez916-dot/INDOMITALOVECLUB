@@ -380,7 +380,7 @@ function _construirSeccionTema() {
       </div>
     </div>
 
-    <p class="form-label" style="margin-top:14px;">Posición de los 4 nodos (% sobre el fondo)</p>
+    <p class="form-label" style="margin-top:14px;">Posición de los nodos (% sobre el fondo) — ${t.mapa.nodos.length} cargado${t.mapa.nodos.length === 1 ? '' : 's'}</p>
     <div style="position:relative; width:100%; max-width:420px; aspect-ratio:16/10; background:#f4e9e4; border-radius:8px; overflow:hidden; margin-bottom:10px;">
       ${t.mapa.fondoActual ? `<img src="${t.mapa.fondoActual}" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;" onerror="this.style.display='none'" />` : `<p class="form-hint" style="padding:10px;">Subí un fondo para previsualizar los nodos aquí.</p>`}
       ${t.mapa.nodos.map((n, i) => `
@@ -399,6 +399,10 @@ function _construirSeccionTema() {
           </div>
         </div>
       `).join('')}
+    </div>
+    <div class="form-fila" style="gap:8px; margin-top:4px;">
+      <button type="button" class="btn-secundario btn-sm" onclick="_agregarNodoMapaAdmin()">+ Agregar nodo</button>
+      <button type="button" class="btn-secundario btn-sm btn-peligro" onclick="_quitarNodoMapaAdmin()" ${t.mapa.nodos.length <= 1 ? 'disabled' : ''}>− Quitar último nodo</button>
     </div>
 
     <h4 class="panel-titulo" style="font-size:16px; margin-top:22px;">Secreto flotante</h4>
@@ -466,6 +470,25 @@ function _actualizarNodoMapaAdmin(idx, eje, valor) {
   if (marcador) marcador.style[eje === 'x' ? 'left' : 'top'] = `${num}%`;
 }
 
+/**
+ * Suma un nodo nuevo al final del mapa (posición 50/50 por defecto,
+ * el admin la ajusta a mano después) y vuelve a pintar el bloque de
+ * "Tema visual" para mostrarlo.
+ */
+function _agregarNodoMapaAdmin() {
+  _eventoFormState.tema.mapa.nodos.push({ x: 50, y: 50 });
+  document.getElementById('panel-tab-tema').innerHTML = _construirSeccionTema();
+}
+
+/**
+ * Quita el último nodo del mapa. No deja bajar de 1 nodo.
+ */
+function _quitarNodoMapaAdmin() {
+  if (_eventoFormState.tema.mapa.nodos.length <= 1) return;
+  _eventoFormState.tema.mapa.nodos.pop();
+  document.getElementById('panel-tab-tema').innerHTML = _construirSeccionTema();
+}
+
 function _capitalizarAdmin(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -480,7 +503,7 @@ function _normalizarTemaCargado(temaCrudo) {
   if (!temaCrudo || typeof temaCrudo !== 'object') return base;
 
   const nodosCrudos = temaCrudo.mapa?.nodos;
-  const nodosValidos = Array.isArray(nodosCrudos) && nodosCrudos.length === 4
+  const nodosValidos = Array.isArray(nodosCrudos) && nodosCrudos.length > 0
     ? nodosCrudos.map(n => ({ x: n.x ?? 0, y: n.y ?? 0 }))
     : base.mapa.nodos;
 
