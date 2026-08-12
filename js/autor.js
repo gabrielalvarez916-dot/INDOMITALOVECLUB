@@ -566,9 +566,6 @@ function _renderPlanCampanaDetalle(plan, ctx) {
 
   const accionesHtml = plan.habilitado
     ? `
-      <div class="creditos-autor-banner" style="margin-bottom:10px;">
-        Precio: <strong>$${precioArs.toLocaleString('es-AR')} ARS</strong> (autores nacionales) o <strong>USD ${precioUsd}</strong> (internacionales)
-      </div>
       ${ctx.creditosTotales > 0
         ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(ctx.creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — se descuentan automáticamente del precio.</div>`
         : ''}
@@ -581,7 +578,6 @@ function _renderPlanCampanaDetalle(plan, ctx) {
       </div>
     `
     : `
-      <div class="plan-campana-precio-detalle">$${precioArs.toLocaleString('es-AR')} ARS (autores nacionales) / USD ${precioUsd} (internacionales)</div>
       <div class="plan-campana-acciones">
         <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
         <button type="button" class="btn-sm" disabled style="background:rgba(0,0,0,0.08); color:var(--gris-suave); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Próximamente</button>
