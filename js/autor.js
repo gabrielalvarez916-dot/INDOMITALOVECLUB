@@ -452,7 +452,7 @@ const PLANES_CAMPANA_INFO = [
       `Auditoría personalizada: analizamos tu campaña y te decimos qué priorizar.`,
       `Portada destacada: tu libro en banner y slider principal durante dos semanas.`,
       `Publicitamos tu campaña con 2 posts en el Instagram de Indómita, durante dos semanas.`,
-      `Notificación directa en formato invitación: durante las dos semanas buscamos activamente nuevos reseñadores según la escala de tu auditoría (por ejemplo: primero 70% de confiabilidad, 2.000 seguidores y 70% de match; luego 70% de match y 70% de confiabilidad; luego 70% de match).`
+      `Notificación directa en formato invitación: durante las dos semanas buscamos activamente nuevos reseñadores según la escala de tu auditoría (por ejemplo: primero 70% de confiabilidad, 1.500 seguidores y 70% de match; luego 70% de match y 70% de confiabilidad; luego 70% de match).`
     ]
   }
 ];
