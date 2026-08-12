@@ -262,10 +262,12 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
 
-  // "Novedad": libros publicados (fecha_inicio) hace 10 días o menos.
+  // "Novedad": libros publicados (fecha_inicio) hace 5 días o menos, pero
+  // solo si el libro NO tiene posición en el ranking (son excluyentes).
   const fechaInicio = c.fecha_inicio ? new Date(c.fecha_inicio) : null;
   const diasDesdeInicio = fechaInicio ? Math.floor((hoy - fechaInicio) / (1000 * 60 * 60 * 24)) : null;
-  const esNovedad = diasDesdeInicio !== null && diasDesdeInicio >= 0 && diasDesdeInicio <= 10;
+  const tieneRanking = !!ranking?.pos_top;
+  const esNovedad = !tieneRanking && diasDesdeInicio !== null && diasDesdeInicio >= 0 && diasDesdeInicio <= 5;
 
   let match;
   if (usuario?.rol === 'reseñador' && usuario.id) {
