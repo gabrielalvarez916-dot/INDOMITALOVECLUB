@@ -152,3 +152,165 @@ function _escaparAtributoJs(str) {
 }
 
 EventosJuegos[1] = _iniciarJuego1;
+
+// ────────────────────────────────────────────────────────────
+// JUEGO 2 — Ordenar 4 portadas: se muestran 4 portadas en un orden
+// (posiciones 1 a 4) para memorizar. Se mezclan visualmente y cada
+// una queda marcada con una letra (A-D) según dónde cayó. Se ocultan.
+// Se pregunta, para cada posición ORIGINAL (1 a 4), qué letra le
+// correspondía. Si falla, se repite con 4 portadas nuevas al azar.
+// ────────────────────────────────────────────────────────────
+
+const _DURACION_FASE_JUEGO2_MS = 5000; // tiempo de cada fase (memorización y mezcla)
+const _LETRAS_JUEGO2 = ['A', 'B', 'C', 'D'];
+
+async function _iniciarJuego2() {
+  const titulo = document.getElementById('juego-evento-titulo');
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!titulo || !body || !footer) return;
+
+  titulo.textContent = 'Juego 2 · Ordená las tapas';
+  footer.innerHTML = '';
+  body.innerHTML = `
+    <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
+      <div class="spinner"></div>
+      <p style="margin-top:10px;">Preparando las tapas…</p>
+    </div>
+  `;
+  mostrarModal('modal-juego-evento');
+
+  await _jugarRondaJuego2();
+}
+
+async function _jugarRondaJuego2() {
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!body || !footer) return;
+
+  const { data: libros, error } = await supabaseClient.rpc('obtener_campanas_azar_para_juego', { p_cantidad: 4 });
+
+  if (error || !libros || libros.length < 4) {
+    body.innerHTML = `<p class="estado-vacio-texto">😕 No pudimos cargar el juego. Probá de nuevo en un rato.</p>`;
+    return;
+  }
+
+  footer.innerHTML = '';
+
+  // FASE A: memorización, en el orden original (posiciones 1 a 4)
+  body.innerHTML = `
+    <p style="text-align:center; font-weight:600; margin-bottom:14px;">Memorizá el orden…</p>
+    <div class="juego-tapas-fila" style="display:flex; gap:10px; justify-content:center;">
+      ${libros.map((l, i) => `
+        <div style="text-align:center;">
+          <img src="${_escaparHtml(l.link_portada)}" alt="" style="width:80px; height:120px; object-fit:cover; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" />
+          <p style="font-size:12px; color:var(--gris-suave); margin-top:4px;">${i + 1}</p>
+        </div>
+      `).join('')}
+    </div>
+    <div id="juego2-countdown-a" style="text-align:center; margin-top:14px; font-size:13px; color:var(--gris-suave);"></div>
+  `;
+  await _countdownJuego2('juego2-countdown-a', _DURACION_FASE_JUEGO2_MS);
+
+  // FASE B: se mezclan y aparece la letra de cada una según dónde cayó
+  const ordenMezclado = _mezclarArrayJuego(libros.map((_, i) => i)); // array de índices originales, en el nuevo orden visual
+  body.innerHTML = `
+    <p style="text-align:center; font-weight:600; margin-bottom:14px;">¡Se mezclaron! Fijate bien dónde cayó cada una…</p>
+    <div class="juego-tapas-fila" style="display:flex; gap:10px; justify-content:center;">
+      ${ordenMezclado.map((idxOriginal, k) => `
+        <div style="text-align:center;">
+          <p style="font-size:16px; font-weight:700; color:var(--bordo); margin-bottom:4px;">${_LETRAS_JUEGO2[k]}</p>
+          <img src="${_escaparHtml(libros[idxOriginal].link_portada)}" alt="" style="width:80px; height:120px; object-fit:cover; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" />
+        </div>
+      `).join('')}
+    </div>
+    <div id="juego2-countdown-b" style="text-align:center; margin-top:14px; font-size:13px; color:var(--gris-suave);"></div>
+  `;
+  await _countdownJuego2('juego2-countdown-b', _DURACION_FASE_JUEGO2_MS);
+
+  // Mapa: para cada posición ORIGINAL (0 a 3), qué letra le correspondió
+  const letraDePosicionOriginal = [];
+  ordenMezclado.forEach((idxOriginal, k) => {
+    letraDePosicionOriginal[idxOriginal] = _LETRAS_JUEGO2[k];
+  });
+
+  _mostrarPreguntaJuego2(letraDePosicionOriginal);
+}
+
+function _countdownJuego2(idContenedor, duracionMs) {
+  return new Promise(resolve => {
+    let segundosRestantes = Math.ceil(duracionMs / 1000);
+    const el = document.getElementById(idContenedor);
+    if (el) el.textContent = `${segundosRestantes}…`;
+    const intervalo = setInterval(() => {
+      segundosRestantes -= 1;
+      if (el) el.textContent = segundosRestantes > 0 ? `${segundosRestantes}…` : '';
+      if (segundosRestantes <= 0) clearInterval(intervalo);
+    }, 1000);
+    setTimeout(() => {
+      clearInterval(intervalo);
+      resolve();
+    }, duracionMs);
+  });
+}
+
+function _mostrarPreguntaJuego2(letraDePosicionOriginal) {
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!body || !footer) return;
+
+  body.innerHTML = `
+    <p style="text-align:center; font-weight:600; margin-bottom:16px;">¿Cuál es el orden correcto?</p>
+    <div id="juego2-respuestas" style="display:flex; flex-direction:column; gap:10px;">
+      ${[0, 1, 2, 3].map(i => `
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-weight:600; min-width:70px;">Posición ${i + 1}</span>
+          <select class="form-input" id="juego2-select-${i}" style="flex:1;">
+            <option value="">Elegí una letra</option>
+            ${_LETRAS_JUEGO2.map(letra => `<option value="${letra}">${letra}</option>`).join('')}
+          </select>
+        </div>
+      `).join('')}
+    </div>
+    <p id="juego2-feedback" style="text-align:center; margin-top:14px; font-size:14px;"></p>
+  `;
+
+  footer.innerHTML = `
+    <button type="button" class="btn-primario" onclick="_confirmarJuego2(${JSON.stringify(letraDePosicionOriginal)})">Confirmar</button>
+  `;
+}
+
+async function _confirmarJuego2(letraDePosicionOriginal) {
+  const feedback = document.getElementById('juego2-feedback');
+  const respuestas = [0, 1, 2, 3].map(i => document.getElementById(`juego2-select-${i}`)?.value);
+
+  if (respuestas.some(r => !r)) {
+    if (feedback) feedback.textContent = 'Completá las 4 posiciones antes de confirmar.';
+    return;
+  }
+
+  const esCorrecto = respuestas.every((letra, i) => letra === letraDePosicionOriginal[i]);
+
+  const footer = document.getElementById('juego-evento-footer');
+  if (footer) footer.innerHTML = '';
+
+  if (esCorrecto) {
+    if (feedback) feedback.innerHTML = '🌸 ¡Correcto!';
+
+    if (typeof registrarAccionEventoSiCorresponde === 'function') {
+      await registrarAccionEventoSiCorresponde('juego2_completado');
+    }
+
+    setTimeout(() => {
+      cerrarModales();
+    }, 1200);
+  } else {
+    if (feedback) feedback.innerHTML = '😅 No era ese orden… ¡vamos de nuevo con otras tapas!';
+    setTimeout(() => {
+      _jugarRondaJuego2();
+    }, 1400);
+  }
+}
+
+EventosJuegos[2] = _iniciarJuego2;
+
