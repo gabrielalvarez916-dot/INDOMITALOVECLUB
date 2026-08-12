@@ -294,7 +294,10 @@ async function cargarCampañasAutor(idUsuario) {
       .in('id_campana', ids);
 
     _campañasAutor.forEach(c => {
-      c.impulso = (impulsosRows || []).find(i => i.id_campana === c.id) || null;
+      // Un impulso rechazado no cuenta como "impulso activo": la campaña
+      // tiene que poder volver a impulsarse (mismo plan u otro) sin que el
+      // botón quede bloqueado por un rechazo anterior.
+      c.impulso = (impulsosRows || []).find(i => i.id_campana === c.id && i.estado !== 'rechazado') || null;
     });
   }
 
@@ -379,7 +382,9 @@ function construirCardCampañaAutor(c) {
 
 /**
  * Arma el botón (o badge de estado) de "Impulsar campaña" para una card.
- * Solo se puede impulsar una vez por campaña.
+ * Solo bloquea si hay un impulso pendiente o pagado; uno rechazado no
+ * cuenta (c.impulso ya viene filtrado sin los rechazados), así que el
+ * autor puede volver a intentar.
  */
 function botonImpulsarCampanaHtml(c) {
   if (!c.impulso) {
