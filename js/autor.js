@@ -290,14 +290,18 @@ async function cargarCampañasAutor(idUsuario) {
 
     const { data: impulsosRows } = await supabaseClient
       .from('impulsos_campana')
-      .select('id_campana, estado')
+      .select('id_campana, plan, estado')
       .in('id_campana', ids);
 
     _campañasAutor.forEach(c => {
-      // Un impulso rechazado no cuenta como "impulso activo": la campaña
-      // tiene que poder volver a impulsarse (mismo plan u otro) sin que el
-      // botón quede bloqueado por un rechazo anterior.
-      c.impulso = (impulsosRows || []).find(i => i.id_campana === c.id && i.estado !== 'rechazado') || null;
+      // Un impulso rechazado no cuenta: ese plan queda libre para
+      // reintentar. Cada plan es independiente por campaña — comprar
+      // Select no bloquea Complete ni ningún otro, así que guardamos el
+      // estado por plan (pendiente/pagado) en vez de un único "impulso".
+      c.impulsosPorPlan = {};
+      (impulsosRows || [])
+        .filter(i => i.id_campana === c.id && i.estado !== 'rechazado')
+        .forEach(i => { c.impulsosPorPlan[i.plan || 'impulso'] = i.estado; });
     });
   }
 
@@ -381,21 +385,14 @@ function construirCardCampañaAutor(c) {
 }
 
 /**
- * Arma el botón (o badge de estado) de "Impulsar campaña" para una card.
- * Solo bloquea si hay un impulso pendiente o pagado; uno rechazado no
- * cuenta (c.impulso ya viene filtrado sin los rechazados), así que el
- * autor puede volver a intentar.
+ * Arma el botón "Impulsar campaña" para una card. Siempre está disponible
+ * y siempre abre el modal con los 4 planes: comprar un plan (ej. Select)
+ * no bloquea los demás, porque cada plan es independiente por campaña.
+ * El bloqueo (no recomprar el mismo plan) se resuelve adentro del modal,
+ * plan por plan, en _renderPlanCampanaDetalle.
  */
 function botonImpulsarCampanaHtml(c) {
-  if (!c.impulso) {
-    return `<button class="btn-primario btn-sm btn-full btn-impulsar-campana" onclick="abrirModalImpulsarCampana('${c.id}')">🚀 Impulsar campaña</button>`;
-  }
-  const textos = {
-    pendiente: '🚀 Impulso pendiente de pago',
-    pagado: '🚀 Impulso activo',
-    rechazado: 'Impulso no aprobado'
-  };
-  return `<span class="badge-impulso-estado">${textos[c.impulso.estado] || 'Impulso solicitado'}</span>`;
+  return `<button class="btn-primario btn-sm btn-full btn-impulsar-campana" onclick="abrirModalImpulsarCampana('${c.id}')">🚀 Impulsar campaña</button>`;
 }
 
 /**
@@ -470,7 +467,7 @@ const PLANES_CAMPANA_INFO = [
  */
 async function abrirModalImpulsarCampana(idCampana) {
   const campana = _campañasAutor.find(c => c.id === idCampana);
-  if (!campana || campana.impulso) return;
+  if (!campana) return;
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
@@ -496,7 +493,7 @@ async function abrirModalImpulsarCampana(idCampana) {
   const creditos = await _obtenerCreditosDisponiblesAutor(user.id);
   const creditosTotales = creditos.reduce((acc, c) => acc + c.disponible, 0);
 
-  _ultimoContextoPlanesCampana = { idCampana, precioArsImpulso, precioUsdImpulso, dias, compatMin, creditosTotales, nombreLibro: campana.nombreLibro };
+  _ultimoContextoPlanesCampana = { idCampana, precioArsImpulso, precioUsdImpulso, dias, compatMin, creditosTotales, nombreLibro: campana.nombreLibro, impulsosPorPlan: campana.impulsosPorPlan || {} };
 
   if (body) body.innerHTML = `
     <div class="planes-campana-acordeon">
@@ -513,12 +510,16 @@ let _ultimoContextoPlanesCampana = null;
 function _renderPlanCampanaItem(plan, ctx) {
   const precioArs = plan.id === 'impulso' ? ctx.precioArsImpulso : plan.precioArs;
   const precioUsd = plan.id === 'impulso' ? ctx.precioUsdImpulso : plan.precioUsd;
+  const estadoEstePlan = (ctx.impulsosPorPlan || {})[plan.id];
+  const badgeEstado = estadoEstePlan
+    ? `<span class="badge-impulso-estado" style="margin-left:6px;">${estadoEstePlan === 'pagado' ? 'Activo' : 'Pendiente'}</span>`
+    : '';
 
   return `
     <div class="plan-campana-item" id="plan-campana-item-${plan.id}">
       <button type="button" class="plan-campana-header" onclick="toggleAcordeonPlanCampana('${plan.id}')">
         <div class="plan-campana-header-info">
-          <span class="plan-campana-nombre">${plan.nombre}
+          <span class="plan-campana-nombre">${plan.nombre}${badgeEstado}
             <span class="plan-campana-subtitulo">${plan.subtitulo}</span>
           </span>
         </div>
@@ -569,8 +570,31 @@ function _renderPlanCampanaDetalle(plan, ctx) {
   const precioUsd = plan.id === 'impulso' ? ctx.precioUsdImpulso : plan.precioUsd;
   const incluye = plan.incluye(ctx.dias, ctx.compatMin);
 
-  const accionesHtml = plan.habilitado
-    ? `
+  // Cada plan es independiente por campaña: comprar Select no bloquea
+  // Complete ni ningún otro. Lo único que se bloquea es recomprar ESTE
+  // mismo plan para ESTA misma campaña si ya tiene un impulso
+  // pendiente/pagado (un rechazado no cuenta, ya se filtró antes).
+  const estadoEstePlan = (ctx.impulsosPorPlan || {})[plan.id];
+
+  let accionesHtml;
+  if (!plan.habilitado) {
+    accionesHtml = `
+      <div class="plan-campana-acciones">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-sm" disabled style="background:rgba(0,0,0,0.08); color:var(--gris-suave); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Próximamente</button>
+      </div>
+    `;
+  } else if (estadoEstePlan) {
+    const textos = { pendiente: 'Pendiente de pago', pagado: 'Ya activo en esta campaña' };
+    accionesHtml = `
+      <p class="form-hint" style="margin-top:10px; margin-bottom:12px;">Este plan ya se usó en esta campaña (${textos[estadoEstePlan] || estadoEstePlan}). Podés elegir otro plan para "${ctx.nombreLibro}" desde el acordeón de arriba.</p>
+      <div class="plan-campana-acciones">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cerrar</button>
+        <button type="button" class="btn-sm" disabled style="background:rgba(0,0,0,0.08); color:var(--gris-suave); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">${textos[estadoEstePlan] || estadoEstePlan}</button>
+      </div>
+    `;
+  } else {
+    accionesHtml = `
       ${ctx.creditosTotales > 0
         ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(ctx.creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — se descuentan automáticamente del precio.</div>`
         : ''}
@@ -581,13 +605,8 @@ function _renderPlanCampanaDetalle(plan, ctx) {
         <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
         <button type="button" class="btn-primario" id="btn-confirmar-impulso" onclick="confirmarImpulsarCampana('${ctx.idCampana}', ${precioArs}, ${precioUsd}, '${plan.id}')">Comprar ahora</button>
       </div>
-    `
-    : `
-      <div class="plan-campana-acciones">
-        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
-        <button type="button" class="btn-sm" disabled style="background:rgba(0,0,0,0.08); color:var(--gris-suave); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Próximamente</button>
-      </div>
     `;
+  }
 
   return `
     <p>${plan.descripcion(ctx.nombreLibro)}</p>
