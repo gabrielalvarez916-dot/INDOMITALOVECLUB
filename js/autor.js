@@ -1265,6 +1265,10 @@ async function darToqueSeguimiento(idPostulacion, btn) {
   if (btn) {
     btn.outerHTML = '<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Ya le diste un toque · esperá 10 días</span>';
   }
+
+  if (typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('enviar_toque_seguimiento');
+  }
 }
 
 /**
@@ -2464,6 +2468,15 @@ async function guardarEditarCampana(idCampana) {
     return;
   }
 
+  // Antes de reemplazar los tropes, guardamos cuáles tenía la campaña para
+  // poder detectar si se está agregando alguno NUEVO (reto de evento).
+  const { data: tropesPrevios } = await supabaseClient
+    .from('campana_tropes')
+    .select('id_trope')
+    .eq('id_campana', idCampana);
+  const idsTropesPrevios = new Set((tropesPrevios || []).map(t => t.id_trope));
+  const hayTropeNuevo = seleccionTropes.idsTropes.some(id => !idsTropesPrevios.has(id));
+
   // Reemplaza los tropes de la campaña: borra los anteriores y carga los elegidos ahora.
   const { error: errorBorrarTropes } = await supabaseClient
     .from('campana_tropes')
@@ -2484,6 +2497,8 @@ async function guardarEditarCampana(idCampana) {
 
     if (errorTropes) {
       console.error('Error guardando tropes de la campaña:', errorTropes);
+    } else if (hayTropeNuevo && typeof registrarAccionEventoSiCorresponde === 'function') {
+      registrarAccionEventoSiCorresponde('cargar_trope_campana');
     }
   }
 

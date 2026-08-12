@@ -545,6 +545,10 @@ async function enviarResena(event) {
 
   mostrarMensajeOk('resena-ok', '¡Reseña cargada correctamente!');
 
+  if (typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('entregar_resena');
+  }
+
   setTimeout(async () => {
     cerrarModales();
     mostrarToast('💅 Reseña enviada. +100 puntos. Mirá cómo cumplís.', 'ok');
