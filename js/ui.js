@@ -197,9 +197,9 @@ function mostrarHeaderLogueado(usuario) {
   const navPanel = document.getElementById('nav-panel');
   if (navPanel) navPanel.style.display = 'inline-block';
 
-  // Muestra botón Mi perfil
+  // Muestra botón Mi perfil (el admin no tiene perfil, así que no se le muestra)
   const navPerfil = document.getElementById('nav-perfil');
-  if (navPerfil) navPerfil.style.display = 'inline-block';
+  if (navPerfil) navPerfil.style.display = usuario.rol === 'admin' ? 'none' : 'inline-block';
 
    // Muestra botón FAQ solo si es autor
   const navFaqAutor = document.getElementById('nav-faq-autor');
@@ -213,11 +213,6 @@ function mostrarHeaderLogueado(usuario) {
     navGuiaResenador.style.display = usuario.rol === 'reseñador' ? 'inline-block' : 'none';
   }
 
-  // Muestra botón Admin solo si es admin
-  const navAdmin = document.getElementById('nav-admin');
-  if (navAdmin) {
-    navAdmin.style.display = usuario.rol === 'admin' ? 'inline-block' : 'none';
-  }
 }
 
 /**
@@ -243,9 +238,6 @@ function mostrarHeaderDeslogueado() {
 
   const navGuiaResenador = document.getElementById('nav-guia-resenador');
   if (navGuiaResenador) navGuiaResenador.style.display = 'none';
-
- const navAdmin = document.getElementById('nav-admin');
-  if (navAdmin) navAdmin.style.display = 'none';
 
   const navEvento = document.getElementById('nav-evento');
   if (navEvento) navEvento.style.display = 'none';
