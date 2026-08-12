@@ -1351,6 +1351,17 @@
     </div>
   </div>
 
+  <!-- Modal genérico de minijuegos de evento (Jardín de Primavera y futuros eventos).
+       El contenido de header/body/footer lo arma en JS cada juego (eventos-juegos.js). -->
+  <div id="modal-juego-evento" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo" id="juego-evento-titulo">Juego</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body" id="juego-evento-body"></div>
+    <div class="modal-footer" id="juego-evento-footer"></div>
+  </div>
+
   <!-- Modal: calificar reseña -->
   <div id="modal-calificar-resena" class="modal">
     <div class="modal-header">
@@ -1869,6 +1880,7 @@
 <script src="js/admin-impersonar.js"></script>
 <script src="js/auth.js?v=2"></script>
 <script src="EVENTOS/eventos.js"></script>
+<script src="EVENTOS/eventos-juegos.js"></script>
 <script src="js/notificaciones.js"></script>
 <script src="js/feed.js?v=5"></script>
 <script src="js/buscador-perfiles.js"></script>

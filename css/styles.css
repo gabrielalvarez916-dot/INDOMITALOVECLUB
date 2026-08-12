@@ -4395,6 +4395,11 @@ img { max-width: 100%; display: block; }
   gap: 8px;
 }
 
+.evento-reto-juego {
+  margin: 10px 0;
+  text-align: center;
+}
+
 .evento-subreto {
   display: flex;
   align-items: center;

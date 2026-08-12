@@ -391,12 +391,26 @@ if (tieneMapaVisual) {
   }
 }
 
+// Registro de minijuegos por número de orden del reto (1 a 5, Jardín de
+// Primavera). Cada función vive en eventos-juegos.js y se autoregistra acá.
+// Convención OBLIGATORIA para el panel admin de este evento: el subReto
+// en la posición 0 (el primero) de cada reto es SIEMPRE el "juego", y su
+// campo Acción debe cargarse exactamente como 'juego1_completado',
+// 'juego2_completado', ... 'juego5_completado' (según el orden del reto).
+const EventosJuegos = {};
+
 function _renderCardReto(reto) {
   const estadoClase = reto.completo
     ? 'evento-reto--completo'
     : reto.desbloqueado
       ? 'evento-reto--activo'
       : 'evento-reto--bloqueado';
+
+  const juegoFn = EventosJuegos[reto.orden];
+  const subRetoJuego = reto.subRetos && reto.subRetos[0];
+  const tieneJuego = !!juegoFn && !!subRetoJuego;
+
+  const subRetosParaLista = tieneJuego ? reto.subRetos.slice(1) : reto.subRetos;
 
   return `
     <div class="evento-reto ${estadoClase}">
@@ -405,15 +419,23 @@ function _renderCardReto(reto) {
         <span class="evento-reto-puntos">+${reto.puntos} pts</span>
       </div>
       ${!reto.desbloqueado ? `<p class="evento-reto-bloqueado-msg">🔒 Completá el reto anterior para desbloquear</p>` : ''}
+      ${tieneJuego && reto.desbloqueado ? `
+        <div class="evento-reto-juego">
+          ${subRetoJuego.completo
+            ? `<p class="evento-subreto evento-subreto--completo"><span class="evento-subreto-check">✓</span><span class="evento-subreto-desc">${subRetoJuego.descripcion}</span></p>`
+            : `<button type="button" class="btn-primario btn-sm" onclick="EventosJuegos[${reto.orden}]()">🎮 Jugar</button>`}
+        </div>
+      ` : ''}
+      ${(!tieneJuego || subRetoJuego.completo) ? `
       <ul class="evento-subretos-lista">
-        ${reto.subRetos.map(sub => `
+        ${subRetosParaLista.map(sub => `
           <li class="evento-subreto ${sub.completo ? 'evento-subreto--completo' : ''}">
             <span class="evento-subreto-check">${sub.completo ? '✓' : '○'}</span>
             <span class="evento-subreto-desc">${sub.descripcion}</span>
             <span class="evento-subreto-progreso">${sub.cantidadActual}/${sub.meta}</span>
           </li>
         `).join('')}
-      </ul>
+      </ul>` : ''}
     </div>
   `;
 }
