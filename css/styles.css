@@ -6005,3 +6005,17 @@ img { max-width: 100%; display: block; }
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
+
+/* Tag "Novedad": libros publicados hace 10 días o menos */
+.tag-novedad-portada {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--ok, #27AE60);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}

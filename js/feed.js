@@ -226,7 +226,7 @@ function renderizarSoloParaVos() {
   scroll.innerHTML = candidatas.map(c => `
     <div class="solo-para-vos-card" onclick="verDetalleCampaña('${c.id}')">
       ${c.linkPortada
-        ? `<div style="position:relative;"><img class="solo-para-vos-portada" src="${c.linkPortada}" alt="${c.nombreLibro}" />${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}</div>`
+        ? `<div style="position:relative;"><img class="solo-para-vos-portada" src="${c.linkPortada}" alt="${c.nombreLibro}" />${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}${c.esNovedad ? `<span class="tag-novedad-portada">✨ Novedad</span>` : ''}</div>`
         : `<div class="solo-para-vos-portada-placeholder">📖</div>`}
       <p class="solo-para-vos-card-titulo">${c.nombreLibro}</p>
       <p class="solo-para-vos-card-match">${c.matchEmoji} ${c.matchLabel} · ${c.matchScore}%</p>
@@ -262,6 +262,11 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
 
+  // "Novedad": libros publicados (fecha_inicio) hace 10 días o menos.
+  const fechaInicio = c.fecha_inicio ? new Date(c.fecha_inicio) : null;
+  const diasDesdeInicio = fechaInicio ? Math.floor((hoy - fechaInicio) / (1000 * 60 * 60 * 24)) : null;
+  const esNovedad = diasDesdeInicio !== null && diasDesdeInicio >= 0 && diasDesdeInicio <= 10;
+
   let match;
   if (usuario?.rol === 'reseñador' && usuario.id) {
     const { data, error } = await supabaseClient
@@ -294,6 +299,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
     cuposTotal: c.cupos_total,
     fechaLimite: c.fecha_limite,
     estaVencida: fechaLimite < hoy,
+    esNovedad,
     modalidadLectura: c.modalidad_lectura,
     plataformasReseña: c.plataformas_resena || [],
     matchScore: match?.score,
@@ -398,7 +404,7 @@ function construirCardCampaña(c) {
   const rol = Sesion.rol();
 
   const portadaHtml = c.linkPortada
-  ? `<div style="position:relative;width:100%;height:100%;"><img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}</div>`
+  ? `<div style="position:relative;width:100%;height:100%;"><img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}${c.esNovedad ? `<span class="tag-novedad-portada">✨ Novedad</span>` : ''}</div>`
   : `<div class="campana-portada-lista-placeholder">📖</div>`;
 
  const listaTropes = (c.tropesCatalogo && c.tropesCatalogo.length > 0)
