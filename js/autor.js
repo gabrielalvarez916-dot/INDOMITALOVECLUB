@@ -596,7 +596,7 @@ function _renderPlanCampanaDetalle(plan, ctx) {
   } else {
     accionesHtml = `
       ${ctx.creditosTotales > 0
-        ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(ctx.creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — se descuentan automáticamente del precio.</div>`
+        ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(ctx.creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — al confirmar te vamos a preguntar si querés usarlos en este plan.</div>`
         : ''}
       <p class="form-hint" style="margin-top:10px; margin-bottom:12px;">⏳ No se activa al instante: en breve te enviamos el link de pago para coordinarlo y, una vez confirmado, lo activamos.</p>
       <div id="impulsar-error" class="mensaje-error" style="display:none; margin-bottom:10px;"></div>
@@ -667,11 +667,21 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
     const creditosDisponibles = await _obtenerCreditosDisponiblesAutor(user.id);
     const totalDisponible = creditosDisponibles.reduce((acc, c) => acc + c.disponible, 0);
 
-    const creditosNecesarios = Math.min(totalDisponible, precioLista / valorCredito);
+    // Si tiene créditos disponibles, le preguntamos si quiere usarlos en esta
+    // compra (ya no se aplican solos). Si no tiene créditos, seguimos derecho.
+    let usarCreditos = false;
+    if (totalDisponible > 0) {
+      usarCreditos = confirm(
+        `Tenés ${Math.round(totalDisponible).toLocaleString('es-AR')} créditos disponibles.\n\n¿Querés usarlos para pagar (o descontar) este plan ${nombrePlan}?\n\nAceptar = Sí, usarlos\nCancelar = No, pagar el precio completo`
+      );
+    }
+
+    const creditosNecesarios = usarCreditos ? Math.min(totalDisponible, precioLista / valorCredito) : 0;
     const descuento = creditosNecesarios * valorCredito;
     const montoAPagar = Math.max(0, Math.round((precioLista - descuento) * 100) / 100);
 
     // Descuenta los créditos consumidos (FIFO por vencimiento más próximo).
+    // Si el autor eligió no usarlos, creditosNecesarios es 0 y este bloque no hace nada.
     let restante = creditosNecesarios;
     for (const c of creditosDisponibles) {
       if (restante <= 0) break;

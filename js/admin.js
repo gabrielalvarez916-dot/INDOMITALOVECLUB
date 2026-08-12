@@ -581,7 +581,7 @@ async function cargarImpulsosAdmin() {
           <th>Autor</th>
           <th>Cupos libres</th>
           <th>Precio lista</th>
-          <th>Créditos aplicados</th>
+          <th>¿Usó créditos?</th>
           <th>A pagar</th>
           <th>Estado</th>
           <th>Solicitado</th>
@@ -633,7 +633,9 @@ function construirFilaImpulsoAdmin(i) {
       <td style="font-size:12px;">${i.aliasAutor || '—'}<br><span style="opacity:.7;">${i.emailAutor}</span></td>
       <td>${i.cuposDisponibles ?? '—'}</td>
       <td>${simbolo}${Number(i.precioLista).toLocaleString('es-AR')}</td>
-      <td>${Number(i.creditosAplicados || 0).toLocaleString('es-AR')}</td>
+      <td>${Number(i.creditosAplicados || 0) > 0
+        ? `<span class="badge badge-aprobada">Sí · ${Number(i.creditosAplicados).toLocaleString('es-AR')}</span>`
+        : `<span class="badge" style="background:rgba(0,0,0,0.08); color:var(--gris-suave);">No</span>`}</td>
       <td><strong>${simbolo}${Number(i.montoAPagar).toLocaleString('es-AR')}</strong></td>
       <td>${estadoBadge}</td>
       <td style="font-size:12px;">${i.fechaSolicitud ? String(i.fechaSolicitud).split('T')[0] : '—'}</td>
