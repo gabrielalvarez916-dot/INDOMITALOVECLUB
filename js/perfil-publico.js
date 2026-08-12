@@ -1023,6 +1023,12 @@ async function cargarBibliotecaSeccion() {
     tituloEl.textContent = _bibliotecaEsPropia ? 'Mi biblioteca' : 'Biblioteca';
   }
 
+  // El estante de favoritos es privado: solo se ve en la propia biblioteca,
+  // nunca al mirar la biblioteca de otro reseñador desde su perfil público.
+  const seccionFavoritos = document.getElementById('bib-favoritos-seccion');
+  if (seccionFavoritos) seccionFavoritos.style.display = _bibliotecaEsPropia ? '' : 'none';
+  if (_bibliotecaEsPropia) _cargarFavoritosBiblioteca();
+
   _estadoBibliotecaSeccion('cargando');
 
   try {
@@ -1138,6 +1144,40 @@ function _estadoBiblioteca(estado) {
 
   const mapa = { cargando: 'bib-cargando', error: 'bib-error', contenido: 'bib-contenido' };
   if (mapa[estado]) toggleElemento(mapa[estado], true);
+}
+
+/**
+ * Carga y pinta el estante de favoritos (campañas guardadas con el corazón
+ * desde el modal de detalle en el feed). Solo aplica a la biblioteca propia.
+ */
+async function _cargarFavoritosBiblioteca() {
+  const cont = document.getElementById('bib-favoritos');
+  if (!cont) return;
+
+  const { data: favoritos, error } = await supabaseClient.rpc('obtener_mis_favoritos_detalle');
+
+  if (error) {
+    cont.innerHTML = '<p class="estante-vacio">No se pudieron cargar los favoritos.</p>';
+    return;
+  }
+
+  if (!favoritos || favoritos.length === 0) {
+    cont.innerHTML = '<p class="estante-vacio">Todavía no guardaste ninguna campaña en favoritos.</p>';
+    return;
+  }
+
+  cont.innerHTML = favoritos.map(f => _renderCampañaFavoritaEstante(f)).join('');
+}
+
+function _renderCampañaFavoritaEstante(f) {
+  return `
+    <div class="estante-libro estante-libro--clickeable" onclick="cerrarModales(); mostrarSeccion('feed'); verDetalleCampaña('${_esc(f.id_campana)}')">
+      <p class="estante-libro-titulo">${_esc(f.nombre_libro || '—')}</p>
+      ${f.link_portada
+        ? `<img src="${_esc(f.link_portada)}" alt="${_esc(f.nombre_libro)}" class="estante-libro-portada" onerror="this.style.display='none'" />`
+        : '<div class="estante-libro-portada-placeholder">📖</div>'}
+    </div>
+  `;
 }
 
 function _pintarBiblioteca(datos) {

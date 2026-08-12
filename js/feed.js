@@ -21,39 +21,6 @@ function _estaCampanaEnFavoritos(idCampaña) {
   return _idsCampanasFavoritas.has(idCampaña);
 }
 
-async function _toggleFavoritoCampanaCard(event, idCampaña, matchScore) {
-  const icono = event.currentTarget.querySelector('.icono-favorito-card');
-  event.currentTarget.disabled = true;
-
-  const { data: quedoFavorito, error } = await supabaseClient.rpc('toggle_favorito_campana', {
-    p_id_campana: idCampaña,
-    p_match_score: matchScore
-  });
-
-  event.currentTarget.disabled = false;
-
-  if (error) {
-    mostrarToast(error.message || '😭 No pudimos guardar el favorito. Probá de nuevo.', 'error');
-    return;
-  }
-
-  if (quedoFavorito) {
-    _idsCampanasFavoritas.add(idCampaña);
-    if (icono) icono.textContent = '❤️';
-    mostrarToast('💗 Guardado en favoritos.', 'ok');
-  } else {
-    _idsCampanasFavoritas.delete(idCampaña);
-    if (icono) icono.textContent = '🤍';
-    mostrarToast('Sacado de favoritos.', 'ok');
-  }
-
-  // Si el modal de detalle de esta misma campaña está abierto, sincroniza su corazón también
-  const iconoModal = document.getElementById('icono-favorito-campana-modal');
-  if (iconoModal && document.getElementById('btn-favorito-campana-modal')?.getAttribute('onclick')?.includes(idCampaña)) {
-    iconoModal.textContent = quedoFavorito ? '❤️' : '🤍';
-  }
-}
-
 async function _toggleFavoritoCampanaModal(idCampaña, matchScore) {
   const boton = document.getElementById('btn-favorito-campana-modal');
   const icono = document.getElementById('icono-favorito-campana-modal');
@@ -520,16 +487,8 @@ let botonHtml = '';
   const icoSilla = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>`;
   const icoReloj = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
 
-  const botonFavoritoHtml = (rol === 'reseñador') ? `
-    <button type="button" class="btn-favorito-campana-card"
-      onclick="event.stopPropagation(); _toggleFavoritoCampanaCard(event, '${c.id}', ${c.matchScore ?? 'null'})"
-      style="position:absolute; top:8px; right:8px; z-index:2; background:rgba(255,255,255,0.85); border:none; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; box-shadow:0 1px 4px rgba(0,0,0,0.15);">
-      <span class="icono-favorito-card" data-id-campana="${c.id}">${_estaCampanaEnFavoritos(c.id) ? '❤️' : '🤍'}</span>
-    </button>` : '';
-
   return `
-    <div class="campana-card-horizontal${c.estaVencida ? ' campana-vencida' : ''}" onclick="verDetalleCampaña('${c.id}')" style="position:relative;">
-      ${botonFavoritoHtml}
+    <div class="campana-card-horizontal${c.estaVencida ? ' campana-vencida' : ''}" onclick="verDetalleCampaña('${c.id}')">
       ${portadaHtml}
       <div class="campana-info">
 <p class="campana-autor"
