@@ -728,17 +728,27 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
       if (errLink) {
         const detalle = await _leerErrorEdgeFunction(errLink, 'No pudimos generar el link de pago automáticamente.');
         console.error('Error generando link de pago del impulso:', detalle);
+        const msj = `Tu solicitud quedó registrada, pero no pudimos generarte el link de pago automáticamente. En breve te lo mandamos por mail para coordinar la activación.`;
         if (ok) {
-          ok.textContent = `Tu solicitud quedó registrada, pero no pudimos generarte el link de pago automáticamente. En breve te lo mandamos por mail para coordinar la activación.`;
+          ok.textContent = msj;
           ok.style.display = 'block';
         }
-      } else if (ok) {
-        ok.textContent = `¡Listo! Te enviamos un mail con el link de pago de $${montoAPagar.toLocaleString('es-AR')} ARS. Una vez que se acredite el pago, activamos tu plan ${nombrePlan}.`;
+        if (typeof mostrarToast === 'function') mostrarToast(msj, 'advertencia');
+      } else {
+        const msj = `¡Listo! Te enviamos un mail con el link de pago de $${montoAPagar.toLocaleString('es-AR')} ARS. Una vez que se acredite el pago, activamos tu plan ${nombrePlan}.`;
+        if (ok) {
+          ok.textContent = msj;
+          ok.style.display = 'block';
+        }
+        if (typeof mostrarToast === 'function') mostrarToast(msj, 'ok');
+      }
+    } else {
+      const msj = `¡Listo! Tu solicitud quedó registrada. Esto no se activa automáticamente: en breve te vamos a enviar el link de pago de ${moneda === 'ARS' ? '$' : 'USD '}${montoAPagar.toLocaleString('es-AR')} para coordinar la activación de tu plan ${nombrePlan}.`;
+      if (ok) {
+        ok.textContent = msj;
         ok.style.display = 'block';
       }
-    } else if (ok) {
-      ok.textContent = `¡Listo! Tu solicitud quedó registrada. Esto no se activa automáticamente: en breve te vamos a enviar el link de pago de ${moneda === 'ARS' ? '$' : 'USD '}${montoAPagar.toLocaleString('es-AR')} para coordinar la activación de tu plan ${nombrePlan}.`;
-      ok.style.display = 'block';
+      if (typeof mostrarToast === 'function') mostrarToast(msj, 'ok');
     }
 
     setTimeout(async () => {
