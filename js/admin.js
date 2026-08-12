@@ -728,6 +728,116 @@ async function _ejecutarAccionImpulsoAdmin(nombreFuncion, params) {
 
 
 // ────────────────────────────────────────────────────────────
+// PENDIENTES (tareas manuales: banner / post instagram por impulso)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Carga y muestra la lista de tareas manuales pendientes (banner / post
+ * instagram) generadas automáticamente al activar cada impulso. Cada plan
+ * genera una cantidad distinta de líneas: Impulso 1 post; Select y
+ * Resistence 1 banner + 2 posts; Complete 1 banner + 4 posts.
+ */
+async function cargarPendientesAdmin() {
+  const contenedor = document.getElementById('admin-pendientes-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_tareas_impulso');
+
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar las tareas pendientes.'}</p>`;
+    return;
+  }
+
+  const tareas = resultado.tareas || [];
+
+  if (tareas.length === 0) {
+    contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay tareas pendientes.</p></div>`;
+    return;
+  }
+
+  contenedor.innerHTML = `
+    <p class="form-info" style="margin-bottom:14px;">
+      Cada vez que se activa un impulso se generan acá las tareas manuales que hay que hacer
+      (subir el post de Instagram, activar el banner). Marcá "Hecho" cuando la hagas. Si es un
+      banner de Select/Resistence o Complete, al marcarlo Hecho te calcula la fecha en la que
+      hay que desactivarlo manualmente desde Banner publicitario.
+    </p>
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Plan</th>
+          <th>Libro</th>
+          <th>Acción</th>
+          <th>Estado</th>
+          <th>Desactivar banner</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tareas.map(t => construirFilaPendienteAdmin(t)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+/**
+ * Construye la fila de una tarea pendiente para la tabla admin.
+ *
+ * @param {Object} t — datos de la tarea
+ * @returns {string} HTML de la fila
+ */
+function construirFilaPendienteAdmin(t) {
+  const nombrePlan = t.plan ? t.plan.charAt(0).toUpperCase() + t.plan.slice(1) : '—';
+  const nombreAccion = t.tipoAccion === 'banner' ? 'Banner' : 'Post Instagram';
+  const estadoBadge = t.estado === 'hecho'
+    ? '<span class="badge badge-aprobada">Hecho</span>'
+    : '<span class="badge badge-pendiente">Pendiente</span>';
+
+  const fechaDesactivar = t.fechaDesactivarBanner
+    ? `<strong>${String(t.fechaDesactivarBanner).split('T')[0]}</strong>`
+    : (t.tipoAccion === 'banner' ? '—' : '');
+
+  const boton = t.estado === 'hecho'
+    ? `<button class="btn-secundario btn-sm" onclick="marcarTareaImpulsoAdmin('${t.id}', 'pendiente')">Volver a pendiente</button>`
+    : `<button class="btn-primario btn-sm" onclick="marcarTareaImpulsoAdmin('${t.id}', 'hecho')">Hecho</button>`;
+
+  return `
+    <tr>
+      <td style="font-size:12px;">${t.fechaCreacion ? String(t.fechaCreacion).split('T')[0] : '—'}</td>
+      <td><span class="badge" style="background:var(--rosa-claro); color:var(--bordo);">${nombrePlan}</span></td>
+      <td>${t.nombreLibro || '—'}</td>
+      <td>${nombreAccion}</td>
+      <td>${estadoBadge}</td>
+      <td style="font-size:12px;">${fechaDesactivar}</td>
+      <td>${boton}</td>
+    </tr>
+  `;
+}
+
+/**
+ * Marca una tarea pendiente como hecha (o la vuelve a pendiente). Si es un
+ * banner de un plan con desactivación programada, el backend calcula solo
+ * la fecha de desactivación (7 días Select/Resistence, 14 días Complete).
+ */
+async function marcarTareaImpulsoAdmin(idTarea, nuevoEstado) {
+  const { data: resultado, error } = await supabaseClient.rpc('admin_marcar_tarea_impulso', {
+    p_id_tarea: idTarea,
+    p_estado: nuevoEstado
+  });
+
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || error?.message || 'No se pudo actualizar la tarea.', 'error');
+    return;
+  }
+
+  await cargarPendientesAdmin();
+}
+
+
+// ────────────────────────────────────────────────────────────
 // ESTADÍSTICAS
 // ────────────────────────────────────────────────────────────
 
