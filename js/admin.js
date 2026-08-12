@@ -12,17 +12,6 @@
  * Carga el panel admin.
  * Se llama automáticamente cuando se muestra la sección admin.
  */
-async function cargarAdmin() {
-  await Promise.all([
-    cargarUsuariosAdmin(),
-    cargarCampañasAdmin(),
-    cargarSuscripcionesAdmin(),
-    cargarImpulsosAdmin(),
-    cargarTicketsAdmin()
-  ]);
-}
-
-
 // ────────────────────────────────────────────────────────────
 // USUARIOS
 // ────────────────────────────────────────────────────────────

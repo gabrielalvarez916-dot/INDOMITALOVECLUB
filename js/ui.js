@@ -95,7 +95,12 @@ function mostrarSeccion(nombre) {
     'perfil',
     'guia-resenador',
     'faq-autor',
-    'admin',
+    'admin-panel',
+    'admin-planes',
+    'admin-soporte',
+    'admin-estadisticas',
+    'admin-visuales',
+    'admin-check',
     'biblioteca-resenador',
     'biblioteca-autor',
     'evento'
@@ -140,8 +145,24 @@ function mostrarSeccion(nombre) {
     case 'faq-autor':                                                    // ← AGREGAR
       if (typeof cargarFaqAutor === 'function') cargarFaqAutor();        // ← AGREGAR
       break;          
-    case 'admin':
-      if (typeof cargarAdmin === 'function') cargarAdmin();
+    case 'admin-panel':
+      if (typeof cargarUsuariosAdmin === 'function') cargarUsuariosAdmin();
+      if (typeof cargarCampañasAdmin === 'function') cargarCampañasAdmin();
+      break;
+    case 'admin-planes':
+      if (typeof cargarSuscripcionesAdmin === 'function') cargarSuscripcionesAdmin();
+      break;
+    case 'admin-soporte':
+      if (typeof cargarTicketsAdmin === 'function') cargarTicketsAdmin(Sesion.email());
+      break;
+    case 'admin-estadisticas':
+      if (typeof cargarEstadisticasAdmin === 'function') cargarEstadisticasAdmin();
+      break;
+    case 'admin-visuales':
+      if (typeof cargarBannersAdmin === 'function') cargarBannersAdmin();
+      break;
+    case 'admin-check':
+      if (typeof cargarVerificacionesAdmin === 'function') cargarVerificacionesAdmin();
       break;
   case 'biblioteca-resenador':
       if (typeof cargarBibliotecaSeccion === 'function') cargarBibliotecaSeccion();
@@ -164,7 +185,7 @@ function mostrarPanelRol() {
   if (rol === 'autor') mostrarSeccion('panel-autor');
   else if (rol === 'reseñador') mostrarSeccion('panel-resenador');
   else if (rol === 'editorial') mostrarSeccion('panel-autor');
-  else if (rol === 'admin') mostrarSeccion('admin');
+  else if (rol === 'admin') mostrarSeccion('admin-panel');
   else mostrarSeccion('login');
 }
 
@@ -213,6 +234,13 @@ function mostrarHeaderLogueado(usuario) {
     navGuiaResenador.style.display = usuario.rol === 'reseñador' ? 'inline-block' : 'none';
   }
 
+  // Muestra los links de admin (Planes, Soporte, Estadísticas, Visuales, Check) solo si es admin
+  const esAdmin = usuario.rol === 'admin';
+  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = esAdmin ? 'inline-block' : 'none';
+  });
+
 }
 
 /**
@@ -238,6 +266,11 @@ function mostrarHeaderDeslogueado() {
 
   const navGuiaResenador = document.getElementById('nav-guia-resenador');
   if (navGuiaResenador) navGuiaResenador.style.display = 'none';
+
+  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
 
   const navEvento = document.getElementById('nav-evento');
   if (navEvento) navEvento.style.display = 'none';

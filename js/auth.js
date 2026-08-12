@@ -416,7 +416,7 @@ function redirigirSegunRol(usuario) {
       mostrarSeccion('panel-autor');
       break;
     case 'admin':
-      mostrarSeccion('admin');
+      mostrarSeccion('admin-panel');
       break;
     default:
       mostrarSeccion('feed');

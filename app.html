@@ -26,6 +26,11 @@
       <nav id="nav-principal">
         <a href="#" class="nav-link" id="nav-campanas" onclick="mostrarSeccion('feed')">Campañas</a>
         <a href="#" class="nav-link" id="nav-panel" style="display:none;" onclick="mostrarPanelRol()">Panel</a>
+        <a href="#" class="nav-link" id="nav-admin-planes" style="display:none;" onclick="mostrarSeccion('admin-planes')">Planes</a>
+        <a href="#" class="nav-link" id="nav-admin-soporte" style="display:none;" onclick="mostrarSeccion('admin-soporte')">Soporte</a>
+        <a href="#" class="nav-link" id="nav-admin-estadisticas" style="display:none;" onclick="mostrarSeccion('admin-estadisticas')">Estadísticas</a>
+        <a href="#" class="nav-link" id="nav-admin-visuales" style="display:none;" onclick="mostrarSeccion('admin-visuales')">Visuales</a>
+        <a href="#" class="nav-link" id="nav-admin-check" style="display:none;" onclick="mostrarSeccion('admin-check')">Check</a>
         <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
         <a href="#" class="nav-link" id="nav-guia-resenador" style="display:none;" onclick="mostrarSeccion('guia-resenador')">Guía</a>
        <a href="#" class="nav-link" id="nav-faq-autor" style="display:none;" onclick="mostrarSeccion('faq-autor')">Dudas</a>
@@ -623,26 +628,13 @@
     </div>
   </section>
   
-  <!-- SECCIÓN: ADMIN -->
-  <section id="seccion-admin" class="seccion" style="display:none;">
+  <!-- SECCIÓN: ADMIN · PANEL (Usuarios + Campañas) -->
+  <section id="seccion-admin-panel" class="seccion" style="display:none;">
     <div class="seccion-inner">
-      <h2 class="panel-titulo">Panel admin</h2>
+      <h2 class="panel-titulo">Panel</h2>
       <div class="tabs">
         <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-usuarios')">Usuarios</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-impulsos'); cargarImpulsosAdmin()">Impulsos</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-pendientes'); cargarPendientesAdmin()">Pendientes</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-tickets'); cargarTicketsAdmin(Sesion.email())">Soporte</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-incumplimientos'); cargarIncumplimientosAdmin()">Incumplimientos</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-tropes-propuestos'); cargarTropesPropuestosAdmin()">Tropes propuestos</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas-soporte'); cargarEstadisticasSoporteAdmin()">Estadísticas Soporte</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas'); cargarEstadisticasAdmin()">Estadísticas</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-banners'); cargarBannersAdmin()">Banners</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-modales'); cargarModalesAdmin()">Modales</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-eventos'); cargarEventosAdmin()">Eventos</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-tutoriales'); cargarTutorialesAdmin()">Tutoriales</button>
-<button class="tab" onclick="cambiarTab(this, 'tab-admin-verificacion'); cargarVerificacionesAdmin()">Verificación</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-campanas')">Campañas</button>
       </div>
       <div id="tab-admin-usuarios" class="tab-contenido activo">
         <div id="admin-usuarios-lista"></div>
@@ -650,7 +642,19 @@
       <div id="tab-admin-campanas" class="tab-contenido">
         <div id="admin-campanas-lista"></div>
       </div>
-      <div id="tab-admin-pagos" class="tab-contenido">
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ADMIN · PLANES (Pagos + Impulsos + Pendientes) -->
+  <section id="seccion-admin-planes" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Planes</h2>
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-impulsos'); cargarImpulsosAdmin()">Impulsos</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-pendientes'); cargarPendientesAdmin()">Pendientes</button>
+      </div>
+      <div id="tab-admin-pagos" class="tab-contenido activo">
         <div id="admin-pagos-lista"></div>
       </div>
       <div id="tab-admin-impulsos" class="tab-contenido">
@@ -659,43 +663,89 @@
       <div id="tab-admin-pendientes" class="tab-contenido">
         <div id="admin-pendientes-lista"></div>
       </div>
-     <div id="tab-admin-tickets" class="tab-contenido">
-  <div id="admin-tickets-lista"></div>
-</div>
-<div id="tab-admin-incumplimientos" class="tab-contenido">
-  <div id="admin-incumplimientos-lista"></div>
-</div>
-<div id="tab-admin-tropes-propuestos" class="tab-contenido">
-  <div id="admin-tropes-propuestos-lista"></div>
-</div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ADMIN · SOPORTE (Tickets + Estadísticas Soporte) -->
+  <section id="seccion-admin-soporte" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Soporte</h2>
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-tickets'); cargarTicketsAdmin(Sesion.email())">Soporte</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-estadisticas-soporte'); cargarEstadisticasSoporteAdmin()">Estadísticas Soporte</button>
+      </div>
+      <div id="tab-admin-tickets" class="tab-contenido activo">
+        <div id="admin-tickets-lista"></div>
+      </div>
       <div id="tab-admin-estadisticas-soporte" class="tab-contenido">
-  <div id="admin-estadisticas-soporte-contenedor"></div>
-</div>
-      <div id="tab-admin-estadisticas" class="tab-contenido">
-  <div id="admin-estadisticas-contenedor"></div>
-</div>
-      <div id="tab-admin-banners" class="tab-contenido">
+        <div id="admin-estadisticas-soporte-contenedor"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ADMIN · ESTADÍSTICAS (Estadísticas + Incumplimientos) -->
+  <section id="seccion-admin-estadisticas" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Estadísticas</h2>
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-estadisticas'); cargarEstadisticasAdmin()">Estadísticas</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-incumplimientos'); cargarIncumplimientosAdmin()">Incumplimientos</button>
+      </div>
+      <div id="tab-admin-estadisticas" class="tab-contenido activo">
+        <div id="admin-estadisticas-contenedor"></div>
+      </div>
+      <div id="tab-admin-incumplimientos" class="tab-contenido">
+        <div id="admin-incumplimientos-lista"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ADMIN · VISUALES (Banners + Modales + Tutoriales + Eventos) -->
+  <section id="seccion-admin-visuales" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Visuales</h2>
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-banners'); cargarBannersAdmin()">Banners</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-modales'); cargarModalesAdmin()">Modales</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-tutoriales'); cargarTutorialesAdmin()">Tutoriales</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-eventos'); cargarEventosAdmin()">Eventos</button>
+      </div>
+      <div id="tab-admin-banners" class="tab-contenido activo">
         <div id="admin-banners-form-contenedor"></div>
         <div id="admin-banners-lista" style="margin-top:24px;"></div>
       </div>
       <div id="tab-admin-modales" class="tab-contenido">
-  <div id="admin-modales-form-contenedor"></div>
-  <div id="admin-modales-lista" style="margin-top:24px;"></div>
-</div>
-      <div id="tab-admin-eventos" class="tab-contenido">
-        <div id="admin-eventos-form-contenedor"></div>
-        <div id="admin-eventos-lista" style="margin-top:24px;"></div>
+        <div id="admin-modales-form-contenedor"></div>
+        <div id="admin-modales-lista" style="margin-top:24px;"></div>
       </div>
       <div id="tab-admin-tutoriales" class="tab-contenido">
         <div id="admin-tutoriales-contenedor"></div>
       </div>
-      <div id="tab-admin-verificacion" class="tab-contenido">
+      <div id="tab-admin-eventos" class="tab-contenido">
+        <div id="admin-eventos-form-contenedor"></div>
+        <div id="admin-eventos-lista" style="margin-top:24px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ADMIN · CHECK (Verificación + Tropes propuestos) -->
+  <section id="seccion-admin-check" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Check</h2>
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-verificacion'); cargarVerificacionesAdmin()">Verificación</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-tropes-propuestos'); cargarTropesPropuestosAdmin()">Tropes propuestos</button>
+      </div>
+      <div id="tab-admin-verificacion" class="tab-contenido activo">
         <div class="admin-verificacion-filtros">
           <button class="tab-mini activo" onclick="cambiarFiltroVerificacionAdmin(this, 'pendiente')">Pendientes</button>
           <button class="tab-mini" onclick="cambiarFiltroVerificacionAdmin(this, 'aprobado')">Aprobadas</button>
           <button class="tab-mini" onclick="cambiarFiltroVerificacionAdmin(this, 'rechazado')">Rechazadas</button>
         </div>
         <div id="admin-verificacion-lista"></div>
+      </div>
+      <div id="tab-admin-tropes-propuestos" class="tab-contenido">
+        <div id="admin-tropes-propuestos-lista"></div>
       </div>
     </div>
   </section>
