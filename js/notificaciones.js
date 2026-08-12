@@ -27,9 +27,9 @@ const VARIANTES = {
   postulacion_nueva: {
     emoji: '😏',
     textos: [
-      (d) => `${d.aliasReseñador || 'Alguien'} se postuló a "${d.nombreLibro || 'tu campaña'}". Después no digas que nadie quiere leerte.`,
-      (d) => `ALERTA: alguien quiere leer "${d.nombreLibro || 'tu campaña'}". Se llama ${d.aliasReseñador || 'alguien'}. Hacé algo.`,
-      (d) => `${d.aliasReseñador || 'Alguien'} se postuló a "${d.nombreLibro || 'tu campaña'}". Elegí sabiamente, criatura.`,
+      (d) => `${d.aliasResenador || 'Alguien'} se postuló a "${d.nombreLibro || 'tu campaña'}". Después no digas que nadie quiere leerte.`,
+      (d) => `ALERTA: alguien quiere leer "${d.nombreLibro || 'tu campaña'}". Se llama ${d.aliasResenador || 'alguien'}. Hacé algo.`,
+      (d) => `${d.aliasResenador || 'Alguien'} se postuló a "${d.nombreLibro || 'tu campaña'}". Elegí sabiamente, criatura.`,
     ],
   },
   resena_cargada: {
@@ -37,7 +37,7 @@ const VARIANTES = {
     textos: [
       (d) => `Hay una reseña nueva de "${d.nombreLibro || ''}". Que sea lo que Dios quiera.`,
       (d) => `Tenemos una reseña nueva de "${d.nombreLibro || ''}". Proceda con cautela.`,
-      (d) => `No queremos meter presión, pero ${d.aliasReseñador || 'alguien'} ya reseñó "${d.nombreLibro || ''}".`,
+      (d) => `No queremos meter presión, pero ${d.aliasResenador || 'alguien'} ya reseñó "${d.nombreLibro || ''}".`,
     ],
   },
   campaña_finalizada: {
@@ -64,12 +64,20 @@ const VARIANTES = {
       () => `Indómita te quiere. Tu banco, aparentemente, no — te rechazó el plan.`,
     ],
   },
+  impulso_rechazado: {
+    emoji: '🚫',
+    textos: [
+      (d) => `Tu impulso ${d.plan || ''} para "${d.nombreLibro || 'tu campaña'}" fue rechazado${d.motivo ? `: ${d.motivo}` : '.'}`,
+      (d) => `No pudimos aprobar tu impulso ${d.plan || ''} de "${d.nombreLibro || 'tu campaña'}"${d.motivo ? `: ${d.motivo}` : '.'}`,
+      (d) => `Rechazamos el impulso ${d.plan || ''} de "${d.nombreLibro || 'tu campaña'}"${d.motivo ? `. Motivo: ${d.motivo}` : '.'}`,
+    ],
+  },
   postulacion_abandono: {
     emoji: '💔',
     textos: [
-      (d) => `${d.aliasReseñador || 'Una reseñadora'} abandonó "${d.nombreLibro || ''}". La relación no funcionó.`,
-      (d) => `No funcionó: ${d.aliasReseñador || 'una reseñadora'} abandonó "${d.nombreLibro || ''}".`,
-      (d) => `Se terminó el romance: ${d.aliasReseñador || 'una reseñadora'} abandonó "${d.nombreLibro || ''}".`,
+      (d) => `${d.aliasResenador || 'Una reseñadora'} abandonó "${d.nombreLibro || ''}". La relación no funcionó.`,
+      (d) => `No funcionó: ${d.aliasResenador || 'una reseñadora'} abandonó "${d.nombreLibro || ''}".`,
+      (d) => `Se terminó el romance: ${d.aliasResenador || 'una reseñadora'} abandonó "${d.nombreLibro || ''}".`,
     ],
   },
 
