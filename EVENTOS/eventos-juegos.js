@@ -15,6 +15,9 @@
 // ============================================================
 
 const _DURACION_MEMORIZACION_MS = 4000; // segundos que se ven las tapas antes de ocultarlas
+const _INTENTOS_JUEGO1 = 4;
+
+let _estadoJuego1 = null;
 
 /**
  * Mezcla un array sin mutar el original.
@@ -43,6 +46,7 @@ async function _iniciarJuego1() {
 
   titulo.textContent = 'Juego 1 · Memoria de tapas';
   footer.innerHTML = '';
+  _estadoJuego1 = { intentosRestantes: _INTENTOS_JUEGO1 };
   body.innerHTML = `
     <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
       <div class="spinner"></div>
@@ -75,7 +79,8 @@ async function _jugarRondaJuego1() {
 
   footer.innerHTML = '';
   body.innerHTML = `
-    <p style="text-align:center; font-weight:600; margin-bottom:14px;">Memorizá estas tapas…</p>
+    <p style="text-align:center; font-weight:600; margin-bottom:4px;">Memorizá estas tapas…</p>
+    <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:14px;">Intentos restantes: <strong>${_estadoJuego1.intentosRestantes}</strong></p>
     <div class="juego-tapas-fila" style="display:flex; gap:12px; justify-content:center;">
       ${libros.map(l => `
         <img src="${_escaparHtml(l.link_portada)}" alt="" style="width:100px; height:150px; object-fit:cover; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" />
@@ -108,9 +113,10 @@ function _mostrarPreguntaJuego1(libros) {
   const opciones = _mezclarArrayJuego(libros.map(l => l.nombre_autor));
 
   body.innerHTML = `
-    <p style="text-align:center; font-weight:600; margin-bottom:16px;">
+    <p style="text-align:center; font-weight:600; margin-bottom:6px;">
       ¿Quién escribió «${_escaparHtml(libroPreguntado.nombre_libro)}»?
     </p>
+    <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:12px;">Intentos restantes: <strong>${_estadoJuego1.intentosRestantes}</strong></p>
     <div id="juego1-opciones" style="display:flex; flex-direction:column; gap:10px;">
       ${opciones.map(autor => `
         <button type="button" class="btn-secundario btn-full" onclick="_responderJuego1('${_escaparAtributoJs(autor)}', '${_escaparAtributoJs(libroPreguntado.nombre_autor)}')">
@@ -138,6 +144,17 @@ async function _responderJuego1(respuesta, correcta) {
       cerrarModales();
     }, 1200);
   } else {
+    _estadoJuego1.intentosRestantes -= 1;
+
+    if (_estadoJuego1.intentosRestantes <= 0) {
+      if (feedback) feedback.innerHTML = '😅 Se acabaron los intentos… ¡otra tanda de tapas!';
+      setTimeout(() => {
+        _estadoJuego1.intentosRestantes = _INTENTOS_JUEGO1;
+        _jugarRondaJuego1();
+      }, 1400);
+      return;
+    }
+
     if (feedback) feedback.innerHTML = '😅 No era ese… ¡vamos de nuevo con otras tapas!';
     setTimeout(() => {
       _jugarRondaJuego1();
@@ -163,6 +180,9 @@ EventosJuegos[1] = _iniciarJuego1;
 
 const _DURACION_FASE_JUEGO2_MS = 5000; // tiempo de cada fase (memorización y mezcla)
 const _LETRAS_JUEGO2 = ['A', 'B', 'C', 'D'];
+const _INTENTOS_JUEGO2 = 4;
+
+let _estadoJuego2 = null;
 
 async function _iniciarJuego2() {
   const titulo = document.getElementById('juego-evento-titulo');
@@ -172,6 +192,7 @@ async function _iniciarJuego2() {
 
   titulo.textContent = 'Juego 2 · Ordená las tapas';
   footer.innerHTML = '';
+  _estadoJuego2 = { intentosRestantes: _INTENTOS_JUEGO2 };
   body.innerHTML = `
     <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
       <div class="spinner"></div>
@@ -260,7 +281,8 @@ function _mostrarPreguntaJuego2(letraDePosicionOriginal) {
   if (!body || !footer) return;
 
   body.innerHTML = `
-    <p style="text-align:center; font-weight:600; margin-bottom:16px;">¿Cuál es el orden correcto?</p>
+    <p style="text-align:center; font-weight:600; margin-bottom:6px;">¿Cuál es el orden correcto?</p>
+    <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:12px;">Intentos restantes: <strong>${_estadoJuego2.intentosRestantes}</strong></p>
     <div id="juego2-respuestas" style="display:flex; flex-direction:column; gap:10px;">
       ${[0, 1, 2, 3].map(i => `
         <div style="display:flex; align-items:center; gap:10px;">
@@ -305,6 +327,17 @@ async function _confirmarJuego2(letraDePosicionOriginal) {
       cerrarModales();
     }, 1200);
   } else {
+    _estadoJuego2.intentosRestantes -= 1;
+
+    if (_estadoJuego2.intentosRestantes <= 0) {
+      if (feedback) feedback.innerHTML = '😅 Se acabaron los intentos… ¡otra tanda de tapas!';
+      setTimeout(() => {
+        _estadoJuego2.intentosRestantes = _INTENTOS_JUEGO2;
+        _jugarRondaJuego2();
+      }, 1400);
+      return;
+    }
+
     if (feedback) feedback.innerHTML = '😅 No era ese orden… ¡vamos de nuevo con otras tapas!';
     setTimeout(() => {
       _jugarRondaJuego2();
@@ -653,4 +686,164 @@ async function _soltarTropeJuego4(event, idCampanaDestino) {
 }
 
 EventosJuegos[4] = _iniciarJuego4;
+
+// ────────────────────────────────────────────────────────────
+// JUEGO 5 — Memoria rápida: aparecen 6 portadas reales, una atrás de
+// otra, 2 segundos cada una (sin volver a mostrarse). Después, 2
+// preguntas multiple choice ("¿cuál de estos títulos viste recién?"),
+// cada una sobre un libro distinto de los 6. Hay que acertar las 2.
+// 4 intentos en total (se descuenta 1 por cada respuesta incorrecta,
+// en cualquiera de las 2 preguntas); si se agotan, resetea todo con
+// 6 portadas nuevas.
+// ────────────────────────────────────────────────────────────
+
+const _DURACION_TAPA_JUEGO5_MS = 2000;
+const _INTENTOS_JUEGO5 = 4;
+const _CANTIDAD_TAPAS_JUEGO5 = 6;
+const _CANTIDAD_PREGUNTAS_JUEGO5 = 2;
+const _CANDIDATOS_DISTRACTORES_JUEGO5 = 10;
+
+let _estadoJuego5 = null;
+
+async function _iniciarJuego5() {
+  const titulo = document.getElementById('juego-evento-titulo');
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!titulo || !body || !footer) return;
+
+  titulo.textContent = 'Juego 5 · Memoria rápida';
+  footer.innerHTML = '';
+  body.innerHTML = `
+    <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
+      <div class="spinner"></div>
+      <p style="margin-top:10px;">Preparando las tapas…</p>
+    </div>
+  `;
+  mostrarModal('modal-juego-evento');
+
+  await _jugarRondaJuego5();
+}
+
+async function _jugarRondaJuego5() {
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!body || !footer) return;
+  footer.innerHTML = '';
+
+  const { data: libros, error } = await supabaseClient.rpc('obtener_campanas_azar_para_juego', { p_cantidad: _CANTIDAD_TAPAS_JUEGO5 });
+  if (error || !libros || libros.length < _CANTIDAD_TAPAS_JUEGO5) {
+    body.innerHTML = `<p class="estado-vacio-texto">😕 No pudimos cargar el juego. Probá de nuevo en un rato.</p>`;
+    return;
+  }
+
+  const { data: pool, error: errorPool } = await supabaseClient.rpc('obtener_campanas_azar_para_juego', { p_cantidad: _CANDIDATOS_DISTRACTORES_JUEGO5 });
+  const titulosVistos = new Set(libros.map(l => l.nombre_libro));
+  const poolDistractores = (pool || []).filter(l => !titulosVistos.has(l.nombre_libro));
+  if (errorPool || poolDistractores.length < 3) {
+    body.innerHTML = `<p class="estado-vacio-texto">😕 No pudimos cargar el juego. Probá de nuevo en un rato.</p>`;
+    return;
+  }
+
+  // Arma las 2 preguntas: 2 libros distintos (al azar) de los 6 vistos,
+  // cada uno con 3 títulos distractores (que NO estaban entre los 6).
+  const librosPreguntados = _mezclarArrayJuego(libros).slice(0, _CANTIDAD_PREGUNTAS_JUEGO5);
+  const distractoresMezclados = _mezclarArrayJuego(poolDistractores);
+  const preguntas = librosPreguntados.map((libroCorrecto, i) => {
+    const distractores = distractoresMezclados.slice(i * 3, i * 3 + 3).map(l => l.nombre_libro);
+    return {
+      tituloCorrecto: libroCorrecto.nombre_libro,
+      opciones: _mezclarArrayJuego([libroCorrecto.nombre_libro, ...distractores]),
+    };
+  });
+
+  _estadoJuego5 = {
+    preguntas,
+    preguntaActual: 0,
+    intentosRestantes: _INTENTOS_JUEGO5,
+  };
+
+  // Muestra las 6 tapas, una atrás de otra, 2 segundos cada una.
+  for (let i = 0; i < libros.length; i++) {
+    const libro = libros[i];
+    body.innerHTML = `
+      <p style="text-align:center; font-weight:600; margin-bottom:4px;">Memorizá estas tapas…</p>
+      <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:14px;">Tapa ${i + 1} de ${libros.length}</p>
+      <div style="display:flex; justify-content:center;">
+        <img src="${_escaparHtml(libro.link_portada)}" alt="" style="width:130px; height:195px; object-fit:cover; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" />
+      </div>
+    `;
+    await new Promise(resolve => setTimeout(resolve, _DURACION_TAPA_JUEGO5_MS));
+  }
+
+  _renderPreguntaJuego5();
+}
+
+function _renderPreguntaJuego5() {
+  const body = document.getElementById('juego-evento-body');
+  if (!body || !_estadoJuego5) return;
+
+  const { preguntas, preguntaActual, intentosRestantes } = _estadoJuego5;
+  const pregunta = preguntas[preguntaActual];
+
+  body.innerHTML = `
+    <p style="text-align:center; font-weight:600; margin-bottom:6px;">
+      Pregunta ${preguntaActual + 1} de ${preguntas.length}: ¿cuál de estos títulos viste recién?
+    </p>
+    <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:12px;">Intentos restantes: <strong>${intentosRestantes}</strong></p>
+    <div id="juego5-opciones" style="display:flex; flex-direction:column; gap:10px;">
+      ${pregunta.opciones.map(titulo => `
+        <button type="button" class="btn-secundario btn-full" onclick="_responderJuego5('${_escaparAtributoJs(titulo)}', '${_escaparAtributoJs(pregunta.tituloCorrecto)}')">
+          ${_escaparHtml(titulo)}
+        </button>
+      `).join('')}
+    </div>
+    <p id="juego5-feedback" style="text-align:center; margin-top:14px; font-size:14px;"></p>
+  `;
+}
+
+async function _responderJuego5(respuesta, correcta) {
+  const estado = _estadoJuego5;
+  if (!estado) return;
+
+  const feedback = document.getElementById('juego5-feedback');
+  const botones = document.querySelectorAll('#juego5-opciones button');
+  botones.forEach(b => b.disabled = true);
+
+  if (respuesta === correcta) {
+    if (estado.preguntaActual + 1 >= estado.preguntas.length) {
+      if (feedback) feedback.innerHTML = '🌸 ¡Correcto! Completaste el juego.';
+      if (typeof registrarAccionEventoSiCorresponde === 'function') {
+        await registrarAccionEventoSiCorresponde('juego5_completado');
+      }
+      setTimeout(() => {
+        cerrarModales();
+      }, 1200);
+      return;
+    }
+
+    if (feedback) feedback.innerHTML = '🌸 ¡Correcto!';
+    estado.preguntaActual += 1;
+    setTimeout(() => {
+      _renderPreguntaJuego5();
+    }, 900);
+    return;
+  }
+
+  estado.intentosRestantes -= 1;
+
+  if (estado.intentosRestantes <= 0) {
+    if (feedback) feedback.innerHTML = '😅 Se acabaron los intentos… ¡otra tanda de tapas!';
+    setTimeout(() => {
+      _jugarRondaJuego5();
+    }, 1400);
+    return;
+  }
+
+  if (feedback) feedback.innerHTML = '😅 No era ese… ¡probá de nuevo!';
+  setTimeout(() => {
+    _renderPreguntaJuego5();
+  }, 1400);
+}
+
+EventosJuegos[5] = _iniciarJuego5;
 
