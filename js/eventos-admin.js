@@ -50,6 +50,7 @@ function _eventoFormVacio() {
         imagenActual: ''
       },
       mapa: {
+        tipo: 'nodos', // 'nodos' (fondo + velo + nodos posicionados) | 'cartas' (5 cartas genéricas en fila)
         fondoActual: '',
         veloActual: '',
         nodos: [
@@ -367,6 +368,18 @@ function _construirSeccionTema() {
     <button type="button" class="btn-secundario btn-sm" onclick="agregarMensajeMascotaAdmin()">+ Agregar mensaje</button>
 
     <h4 class="panel-titulo" style="font-size:16px; margin-top:22px;">Mapa de retos</h4>
+    <div class="form-fila" style="flex-wrap:wrap; align-items:flex-end;">
+      <div class="form-grupo" style="min-width:220px;">
+        <label class="form-label">Tipo de mapa</label>
+        <select class="form-input" id="ev-tema-mapa-tipo" onchange="_cambiarTipoMapaAdmin(this.value)">
+          <option value="nodos" ${t.mapa.tipo !== 'cartas' ? 'selected' : ''}>Fondo con nodos y velo (ej: Chocolate y Libros)</option>
+          <option value="cartas" ${t.mapa.tipo === 'cartas' ? 'selected' : ''}>Cartas genéricas en fila (se destapan en orden)</option>
+        </select>
+      </div>
+    </div>
+    ${t.mapa.tipo === 'cartas' ? `
+    <p class="form-hint" style="margin-top:8px;">Con este tipo no hace falta subir fondo, velo ni cargar posiciones: se muestran automáticamente 5 cartas genéricas en fila, bloqueadas hasta completar el reto anterior, y se destapan con animación al arrancar el juego.</p>
+    ` : `
     <div class="form-fila" style="flex-wrap:wrap;">
       <div class="form-grupo" style="min-width:220px;">
         <label class="form-label">Fondo del mapa</label>
@@ -404,6 +417,7 @@ function _construirSeccionTema() {
       <button type="button" class="btn-secundario btn-sm" onclick="_agregarNodoMapaAdmin()">+ Agregar nodo</button>
       <button type="button" class="btn-secundario btn-sm btn-peligro" onclick="_quitarNodoMapaAdmin()" ${t.mapa.nodos.length <= 1 ? 'disabled' : ''}>− Quitar último nodo</button>
     </div>
+    `}
 
     <h4 class="panel-titulo" style="font-size:16px; margin-top:22px;">Secreto flotante</h4>
     <div class="form-fila" style="flex-wrap:wrap; align-items:flex-end;">
@@ -471,6 +485,15 @@ function _actualizarNodoMapaAdmin(idx, eje, valor) {
 }
 
 /**
+ * Cambia el tipo de mapa ('nodos' o 'cartas') y re-renderiza la pestaña
+ * Tema para mostrar/ocultar la config de fondo/velo/nodos.
+ */
+function _cambiarTipoMapaAdmin(valor) {
+  _eventoFormState.tema.mapa.tipo = valor === 'cartas' ? 'cartas' : 'nodos';
+  document.getElementById('panel-tab-tema').innerHTML = _construirSeccionTema();
+}
+
+/**
  * Suma un nodo nuevo al final del mapa (posición 50/50 por defecto,
  * el admin la ajusta a mano después) y vuelve a pintar el bloque de
  * "Tema visual" para mostrarlo.
@@ -519,6 +542,7 @@ function _normalizarTemaCargado(temaCrudo) {
         : ''
     },
     mapa: {
+      tipo: temaCrudo.mapa?.tipo === 'cartas' ? 'cartas' : 'nodos',
       fondoActual: temaCrudo.mapa?.fondo || '',
       veloActual: temaCrudo.mapa?.velo || '',
       nodos: nodosValidos
@@ -606,6 +630,7 @@ particula: {
       imagen: imagenParticula || ''
     },
     mapa: {
+      tipo: s.tema.mapa.tipo === 'cartas' ? 'cartas' : 'nodos',
       fondo: imagenMapaFondo || '',
       velo: imagenMapaVelo || '',
       nodos: s.tema.mapa.nodos

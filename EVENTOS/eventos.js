@@ -446,6 +446,10 @@ function _renderCardReto(reto) {
  * viendo la lista de tarjetas de siempre.
  */
 function _renderMapaOListaRetos(evento, progreso) {
+  if (evento.tema?.mapa?.tipo === 'cartas') {
+    return _renderMapaCartas(progreso);
+  }
+
   const nodos = evento.tema?.mapa?.nodos;
   const tieneMapa = evento.tema?.mapa?.fondo && Array.isArray(nodos) && nodos.length > 0;
 
@@ -453,6 +457,69 @@ function _renderMapaOListaRetos(evento, progreso) {
     return `<div class="evento-retos-lista">${progreso.retos.map(reto => _renderCardReto(reto)).join('')}</div>`;
   }
   return _renderMapaRetos(evento, progreso, nodos);
+}
+
+// ────────────────────────────────────────────────────────────
+// Mapa tipo "cartas": una carta genérica por reto, en fila horizontal.
+// Bloqueada (🔒) hasta completar el reto anterior. Al tocar una carta
+// desbloqueada, se da vuelta con animación y arranca directo el juego
+// de ese reto (EventosJuegos[orden]). Las cartas ya completadas quedan
+// mostrando su cara revelada (✓) de forma permanente.
+// ────────────────────────────────────────────────────────────
+
+function _renderMapaCartas(progreso) {
+  const cartas = progreso.retos.map(reto => {
+    const estado = reto.completo ? 'completo' : reto.desbloqueado ? 'activo' : 'bloqueado';
+    const yaRevelada = reto.completo; // arranca ya "dada vuelta" si el reto está completo
+    const puedeJugar = reto.desbloqueado && !reto.completo && !!EventosJuegos[reto.orden];
+
+    return `
+      <div class="evento-carta-mapa-item" style="text-align:center; width:66px;">
+        <div id="evento-carta-mapa-${reto.orden}"
+          class="evento-carta-mapa evento-carta-mapa--${estado}"
+          data-orden="${reto.orden}"
+          data-desbloqueado="${reto.desbloqueado ? '1' : '0'}"
+          data-completo="${reto.completo ? '1' : '0'}"
+          onclick="_tocarCartaMapaEvento(${reto.orden})"
+          style="position:relative; width:100%; aspect-ratio:2/3; margin:0 auto; perspective:600px; cursor:${puedeJugar ? 'pointer' : 'default'};">
+          <div style="position:absolute; inset:0; transition:transform 0.5s; transform-style:preserve-3d; transform:${yaRevelada ? 'rotateY(180deg)' : 'rotateY(0deg)'};">
+            <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:8px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 2px 8px rgba(0,0,0,0.15); opacity:${reto.desbloqueado ? '1' : '0.55'};">
+              ${reto.desbloqueado ? '🌸' : '🔒'}
+            </div>
+            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:8px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--bordo, #c94f7c);">
+              ✓
+            </div>
+          </div>
+        </div>
+        <p style="font-size:10px; color:var(--gris-suave); margin-top:4px; line-height:1.2;">${_escaparHtml(reto.nombre)}</p>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="evento-mapa-cartas-fila" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; padding:10px 0;">
+      ${cartas}
+    </div>
+  `;
+}
+
+/**
+ * Al tocar una carta desbloqueada y sin completar: la da vuelta con
+ * animación y, apenas termina, arranca directo el juego de ese reto.
+ * Si está bloqueada o ya completa, no hace nada.
+ */
+function _tocarCartaMapaEvento(orden) {
+  const el = document.getElementById(`evento-carta-mapa-${orden}`);
+  if (!el) return;
+  if (el.dataset.desbloqueado !== '1' || el.dataset.completo === '1') return;
+  if (typeof EventosJuegos[orden] !== 'function') return;
+
+  const interior = el.firstElementChild;
+  if (interior) interior.style.transform = 'rotateY(180deg)';
+
+  setTimeout(() => {
+    EventosJuegos[orden]();
+  }, 500);
 }
 
 // Radio de revelado del velo alrededor de cada nodo desbloqueado (0 a 1, fracción del mapa)
