@@ -465,3 +465,192 @@ async function _voltearCartaJuego3(idx) {
 
 EventosJuegos[3] = _iniciarJuego3;
 
+// ────────────────────────────────────────────────────────────
+// JUEGO 4 — Unir tropes con portadas: 2 portadas, cada una con 2
+// tropes REALES (los que la campaña tiene cargados en el catálogo
+// de tropes). Se muestran los 4 tropes mezclados abajo y hay que
+// arrastrar cada uno hasta la portada correcta. 4 intentos (se
+// descuenta 1 por cada arrastre a la portada equivocada). Si se
+// agotan, se resetea con 2 portadas nuevas (mismo criterio que
+// Juego 3).
+// ────────────────────────────────────────────────────────────
+
+const _INTENTOS_JUEGO4 = 4;
+const _CANDIDATOS_JUEGO4 = 12; // se piden de más porque no todas las campañas tienen 2+ tropes cargados
+
+let _estadoJuego4 = null;
+
+async function _iniciarJuego4() {
+  const titulo = document.getElementById('juego-evento-titulo');
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!titulo || !body || !footer) return;
+
+  titulo.textContent = 'Juego 4 · Uní los tropes con la portada';
+  footer.innerHTML = '';
+  body.innerHTML = `
+    <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
+      <div class="spinner"></div>
+      <p style="margin-top:10px;">Preparando las tapas…</p>
+    </div>
+  `;
+  mostrarModal('modal-juego-evento');
+
+  await _jugarRondaJuego4();
+}
+
+// Busca 2 campañas al azar que tengan al menos 2 tropes reales cargados.
+// Reintenta pidiendo tandas nuevas si las primeras candidatas no alcanzan.
+async function _buscarPortadasConTropesJuego4(intentosBusqueda = 4) {
+  for (let i = 0; i < intentosBusqueda; i++) {
+    const { data: candidatas, error } = await supabaseClient.rpc('obtener_campanas_azar_para_juego', { p_cantidad: _CANDIDATOS_JUEGO4 });
+    if (error || !candidatas || candidatas.length === 0) continue;
+
+    const { data: tropesRaw, error: errorTropes } = await supabaseClient
+      .from('campana_tropes')
+      .select('id_campana, tropes ( nombre )')
+      .in('id_campana', candidatas.map(c => c.id_campana));
+    if (errorTropes) continue;
+
+    const tropesPorCampana = {};
+    (tropesRaw || []).forEach(fila => {
+      const nombre = fila.tropes?.nombre;
+      if (!nombre) return;
+      if (!tropesPorCampana[fila.id_campana]) tropesPorCampana[fila.id_campana] = [];
+      tropesPorCampana[fila.id_campana].push(nombre);
+    });
+
+    const candidatasConTropes = candidatas.filter(c => (tropesPorCampana[c.id_campana] || []).length >= 2);
+    if (candidatasConTropes.length < 2) continue;
+
+    const elegidas = _mezclarArrayJuego(candidatasConTropes).slice(0, 2);
+    return elegidas.map(c => ({
+      id_campana: c.id_campana,
+      link_portada: c.link_portada,
+      tropesReales: _mezclarArrayJuego(tropesPorCampana[c.id_campana]).slice(0, 2),
+    }));
+  }
+  return null;
+}
+
+async function _jugarRondaJuego4() {
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!body || !footer) return;
+
+  body.innerHTML = `
+    <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
+      <div class="spinner"></div>
+      <p style="margin-top:10px;">Preparando las tapas…</p>
+    </div>
+  `;
+
+  const portadas = await _buscarPortadasConTropesJuego4();
+  if (!portadas) {
+    body.innerHTML = `<p class="estado-vacio-texto">😕 No pudimos cargar el juego. Probá de nuevo en un rato.</p>`;
+    return;
+  }
+
+  const tropesJuego = _mezclarArrayJuego(
+    portadas.flatMap(p => p.tropesReales.map(nombre => ({ nombre, id_campana: p.id_campana, colocado: false })))
+  );
+
+  _estadoJuego4 = {
+    portadas,
+    tropes: tropesJuego,
+    intentosRestantes: _INTENTOS_JUEGO4,
+  };
+
+  footer.innerHTML = '';
+  _renderTableroJuego4();
+}
+
+function _renderTableroJuego4() {
+  const body = document.getElementById('juego-evento-body');
+  if (!body || !_estadoJuego4) return;
+
+  const { portadas, tropes, intentosRestantes } = _estadoJuego4;
+
+  body.innerHTML = `
+    <p style="text-align:center; font-weight:600; margin-bottom:6px;">Arrastrá cada trope hasta la portada correcta</p>
+    <p id="juego4-intentos" style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:14px;">
+      Intentos restantes: <strong>${intentosRestantes}</strong>
+    </p>
+    <div class="juego4-portadas" style="display:flex; gap:20px; justify-content:center; margin-bottom:18px;">
+      ${portadas.map(p => `
+        <div class="juego4-portada-drop"
+             ondragover="event.preventDefault()"
+             ondrop="_soltarTropeJuego4(event, '${p.id_campana}')"
+             style="text-align:center; width:110px;">
+          <img src="${_escaparHtml(p.link_portada)}" alt="" style="width:110px; height:165px; object-fit:cover; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" />
+          <div id="juego4-colocados-${p.id_campana}" style="margin-top:8px; display:flex; flex-direction:column; gap:4px; min-height:26px;">
+            ${tropes.filter(t => t.colocado && t.id_campana === p.id_campana).map(t => `
+              <span style="font-size:12px; background:var(--verde-suave, #dff0e0); border-radius:12px; padding:3px 8px;">✓ ${_escaparHtml(t.nombre)}</span>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div id="juego4-pool" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; min-height:40px;">
+      ${tropes.map((t, idx) => t.colocado ? '' : `
+        <div class="juego4-trope-chip"
+             draggable="true"
+             ondragstart="event.dataTransfer.setData('text/plain', '${idx}')"
+             style="padding:8px 14px; border-radius:20px; background:var(--rosa-suave, #f7d9e3); border:1px solid var(--bordo); font-size:13px; cursor:grab;">
+          ${_escaparHtml(t.nombre)}
+        </div>
+      `).join('')}
+    </div>
+    <p id="juego4-feedback" style="text-align:center; margin-top:14px; font-size:14px;"></p>
+  `;
+}
+
+async function _soltarTropeJuego4(event, idCampanaDestino) {
+  event.preventDefault();
+  const estado = _estadoJuego4;
+  if (!estado) return;
+
+  const idx = parseInt(event.dataTransfer.getData('text/plain'), 10);
+  const trope = estado.tropes[idx];
+  if (!trope || trope.colocado) return;
+
+  const feedback = document.getElementById('juego4-feedback');
+
+  if (trope.id_campana === idCampanaDestino) {
+    trope.colocado = true;
+    if (feedback) feedback.textContent = '🌸 ¡Correcto!';
+
+    const faltan = estado.tropes.some(t => !t.colocado);
+    if (!faltan) {
+      if (feedback) feedback.innerHTML = '🌸 ¡Completaste el juego!';
+      if (typeof registrarAccionEventoSiCorresponde === 'function') {
+        await registrarAccionEventoSiCorresponde('juego4_completado');
+      }
+      setTimeout(() => {
+        cerrarModales();
+      }, 1200);
+      return;
+    }
+
+    _renderTableroJuego4();
+    return;
+  }
+
+  // Trope equivocado para esa portada
+  estado.intentosRestantes -= 1;
+  if (feedback) feedback.textContent = '😅 Te equivocaste…';
+
+  if (estado.intentosRestantes <= 0) {
+    if (feedback) feedback.textContent = '😅 Se acabaron los intentos… ¡otra tanda de tapas!';
+    setTimeout(() => {
+      _jugarRondaJuego4();
+    }, 1200);
+    return;
+  }
+
+  const intentosEl = document.getElementById('juego4-intentos');
+  if (intentosEl) intentosEl.innerHTML = `Intentos restantes: <strong>${estado.intentosRestantes}</strong>`;
+}
+
+EventosJuegos[4] = _iniciarJuego4;
+
