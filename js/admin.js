@@ -577,6 +577,7 @@ async function cargarImpulsosAdmin() {
       <thead>
         <tr>
           <th>Libro</th>
+          <th>Plan</th>
           <th>Autor</th>
           <th>Cupos libres</th>
           <th>Precio lista</th>
@@ -616,9 +617,12 @@ function construirFilaImpulsoAdmin(i) {
       ? `<span style="font-size:12px;">En slider hasta ${String(i.fechaFinSlider).split('T')[0]}</span>`
       : '');
 
+  const nombrePlan = i.plan ? i.plan.charAt(0).toUpperCase() + i.plan.slice(1) : 'Impulso';
+
   return `
     <tr>
       <td>${i.nombreLibro}</td>
+      <td><span class="badge" style="background:var(--rosa-claro); color:var(--bordo);">${nombrePlan}</span></td>
       <td style="font-size:12px;">${i.aliasAutor || '—'}<br><span style="opacity:.7;">${i.emailAutor}</span></td>
       <td>${i.cuposDisponibles ?? '—'}</td>
       <td>${simbolo}${Number(i.precioLista).toLocaleString('es-AR')}</td>

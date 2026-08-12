@@ -416,7 +416,7 @@ const PLANES_CAMPANA_INFO = [
     id: 'select',
     nombre: 'Select',
     subtitulo: 'Reseñadores con más visibilidad',
-    habilitado: false,
+    habilitado: true,
     precioArs: 9000,
     precioUsd: 6,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> reseñadores con más visibilidad en redes sociales. Select prioriza reseñadores con 50% o más de confiabilidad y más de 1.500 seguidores, para que tu campaña llegue a más lectores además de sumar cupos.`,
@@ -430,7 +430,7 @@ const PLANES_CAMPANA_INFO = [
     id: 'resistence',
     nombre: 'Resistence',
     subtitulo: 'Más reseñas entregadas',
-    habilitado: false,
+    habilitado: true,
     precioArs: 12000,
     precioUsd: 8,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> más reseñas entregadas, con reseñadores confiables y buen match. Resistence combina 70% o más de confiabilidad con un mínimo de 51% de match, para asegurar cupos que realmente se completen.`,
@@ -444,7 +444,7 @@ const PLANES_CAMPANA_INFO = [
     id: 'complete',
     nombre: 'Complete',
     subtitulo: 'Personalizado con auditoría',
-    habilitado: false,
+    habilitado: true,
     precioArs: 15000,
     precioUsd: 10,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> una estrategia 100% personalizada. Hacemos una auditoría de tu campaña para definir qué conviene priorizar —match, confiabilidad o seguidores— y armamos el orden de búsqueda de reseñadores a medida.`,
@@ -577,7 +577,7 @@ function _renderPlanCampanaDetalle(plan, ctx) {
       <div id="impulsar-ok" class="mensaje-ok" style="display:none; margin-bottom:10px;"></div>
       <div class="plan-campana-acciones">
         <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
-        <button type="button" class="btn-primario" id="btn-confirmar-impulso" onclick="confirmarImpulsarCampana('${ctx.idCampana}', ${precioArs}, ${precioUsd})">Comprar ahora</button>
+        <button type="button" class="btn-primario" id="btn-confirmar-impulso" onclick="confirmarImpulsarCampana('${ctx.idCampana}', ${precioArs}, ${precioUsd}, '${plan.id}')">Comprar ahora</button>
       </div>
     `
     : `
@@ -622,8 +622,9 @@ async function _obtenerCreditosDisponiblesAutor(idUsuario) {
  * aplica el descuento de créditos disponibles y deja la solicitud pendiente de pago
  * para que el admin la active manualmente desde el panel.
  */
-async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd) {
+async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId = 'impulso') {
   const btn = document.getElementById('btn-confirmar-impulso');
+  const nombrePlan = (PLANES_CAMPANA_INFO.find(p => p.id === planId) || {}).nombre || 'Impulso';
   ocultarMensajes('impulsar-error', 'impulsar-ok');
 
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -675,7 +676,8 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd) {
         precio_lista: precioLista,
         creditos_aplicados: Math.round(creditosNecesarios * 100) / 100,
         monto_a_pagar: montoAPagar,
-        estado: 'pendiente'
+        estado: 'pendiente',
+        plan: planId
       })
       .select('id')
       .single();
@@ -700,11 +702,11 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd) {
           ok.style.display = 'block';
         }
       } else if (ok) {
-        ok.textContent = `¡Listo! Te enviamos un mail con el link de pago de $${montoAPagar.toLocaleString('es-AR')} ARS. Una vez que se acredite el pago, activamos el impulso.`;
+        ok.textContent = `¡Listo! Te enviamos un mail con el link de pago de $${montoAPagar.toLocaleString('es-AR')} ARS. Una vez que se acredite el pago, activamos tu plan ${nombrePlan}.`;
         ok.style.display = 'block';
       }
     } else if (ok) {
-      ok.textContent = `¡Listo! Tu solicitud quedó registrada. Esto no se activa automáticamente: en breve te vamos a enviar el link de pago de ${moneda === 'ARS' ? '$' : 'USD '}${montoAPagar.toLocaleString('es-AR')} para coordinar la activación del impulso.`;
+      ok.textContent = `¡Listo! Tu solicitud quedó registrada. Esto no se activa automáticamente: en breve te vamos a enviar el link de pago de ${moneda === 'ARS' ? '$' : 'USD '}${montoAPagar.toLocaleString('es-AR')} para coordinar la activación de tu plan ${nombrePlan}.`;
       ok.style.display = 'block';
     }
 
