@@ -397,8 +397,9 @@ function botonImpulsarCampanaHtml(c) {
 
 /**
  * Definición comercial de los planes de campaña (Select, Resistence y Complete
- * todavía no están habilitados para compra — se muestran como "Próximamente").
- * Impulso es el único con precio dinámico (tabla `configuracion`) y compra activa.
+ * ya están habilitados para compra, igual que Impulso).
+ * Impulso es el único con precio dinámico (tabla `configuracion`); los demás
+ * tienen precio fijo definido acá (precioArs / precioUsd).
  */
 const PLANES_CAMPANA_INFO = [
   {
@@ -418,7 +419,7 @@ const PLANES_CAMPANA_INFO = [
     id: 'select',
     nombre: 'Select',
     subtitulo: 'Reseñadores con más visibilidad',
-    habilitado: false,
+    habilitado: true,
     precioArs: 9000,
     precioUsd: 6,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> reseñadores con más visibilidad en redes sociales. Select prioriza reseñadores con 50% o más de confiabilidad y más de 1.500 seguidores, para que tu campaña llegue a más lectores además de sumar cupos.`,
@@ -432,7 +433,7 @@ const PLANES_CAMPANA_INFO = [
     id: 'resistence',
     nombre: 'Resistence',
     subtitulo: 'Más reseñas entregadas',
-    habilitado: false,
+    habilitado: true,
     precioArs: 12000,
     precioUsd: 8,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> más reseñas entregadas, con reseñadores confiables y buen match. Resistence combina 70% o más de confiabilidad con un mínimo de 51% de match, para asegurar cupos que realmente se completen.`,
@@ -446,7 +447,7 @@ const PLANES_CAMPANA_INFO = [
     id: 'complete',
     nombre: 'Complete',
     subtitulo: 'Personalizado con auditoría',
-    habilitado: false,
+    habilitado: true,
     precioArs: 15000,
     precioUsd: 10,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> una estrategia 100% personalizada. Hacemos una auditoría de tu campaña para definir qué conviene priorizar —match, confiabilidad o seguidores— y armamos el orden de búsqueda de reseñadores a medida.`,
