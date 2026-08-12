@@ -314,3 +314,154 @@ async function _confirmarJuego2(letraDePosicionOriginal) {
 
 EventosJuegos[2] = _iniciarJuego2;
 
+// ────────────────────────────────────────────────────────────
+// JUEGO 3 — Memotest: 8 portadas (16 cartas, cada una x2), hay que
+// encontrar los 8 pares. Se voltean de a dos por click. Cada PAR
+// FALLIDO descuenta 1 de los 4 intentos disponibles. Si se agotan
+// los intentos sin completar el tablero, se resetea todo con un
+// set nuevo de 8 portadas al azar (siempre distintas para cada
+// usuario, sin persistencia entre sesiones).
+// ────────────────────────────────────────────────────────────
+
+const _INTENTOS_JUEGO3 = 4;
+
+// Estado del juego en curso (se recrea en cada _jugarRondaJuego3)
+let _estadoJuego3 = null;
+
+async function _iniciarJuego3() {
+  const titulo = document.getElementById('juego-evento-titulo');
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!titulo || !body || !footer) return;
+
+  titulo.textContent = 'Juego 3 · Encontrá las parejas';
+  footer.innerHTML = '';
+  body.innerHTML = `
+    <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
+      <div class="spinner"></div>
+      <p style="margin-top:10px;">Preparando las tapas…</p>
+    </div>
+  `;
+  mostrarModal('modal-juego-evento');
+
+  await _jugarRondaJuego3();
+}
+
+async function _jugarRondaJuego3() {
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!body || !footer) return;
+
+  const { data: libros, error } = await supabaseClient.rpc('obtener_campanas_azar_para_juego', { p_cantidad: 8 });
+
+  if (error || !libros || libros.length < 8) {
+    body.innerHTML = `<p class="estado-vacio-texto">😕 No pudimos cargar el juego. Probá de nuevo en un rato.</p>`;
+    return;
+  }
+
+  // Cada portada aparece 2 veces (idPar identifica el par al que pertenece)
+  const cartasSinMezclar = [];
+  libros.slice(0, 8).forEach((libro, idPar) => {
+    cartasSinMezclar.push({ idPar, link_portada: libro.link_portada });
+    cartasSinMezclar.push({ idPar, link_portada: libro.link_portada });
+  });
+
+  _estadoJuego3 = {
+    cartas: _mezclarArrayJuego(cartasSinMezclar),
+    volteadas: [],       // índices de las cartas boca arriba en este intento (máx 2)
+    encontradas: new Set(), // índices de cartas ya emparejadas (quedan boca arriba)
+    intentosRestantes: _INTENTOS_JUEGO3,
+    bloqueado: false,    // true mientras se resuelve un par (evita clicks de más)
+  };
+
+  footer.innerHTML = '';
+  _renderTableroJuego3();
+}
+
+function _renderTableroJuego3() {
+  const body = document.getElementById('juego-evento-body');
+  if (!body || !_estadoJuego3) return;
+
+  const { cartas, volteadas, encontradas, intentosRestantes } = _estadoJuego3;
+
+  body.innerHTML = `
+    <p style="text-align:center; font-weight:600; margin-bottom:6px;">Encontrá las 8 parejas</p>
+    <p id="juego3-intentos" style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:14px;">
+      Intentos restantes: <strong>${intentosRestantes}</strong>
+    </p>
+    <div class="juego3-grilla" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; max-width:340px; margin:0 auto;">
+      ${cartas.map((carta, idx) => {
+        const boca = volteadas.includes(idx) || encontradas.has(idx);
+        return `
+          <div class="juego3-carta" onclick="_voltearCartaJuego3(${idx})" style="aspect-ratio:2/3; border-radius:8px; cursor:${boca || encontradas.has(idx) ? 'default' : 'pointer'}; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.15); ${encontradas.has(idx) ? 'opacity:0.55;' : ''}">
+            ${boca
+              ? `<img src="${_escaparHtml(carta.link_portada)}" alt="" style="width:100%; height:100%; object-fit:cover;" />`
+              : `<div style="width:100%; height:100%; background:var(--bordo); display:flex; align-items:center; justify-content:center; font-size:22px;">🌸</div>`}
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <p id="juego3-feedback" style="text-align:center; margin-top:14px; font-size:14px;"></p>
+  `;
+}
+
+async function _voltearCartaJuego3(idx) {
+  const estado = _estadoJuego3;
+  if (!estado || estado.bloqueado) return;
+  if (estado.encontradas.has(idx) || estado.volteadas.includes(idx)) return;
+
+  estado.volteadas.push(idx);
+  _renderTableroJuego3();
+
+  if (estado.volteadas.length < 2) return;
+
+  estado.bloqueado = true;
+  const [i1, i2] = estado.volteadas;
+  const esPareja = estado.cartas[i1].idPar === estado.cartas[i2].idPar;
+  const feedback = document.getElementById('juego3-feedback');
+
+  if (esPareja) {
+    estado.encontradas.add(i1);
+    estado.encontradas.add(i2);
+    estado.volteadas = [];
+    estado.bloqueado = false;
+
+    if (feedback) feedback.textContent = '🌸 ¡Pareja encontrada!';
+
+    if (estado.encontradas.size === estado.cartas.length) {
+      // Tablero completo
+      if (feedback) feedback.innerHTML = '🌸 ¡Completaste el memotest!';
+      if (typeof registrarAccionEventoSiCorresponde === 'function') {
+        await registrarAccionEventoSiCorresponde('juego3_completado');
+      }
+      setTimeout(() => {
+        cerrarModales();
+      }, 1200);
+      return;
+    }
+
+    _renderTableroJuego3();
+    return;
+  }
+
+  // No es pareja: descuenta un intento
+  estado.intentosRestantes -= 1;
+  if (feedback) feedback.textContent = '😅 No coinciden…';
+
+  await new Promise(resolve => setTimeout(resolve, 900));
+
+  if (estado.intentosRestantes <= 0) {
+    if (feedback) feedback.textContent = '😅 Se acabaron los intentos… ¡otra tanda de tapas!';
+    setTimeout(() => {
+      _jugarRondaJuego3();
+    }, 1200);
+    return;
+  }
+
+  estado.volteadas = [];
+  estado.bloqueado = false;
+  _renderTableroJuego3();
+}
+
+EventosJuegos[3] = _iniciarJuego3;
+
