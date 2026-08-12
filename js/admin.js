@@ -610,10 +610,17 @@ function construirFilaImpulsoAdmin(i) {
 
   const simbolo = i.moneda === 'ARS' ? '$' : 'USD ';
 
-  const botones = i.estado === 'pendiente' ? `
-    <button class="btn-primario btn-sm" onclick="activarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Activar impulso</button>
-    <button class="btn-secundario btn-sm btn-peligro" onclick="rechazarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Rechazar</button>
-  ` : (i.estado === 'pagado' && i.fechaFinSlider
+  const botones = i.estado === 'pendiente' ? (
+    i.plan === 'complete'
+      ? `
+        <button class="btn-primario btn-sm" onclick="mostrarOpcionesPrioridadComplete('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Aprobar</button>
+        <button class="btn-secundario btn-sm btn-peligro" onclick="rechazarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Rechazar</button>
+      `
+      : `
+        <button class="btn-primario btn-sm" onclick="activarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Activar impulso</button>
+        <button class="btn-secundario btn-sm btn-peligro" onclick="rechazarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Rechazar</button>
+      `
+  ) : (i.estado === 'pagado' && i.fechaFinSlider
       ? `<span style="font-size:12px;">En slider hasta ${String(i.fechaFinSlider).split('T')[0]}</span>`
       : '');
 
@@ -630,7 +637,7 @@ function construirFilaImpulsoAdmin(i) {
       <td><strong>${simbolo}${Number(i.montoAPagar).toLocaleString('es-AR')}</strong></td>
       <td>${estadoBadge}</td>
       <td style="font-size:12px;">${i.fechaSolicitud ? String(i.fechaSolicitud).split('T')[0] : '—'}</td>
-      <td style="display:flex; gap:6px; flex-wrap:wrap;">${botones}</td>
+      <td id="impulso-acciones-${i.id}" style="display:flex; gap:6px; flex-wrap:wrap;">${botones}</td>
     </tr>
   `;
 }
@@ -651,6 +658,36 @@ async function activarImpulsoAdmin(idImpulso, nombreLibro) {
   if (!resultado) return;
 
   mostrarToast(`Impulso activado. Se notificó a ${resultado.notificados ?? 0} reseñador(es).`, 'ok');
+  await cargarImpulsosAdmin();
+}
+
+/**
+ * Plan Complete: al aprobar, en vez de activar directo, muestra 3 botones
+ * de prioridad (Match / Visibilidad / Confiabilidad). Elegir uno define el
+ * algoritmo de búsqueda de reseñadoras y dispara la auditoría personalizada
+ * (predefinida) al autor.
+ */
+function mostrarOpcionesPrioridadComplete(idImpulso, nombreLibro) {
+  const celda = document.getElementById(`impulso-acciones-${idImpulso}`);
+  if (!celda) return;
+
+  celda.innerHTML = `
+    <span style="font-size:12px; width:100%; margin-bottom:4px;">Elegí la prioridad para "${nombreLibro}":</span>
+    <button class="btn-primario btn-sm" onclick="activarImpulsoCompleteConPrioridad('${idImpulso}', '${escaparHtmlSoporte(nombreLibro)}', 'match')">Prioriza Match</button>
+    <button class="btn-primario btn-sm" onclick="activarImpulsoCompleteConPrioridad('${idImpulso}', '${escaparHtmlSoporte(nombreLibro)}', 'visibilidad')">Prioriza Visibilidad</button>
+    <button class="btn-primario btn-sm" onclick="activarImpulsoCompleteConPrioridad('${idImpulso}', '${escaparHtmlSoporte(nombreLibro)}', 'confiabilidad')">Prioriza Confiabilidad</button>
+    <button class="btn-secundario btn-sm" onclick="cargarImpulsosAdmin()">Cancelar</button>
+  `;
+}
+
+async function activarImpulsoCompleteConPrioridad(idImpulso, nombreLibro, prioridad) {
+  const nombresPrioridad = { match: 'Match', visibilidad: 'Visibilidad', confiabilidad: 'Confiabilidad' };
+  if (!confirm(`¿Confirmás que ya se cobró el Complete de "${nombreLibro}" con prioridad ${nombresPrioridad[prioridad]}?\n\nEsto va a notificar a las reseñadoras que correspondan, meter la campaña en el slider por 2 semanas y mandarle al autor la auditoría personalizada.`)) return;
+
+  const resultado = await _ejecutarAccionImpulsoAdmin('admin_activar_impulso', { p_id_impulso: idImpulso, p_prioridad: prioridad });
+  if (!resultado) return;
+
+  mostrarToast(`Complete activado (${nombresPrioridad[prioridad]}). Se notificó a ${resultado.notificados ?? 0} reseñador(es) y se envió la auditoría al autor.`, 'ok');
   await cargarImpulsosAdmin();
 }
 

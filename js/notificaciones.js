@@ -181,6 +181,15 @@ const VARIANTES = {
     ],
   },
 
+    auditoria_complete: {
+    emoji: '🔎',
+    textos: [
+      (d) => `Terminamos tu auditoría de "${d.nombreLibro || ''}". Te contamos qué estrategia vamos a usar.`,
+      (d) => `Auditoría lista para "${d.nombreLibro || ''}". Mirá qué encontramos.`,
+      (d) => `Ya analizamos "${d.nombreLibro || ''}" a fondo. Te dejamos el resultado.`,
+    ],
+  },
+
   // TODOS LOS ROLES
   ticket_actualizado: {
     emoji: '🔔',
@@ -491,6 +500,11 @@ function _navegarPorNotificacion(notif) {
     'resena_compatible_impulso', 'cupos_llenos',
     'toque_no_empezado', 'toque_leyendo', 'toque_mitad', 'toque_finalizado'
   ];
+
+  if (notif.tipo === 'auditoria_complete') {
+    if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
+    return;
+  }
 
   if (tiposCampaña.includes(notif.tipo) && notif.referenciaId) {
     if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
