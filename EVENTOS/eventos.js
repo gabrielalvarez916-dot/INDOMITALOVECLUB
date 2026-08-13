@@ -470,7 +470,7 @@ function _renderCardReto(reto) {
  */
 function _renderMapaOListaRetos(evento, progreso) {
   if (evento.tema?.mapa?.tipo === 'cartas') {
-    return _renderMapaCartas(progreso, evento.tema?.mapa?.fondo || '');
+    return _renderMapaCartas(progreso, evento.tema?.mapa?.fondo || '', evento.tema?.mapa?.frente || '');
   }
 
   const nodos = evento.tema?.mapa?.nodos;
@@ -506,8 +506,11 @@ const _ICONOS_CARTA_MAPA = {
   5: '🌻', // El jardín florecido — memoria rápida
 };
 
-function _renderMapaCartas(progreso, fondo) {
+function _renderMapaCartas(progreso, fondo, imagenFrente) {
   const total = progreso.retos.length;
+  const estiloFrenteCarta = imagenFrente
+    ? `background-image:linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url('${imagenFrente}'); background-size:cover; background-position:center;`
+    : 'background:#fff;';
   const cartas = progreso.retos.map((reto, idx) => {
     const subRetoJuego = reto.subRetos && reto.subRetos[0];
     const juegoGanado = !!subRetoJuego?.completo;
@@ -553,7 +556,7 @@ function _renderMapaCartas(progreso, fondo) {
             <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:14px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:50px; box-shadow:0 4px 14px rgba(0,0,0,0.18); opacity:${reto.desbloqueado ? '1' : '0.55'};">
               ${reto.desbloqueado ? iconoJuego : '🔒'}
             </div>
-            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:14px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
+            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:14px; ${estiloFrenteCarta} border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
               ${contenidoFrente}
             </div>
           </div>

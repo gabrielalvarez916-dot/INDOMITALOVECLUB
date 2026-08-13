@@ -53,6 +53,7 @@ function _eventoFormVacio() {
         tipo: 'nodos', // 'nodos' (fondo + velo + nodos posicionados) | 'cartas' (5 cartas genéricas en fila)
         fondoActual: '',
         veloActual: '',
+        frenteActual: '', // imagen sutil de fondo detrás del texto, en el lado revelado de las cartas (solo modo 'cartas')
         nodos: [
           { x: 20, y: 70 },
           { x: 45, y: 50 },
@@ -386,6 +387,12 @@ function _construirSeccionTema() {
         <input type="file" id="ev-tema-mapa-fondo" class="form-input" accept="image/jpeg,image/png,image/webp" />
         <p class="form-hint">Si subís una imagen acá, se muestra como fondo detrás de las 5 cartas (por ejemplo un jardín, un mapa ilustrado, etc.). Si no cargás nada, el fondo queda liso.</p>
       </div>
+      <div class="form-grupo" style="min-width:220px;">
+        <label class="form-label">Imagen de frente de la carta (opcional)</label>
+        ${t.mapa.frenteActual ? `<img src="${t.mapa.frenteActual}" alt="Frente de la carta" style="max-width:100px; display:block; margin-bottom:6px; border-radius:6px;" onerror="this.style.display='none'" />` : ''}
+        <input type="file" id="ev-tema-mapa-frente" class="form-input" accept="image/jpeg,image/png,image/webp" />
+        <p class="form-hint">Se usa como fondo sutil (bien tenue, casi transparente) detrás del texto del reto, del lado de adentro de la carta (cuando se da vuelta). Es la misma imagen para las 5 cartas. Si no cargás nada, queda blanco liso como ahora.</p>
+      </div>
     </div>
     ` : `
     <div class="form-fila" style="flex-wrap:wrap;">
@@ -553,6 +560,7 @@ function _normalizarTemaCargado(temaCrudo) {
       tipo: temaCrudo.mapa?.tipo === 'cartas' ? 'cartas' : 'nodos',
       fondoActual: temaCrudo.mapa?.fondo || '',
       veloActual: temaCrudo.mapa?.velo || '',
+      frenteActual: temaCrudo.mapa?.frente || '',
       nodos: nodosValidos
     },
     secreto: {
@@ -602,6 +610,7 @@ async function guardarEventoAdmin(event) {
   let imagenMascota = s.tema.mascota.imagenActual;
   let imagenMapaFondo = s.tema.mapa.fondoActual;
   let imagenMapaVelo = s.tema.mapa.veloActual;
+  let imagenMapaFrente = s.tema.mapa.frenteActual;
   let imagenParticula = s.tema.particula.imagenActual;
   let imagenSecreto = s.tema.secreto.imagenActual;
 
@@ -609,6 +618,7 @@ async function guardarEventoAdmin(event) {
     { inputId: 'ev-tema-mascota-img', path: 'tema/mascota', asignar: (url) => (imagenMascota = url) },
     { inputId: 'ev-tema-mapa-fondo', path: 'tema/mapaFondo', asignar: (url) => (imagenMapaFondo = url) },
     { inputId: 'ev-tema-mapa-velo', path: 'tema/mapaVelo', asignar: (url) => (imagenMapaVelo = url) },
+    { inputId: 'ev-tema-mapa-frente', path: 'tema/mapaFrente', asignar: (url) => (imagenMapaFrente = url) },
     { inputId: 'ev-tema-particula-img', path: 'tema/particula', asignar: (url) => (imagenParticula = url) },
     { inputId: 'ev-tema-secreto-img', path: 'tema/secreto', asignar: (url) => (imagenSecreto = url) }
   ];
@@ -641,6 +651,7 @@ particula: {
       tipo: s.tema.mapa.tipo === 'cartas' ? 'cartas' : 'nodos',
       fondo: imagenMapaFondo || '',
       velo: imagenMapaVelo || '',
+      frente: imagenMapaFrente || '',
       nodos: s.tema.mapa.nodos
     },
     secreto: {
