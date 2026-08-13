@@ -22,6 +22,11 @@ async function comprimirImagen(archivo, maxAncho = 1000, calidad = 0.82) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const urlTemp = URL.createObjectURL(archivo);
+    // Si la imagen original es PNG o WEBP, puede tener transparencia:
+    // la mantenemos exportando a PNG. El resto (fotos JPEG comunes) se
+    // sigue comprimiendo a JPEG para que pese menos.
+    const preservarTransparencia = archivo.type === 'image/png' || archivo.type === 'image/webp';
+    const tipoSalida = preservarTransparencia ? 'image/png' : 'image/jpeg';
 
     img.onload = () => {
       URL.revokeObjectURL(urlTemp);
@@ -33,14 +38,21 @@ async function comprimirImagen(archivo, maxAncho = 1000, calidad = 0.82) {
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      const ctx = canvas.getContext('2d');
+      if (!preservarTransparencia) {
+        // JPEG no tiene canal alfa: sin este relleno blanco previo, el
+        // navegador deja las zonas transparentes en negro al exportar.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+      }
+      ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
           if (!blob) return reject(new Error('No se pudo comprimir la imagen.'));
-          resolve(new File([blob], archivo.name, { type: 'image/jpeg' }));
+          resolve(new File([blob], archivo.name, { type: tipoSalida }));
         },
-        'image/jpeg',
-        calidad
+        tipoSalida,
+        preservarTransparencia ? undefined : calidad
       );
     };
     img.onerror = () => {
@@ -70,7 +82,9 @@ async function subirImagen(bucket, ruta, archivo) {
     archivo = await comprimirImagen(archivo, 1000, 0.82);
   }
 
-  const extension = bucket === 'PORTADAS' || bucket === 'EVENTOS' ? 'jpg' : archivo.name.split('.').pop().toLowerCase();
+  const extension = bucket === 'PORTADAS' || bucket === 'EVENTOS'
+    ? (archivo.type === 'image/png' ? 'png' : 'jpg')
+    : archivo.name.split('.').pop().toLowerCase();
   const rutaCompleta = `${ruta}.${extension}`;
 
   const { error } = await supabaseClient
