@@ -406,9 +406,14 @@ function _renderCardReto(reto) {
       ? 'evento-reto--activo'
       : 'evento-reto--bloqueado';
 
-  const juegoFn = EventosJuegos[reto.orden];
+  // Un reto solo "es un juego" si su primer sub-reto tiene EXACTAMENTE la
+  // acción juego{orden}_completado (no alcanza con que coincida el número
+  // de orden, porque otros eventos como GranMaraton también numeran sus
+  // retos 1, 2, 3... y no deben mostrar el botón Jugar).
   const subRetoJuego = reto.subRetos && reto.subRetos[0];
-  const tieneJuego = !!juegoFn && !!subRetoJuego;
+  const esAccionDeJuego = !!subRetoJuego && subRetoJuego.accion === `juego${reto.orden}_completado`;
+  const juegoFn = esAccionDeJuego ? EventosJuegos[reto.orden] : null;
+  const tieneJuego = !!juegoFn;
 
   const subRetosParaLista = tieneJuego ? reto.subRetos.slice(1) : reto.subRetos;
 
