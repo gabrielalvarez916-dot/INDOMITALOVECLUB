@@ -495,11 +495,23 @@ function _renderMapaOListaRetos(evento, progreso) {
 //   mostrando un tilde grande, de forma permanente.
 // ────────────────────────────────────────────────────────────
 
+// Un ícono por juego, relacionado a la temática de cada reto (en vez del
+// mismo genérico para los 5). Si en el futuro hay más de 5 retos, cae a
+// una flor genérica como default.
+const _ICONOS_CARTA_MAPA = {
+  1: '🌱', // El primer brote — memoria de tapas
+  2: '🌿', // Raíces enredadas — ordenar portadas
+  3: '🌸', // Flores gemelas — memotest de parejas
+  4: '🌼', // Polen y pétalos — unir tropes con portadas
+  5: '🌻', // El jardín florecido — memoria rápida
+};
+
 function _renderMapaCartas(progreso) {
   const cartas = progreso.retos.map(reto => {
     const subRetoJuego = reto.subRetos && reto.subRetos[0];
     const juegoGanado = !!subRetoJuego?.completo;
     const retoPendiente = (reto.subRetos || []).slice(1).find(sr => !sr.completo);
+    const iconoJuego = _ICONOS_CARTA_MAPA[reto.orden] || '✨';
 
     const estado = reto.completo ? 'completo' : reto.desbloqueado ? 'activo' : 'bloqueado';
     // Se ve "dada vuelta" apenas se gana el juego (para mostrar el reto
@@ -509,20 +521,20 @@ function _renderMapaCartas(progreso) {
 
     let contenidoFrente; // lo que se ve del lado revelado
     if (reto.completo) {
-      contenidoFrente = `<span style="font-size:30px; color:#3a9d5c;">✓</span>`;
+      contenidoFrente = `<span style="font-size:46px; color:#3a9d5c;">✓</span>`;
     } else if (juegoGanado && retoPendiente) {
       contenidoFrente = `
-        <div style="padding:6px; text-align:center;">
-          <span style="font-size:16px; display:block; margin-bottom:2px;">🎯</span>
-          <span style="font-size:9px; line-height:1.25; color:var(--bordo, #c94f7c); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
+        <div style="padding:10px; text-align:center;">
+          <span style="font-size:26px; display:block; margin-bottom:6px;">🎯</span>
+          <span style="font-size:12px; line-height:1.3; color:var(--bordo, #c94f7c); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
         </div>
       `;
     } else {
-      contenidoFrente = `<span style="font-size:18px; font-weight:700; color:var(--bordo, #c94f7c);">✓</span>`;
+      contenidoFrente = `<span style="font-size:26px; font-weight:700; color:var(--bordo, #c94f7c);">✓</span>`;
     }
 
     return `
-      <div class="evento-carta-mapa-item" style="text-align:center; width:66px;">
+      <div class="evento-carta-mapa-item" style="text-align:center; width:100px;">
         <div id="evento-carta-mapa-${reto.orden}"
           class="evento-carta-mapa evento-carta-mapa--${estado}"
           data-orden="${reto.orden}"
@@ -531,21 +543,21 @@ function _renderMapaCartas(progreso) {
           onclick="_tocarCartaMapaEvento(${reto.orden})"
           style="position:relative; width:100%; aspect-ratio:2/3; margin:0 auto; perspective:600px; cursor:${puedeJugar ? 'pointer' : 'default'};">
           <div style="position:absolute; inset:0; transition:transform 0.5s; transform-style:preserve-3d; transform:${yaRevelada ? 'rotateY(180deg)' : 'rotateY(0deg)'};">
-            <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:8px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 2px 8px rgba(0,0,0,0.15); opacity:${reto.desbloqueado ? '1' : '0.55'};">
-              ${reto.desbloqueado ? '🌸' : '🔒'}
+            <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:36px; box-shadow:0 3px 10px rgba(0,0,0,0.18); opacity:${reto.desbloqueado ? '1' : '0.55'};">
+              ${reto.desbloqueado ? iconoJuego : '🔒'}
             </div>
-            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:8px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
+            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:12px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
               ${contenidoFrente}
             </div>
           </div>
         </div>
-        <p style="font-size:10px; color:var(--gris-suave); margin-top:4px; line-height:1.2;">${_escaparHtml(reto.nombre)}</p>
+        <p style="font-size:12px; color:var(--gris-suave); margin-top:6px; line-height:1.25;">${_escaparHtml(reto.nombre)}</p>
       </div>
     `;
   }).join('');
 
   return `
-    <div class="evento-mapa-cartas-fila" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; padding:10px 0;">
+    <div class="evento-mapa-cartas-fila" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; padding:10px 0;">
       ${cartas}
     </div>
   `;
