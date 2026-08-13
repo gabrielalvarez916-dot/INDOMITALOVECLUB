@@ -397,6 +397,24 @@ if (tieneMapaVisual) {
 // en la posición 0 (el primero) de cada reto es SIEMPRE el "juego", y su
 // campo Acción debe cargarse exactamente como 'juego1_completado',
 // 'juego2_completado', ... 'juego5_completado' (según el orden del reto).
+/**
+ * Cierra el modal de un minijuego de evento. A diferencia de cerrarModales()
+ * simple, esto SIEMPRE refresca el progreso y re-renderiza el mapa — así,
+ * si el usuario abandona el juego a la mitad (sin ganarlo), la carta vuelve
+ * a mostrarse boca abajo (dorso) en vez de quedar visualmente "dada vuelta"
+ * por la animación previa al juego. Si en cambio ya lo había ganado, la
+ * carta va a mostrar correctamente el reto pendiente.
+ */
+function _cerrarModalJuegoEvento() {
+  cerrarModales();
+  _refrescarProgresoEventoGlobal().then((datosFrescos) => {
+    const seccionEvento = document.getElementById('seccion-evento');
+    if (seccionEvento && seccionEvento.style.display !== 'none') {
+      renderPaginaEvento(datosFrescos);
+    }
+  });
+}
+
 const EventosJuegos = {};
 
 function _renderCardReto(reto) {
