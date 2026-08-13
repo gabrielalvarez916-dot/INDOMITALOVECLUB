@@ -373,12 +373,20 @@ function _construirSeccionTema() {
         <label class="form-label">Tipo de mapa</label>
         <select class="form-input" id="ev-tema-mapa-tipo" onchange="_cambiarTipoMapaAdmin(this.value)">
           <option value="nodos" ${t.mapa.tipo !== 'cartas' ? 'selected' : ''}>Fondo con nodos y velo (ej: Chocolate y Libros)</option>
-          <option value="cartas" ${t.mapa.tipo === 'cartas' ? 'selected' : ''}>Cartas genéricas en fila (se destapan en orden)</option>
+          <option value="cartas" ${t.mapa.tipo === 'cartas' ? 'selected' : ''}>Cartas (2 arriba, 2 abajo, 1 centrada) + fondo opcional</option>
         </select>
       </div>
     </div>
     ${t.mapa.tipo === 'cartas' ? `
-    <p class="form-hint" style="margin-top:8px;">Con este tipo no hace falta subir fondo, velo ni cargar posiciones: se muestran automáticamente 5 cartas genéricas en fila, bloqueadas hasta completar el reto anterior, y se destapan con animación al arrancar el juego.</p>
+    <p class="form-hint" style="margin-top:8px;">Se muestran automáticamente 5 cartas genéricas (2 arriba, 2 abajo, 1 centrada abajo), bloqueadas hasta completar el reto anterior, que se destapan con animación al arrancar el juego. No hace falta cargar velo ni posiciones de nodos.</p>
+    <div class="form-fila" style="flex-wrap:wrap; margin-top:10px;">
+      <div class="form-grupo" style="min-width:220px;">
+        <label class="form-label">Fondo detrás de las cartas (opcional)</label>
+        ${t.mapa.fondoActual ? `<img src="${t.mapa.fondoActual}" alt="Fondo del mapa" style="max-width:140px; display:block; margin-bottom:6px; border-radius:6px;" onerror="this.style.display='none'" />` : ''}
+        <input type="file" id="ev-tema-mapa-fondo" class="form-input" accept="image/jpeg,image/png,image/webp" />
+        <p class="form-hint">Si subís una imagen acá, se muestra como fondo detrás de las 5 cartas (por ejemplo un jardín, un mapa ilustrado, etc.). Si no cargás nada, el fondo queda liso.</p>
+      </div>
+    </div>
     ` : `
     <div class="form-fila" style="flex-wrap:wrap;">
       <div class="form-grupo" style="min-width:220px;">

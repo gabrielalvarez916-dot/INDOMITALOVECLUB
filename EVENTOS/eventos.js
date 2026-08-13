@@ -470,7 +470,7 @@ function _renderCardReto(reto) {
  */
 function _renderMapaOListaRetos(evento, progreso) {
   if (evento.tema?.mapa?.tipo === 'cartas') {
-    return _renderMapaCartas(progreso);
+    return _renderMapaCartas(progreso, evento.tema?.mapa?.fondo || '');
   }
 
   const nodos = evento.tema?.mapa?.nodos;
@@ -506,7 +506,7 @@ const _ICONOS_CARTA_MAPA = {
   5: '🌻', // El jardín florecido — memoria rápida
 };
 
-function _renderMapaCartas(progreso) {
+function _renderMapaCartas(progreso, fondo) {
   const total = progreso.retos.length;
   const cartas = progreso.retos.map((reto, idx) => {
     const subRetoJuego = reto.subRetos && reto.subRetos[0];
@@ -563,8 +563,12 @@ function _renderMapaCartas(progreso) {
     `;
   }).join('');
 
+  const estiloFondo = fondo
+    ? `background-image:linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url('${fondo}'); background-size:cover; background-position:center; border-radius:16px;`
+    : '';
+
   return `
-    <div class="evento-mapa-cartas-fila" style="display:grid; grid-template-columns:repeat(2, 1fr); justify-items:center; gap:20px 16px; max-width:360px; margin:0 auto; padding:10px 0;">
+    <div class="evento-mapa-cartas-fila" style="position:relative; display:grid; grid-template-columns:repeat(2, 1fr); justify-items:center; gap:20px 16px; max-width:360px; margin:0 auto; padding:18px 10px; ${estiloFondo}">
       ${cartas}
     </div>
   `;
