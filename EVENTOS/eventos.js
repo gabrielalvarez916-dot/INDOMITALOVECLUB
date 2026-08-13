@@ -507,7 +507,8 @@ const _ICONOS_CARTA_MAPA = {
 };
 
 function _renderMapaCartas(progreso) {
-  const cartas = progreso.retos.map(reto => {
+  const total = progreso.retos.length;
+  const cartas = progreso.retos.map((reto, idx) => {
     const subRetoJuego = reto.subRetos && reto.subRetos[0];
     const juegoGanado = !!subRetoJuego?.completo;
     const retoPendiente = (reto.subRetos || []).slice(1).find(sr => !sr.completo);
@@ -521,20 +522,26 @@ function _renderMapaCartas(progreso) {
 
     let contenidoFrente; // lo que se ve del lado revelado
     if (reto.completo) {
-      contenidoFrente = `<span style="font-size:46px; color:#3a9d5c;">✓</span>`;
+      contenidoFrente = `<span style="font-size:60px; color:#3a9d5c;">✓</span>`;
     } else if (juegoGanado && retoPendiente) {
       contenidoFrente = `
-        <div style="padding:10px; text-align:center;">
-          <span style="font-size:26px; display:block; margin-bottom:6px;">🎯</span>
-          <span style="font-size:12px; line-height:1.3; color:var(--bordo, #c94f7c); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
+        <div style="padding:14px; text-align:center;">
+          <span style="font-size:34px; display:block; margin-bottom:8px;">🎯</span>
+          <span style="font-size:15px; line-height:1.3; color:var(--bordo, #c94f7c); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
         </div>
       `;
     } else {
-      contenidoFrente = `<span style="font-size:26px; font-weight:700; color:var(--bordo, #c94f7c);">✓</span>`;
+      contenidoFrente = `<span style="font-size:34px; font-weight:700; color:var(--bordo, #c94f7c);">✓</span>`;
     }
 
+    // La última carta (5ta) ocupa las dos columnas y queda centrada abajo.
+    const esUltima = idx === total - 1;
+    const estiloItem = esUltima
+      ? 'text-align:center; width:150px; grid-column:1 / -1; justify-self:center;'
+      : 'text-align:center; width:150px;';
+
     return `
-      <div class="evento-carta-mapa-item" style="text-align:center; width:100px;">
+      <div class="evento-carta-mapa-item" style="${estiloItem}">
         <div id="evento-carta-mapa-${reto.orden}"
           class="evento-carta-mapa evento-carta-mapa--${estado}"
           data-orden="${reto.orden}"
@@ -543,21 +550,21 @@ function _renderMapaCartas(progreso) {
           onclick="_tocarCartaMapaEvento(${reto.orden})"
           style="position:relative; width:100%; aspect-ratio:2/3; margin:0 auto; perspective:600px; cursor:${puedeJugar ? 'pointer' : 'default'};">
           <div style="position:absolute; inset:0; transition:transform 0.5s; transform-style:preserve-3d; transform:${yaRevelada ? 'rotateY(180deg)' : 'rotateY(0deg)'};">
-            <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:36px; box-shadow:0 3px 10px rgba(0,0,0,0.18); opacity:${reto.desbloqueado ? '1' : '0.55'};">
+            <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:14px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:50px; box-shadow:0 4px 14px rgba(0,0,0,0.18); opacity:${reto.desbloqueado ? '1' : '0.55'};">
               ${reto.desbloqueado ? iconoJuego : '🔒'}
             </div>
-            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:12px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
+            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:14px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
               ${contenidoFrente}
             </div>
           </div>
         </div>
-        <p style="font-size:12px; color:var(--gris-suave); margin-top:6px; line-height:1.25;">${_escaparHtml(reto.nombre)}</p>
+        <p style="font-size:13px; color:var(--gris-suave); margin-top:8px; line-height:1.25;">${_escaparHtml(reto.nombre)}</p>
       </div>
     `;
   }).join('');
 
   return `
-    <div class="evento-mapa-cartas-fila" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; padding:10px 0;">
+    <div class="evento-mapa-cartas-fila" style="display:grid; grid-template-columns:repeat(2, 1fr); justify-items:center; gap:20px 16px; max-width:360px; margin:0 auto; padding:10px 0;">
       ${cartas}
     </div>
   `;
