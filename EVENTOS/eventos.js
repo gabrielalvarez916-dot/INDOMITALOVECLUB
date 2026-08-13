@@ -466,17 +466,42 @@ function _renderMapaOListaRetos(evento, progreso) {
 
 // ────────────────────────────────────────────────────────────
 // Mapa tipo "cartas": una carta genérica por reto, en fila horizontal.
-// Bloqueada (🔒) hasta completar el reto anterior. Al tocar una carta
-// desbloqueada, se da vuelta con animación y arranca directo el juego
-// de ese reto (EventosJuegos[orden]). Las cartas ya completadas quedan
-// mostrando su cara revelada (✓) de forma permanente.
+// - Bloqueada (🔒): hasta completar el reto anterior, no se puede tocar.
+// - Desbloqueada, juego sin ganar (🌸): al tocarla se da vuelta con
+//   animación y arranca DIRECTO el juego (sin botón intermedio).
+// - Juego ganado pero falta el reto real (revisar perfil, postularse,
+//   etc.): la carta queda dada vuelta mostrando esa consigna pendiente
+//   adentro, ya no es clickeable (esa acción se hace en otra parte de
+//   la plataforma).
+// - Reto 100% completo (juego + reto real): la carta queda dada vuelta
+//   mostrando un tilde grande, de forma permanente.
 // ────────────────────────────────────────────────────────────
 
 function _renderMapaCartas(progreso) {
   const cartas = progreso.retos.map(reto => {
+    const subRetoJuego = reto.subRetos && reto.subRetos[0];
+    const juegoGanado = !!subRetoJuego?.completo;
+    const retoPendiente = (reto.subRetos || []).slice(1).find(sr => !sr.completo);
+
     const estado = reto.completo ? 'completo' : reto.desbloqueado ? 'activo' : 'bloqueado';
-    const yaRevelada = reto.completo; // arranca ya "dada vuelta" si el reto está completo
-    const puedeJugar = reto.desbloqueado && !reto.completo && !!EventosJuegos[reto.orden];
+    // Se ve "dada vuelta" apenas se gana el juego (para mostrar el reto
+    // pendiente adentro), y se queda así para siempre una vez completo.
+    const yaRevelada = juegoGanado || reto.completo;
+    const puedeJugar = reto.desbloqueado && subRetoJuego && !juegoGanado && !!EventosJuegos[reto.orden];
+
+    let contenidoFrente; // lo que se ve del lado revelado
+    if (reto.completo) {
+      contenidoFrente = `<span style="font-size:30px; color:#3a9d5c;">✓</span>`;
+    } else if (juegoGanado && retoPendiente) {
+      contenidoFrente = `
+        <div style="padding:6px; text-align:center;">
+          <span style="font-size:16px; display:block; margin-bottom:2px;">🎯</span>
+          <span style="font-size:9px; line-height:1.25; color:var(--bordo, #c94f7c); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
+        </div>
+      `;
+    } else {
+      contenidoFrente = `<span style="font-size:18px; font-weight:700; color:var(--bordo, #c94f7c);">✓</span>`;
+    }
 
     return `
       <div class="evento-carta-mapa-item" style="text-align:center; width:66px;">
@@ -484,15 +509,15 @@ function _renderMapaCartas(progreso) {
           class="evento-carta-mapa evento-carta-mapa--${estado}"
           data-orden="${reto.orden}"
           data-desbloqueado="${reto.desbloqueado ? '1' : '0'}"
-          data-completo="${reto.completo ? '1' : '0'}"
+          data-juego-ganado="${juegoGanado ? '1' : '0'}"
           onclick="_tocarCartaMapaEvento(${reto.orden})"
           style="position:relative; width:100%; aspect-ratio:2/3; margin:0 auto; perspective:600px; cursor:${puedeJugar ? 'pointer' : 'default'};">
           <div style="position:absolute; inset:0; transition:transform 0.5s; transform-style:preserve-3d; transform:${yaRevelada ? 'rotateY(180deg)' : 'rotateY(0deg)'};">
             <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:8px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 2px 8px rgba(0,0,0,0.15); opacity:${reto.desbloqueado ? '1' : '0.55'};">
               ${reto.desbloqueado ? '🌸' : '🔒'}
             </div>
-            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:8px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--bordo, #c94f7c);">
-              ✓
+            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:8px; background:#fff; border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
+              ${contenidoFrente}
             </div>
           </div>
         </div>
@@ -509,14 +534,15 @@ function _renderMapaCartas(progreso) {
 }
 
 /**
- * Al tocar una carta desbloqueada y sin completar: la da vuelta con
- * animación y, apenas termina, arranca directo el juego de ese reto.
- * Si está bloqueada o ya completa, no hace nada.
+ * Al tocar una carta desbloqueada con el juego todavía sin ganar: la
+ * da vuelta con animación y, apenas termina, arranca directo el juego
+ * de ese reto. Si está bloqueada, o el juego ya se ganó (con o sin el
+ * reto real completo), no hace nada — ahí la carta solo muestra info.
  */
 function _tocarCartaMapaEvento(orden) {
   const el = document.getElementById(`evento-carta-mapa-${orden}`);
   if (!el) return;
-  if (el.dataset.desbloqueado !== '1' || el.dataset.completo === '1') return;
+  if (el.dataset.desbloqueado !== '1' || el.dataset.juegoGanado === '1') return;
   if (typeof EventosJuegos[orden] !== 'function') return;
 
   const interior = el.firstElementChild;
