@@ -24,13 +24,21 @@ function renderizarFormBanner() {
 
   contenedor.innerHTML = `
     <h3 class="panel-titulo" style="font-size:20px;">Agregar banner</h3>
-    <p class="form-info">
-      Tamaño recomendado de la imagen: 1200x300px. Subí la imagen a Drive,
-      compartila como "Cualquier usuario con el enlace" y pegá el link acá.
-    </p>
     <form id="form-nuevo-banner" onsubmit="crearBannerAdmin(event)">
       <div class="form-grupo">
-        <label class="form-label">Link de la imagen *</label>
+        <label class="form-label">Tipo de banner</label>
+        <select id="banner-tipo" class="form-input" onchange="_actualizarHintBanner()">
+          <option value="imagen">Imagen (jpg, png, gif animado)</option>
+          <option value="video">Video (mp4)</option>
+        </select>
+      </div>
+      <p class="form-info" id="banner-hint">
+        Tamaño recomendado: 1200x300px. Subí la imagen a Drive, compartila
+        como "Cualquier usuario con el enlace" y pegá el link acá — si es un
+        GIF animado, se va a animar solo.
+      </p>
+      <div class="form-grupo">
+        <label class="form-label" id="banner-url-label">Link de la imagen *</label>
         <input type="url" id="banner-imagen-url" class="form-input" required placeholder="https://drive.google.com/..." />
       </div>
       <div class="form-grupo">
@@ -49,6 +57,38 @@ function renderizarFormBanner() {
 }
 
 /**
+ * Cambia el texto de ayuda del form según si el banner es imagen o video.
+ * Un link de Google Drive normal (el que ya usamos para imágenes) NO sirve
+ * para video: Drive lo convierte en una miniatura fija, no en un archivo
+ * reproducible. Para video hace falta un link directo a un .mp4 (por
+ * ejemplo alojado en el mismo storage que usamos para las portadas/PDFs).
+ */
+function _actualizarHintBanner() {
+  const tipo = document.getElementById('banner-tipo')?.value;
+  const hint = document.getElementById('banner-hint');
+  const label = document.getElementById('banner-url-label');
+  if (!hint || !label) return;
+
+  if (tipo === 'video') {
+    hint.innerHTML = `
+      ⚠️ Para video NO sirve un link de Google Drive normal (Drive lo
+      convierte en una foto fija, no en un video que se reproduce).
+      Necesitás un link directo a un archivo .mp4, alojado en un storage
+      que sirva el archivo tal cual (por ejemplo el mismo que usamos para
+      portadas/PDFs). El video se muestra sin sonido, en loop automático.
+    `;
+    label.textContent = 'Link directo al .mp4 *';
+  } else {
+    hint.innerHTML = `
+      Tamaño recomendado: 1200x300px. Subí la imagen a Drive, compartila
+      como "Cualquier usuario con el enlace" y pegá el link acá — si es un
+      GIF animado, se va a animar solo.
+    `;
+    label.textContent = 'Link de la imagen *';
+  }
+}
+
+/**
  * Crea un banner nuevo desde el formulario.
  *
  * @param {Event} event
@@ -58,14 +98,19 @@ async function crearBannerAdmin(event) {
   ocultarMensajes('banner-error', 'banner-ok');
   toggleBoton('btn-crear-banner', false, 'Creando...');
 
-  const imagenUrl = convertirLinkDrive(document.getElementById('banner-imagen-url')?.value?.trim());
+  const tipo = document.getElementById('banner-tipo')?.value === 'video' ? 'video' : 'imagen';
+  const urlCruda = document.getElementById('banner-imagen-url')?.value?.trim();
+  // La conversión a miniatura de Drive es solo para imágenes: en un video
+  // rompería el archivo (lo convertiría en una foto fija).
+  const imagenUrl = tipo === 'video' ? urlCruda : convertirLinkDrive(urlCruda);
   const linkDestino = document.getElementById('banner-link-destino')?.value?.trim();
   const orden = document.getElementById('banner-orden')?.value;
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
     p_imagen_url: imagenUrl,
     p_link_destino: linkDestino,
-    p_orden: orden ? parseInt(orden, 10) : 0
+    p_orden: orden ? parseInt(orden, 10) : 0,
+    p_tipo: tipo
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Agregar banner');

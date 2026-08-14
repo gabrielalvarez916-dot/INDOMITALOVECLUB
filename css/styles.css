@@ -3566,7 +3566,8 @@ img { max-width: 100%; display: block; }
 }
 
 .banner-publicitario-slide a,
-.banner-publicitario-slide img {
+.banner-publicitario-slide img,
+.banner-publicitario-slide video {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 1;
