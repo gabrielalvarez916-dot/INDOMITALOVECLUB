@@ -5792,6 +5792,24 @@ img { max-width: 100%; display: block; }
   margin-top: 12px;
 }
 
+.admin-verificacion-fila-manual {
+  align-items: flex-start;
+}
+
+.admin-verificacion-links-manual {
+  margin-top: 4px;
+}
+
+.admin-verificacion-links-manual .btn-sm {
+  font-weight: 600;
+}
+
+.admin-verificacion-sin-link {
+  font-size: 0.8rem;
+  color: var(--texto-secundario, #6b5b52);
+  font-style: italic;
+}
+
 .admin-verificacion-manual-vacio {
   font-size: 0.85rem;
   color: var(--texto-secundario, #6b5b52);

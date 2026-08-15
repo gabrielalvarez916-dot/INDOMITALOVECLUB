@@ -217,7 +217,7 @@ async function _buscarVerificacionManual() {
 function _renderFilaVerificacionManual(u) {
   const yaAprobado = u.estado === 'aprobado';
   return `
-    <div class="admin-verificacion-fila" id="verif-manual-fila-${_esc(u.id)}">
+    <div class="admin-verificacion-fila admin-verificacion-fila-manual" id="verif-manual-fila-${_esc(u.id)}">
       <img src="${_esc(u.avatarUrl || '')}" class="admin-verificacion-avatar" alt="" onerror="this.style.visibility='hidden'" />
       <div class="admin-verificacion-datos">
         <p class="admin-verificacion-alias">${_esc(u.alias || u.nombre || 'Sin alias')}</p>
@@ -225,9 +225,9 @@ function _renderFilaVerificacionManual(u) {
         <p class="admin-verificacion-numeros">
           📸 ${u.instagramSeguidores ?? '—'} seguidores &nbsp;|&nbsp; 🎵 ${u.tiktokSeguidores ?? '—'} seguidores
         </p>
-        <div class="admin-verificacion-links">
-          ${u.instagram ? `<a href="${_esc(u.instagram)}" target="_blank" class="btn-secundario btn-sm">Ver Instagram</a>` : ''}
-          ${u.tiktok ? `<a href="${_esc(u.tiktok)}" target="_blank" class="btn-secundario btn-sm">Ver TikTok</a>` : ''}
+        <div class="admin-verificacion-links admin-verificacion-links-manual">
+          ${u.instagram ? `<a href="${_esc(u.instagram)}" target="_blank" class="btn-secundario btn-sm">📸 Ver Instagram</a>` : `<span class="admin-verificacion-sin-link">Sin Instagram cargado</span>`}
+          ${u.tiktok ? `<a href="${_esc(u.tiktok)}" target="_blank" class="btn-secundario btn-sm">🎵 Ver TikTok</a>` : `<span class="admin-verificacion-sin-link">Sin TikTok cargado</span>`}
         </div>
       </div>
       ${yaAprobado
