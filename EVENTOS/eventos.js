@@ -509,7 +509,7 @@ const _ICONOS_CARTA_MAPA = {
 function _renderMapaCartas(progreso, fondo, imagenFrente) {
   const total = progreso.retos.length;
   const estiloFrenteCarta = imagenFrente
-    ? `background-image:linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url('${imagenFrente}'); background-size:cover; background-position:center;`
+    ? `background-image:linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0.45)), url('${imagenFrente}'); background-size:cover; background-position:center;`
     : 'background:#fff;';
   const cartas = progreso.retos.map((reto, idx) => {
     const subRetoJuego = reto.subRetos && reto.subRetos[0];
@@ -530,11 +530,11 @@ function _renderMapaCartas(progreso, fondo, imagenFrente) {
       contenidoFrente = `
         <div style="padding:14px; text-align:center;">
           <span style="font-size:34px; display:block; margin-bottom:8px;">🎯</span>
-          <span style="font-size:15px; line-height:1.3; color:var(--bordo, #c94f7c); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
+          <span style="font-size:15px; line-height:1.3; color:var(--evento-color, #e05a8a); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
         </div>
       `;
     } else {
-      contenidoFrente = `<span style="font-size:34px; font-weight:700; color:var(--bordo, #c94f7c);">✓</span>`;
+      contenidoFrente = `<span style="font-size:34px; font-weight:700; color:var(--evento-color, #e05a8a);">✓</span>`;
     }
 
     // La última carta (5ta) ocupa las dos columnas y queda centrada abajo.
@@ -553,10 +553,10 @@ function _renderMapaCartas(progreso, fondo, imagenFrente) {
           onclick="_tocarCartaMapaEvento(${reto.orden})"
           style="position:relative; width:100%; aspect-ratio:2/3; margin:0 auto; perspective:600px; cursor:${puedeJugar ? 'pointer' : 'default'};">
           <div style="position:absolute; inset:0; transition:transform 0.5s; transform-style:preserve-3d; transform:${yaRevelada ? 'rotateY(180deg)' : 'rotateY(0deg)'};">
-            <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:14px; background:linear-gradient(135deg, var(--bordo, #c94f7c), #e05a8a); display:flex; align-items:center; justify-content:center; font-size:50px; box-shadow:0 4px 14px rgba(0,0,0,0.18); opacity:${reto.desbloqueado ? '1' : '0.55'};">
+            <div style="position:absolute; inset:0; backface-visibility:hidden; border-radius:14px; background:linear-gradient(135deg, var(--evento-color, #e05a8a), var(--evento-color, #e05a8a)); display:flex; align-items:center; justify-content:center; font-size:50px; box-shadow:0 4px 14px rgba(0,0,0,0.18); opacity:${reto.desbloqueado ? '1' : '0.55'};">
               ${reto.desbloqueado ? iconoJuego : '🔒'}
             </div>
-            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:14px; ${estiloFrenteCarta} border:2px solid var(--bordo, #c94f7c); display:flex; align-items:center; justify-content:center;">
+            <div style="position:absolute; inset:0; backface-visibility:hidden; transform:rotateY(180deg); border-radius:14px; ${estiloFrenteCarta} border:2px solid var(--evento-color, #e05a8a); display:flex; align-items:center; justify-content:center;">
               ${contenidoFrente}
             </div>
           </div>

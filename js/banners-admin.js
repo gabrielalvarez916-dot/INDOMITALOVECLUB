@@ -230,12 +230,17 @@ async function refrescarListaBanners() {
  * @returns {string} HTML de la card
  */
 function construirCardBannerAdmin(b) {
+  const miniatura = b.tipo === 'video'
+    ? `<video src="${b.imagenUrl}" muted loop playsinline style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'"></video>`
+    : `<img src="${b.imagenUrl}" alt="Banner" style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'" />`;
+
   return `
     <div class="lista-item" style="align-items:center;">
-      <img src="${b.imagenUrl}" alt="Banner" style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'" />
+      ${miniatura}
       <div class="lista-item-body">
         <p class="lista-item-meta" style="margin-bottom:4px;">
           ${b.activo ? '<span class="badge badge-activa">Activo</span>' : '<span class="badge badge-cancelada">Inactivo</span>'}
+          &nbsp;${b.tipo === 'video' ? '<span class="badge">🎬 Video</span>' : '<span class="badge">🖼️ Imagen</span>'}
           &nbsp;Orden: ${b.orden ?? 0}
         </p>
         ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : '<p class="lista-item-meta" style="margin:0;">Sin link de destino</p>'}
