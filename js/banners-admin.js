@@ -50,7 +50,7 @@ async function _cargarCampanasParaBanner(idSelect = 'banner-id-campana', valorPr
     return;
   }
 
-  const campanas = (resultado.campañas || []).filter(c => c.estado === 'activa');
+  const campanas = (resultado.campañas || []).filter(c => c.estado === 'activa' && (c.cuposDisponibles ?? 0) > 0);
 
   if (campanas.length === 0) {
     select.innerHTML = '<option value="">No hay campañas activas</option>';
