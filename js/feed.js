@@ -1093,7 +1093,7 @@ const BannerPublicitario = (() => {
   let banners = [];
   let actual = 0;
   let timer = null;
-  const INTERVALO = 6000;
+  const INTERVALO_DEFAULT = 10000;
 
  async function cargar() {
     const { data, error } = await supabaseClient
@@ -1107,7 +1107,8 @@ const BannerPublicitario = (() => {
     banners = (data || []).map(b => ({
       imagenUrl: b.imagen_url,
       linkDestino: b.link_destino,
-      tipo: b.tipo === 'video' ? 'video' : 'imagen'
+      tipo: b.tipo === 'video' ? 'video' : 'imagen',
+      duracionMs: (b.duracion_segundos ? b.duracion_segundos * 1000 : INTERVALO_DEFAULT)
     }));
     const wrapper = document.getElementById('banner-publicitario-wrapper');
 
@@ -1164,11 +1165,13 @@ const BannerPublicitario = (() => {
   }
 
   function iniciarAutoplay() {
-    clearInterval(timer);
+    clearTimeout(timer);
     if (banners.length <= 1) return;
-    timer = setInterval(() => {
+    const duracion = banners[actual]?.duracionMs || INTERVALO_DEFAULT;
+    timer = setTimeout(() => {
       mostrar((actual + 1) % banners.length);
-    }, INTERVALO);
+      iniciarAutoplay();
+    }, duracion);
   }
 
   function reiniciarAutoplay() {

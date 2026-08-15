@@ -49,6 +49,10 @@ function renderizarFormBanner() {
         <label class="form-label">Orden (menor número aparece primero)</label>
         <input type="number" id="banner-orden" class="form-input" value="0" min="0" />
       </div>
+      <div class="form-grupo">
+        <label class="form-label">Duración en pantalla (segundos)</label>
+        <input type="number" id="banner-duracion" class="form-input" value="10" min="1" />
+      </div>
       <div id="banner-error" class="mensaje-error" style="display:none;"></div>
       <div id="banner-ok" class="mensaje-ok" style="display:none;"></div>
       <button type="submit" class="btn-primario" id="btn-crear-banner">Subir y agregar banner</button>
@@ -164,12 +168,14 @@ async function crearBannerAdmin(event) {
 
   const linkDestino = document.getElementById('banner-link-destino')?.value?.trim();
   const orden = document.getElementById('banner-orden')?.value;
+  const duracion = document.getElementById('banner-duracion')?.value;
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
     p_imagen_url: urlPublica,
     p_link_destino: linkDestino,
     p_orden: orden ? parseInt(orden, 10) : 0,
-    p_tipo: tipo
+    p_tipo: tipo,
+    p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
@@ -242,9 +248,12 @@ function construirCardBannerAdmin(b) {
           ${b.activo ? '<span class="badge badge-activa">Activo</span>' : '<span class="badge badge-cancelada">Inactivo</span>'}
           &nbsp;${b.tipo === 'video' ? '<span class="badge">🎬 Video</span>' : '<span class="badge">🖼️ Imagen</span>'}
           &nbsp;Orden: ${b.orden ?? 0}
+          &nbsp;Duración: ${b.duracionSegundos ?? 10}s
         </p>
         ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : '<p class="lista-item-meta" style="margin:0;">Sin link de destino</p>'}
         <div class="lista-item-acciones">
+          <input type="number" min="1" value="${b.duracionSegundos ?? 10}" id="banner-duracion-${b.id}" class="form-input" style="width:70px; display:inline-block;" />
+          <button class="btn-secundario btn-sm" onclick="editarDuracionBannerAdmin('${b.id}')">Guardar duración</button>
           <button class="btn-secundario btn-sm" onclick="toggleBannerAdmin('${b.id}', ${!b.activo})">${b.activo ? 'Desactivar' : 'Activar'}</button>
           <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarBannerAdmin('${b.id}')">Eliminar</button>
         </div>
@@ -271,6 +280,34 @@ async function toggleBannerAdmin(idBanner, nuevoEstado) {
   }
 
   mostrarToast(nuevoEstado ? 'Banner activado.' : 'Banner desactivado.', 'ok');
+  await refrescarListaBanners();
+}
+
+/**
+ * Edita la duración en pantalla (segundos) de un banner ya creado.
+ *
+ * @param {string} idBanner
+ */
+async function editarDuracionBannerAdmin(idBanner) {
+  const input = document.getElementById(`banner-duracion-${idBanner}`);
+  const duracion = parseInt(input?.value, 10);
+
+  if (!duracion || duracion < 1) {
+    mostrarToast('Ingresá una duración válida (mínimo 1 segundo).', 'error');
+    return;
+  }
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_editar_duracion_banner', {
+    p_id_banner: idBanner,
+    p_duracion_segundos: duracion
+  });
+
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || 'Error al guardar la duración.', 'error');
+    return;
+  }
+
+  mostrarToast('Duración actualizada.', 'ok');
   await refrescarListaBanners();
 }
 

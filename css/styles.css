@@ -3557,12 +3557,20 @@ img { max-width: 100%; display: block; }
 }
 
 .banner-publicitario-slide {
-  display: none;
+  display: block;
   width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
 }
 
 .banner-publicitario-slide.activo {
-  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
 }
 
 .banner-publicitario-slide a,
