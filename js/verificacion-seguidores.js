@@ -170,3 +170,98 @@ async function revisarVerificacionSeguidoresAdmin(idUsuario, aprobar) {
 
   cargarVerificacionesAdmin();
 }
+
+// ────────────────────────────────────────────────────────────
+// LADO ADMIN — Verificación manual (buscador + botón directo)
+// No requiere que la reseñadora haya solicitado nada.
+// ────────────────────────────────────────────────────────────
+
+let _timeoutBuscarVerificacionManual = null;
+
+function _debounceBuscarVerificacionManual() {
+  clearTimeout(_timeoutBuscarVerificacionManual);
+  _timeoutBuscarVerificacionManual = setTimeout(_buscarVerificacionManual, 350);
+}
+
+async function _buscarVerificacionManual() {
+  const input = document.getElementById('input-buscar-verificacion-manual');
+  const cont = document.getElementById('admin-verificacion-manual-resultados');
+  if (!input || !cont) return;
+
+  const q = input.value.trim();
+  if (q.length < 2) {
+    cont.innerHTML = '';
+    return;
+  }
+
+  cont.innerHTML = '<p class="admin-cargando">Buscando...</p>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_buscar_reseñadores_verificacion', {
+    p_busqueda: q
+  });
+
+  if (error || resultado?.error) {
+    cont.innerHTML = `<p class="admin-error">${_esc(resultado?.error || 'Error al buscar.')}</p>`;
+    return;
+  }
+
+  const lista = resultado || [];
+  if (lista.length === 0) {
+    cont.innerHTML = '<p class="admin-verificacion-manual-vacio">No se encontraron reseñadoras.</p>';
+    return;
+  }
+
+  cont.innerHTML = lista.map(u => _renderFilaVerificacionManual(u)).join('');
+}
+
+function _renderFilaVerificacionManual(u) {
+  const yaAprobado = u.estado === 'aprobado';
+  return `
+    <div class="admin-verificacion-fila" id="verif-manual-fila-${_esc(u.id)}">
+      <img src="${_esc(u.avatarUrl || '')}" class="admin-verificacion-avatar" alt="" onerror="this.style.visibility='hidden'" />
+      <div class="admin-verificacion-datos">
+        <p class="admin-verificacion-alias">${_esc(u.alias || u.nombre || 'Sin alias')}</p>
+        <p class="admin-verificacion-email">${_esc(u.email || '')}</p>
+        <p class="admin-verificacion-numeros">
+          📸 ${u.instagramSeguidores ?? '—'} seguidores &nbsp;|&nbsp; 🎵 ${u.tiktokSeguidores ?? '—'} seguidores
+        </p>
+        <div class="admin-verificacion-links">
+          ${u.instagram ? `<a href="${_esc(u.instagram)}" target="_blank" class="btn-secundario btn-sm">Ver Instagram</a>` : ''}
+          ${u.tiktok ? `<a href="${_esc(u.tiktok)}" target="_blank" class="btn-secundario btn-sm">Ver TikTok</a>` : ''}
+        </div>
+      </div>
+      ${yaAprobado
+        ? `<div class="admin-verificacion-estado admin-verificacion-estado-aprobado">✔ Verificado</div>`
+        : `<div class="admin-verificacion-acciones">
+             <button class="btn-primario btn-sm" onclick="_verificarManualmente('${_esc(u.id)}')">✔ Verificar manualmente</button>
+           </div>`
+      }
+    </div>
+  `;
+}
+
+async function _verificarManualmente(idUsuario) {
+  const fila = document.getElementById(`verif-manual-fila-${idUsuario}`);
+  const boton = fila?.querySelector('button');
+  if (boton) { boton.disabled = true; boton.textContent = 'Verificando...'; }
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_verificar_seguidores_manual', {
+    p_id_usuario: idUsuario
+  });
+
+  if (error || !resultado || resultado.error) {
+    alert(resultado?.error || 'No pudimos verificar a esta usuaria. Probá de nuevo.');
+    if (boton) { boton.disabled = false; boton.textContent = '✔ Verificar manualmente'; }
+    return;
+  }
+
+  if (fila) {
+    const acciones = fila.querySelector('.admin-verificacion-acciones');
+    if (acciones) {
+      acciones.outerHTML = `<div class="admin-verificacion-estado admin-verificacion-estado-aprobado">✔ Verificado</div>`;
+    }
+  }
+
+  // Si la lista principal (pendientes/aprobadas) está visible, la refrescamos también
+  cargarVerificacionesAdmin();
+}

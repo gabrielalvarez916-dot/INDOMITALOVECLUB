@@ -5759,6 +5759,45 @@ img { max-width: 100%; display: block; }
   font-size: 0.85rem;
 }
 
+/* Verificación manual (búsqueda + botón directo) — pestaña admin Verificación */
+.admin-verificacion-manual {
+  padding: 14px;
+  border: 1px solid var(--borde, #e5d9d2);
+  border-radius: 10px;
+  background: #faf5f1;
+  margin-bottom: 20px;
+}
+
+.admin-verificacion-manual-titulo {
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.admin-verificacion-manual-texto {
+  font-size: 0.85rem;
+  color: var(--texto-secundario, #6b5b52);
+  margin: 0 0 12px;
+}
+
+.admin-verificacion-manual-buscador input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--borde, #e5d9d2);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+#admin-verificacion-manual-resultados {
+  margin-top: 12px;
+}
+
+.admin-verificacion-manual-vacio {
+  font-size: 0.85rem;
+  color: var(--texto-secundario, #6b5b52);
+  margin: 8px 2px 0;
+}
+
 /* Tabs secundarios (mini) — usados dentro de la pestaña admin Verificación */
 .admin-verificacion-filtros {
   display: flex;

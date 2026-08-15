@@ -744,6 +744,16 @@
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-tropes-propuestos'); cargarTropesPropuestosAdmin()">Tropes propuestos</button>
       </div>
       <div id="tab-admin-verificacion" class="tab-contenido activo">
+
+        <div class="admin-verificacion-manual">
+          <p class="admin-verificacion-manual-titulo">Verificar manualmente</p>
+          <p class="admin-verificacion-manual-texto">Buscá por alias, nombre o email para verificar a alguien aunque no haya solicitado nada.</p>
+          <div class="admin-verificacion-manual-buscador">
+            <input type="text" id="input-buscar-verificacion-manual" placeholder="Buscar reseñadora..." oninput="_debounceBuscarVerificacionManual()" />
+          </div>
+          <div id="admin-verificacion-manual-resultados"></div>
+        </div>
+
         <div class="admin-verificacion-filtros">
           <button class="tab-mini activo" onclick="cambiarFiltroVerificacionAdmin(this, 'pendiente')">Pendientes</button>
           <button class="tab-mini" onclick="cambiarFiltroVerificacionAdmin(this, 'aprobado')">Aprobadas</button>
