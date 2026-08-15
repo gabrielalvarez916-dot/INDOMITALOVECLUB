@@ -27,9 +27,11 @@ async function _toggleFavoritoCampanaModal(idCampaña, matchScore) {
   const texto = document.getElementById('texto-favorito-campana-modal');
   if (boton) boton.disabled = true;
 
+  const scoreEntero = (matchScore !== null && matchScore !== undefined) ? Math.round(matchScore) : null;
+
   const { data: quedoFavorito, error } = await supabaseClient.rpc('toggle_favorito_campana', {
     p_id_campana: idCampaña,
-    p_match_score: matchScore
+    p_match_score: scoreEntero
   });
 
   if (boton) boton.disabled = false;
@@ -798,7 +800,7 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
       ${Sesion.rol() === 'reseñador' ? `
         <div style="margin:8px 0 16px; text-align:right;">
           <button type="button" id="btn-favorito-campana-modal" class="btn-favorito-campana"
-            onclick="_toggleFavoritoCampanaModal('${c.id}', ${c.matchScore ?? 'null'})"
+            onclick="_toggleFavoritoCampanaModal('${c.id}', ${c.matchScore !== undefined && c.matchScore !== null ? Math.round(c.matchScore) : 'null'})"
             title="${_estaCampanaEnFavoritos(c.id) ? 'Sacar de favoritos' : 'Guardar en favoritos'}"
             style="background:var(--crema); border:1px solid var(--gris-borde); border-radius:20px; cursor:pointer; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--gris-suave);">
             <span id="icono-favorito-campana-modal" style="font-size:18px; line-height:1;">${_estaCampanaEnFavoritos(c.id) ? '❤️' : '🤍'}</span>
