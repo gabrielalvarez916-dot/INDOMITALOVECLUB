@@ -514,6 +514,12 @@ async function enviarResena(event) {
     return;
   }
 
+  if (!datos.puntuacionLibro) {
+    mostrarMensajeError('resena-error', 'Tenés que calificar el libro con estrellas antes de entregar la reseña.');
+    _mostrarPasoResena(1);
+    return;
+  }
+
   const { data: { user } } = await supabaseClient.auth.getUser();
 
   const { data: postulacionAprobada } = await supabaseClient
