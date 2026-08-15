@@ -24,6 +24,7 @@ function _estaCampanaEnFavoritos(idCampaña) {
 async function _toggleFavoritoCampanaModal(idCampaña, matchScore) {
   const boton = document.getElementById('btn-favorito-campana-modal');
   const icono = document.getElementById('icono-favorito-campana-modal');
+  const texto = document.getElementById('texto-favorito-campana-modal');
   if (boton) boton.disabled = true;
 
   const { data: quedoFavorito, error } = await supabaseClient.rpc('toggle_favorito_campana', {
@@ -41,10 +42,14 @@ async function _toggleFavoritoCampanaModal(idCampaña, matchScore) {
   if (quedoFavorito) {
     _idsCampanasFavoritas.add(idCampaña);
     if (icono) icono.textContent = '❤️';
+    if (texto) texto.textContent = 'En favoritos';
+    if (boton) boton.title = 'Sacar de favoritos';
     mostrarToast('💗 Guardado en favoritos.', 'ok');
   } else {
     _idsCampanasFavoritas.delete(idCampaña);
     if (icono) icono.textContent = '🤍';
+    if (texto) texto.textContent = 'Guardar en favoritos';
+    if (boton) boton.title = 'Guardar en favoritos';
     mostrarToast('Sacado de favoritos.', 'ok');
   }
 }
@@ -794,8 +799,10 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
         <div style="margin:8px 0 16px; text-align:right;">
           <button type="button" id="btn-favorito-campana-modal" class="btn-favorito-campana"
             onclick="_toggleFavoritoCampanaModal('${c.id}', ${c.matchScore ?? 'null'})"
-            style="background:none; border:none; cursor:pointer; font-size:22px; line-height:1;">
-            <span id="icono-favorito-campana-modal">${_estaCampanaEnFavoritos(c.id) ? '❤️' : '🤍'}</span>
+            title="${_estaCampanaEnFavoritos(c.id) ? 'Sacar de favoritos' : 'Guardar en favoritos'}"
+            style="background:var(--crema); border:1px solid var(--gris-borde); border-radius:20px; cursor:pointer; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--gris-suave);">
+            <span id="icono-favorito-campana-modal" style="font-size:18px; line-height:1;">${_estaCampanaEnFavoritos(c.id) ? '❤️' : '🤍'}</span>
+            <span id="texto-favorito-campana-modal">${_estaCampanaEnFavoritos(c.id) ? 'En favoritos' : 'Guardar en favoritos'}</span>
           </button>
         </div>` : ''}
       <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--crema-oscura);">
