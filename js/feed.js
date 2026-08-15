@@ -1104,6 +1104,9 @@ const BannerPublicitario = (() => {
 
     if (error) return;
 
+    clearTimeout(timer);
+    actual = 0;
+
     banners = (data || []).map(b => ({
       imagenUrl: b.imagen_url,
       linkDestino: b.link_destino,
