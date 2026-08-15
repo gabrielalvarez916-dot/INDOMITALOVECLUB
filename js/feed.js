@@ -765,7 +765,7 @@ async function verDetalleCampaña(idCampaña) {
   if (titulo) titulo.textContent = c.nombreLibro;
 
   const portadaHtml = c.linkPortada
-    ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; margin-bottom:20px;" onerror="this.style.display='none'" />`
+    ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%; height:300px; object-fit:cover; object-position:center top; border-radius:8px; margin-bottom:20px; display:block;" onerror="this.style.display='none'" />`
     : '';
 
   const amazonHtml = c.linkAmazon
