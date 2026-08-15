@@ -33,13 +33,13 @@ function renderizarFormBanner() {
         </select>
       </div>
       <p class="form-info" id="banner-hint">
-        Tamaño recomendado: 1200x300px. Subí la imagen a Drive, compartila
-        como "Cualquier usuario con el enlace" y pegá el link acá — si es un
-        GIF animado, se va a animar solo.
+        Tamaño recomendado: 1200x300px.
       </p>
       <div class="form-grupo">
-        <label class="form-label" id="banner-url-label">Link de la imagen *</label>
-        <input type="url" id="banner-imagen-url" class="form-input" required placeholder="https://drive.google.com/..." />
+        <label class="form-label" id="banner-archivo-label">Archivo de imagen *</label>
+        <input type="file" id="banner-archivo" class="form-input" accept="image/jpeg,image/png,image/gif" required onchange="_limpiarUrlSubidaBanner()" />
+        <input type="hidden" id="banner-imagen-url" />
+        <p id="banner-subida-estado" style="font-size:13px; color:var(--gris-suave); margin-top:6px;"></p>
       </div>
       <div class="form-grupo">
         <label class="form-label">Link de destino (opcional)</label>
@@ -51,9 +51,20 @@ function renderizarFormBanner() {
       </div>
       <div id="banner-error" class="mensaje-error" style="display:none;"></div>
       <div id="banner-ok" class="mensaje-ok" style="display:none;"></div>
-      <button type="submit" class="btn-primario" id="btn-crear-banner">Agregar banner</button>
+      <button type="submit" class="btn-primario" id="btn-crear-banner">Subir y agregar banner</button>
     </form>
   `;
+}
+
+/**
+ * Si el usuario cambia de archivo después de haber subido uno, limpia la
+ * URL ya subida para forzar que se vuelva a subir el archivo correcto.
+ */
+function _limpiarUrlSubidaBanner() {
+  const oculto = document.getElementById('banner-imagen-url');
+  if (oculto) oculto.value = '';
+  const estado = document.getElementById('banner-subida-estado');
+  if (estado) estado.textContent = '';
 }
 
 /**
@@ -66,63 +77,113 @@ function renderizarFormBanner() {
 function _actualizarHintBanner() {
   const tipo = document.getElementById('banner-tipo')?.value;
   const hint = document.getElementById('banner-hint');
-  const label = document.getElementById('banner-url-label');
-  if (!hint || !label) return;
+  const label = document.getElementById('banner-archivo-label');
+  const input = document.getElementById('banner-archivo');
+  if (!hint || !label || !input) return;
+
+  _limpiarUrlSubidaBanner();
 
   if (tipo === 'video') {
-    hint.innerHTML = `
-      ⚠️ Para video NO sirve un link de Google Drive normal (Drive lo
-      convierte en una foto fija, no en un video que se reproduce).
-      Necesitás un link directo a un archivo .mp4, alojado en un storage
-      que sirva el archivo tal cual (por ejemplo el mismo que usamos para
-      portadas/PDFs). El video se muestra sin sonido, en loop automático.
-    `;
-    label.textContent = 'Link directo al .mp4 *';
+    hint.innerHTML = `Tamaño recomendado: 1200x300px. El video se muestra sin sonido, en loop automático.`;
+    label.textContent = 'Archivo de video (.mp4) *';
+    input.setAttribute('accept', 'video/mp4');
   } else {
-    hint.innerHTML = `
-      Tamaño recomendado: 1200x300px. Subí la imagen a Drive, compartila
-      como "Cualquier usuario con el enlace" y pegá el link acá — si es un
-      GIF animado, se va a animar solo.
-    `;
-    label.textContent = 'Link de la imagen *';
+    hint.innerHTML = `Tamaño recomendado: 1200x300px. Si subís un GIF, se va a animar solo.`;
+    label.textContent = 'Archivo de imagen *';
+    input.setAttribute('accept', 'image/jpeg,image/png,image/gif');
   }
 }
 
 /**
- * Crea un banner nuevo desde el formulario.
+ * Sube un archivo de banner (imagen o video) directo a R2, usando la
+ * Edge Function subir-banner (flujo: presignar → PUT directo a R2).
+ * Devuelve la URL pública final del archivo ya subido.
+ *
+ * @param {File} archivo
+ * @returns {Promise<string>} URL pública
+ */
+async function _subirArchivoBanner(archivo) {
+  const formato = (archivo.name.split('.').pop() || '').toLowerCase();
+
+  const { data: presign, error: errPresign } = await supabaseClient.functions.invoke('subir-banner', {
+    body: { formato }
+  });
+
+  if (errPresign || !presign?.url) {
+    const detalle = await _leerErrorEdgeFunction(errPresign, 'No se pudo iniciar la subida del archivo.');
+    throw new Error(detalle);
+  }
+
+  const respPut = await fetch(presign.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': presign.content_type },
+    body: archivo
+  });
+
+  if (!respPut.ok) {
+    throw new Error(`Error al subir el archivo (HTTP ${respPut.status}). Probá de nuevo.`);
+  }
+
+  return presign.public_url;
+}
+
+/**
+ * Crea un banner nuevo desde el formulario: primero sube el archivo
+ * elegido a R2, y con la URL pública que devuelve crea el banner.
  *
  * @param {Event} event
  */
 async function crearBannerAdmin(event) {
   event.preventDefault();
   ocultarMensajes('banner-error', 'banner-ok');
-  toggleBoton('btn-crear-banner', false, 'Creando...');
 
   const tipo = document.getElementById('banner-tipo')?.value === 'video' ? 'video' : 'imagen';
-  const urlCruda = document.getElementById('banner-imagen-url')?.value?.trim();
-  // La conversión a miniatura de Drive es solo para imágenes: en un video
-  // rompería el archivo (lo convertiría en una foto fija).
-  const imagenUrl = tipo === 'video' ? urlCruda : convertirLinkDrive(urlCruda);
+  const archivo = document.getElementById('banner-archivo')?.files?.[0];
+  const estado = document.getElementById('banner-subida-estado');
+
+  if (!archivo) {
+    mostrarMensajeError('banner-error', 'Elegí un archivo primero.');
+    return;
+  }
+
+  toggleBoton('btn-crear-banner', false, 'Subiendo archivo...');
+  if (estado) estado.textContent = `Subiendo ${archivo.name}…`;
+
+  let urlPublica;
+  try {
+    urlPublica = await _subirArchivoBanner(archivo);
+  } catch (e) {
+    toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
+    mostrarMensajeError('banner-error', e.message || 'Error al subir el archivo.');
+    if (estado) estado.textContent = '';
+    return;
+  }
+
+  if (estado) estado.textContent = '¡Archivo subido! Creando banner...';
+  toggleBoton('btn-crear-banner', false, 'Creando banner...');
+
   const linkDestino = document.getElementById('banner-link-destino')?.value?.trim();
   const orden = document.getElementById('banner-orden')?.value;
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
-    p_imagen_url: imagenUrl,
+    p_imagen_url: urlPublica,
     p_link_destino: linkDestino,
     p_orden: orden ? parseInt(orden, 10) : 0,
     p_tipo: tipo
   });
 
-  toggleBoton('btn-crear-banner', true, '', 'Agregar banner');
+  toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
 
   if (error || !resultado || resultado.error) {
     mostrarMensajeError('banner-error', resultado?.error || 'Error al crear el banner.');
+    if (estado) estado.textContent = '';
     return;
   }
 
   mostrarMensajeOk('banner-ok', '¡Banner creado correctamente!');
   document.getElementById('form-nuevo-banner')?.reset();
   document.getElementById('banner-orden').value = '0';
+  if (estado) estado.textContent = '';
 
   await refrescarListaBanners();
 }
