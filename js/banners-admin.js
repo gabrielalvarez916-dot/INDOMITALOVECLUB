@@ -35,9 +35,12 @@ function _actualizarDestinoBanner() {
 
 /**
  * Carga el desplegable de campañas activas para elegir como destino del banner.
+ *
+ * @param {string} idSelect - id del <select> a llenar (default: el del form de creación)
+ * @param {string} [valorPreseleccionado] - id de campaña a dejar seleccionada
  */
-async function _cargarCampanasParaBanner() {
-  const select = document.getElementById('banner-id-campana');
+async function _cargarCampanasParaBanner(idSelect = 'banner-id-campana', valorPreseleccionado = null) {
+  const select = document.getElementById(idSelect);
   if (!select) return;
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_listar_campanas');
@@ -55,7 +58,7 @@ async function _cargarCampanasParaBanner() {
   }
 
   select.innerHTML = '<option value="">Elegí una campaña</option>' +
-    campanas.map(c => `<option value="${c.id}">${c.nombreLibro}</option>`).join('');
+    campanas.map(c => `<option value="${c.id}" ${valorPreseleccionado === c.id ? 'selected' : ''}>${c.nombreLibro}</option>`).join('');
 }
 
 /**
@@ -323,15 +326,126 @@ function construirCardBannerAdmin(b) {
         ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : ''}
         ${b.idCampana ? `<p class="lista-item-meta" style="margin:0;">Destino: campaña "${b.nombreCampana || 'sin nombre'}"</p>` : ''}
         ${!b.linkDestino && !b.idCampana ? '<p class="lista-item-meta" style="margin:0;">Sin destino</p>' : ''}
+        <div id="banner-editar-${b.id}"></div>
         <div class="lista-item-acciones">
-          <input type="number" min="1" value="${b.duracionSegundos ?? 10}" id="banner-duracion-${b.id}" class="form-input" style="width:70px; display:inline-block;" />
-          <button class="btn-secundario btn-sm" onclick="editarDuracionBannerAdmin('${b.id}')">Guardar duración</button>
+          <button class="btn-secundario btn-sm" onclick="abrirEditarBannerAdmin('${b.id}')">Editar</button>
           <button class="btn-secundario btn-sm" onclick="toggleBannerAdmin('${b.id}', ${!b.activo})">${b.activo ? 'Desactivar' : 'Activar'}</button>
           <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarBannerAdmin('${b.id}')">Eliminar</button>
         </div>
       </div>
     </div>
   `;
+}
+
+/**
+ * Abre (o cierra si ya está abierto) el mini-formulario de edición inline
+ * de un banner: link/campaña, orden y duración. La imagen y el tipo
+ * (imagen/video) no se editan acá — para eso hay que crear un banner nuevo.
+ *
+ * @param {string} idBanner
+ */
+async function abrirEditarBannerAdmin(idBanner) {
+  const contenedor = document.getElementById(`banner-editar-${idBanner}`);
+  if (!contenedor) return;
+
+  if (contenedor.innerHTML.trim() !== '') {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  const b = _bannersAdmin.find(x => x.id === idBanner);
+  if (!b) return;
+
+  const tipoDestinoActual = b.idCampana ? 'campana' : (b.linkDestino ? 'link' : 'ninguno');
+
+  contenedor.innerHTML = `
+    <div style="background:var(--crema); border-radius:8px; padding:12px; margin:10px 0; display:flex; flex-direction:column; gap:10px;">
+      <div class="form-grupo" style="margin:0;">
+        <label class="form-label">Destino al hacer click</label>
+        <select id="banner-edit-tipo-destino-${idBanner}" class="form-input" onchange="_actualizarDestinoEditBanner('${idBanner}')">
+          <option value="ninguno" ${tipoDestinoActual === 'ninguno' ? 'selected' : ''}>Sin destino (no clickeable)</option>
+          <option value="link" ${tipoDestinoActual === 'link' ? 'selected' : ''}>Link externo</option>
+          <option value="campana" ${tipoDestinoActual === 'campana' ? 'selected' : ''}>Abrir una campaña del feed</option>
+        </select>
+      </div>
+      <div class="form-grupo" id="banner-edit-grupo-link-${idBanner}" style="margin:0; display:${tipoDestinoActual === 'link' ? 'block' : 'none'};">
+        <label class="form-label">Link de destino</label>
+        <input type="url" id="banner-edit-link-${idBanner}" class="form-input" value="${b.linkDestino || ''}" />
+      </div>
+      <div class="form-grupo" id="banner-edit-grupo-campana-${idBanner}" style="margin:0; display:${tipoDestinoActual === 'campana' ? 'block' : 'none'};">
+        <label class="form-label">Campaña</label>
+        <select id="banner-edit-campana-${idBanner}" class="form-input">
+          <option value="">Cargando campañas...</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div class="form-grupo" style="margin:0; flex:1;">
+          <label class="form-label">Orden</label>
+          <input type="number" id="banner-edit-orden-${idBanner}" class="form-input" value="${b.orden ?? 0}" min="0" />
+        </div>
+        <div class="form-grupo" style="margin:0; flex:1;">
+          <label class="form-label">Duración (seg)</label>
+          <input type="number" id="banner-edit-duracion-${idBanner}" class="form-input" value="${b.duracionSegundos ?? 10}" min="1" />
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-primario btn-sm" onclick="guardarEditarBannerAdmin('${idBanner}')">Guardar cambios</button>
+        <button class="btn-secundario btn-sm" onclick="abrirEditarBannerAdmin('${idBanner}')">Cancelar</button>
+      </div>
+    </div>
+  `;
+
+  await _cargarCampanasParaBanner(`banner-edit-campana-${idBanner}`, b.idCampana);
+}
+
+/**
+ * Muestra el campo de link o el de campaña dentro del form de edición
+ * inline, según lo elegido (son excluyentes).
+ *
+ * @param {string} idBanner
+ */
+function _actualizarDestinoEditBanner(idBanner) {
+  const tipo = document.getElementById(`banner-edit-tipo-destino-${idBanner}`)?.value;
+  const grupoLink = document.getElementById(`banner-edit-grupo-link-${idBanner}`);
+  const grupoCampana = document.getElementById(`banner-edit-grupo-campana-${idBanner}`);
+  if (!grupoLink || !grupoCampana) return;
+
+  grupoLink.style.display = tipo === 'link' ? 'block' : 'none';
+  grupoCampana.style.display = tipo === 'campana' ? 'block' : 'none';
+}
+
+/**
+ * Guarda los cambios del mini-formulario de edición de un banner.
+ *
+ * @param {string} idBanner
+ */
+async function guardarEditarBannerAdmin(idBanner) {
+  const tipoDestino = document.getElementById(`banner-edit-tipo-destino-${idBanner}`)?.value;
+  const linkDestino = tipoDestino === 'link' ? document.getElementById(`banner-edit-link-${idBanner}`)?.value?.trim() : null;
+  const idCampana = tipoDestino === 'campana' ? document.getElementById(`banner-edit-campana-${idBanner}`)?.value : null;
+  const orden = document.getElementById(`banner-edit-orden-${idBanner}`)?.value;
+  const duracion = document.getElementById(`banner-edit-duracion-${idBanner}`)?.value;
+
+  if (tipoDestino === 'campana' && !idCampana) {
+    mostrarToast('Elegí una campaña.', 'error');
+    return;
+  }
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_editar_banner', {
+    p_id_banner: idBanner,
+    p_link_destino: linkDestino,
+    p_orden: orden ? parseInt(orden, 10) : 0,
+    p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
+    p_id_campana: idCampana || null
+  });
+
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || 'Error al guardar los cambios.', 'error');
+    return;
+  }
+
+  mostrarToast('Banner actualizado.', 'ok');
+  await refrescarListaBanners();
 }
 
 /**
@@ -352,34 +466,6 @@ async function toggleBannerAdmin(idBanner, nuevoEstado) {
   }
 
   mostrarToast(nuevoEstado ? 'Banner activado.' : 'Banner desactivado.', 'ok');
-  await refrescarListaBanners();
-}
-
-/**
- * Edita la duración en pantalla (segundos) de un banner ya creado.
- *
- * @param {string} idBanner
- */
-async function editarDuracionBannerAdmin(idBanner) {
-  const input = document.getElementById(`banner-duracion-${idBanner}`);
-  const duracion = parseInt(input?.value, 10);
-
-  if (!duracion || duracion < 1) {
-    mostrarToast('Ingresá una duración válida (mínimo 1 segundo).', 'error');
-    return;
-  }
-
-  const { data: resultado, error } = await supabaseClient.rpc('admin_editar_duracion_banner', {
-    p_id_banner: idBanner,
-    p_duracion_segundos: duracion
-  });
-
-  if (error || !resultado || resultado.error) {
-    mostrarToast(resultado?.error || 'Error al guardar la duración.', 'error');
-    return;
-  }
-
-  mostrarToast('Duración actualizada.', 'ok');
   await refrescarListaBanners();
 }
 
