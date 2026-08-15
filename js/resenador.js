@@ -771,7 +771,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
               <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-avatar-img" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
               <p class="ranking-resenador-avatar-alias"
    ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
-  ${r.alias}
+  ${r.alias}${badgeSeguidoresVerificados(r.seguidoresVerificados)}
 </p>
               <span class="ranking-resenador-badge-nivel">${r.labelNivel || 'Novato'}</span>
             </div>
@@ -796,7 +796,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
           return `
             <div class="ranking-podio-columna">
               <p class="ranking-podio-alias"
-   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.alias}</p>
+   ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.alias}${badgeSeguidoresVerificados(r.seguidoresVerificados)}</p>
               <div class="ranking-podio-avatar-wrap">
                 ${i === 0 ? '<span class="ranking-podio-corona">👑</span>' : ''}
                 <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-podio-avatar ${i === 0 ? 'ranking-podio-avatar--oro' : ''}" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
@@ -825,7 +825,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
             <div class="ranking-top-item-info">
               <p class="ranking-top-item-titulo"
    ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
-  ${r.alias}
+  ${r.alias}${badgeSeguidoresVerificados(r.seguidoresVerificados)}
 </p>
             </div>
             <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? 0} pts</span>
@@ -850,7 +850,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
       <div class="ranking-top-item-info">
         <p class="ranking-top-item-titulo"
    ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>
-  ${r.alias}
+  ${r.alias}${badgeSeguidoresVerificados(r.seguidoresVerificados)}
 </p>
       </div>
       <span class="ranking-resenador-badge-nivel">${r.puntosMensuales ?? 0} pts</span>
