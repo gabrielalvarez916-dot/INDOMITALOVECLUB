@@ -13,6 +13,49 @@ let _bannersAdmin = [];
 async function cargarBannersAdmin() {
   renderizarFormBanner();
   await refrescarListaBanners();
+  await _cargarCampanasParaBanner();
+}
+
+/**
+ * Muestra el campo de link externo o el de campaña según lo elegido,
+ * asegurando que solo uno de los dos se envíe (son excluyentes).
+ */
+function _actualizarDestinoBanner() {
+  const tipo = document.getElementById('banner-tipo-destino')?.value;
+  const grupoLink = document.getElementById('banner-grupo-link');
+  const grupoCampana = document.getElementById('banner-grupo-campana');
+  if (!grupoLink || !grupoCampana) return;
+
+  grupoLink.style.display = tipo === 'link' ? 'block' : 'none';
+  grupoCampana.style.display = tipo === 'campana' ? 'block' : 'none';
+
+  if (tipo !== 'link') document.getElementById('banner-link-destino').value = '';
+  if (tipo !== 'campana') document.getElementById('banner-id-campana').value = '';
+}
+
+/**
+ * Carga el desplegable de campañas activas para elegir como destino del banner.
+ */
+async function _cargarCampanasParaBanner() {
+  const select = document.getElementById('banner-id-campana');
+  if (!select) return;
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_campanas');
+
+  if (error || !resultado || resultado.error) {
+    select.innerHTML = '<option value="">Error al cargar campañas</option>';
+    return;
+  }
+
+  const campanas = (resultado.campañas || []).filter(c => c.estado === 'activa');
+
+  if (campanas.length === 0) {
+    select.innerHTML = '<option value="">No hay campañas activas</option>';
+    return;
+  }
+
+  select.innerHTML = '<option value="">Elegí una campaña</option>' +
+    campanas.map(c => `<option value="${c.id}">${c.nombreLibro}</option>`).join('');
 }
 
 /**
@@ -42,8 +85,22 @@ function renderizarFormBanner() {
         <p id="banner-subida-estado" style="font-size:13px; color:var(--gris-suave); margin-top:6px;"></p>
       </div>
       <div class="form-grupo">
-        <label class="form-label">Link de destino (opcional)</label>
+        <label class="form-label">Destino al hacer click</label>
+        <select id="banner-tipo-destino" class="form-input" onchange="_actualizarDestinoBanner()">
+          <option value="ninguno">Sin destino (no clickeable)</option>
+          <option value="link">Link externo (Instagram, WhatsApp, etc.)</option>
+          <option value="campana">Abrir una campaña del feed</option>
+        </select>
+      </div>
+      <div class="form-grupo" id="banner-grupo-link">
+        <label class="form-label">Link de destino</label>
         <input type="url" id="banner-link-destino" class="form-input" placeholder="https://instagram.com/indomitaloveclub" />
+      </div>
+      <div class="form-grupo" id="banner-grupo-campana" style="display:none;">
+        <label class="form-label">Campaña</label>
+        <select id="banner-id-campana" class="form-input">
+          <option value="">Cargando campañas...</option>
+        </select>
       </div>
       <div class="form-grupo">
         <label class="form-label">Orden (menor número aparece primero)</label>
@@ -166,7 +223,17 @@ async function crearBannerAdmin(event) {
   if (estado) estado.textContent = '¡Archivo subido! Creando banner...';
   toggleBoton('btn-crear-banner', false, 'Creando banner...');
 
-  const linkDestino = document.getElementById('banner-link-destino')?.value?.trim();
+  const tipoDestino = document.getElementById('banner-tipo-destino')?.value;
+  const linkDestino = tipoDestino === 'link' ? document.getElementById('banner-link-destino')?.value?.trim() : null;
+  const idCampana = tipoDestino === 'campana' ? document.getElementById('banner-id-campana')?.value : null;
+
+  if (tipoDestino === 'campana' && !idCampana) {
+    mostrarMensajeError('banner-error', 'Elegí una campaña.');
+    toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
+    if (estado) estado.textContent = '';
+    return;
+  }
+
   const orden = document.getElementById('banner-orden')?.value;
   const duracion = document.getElementById('banner-duracion')?.value;
 
@@ -175,7 +242,8 @@ async function crearBannerAdmin(event) {
     p_link_destino: linkDestino,
     p_orden: orden ? parseInt(orden, 10) : 0,
     p_tipo: tipo,
-    p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10
+    p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
+    p_id_campana: idCampana || null
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
@@ -189,6 +257,8 @@ async function crearBannerAdmin(event) {
   mostrarMensajeOk('banner-ok', '¡Banner creado correctamente!');
   document.getElementById('form-nuevo-banner')?.reset();
   document.getElementById('banner-orden').value = '0';
+  document.getElementById('banner-duracion').value = '10';
+  _actualizarDestinoBanner();
   if (estado) estado.textContent = '';
 
   await refrescarListaBanners();
@@ -250,7 +320,9 @@ function construirCardBannerAdmin(b) {
           &nbsp;Orden: ${b.orden ?? 0}
           &nbsp;Duración: ${b.duracionSegundos ?? 10}s
         </p>
-        ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : '<p class="lista-item-meta" style="margin:0;">Sin link de destino</p>'}
+        ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : ''}
+        ${b.idCampana ? `<p class="lista-item-meta" style="margin:0;">Destino: campaña "${b.nombreCampana || 'sin nombre'}"</p>` : ''}
+        ${!b.linkDestino && !b.idCampana ? '<p class="lista-item-meta" style="margin:0;">Sin destino</p>' : ''}
         <div class="lista-item-acciones">
           <input type="number" min="1" value="${b.duracionSegundos ?? 10}" id="banner-duracion-${b.id}" class="form-input" style="width:70px; display:inline-block;" />
           <button class="btn-secundario btn-sm" onclick="editarDuracionBannerAdmin('${b.id}')">Guardar duración</button>

@@ -1107,6 +1107,7 @@ const BannerPublicitario = (() => {
     banners = (data || []).map(b => ({
       imagenUrl: b.imagen_url,
       linkDestino: b.link_destino,
+      idCampana: b.id_campana,
       tipo: b.tipo === 'video' ? 'video' : 'imagen',
       duracionMs: (b.duracion_segundos ? b.duracion_segundos * 1000 : INTERVALO_DEFAULT)
     }));
@@ -1130,11 +1131,15 @@ const BannerPublicitario = (() => {
       const media = b.tipo === 'video'
         ? `<video src="${b.imagenUrl}" autoplay muted loop playsinline></video>`
         : `<img src="${b.imagenUrl}" alt="Banner publicitario" />`;
+      let contenido = media;
+      if (b.idCampana) {
+        contenido = `<a href="javascript:void(0)" onclick="verDetalleCampaña('${b.idCampana}')">${media}</a>`;
+      } else if (b.linkDestino) {
+        contenido = `<a href="${b.linkDestino}" target="_blank" rel="noopener">${media}</a>`;
+      }
       return `
       <div class="banner-publicitario-slide${i === 0 ? ' activo' : ''}" id="banner-slide-${i}">
-        ${b.linkDestino
-          ? `<a href="${b.linkDestino}" target="_blank" rel="noopener">${media}</a>`
-          : media}
+        ${contenido}
       </div>
     `;
     }).join('');
