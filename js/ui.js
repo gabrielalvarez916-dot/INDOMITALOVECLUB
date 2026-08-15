@@ -651,6 +651,19 @@ function badgeEstado(estado) {
 }
 
 /**
+ * Devuelve el HTML del check de "seguidores verificados" (+1500) que se
+ * muestra al lado del alias de un reseñador, en cualquier lugar donde
+ * aparezca (perfil público, postulaciones, reseñas del modal de campaña, etc).
+ *
+ * @param {boolean} seguidoresVerificados
+ * @returns {string} HTML del badge, o string vacío si no está verificado
+ */
+function badgeSeguidoresVerificados(seguidoresVerificados) {
+  if (!seguidoresVerificados) return '';
+  return ` <span class="badge-verificado-inline" title="Seguidores verificados (+1500)">✔</span>`;
+}
+
+/**
  * Devuelve el HTML del badge de nivel de un reseñador.
  *
  * @param {string} nivel

@@ -707,7 +707,7 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
             <div class="resenas-obtenidas-item">
               <div class="resenas-obtenidas-item-header" ${r.usuarioId ? `onclick="abrirPerfilPublico('${r.usuarioId}', 'reseñador')" style="cursor:pointer;"` : ''}>
                 <img class="resenas-obtenidas-item-avatar" src="${r.avatarUrl || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="" onerror="this.style.visibility='hidden'" />
-                <span class="resenas-obtenidas-item-alias">${_esc(r.alias || 'Reseñador@')}</span>
+                <span class="resenas-obtenidas-item-alias">${_esc(r.alias || 'Reseñador@')}${badgeSeguidoresVerificados(r.seguidoresVerificados)}</span>
                 <span class="resenas-obtenidas-item-estrellas">${'★'.repeat(r.puntuacionLibro || 0)}${'☆'.repeat(5 - (r.puntuacionLibro || 0))}</span>
               </div>
               <p class="resenas-obtenidas-item-comentario">${_esc(r.comentarios)}</p>

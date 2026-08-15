@@ -5718,6 +5718,12 @@ img { max-width: 100%; display: block; }
   font-weight: 700;
 }
 
+.badge-verificado-inline {
+  color: #1DA1F2;
+  font-weight: 700;
+  font-size: 0.95em;
+}
+
 .verificacion-seguidores-texto {
   font-size: 0.9rem;
   color: var(--texto-secundario, #6b5b52);

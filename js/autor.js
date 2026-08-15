@@ -792,7 +792,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
     .select(`
      id, estado, motivo_abandono, fecha_limite_entrega,
       usuarios!postulaciones_id_usuario_resenador_fkey (
-        id, alias, pais, ciudad, instagram, tiktok, amazon, tropes_favoritos, descripcion_lector,
+        id, alias, pais, ciudad, instagram, tiktok, amazon, tropes_favoritos, descripcion_lector, verificacion_seguidores_estado,
         avatares ( imagen_url )
       )
     `)
@@ -838,6 +838,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
         tiktok: u.tiktok,
         amazon: u.amazon,
         fotoPerfil: u.avatares?.imagen_url || null,
+        seguidoresVerificados: u.verificacion_seguidores_estado === 'aprobado',
         labelNivel: rankingUsuario ? _labelLiga(rankingUsuario.categoria) : null,
         match: (matches || []).find(m => m.id === u?.id)?.valor ?? null,
         ranking: rankingUsuario ? {
@@ -941,7 +942,7 @@ const avatarHtml = r?.fotoPerfil
         ${avatarHtml}
         <div class="postulacion-info">
           <div class="postulacion-info-header">
-            <p class="postulacion-alias" ${r?.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r?.alias || 'Usuario no disponible'}</p>
+            <p class="postulacion-alias" ${r?.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r?.alias || 'Usuario no disponible'}${badgeSeguidoresVerificados(r?.seguidoresVerificados)}</p>
             ${badgeEstado(p.estado)}
           </div>
           <p class="postulacion-meta">${r?.pais || ''}${r?.ciudad ? `, ${r.ciudad}` : ''} · Nivel: ${r?.labelNivel || '—'}</p>
@@ -1028,7 +1029,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
       moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
       rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
       usuarios!resenas_id_usuario_resenador_fkey (
-        id, alias,
+        id, alias, verificacion_seguidores_estado,
         avatares ( imagen_url )
       )
     `)
@@ -1070,7 +1071,8 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     reseñador: r.usuarios ? {
       id: r.usuarios.id,
       alias: r.usuarios.alias,
-      fotoPerfil: r.usuarios.avatares?.imagen_url || null
+      fotoPerfil: r.usuarios.avatares?.imagen_url || null,
+      seguidoresVerificados: r.usuarios.verificacion_seguidores_estado === 'aprobado'
     } : null
   }));
 
@@ -1222,7 +1224,7 @@ async function verSeguimientoLectura(idCampana, nombreLibro) {
       <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--gris-borde); padding:12px 0;">
         ${avatarHtml}
         <div style="flex:1;">
-          <p style="font-size:13px; font-weight:700; color:var(--gris-texto); margin:0;">${r.alias || ''}</p>
+          <p style="font-size:13px; font-weight:700; color:var(--gris-texto); margin:0;">${r.alias || ''}${badgeSeguidoresVerificados(r.seguidores_verificados)}</p>
           <p style="font-size:11px; color:${vencida ? 'var(--error)' : 'var(--gris-medio)'}; font-weight:${vencida ? '700' : '400'}; margin:2px 0 0;">
             📅 Vence ${formatearFechaAmigable(r.fecha_limite_entrega)}
           </p>
@@ -1302,7 +1304,7 @@ function construirCardResenaCarpeta(r, linkPortada) {
           : `<div class="resena-carpeta-portada-placeholder">📖</div>`}
         <div class="resena-carpeta-tab">
           ${avatarHtml}
-          <span class="resena-carpeta-tab-alias" ${r.reseñador?.id ? `onclick="abrirPerfilPublico('${r.reseñador.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.reseñador?.alias || 'Reseñador'}</span>
+          <span class="resena-carpeta-tab-alias" ${r.reseñador?.id ? `onclick="abrirPerfilPublico('${r.reseñador.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.reseñador?.alias || 'Reseñador'}${badgeSeguidoresVerificados(r.reseñador?.seguidoresVerificados)}</span>
         </div>
       </div>
       <div class="resena-carpeta-body">

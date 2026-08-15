@@ -131,7 +131,7 @@ const BuscadorPerfiles = (() => {
       <li class="buscador-perfiles-item" data-id="${perfil.id}" data-rol="${perfil.rol}">
         ${fotoHtml}
         <div class="buscador-perfiles-item-info">
-          <div class="buscador-perfiles-item-alias">${perfil.alias}</div>
+          <div class="buscador-perfiles-item-alias">${perfil.alias}${perfil.rol === 'reseñador' ? badgeSeguidoresVerificados(perfil.seguidoresVerificados) : ''}</div>
           <div class="buscador-perfiles-item-rol">${perfil.rol}</div>
         </div>
       </li>
