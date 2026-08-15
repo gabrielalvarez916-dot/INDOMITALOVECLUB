@@ -14,7 +14,7 @@ async function obtenerPostulacionesReseñador() {
     .from('postulaciones')
     .select(`
       id, estado, fecha_postulacion, fecha_respuesta, fecha_limite_entrega, fecha_abandono, motivo_abandono,
-      campanas ( id, nombre_libro, nombre_autor, link_portada, id_usuario_autor, estado, fecha_limite, modalidad_lectura,
+      campanas ( id, nombre_libro, nombre_autor, link_portada, id_usuario_autor, estado, fecha_limite, modalidad_lectura, plataformas_resena,
         campanas_archivos ( link_epub, link_pdf ) )
     `)
     .eq('id_usuario_resenador', user.id);
@@ -57,7 +57,8 @@ return (data || [])
         fechaLimite: p.campanas.fecha_limite,
        linkEpub: p.campanas.campanas_archivos?.link_epub || '',
         linkPdf: p.campanas.campanas_archivos?.link_pdf || '',
-        modalidadLectura: p.campanas.modalidad_lectura || 'visor'
+        modalidadLectura: p.campanas.modalidad_lectura || 'visor',
+        plataformasResena: p.campanas.plataformas_resena || []
       } : null
     }));
 }
@@ -493,6 +494,26 @@ async function enviarResena(event) {
     ratingWorldbuilding: document.getElementById('resena-rating-worldbuilding')?.value || ''
   };
 
+  // No dejamos entregar la reseña sin al menos un link de prueba (a alguna
+  // de las plataformas que el autor pidió en la campaña). Si la campaña no
+  // especificó plataformas, exigimos al menos un link de cualquiera de las 4.
+  const linksCargados = {
+    Instagram: datos.linkInstagram,
+    TikTok: datos.linkTikTok,
+    Amazon: datos.linkAmazon,
+    Goodreads: datos.linkGoodreads
+  };
+  const plataformasPedidas = _resenaEnCurso?.campaña?.plataformasResena?.map(p => p.trim()).filter(Boolean) || [];
+  const plataformasAChequear = plataformasPedidas.length > 0 ? plataformasPedidas : Object.keys(linksCargados);
+  const hayAlMenosUnLink = plataformasAChequear.some(p => linksCargados[p]);
+
+  if (!hayAlMenosUnLink) {
+    const listaPedida = plataformasPedidas.length > 0 ? plataformasPedidas.join(' o ') : 'Instagram, TikTok, Amazon o Goodreads';
+    mostrarMensajeError('resena-error', `Necesitás cargar al menos un link de reseña (${listaPedida}) para poder entregar.`);
+    _mostrarPasoResena(2);
+    return;
+  }
+
   const { data: { user } } = await supabaseClient.auth.getUser();
 
   const { data: postulacionAprobada } = await supabaseClient
@@ -535,8 +556,8 @@ async function enviarResena(event) {
       mostrarMensajeError('resena-error', 'Ya habías cargado una reseña para este libro.');
       return;
     }
-    if (error.code === '23514') {
-      mostrarMensajeError('resena-error', 'Debés cargar al menos un link de reseña.');
+    if (error.code === '23514' || (error.message && error.message.includes('link de reseña'))) {
+      mostrarMensajeError('resena-error', error.message && error.message.includes('link de reseña') ? error.message : 'Debés cargar al menos un link de reseña.');
       return;
     }
     mostrarMensajeError('resena-error', 'Ocurrió un error al enviar la reseña. Intentá de nuevo.');
