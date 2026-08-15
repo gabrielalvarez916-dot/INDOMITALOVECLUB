@@ -460,6 +460,69 @@ function volverAPasoResena1() {
  *
  * @param {Event} event
  */
+function _hostnameDeLink(link) {
+  try {
+    return new URL(link).hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+}
+
+const _DOMINIOS_VALIDOS_RESENA = {
+  Instagram: ['instagram.com'],
+  TikTok: ['tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'],
+  Goodreads: ['goodreads.com']
+};
+const _DOMINIOS_AMAZON_ACORTADOS = ['amzn.to', 'amzn.eu', 'a.co'];
+
+function _validarDominioLinkResena(link, plataforma) {
+  if (!link) return null;
+
+  const host = _hostnameDeLink(link);
+  if (!host) {
+    return `El link que pusiste en ${plataforma} no es una URL válida. Revisá que esté completo y empiece con "https://".`;
+  }
+
+  if (plataforma === 'Amazon') {
+    const esAmazon = /(^|\.)amazon\.[a-z.]{2,10}$/.test(host) || _DOMINIOS_AMAZON_ACORTADOS.includes(host);
+    if (!esAmazon) {
+      return `El link que pusiste en Amazon no parece ser de amazon.* (también podés usar un acortador oficial como amzn.to, amzn.eu o a.co).`;
+    }
+    return null;
+  }
+
+  const dominiosOk = _DOMINIOS_VALIDOS_RESENA[plataforma] || [];
+  const coincide = dominiosOk.some(d => host === d || host.endsWith('.' + d));
+  if (!coincide) {
+    return `El link que pusiste en ${plataforma} no parece ser de ${plataforma} — revisá que no lo hayas pegado en el campo equivocado.`;
+  }
+  return null;
+}
+
+function _linkPareceDePerfil(link, plataforma) {
+  if (!link) return false;
+  let url;
+  try { url = new URL(link); } catch { return false; }
+  const host = url.hostname.toLowerCase().replace(/^www\./, '');
+  const path = url.pathname || '';
+
+  if (plataforma === 'Instagram') {
+    return !/\/(p|reel|reels|tv|stories)\//i.test(path);
+  }
+  if (plataforma === 'TikTok') {
+    if (host === 'vm.tiktok.com' || host === 'vt.tiktok.com') return false;
+    return !/\/video\//i.test(path);
+  }
+  if (plataforma === 'Goodreads') {
+    return !/\/review\/show\//i.test(path);
+  }
+  if (plataforma === 'Amazon') {
+    if (_DOMINIOS_AMAZON_ACORTADOS.includes(host)) return false;
+    return !/(review|customer-reviews)/i.test(link);
+  }
+  return false;
+}
+
 async function enviarResena(event) {
   event.preventDefault();
   ocultarMensajes('resena-error', 'resena-ok');
@@ -494,9 +557,6 @@ async function enviarResena(event) {
     ratingWorldbuilding: document.getElementById('resena-rating-worldbuilding')?.value || ''
   };
 
-  // No dejamos entregar la reseña sin al menos un link de prueba (a alguna
-  // de las plataformas que el autor pidió en la campaña). Si la campaña no
-  // especificó plataformas, exigimos al menos un link de cualquiera de las 4.
   const linksCargados = {
     Instagram: datos.linkInstagram,
     TikTok: datos.linkTikTok,
@@ -520,6 +580,33 @@ async function enviarResena(event) {
     return;
   }
 
+  for (const [plataforma, link] of Object.entries(linksCargados)) {
+    const errorDominio = _validarDominioLinkResena(link, plataforma);
+    if (errorDominio) {
+      mostrarMensajeError('resena-error', errorDominio);
+      _mostrarPasoResena(2);
+      return;
+    }
+  }
+
+  const avisos = Object.entries(linksCargados)
+    .filter(([plataforma, link]) => link && _linkPareceDePerfil(link, plataforma))
+    .map(([plataforma]) => plataforma);
+
+  if (avisos.length > 0) {
+    const listaAvisos = avisos.join(', ');
+    mostrarConfirmacion(
+      `El link de ${listaAvisos} que cargaste parece ir a tu perfil general, no a la publicación puntual de la reseña. Si es así, el autor no va a poder verificarla.<br><br>¿Querés enviarla igual o preferís revisar el link primero?`,
+      () => _finalizarEnvioResena(idCampaña, datos, moods),
+      { titulo: 'Revisá el link antes de enviar', textoConfirmar: 'Enviar igual', textoCancelar: 'Revisar link' }
+    );
+    return;
+  }
+
+  await _finalizarEnvioResena(idCampaña, datos, moods);
+}
+
+async function _finalizarEnvioResena(idCampaña, datos, moods) {
   const { data: { user } } = await supabaseClient.auth.getUser();
 
   const { data: postulacionAprobada } = await supabaseClient
