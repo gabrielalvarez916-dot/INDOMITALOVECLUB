@@ -802,7 +802,7 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
           <button type="button" id="btn-favorito-campana-modal" class="btn-favorito-campana"
             onclick="_toggleFavoritoCampanaModal('${c.id}', ${c.matchScore !== undefined && c.matchScore !== null ? Math.round(c.matchScore) : 'null'})"
             title="${_estaCampanaEnFavoritos(c.id) ? 'Sacar de favoritos' : 'Guardar en favoritos'}"
-            style="background:var(--crema); border:1px solid var(--gris-borde); border-radius:20px; cursor:pointer; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--gris-suave);">
+            style="background:var(--blanco); border:1.5px solid var(--bordo); border-radius:20px; cursor:pointer; padding:7px 16px; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--bordo);">
             <span id="icono-favorito-campana-modal" style="font-size:18px; line-height:1;">${_estaCampanaEnFavoritos(c.id) ? '❤️' : '🤍'}</span>
             <span id="texto-favorito-campana-modal">${_estaCampanaEnFavoritos(c.id) ? 'En favoritos' : 'Guardar en favoritos'}</span>
           </button>
