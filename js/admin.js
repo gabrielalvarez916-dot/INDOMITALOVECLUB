@@ -858,22 +858,22 @@ async function cargarEstadisticasAdmin() {
         <p class="stat-valor">${usuarios.totalReseñadores}</p>
         <p style="font-size:11px; color:#888; margin:2px 0 0;">Total de reseñadores registrados en la plataforma.</p>
       </div>
-      <div class="stat-card">
-        <p class="stat-label">Nuevos este mes</p>
-        <p class="stat-valor">${usuarios.nuevosEsteMes}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Usuarios (cualquier rol) registrados en lo que va del mes calendario.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Autores sin actividad</p>
-        <p class="stat-valor">${usuarios.autoresSinActividad}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Autores activos que no crearon ninguna campaña en los últimos 30 días.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Reseñadores sin actividad</p>
-        <p class="stat-valor">${usuarios.reseñadoresSinActividad}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñadores activos sin postulaciones respondidas ni reseñas entregadas en los últimos 30 días.</p>
-      </div>
     </div>
+
+    <div class="form-separador">Actividad</div>
+    <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+      <div>
+        <label style="display:block; font-size:11px; color:#888; margin-bottom:4px;">Desde</label>
+        <input type="date" id="admin-actividad-desde" class="input-buscar" style="max-width:170px;" />
+      </div>
+      <div>
+        <label style="display:block; font-size:11px; color:#888; margin-bottom:4px;">Hasta</label>
+        <input type="date" id="admin-actividad-hasta" class="input-buscar" style="max-width:170px;" />
+      </div>
+      <button class="btn-secundario btn-sm" onclick="actualizarActividadAdmin()">Actualizar</button>
+      <span style="font-size:11px; color:#888;">Por defecto: últimos 45 días.</span>
+    </div>
+    <div id="admin-actividad-cards" class="stats-grid"></div>
 
     <div class="form-separador">Campañas</div>
     <div class="stats-grid">
@@ -919,17 +919,22 @@ async function cargarEstadisticasAdmin() {
       <div class="stat-card">
         <p class="stat-label">Completion total</p>
         <p class="stat-valor">${reseñas.completionTotal}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones cuyo plazo ya venció, qué % se entregó (tarde o en término).</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas (excluye abandonos avisados y campañas canceladas por el autor), qué % se entregó (tarde o en término).</p>
       </div>
       <div class="stat-card">
         <p class="stat-label">Completion a tiempo</p>
         <p class="stat-valor">${reseñas.completionATiempo}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas, qué % se entregó antes del deadline.</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las mismas asignaciones vencidas, qué % se entregó antes del deadline.</p>
       </div>
       <div class="stat-card">
         <p class="stat-label">Tasa de abandono</p>
         <p class="stat-valor">${reseñas.tasaAbandono}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas, qué % nunca se entregó. Es el complemento exacto de completion total.</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas (sin contar abandonos avisados ni campañas canceladas por el autor), qué % nunca se entregó. Es incumplimiento real.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Abandono avisado</p>
+        <p class="stat-valor">${reseñas.abandonoAvisado} <span style="font-size:14px; color:#888;">(${reseñas.abandonoAvisadoPct}%)</span></p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñadoras que cancelaron formalmente su postulación avisando, en vez de simplemente no entregar. No cuenta como incumplimiento.</p>
       </div>
       <div class="stat-card">
         <p class="stat-label">Tiempo promedio de entrega</p>
@@ -939,7 +944,7 @@ async function cargarEstadisticasAdmin() {
       <div class="stat-card">
         <p class="stat-label">Asignaciones vencidas</p>
         <p class="stat-valor">${reseñas.asignacionesVencidas}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Cantidad de asignaciones cuyo deadline ya pasó (es la base sobre la que se calculan completion y abandono).</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">Asignaciones con deadline vencido, aprobadas y de campañas no canceladas (es la base real sobre la que se calculan completion y abandono).</p>
       </div>
     </div>
     
@@ -996,6 +1001,85 @@ async function cargarEstadisticasAdmin() {
       `
     }
   `;
+
+  // Rango por defecto: últimos 45 días (hoy incluido). Se precargan los inputs
+  // y se dispara la carga de la sección "Actividad" con ese rango.
+  const hoy = new Date();
+  const hace45 = new Date();
+  hace45.setDate(hoy.getDate() - 45);
+  const formatoFecha = (d) => d.toISOString().slice(0, 10);
+
+  const inputDesde = document.getElementById('admin-actividad-desde');
+  const inputHasta = document.getElementById('admin-actividad-hasta');
+  if (inputDesde) inputDesde.value = formatoFecha(hace45);
+  if (inputHasta) inputHasta.value = formatoFecha(hoy);
+
+  cargarActividadAdmin(formatoFecha(hace45), formatoFecha(hoy));
+}
+
+/**
+ * Carga las 3 tarjetas de "Actividad" (autores sin actividad, reseñadores sin
+ * actividad, usuarios nuevos) para el rango de fechas indicado, llamando a la
+ * función admin_estadisticas_actividad(p_fecha_desde, p_fecha_hasta) en Supabase.
+ *
+ * @param {string} fechaDesde — 'YYYY-MM-DD'
+ * @param {string} fechaHasta — 'YYYY-MM-DD'
+ */
+async function cargarActividadAdmin(fechaDesde, fechaHasta) {
+  const contenedor = document.getElementById('admin-actividad-cards');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_estadisticas_actividad', {
+    p_fecha_desde: fechaDesde || null,
+    p_fecha_hasta: fechaHasta || null
+  });
+
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || error?.message || 'Error al cargar la actividad.'}</p>`;
+    return;
+  }
+
+  const rangoTexto = `${resultado.rangoDesde} al ${resultado.rangoHasta}`;
+
+  contenedor.innerHTML = `
+    <div class="stat-card">
+      <p class="stat-label">Autores sin actividad</p>
+      <p class="stat-valor">${resultado.autoresSinActividad}</p>
+      <p style="font-size:11px; color:#888; margin:2px 0 0;">Autores activos sin crear campaña, responder postulaciones, editar libros ni pedir impulsos entre ${rangoTexto}.</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Reseñadores sin actividad</p>
+      <p class="stat-valor">${resultado.reseñadoresSinActividad}</p>
+      <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñadores activos sin postularse, entregar reseñas ni marcar favoritos entre ${rangoTexto}.</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Usuarios nuevos</p>
+      <p class="stat-valor">${resultado.usuariosNuevos}</p>
+      <p style="font-size:11px; color:#888; margin:2px 0 0;">Usuarios (cualquier rol) registrados entre ${rangoTexto}.</p>
+    </div>
+  `;
+}
+
+/**
+ * Handler del botón "Actualizar" de la sección Actividad: toma las fechas
+ * elegidas en los inputs y recarga las 3 tarjetas con ese rango.
+ */
+function actualizarActividadAdmin() {
+  const desde = document.getElementById('admin-actividad-desde')?.value;
+  const hasta = document.getElementById('admin-actividad-hasta')?.value;
+
+  if (!desde || !hasta) {
+    mostrarToast('Elegí las dos fechas (desde y hasta).', 'error');
+    return;
+  }
+  if (desde > hasta) {
+    mostrarToast('La fecha "desde" no puede ser posterior a "hasta".', 'error');
+    return;
+  }
+
+  cargarActividadAdmin(desde, hasta);
 }
 
 /**
