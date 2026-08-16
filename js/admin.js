@@ -897,6 +897,21 @@ async function cargarEstadisticasAdmin() {
         <p class="stat-valor">${campañas.canceladas}</p>
         <p style="font-size:11px; color:#888; margin:2px 0 0;">Campañas dadas de baja manualmente por vos o por el autor.</p>
       </div>
+      <div class="stat-card">
+        <p class="stat-label">Activas con cupo completo</p>
+        <p class="stat-valor">${campañas.activasCupoCompleto}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las campañas activas, cuántas ya no tienen cupos disponibles.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Activas con cupo disponible</p>
+        <p class="stat-valor">${campañas.activasCupoIncompleto}</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las campañas activas, cuántas todavía tienen cupos libres.</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">% histórico que llenó cupo</p>
+        <p class="stat-valor">${campañas.pctHistoricoLlenoCupo ?? '—'}%</p>
+        <p style="font-size:11px; color:#888; margin:2px 0 0;">De todas las campañas creadas alguna vez, qué % llegó a agotar sus cupos (sin importar su estado actual).</p>
+      </div>
     </div>
 
     <div class="form-separador">Reseñas</div>
