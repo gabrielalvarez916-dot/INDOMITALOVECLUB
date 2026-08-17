@@ -690,7 +690,10 @@ if (!user) return;
 
 const { data: reseñas, error } = await supabaseClient
   .from('resenas')
-  .select(`id, fecha_entrega, puntuacion_autor, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios,
+  .select(`id, fecha_entrega, puntuacion_autor, puntuacion_libro, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios,
+    moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
+    rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
+    mensaje_agradecimiento, fecha_agradecimiento,
     campanas ( nombre_libro, nombre_autor, link_portada )`)
   .eq('id_usuario_resenador', user.id)
   .order('fecha_entrega', { ascending: false });
@@ -707,13 +710,29 @@ if (error) {
 }
 
 _historialReseñador = (reseñas || []).map(r => ({
+  idReseña: r.id,
   fechaEntrega: r.fecha_entrega,
   puntuacion: r.puntuacion_autor,
+  puntuacionLibro: r.puntuacion_libro,
   completion: null,
   linkInstagram: r.link_instagram,
   linkTikTok: r.link_tiktok,
   linkAmazon: r.link_amazon,
   linkGoodreads: r.link_goodreads,
+  comentarios: r.comentarios,
+  moods: r.moods || [],
+  frase1: r.frase_favorita_1,
+  frase2: r.frase_favorita_2,
+  frase3: r.frase_favorita_3,
+  ratingRomance: r.rating_romance,
+  ratingSpice: r.rating_spice,
+  ratingDrama: r.rating_drama,
+  ratingEstilo: r.rating_estilo,
+  ratingTension: r.rating_tension,
+  ratingRitmo: r.rating_ritmo,
+  ratingWorldbuilding: r.rating_worldbuilding,
+  mensajeAgradecimiento: r.mensaje_agradecimiento,
+  fechaAgradecimiento: r.fecha_agradecimiento,
   campaña: r.campanas ? {
     nombreLibro: r.campanas.nombre_libro,
     nombreAutor: r.campanas.nombre_autor,
@@ -793,8 +812,12 @@ function construirCardHistorialReseña(r) {
     </div>
   ` : '';
   
+  const agradecimientoPreview = r.mensajeAgradecimiento
+    ? `<p style="font-size:12px; color:var(--bordo); margin-top:6px; font-style:italic;">💌 El autor te agradeció esta reseña</p>`
+    : '';
+
   return `
-    <div class="lista-item">
+    <div class="lista-item lista-item--clickeable" ${r.idReseña ? `onclick="abrirResenaInternaHistorial('${r.idReseña}')" style="cursor:pointer;"` : ''}>
       ${c && c.linkPortada ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />` : ''}
       <div class="lista-item-body">
         <p class="lista-item-titulo">${c ? c.nombreLibro : 'Libro eliminado'}</p>
@@ -804,15 +827,56 @@ function construirCardHistorialReseña(r) {
         </p>
         ${estrellas}
         ${completionHtml}
+        ${agradecimientoPreview}
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-          ${r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link">Instagram</a>` : ''}
-          ${r.linkTikTok    ? `<a href="${r.linkTikTok}"    target="_blank" class="red-link">TikTok</a>`    : ''}
-          ${r.linkAmazon    ? `<a href="${r.linkAmazon}"    target="_blank" class="red-link">Amazon</a>`    : ''}
-          ${r.linkGoodreads ? `<a href="${r.linkGoodreads}" target="_blank" class="red-link">Goodreads</a>` : ''}
+          ${r.linkInstagram ? `<a href="${r.linkInstagram}" target="_blank" class="red-link" onclick="event.stopPropagation()">Instagram</a>` : ''}
+          ${r.linkTikTok    ? `<a href="${r.linkTikTok}"    target="_blank" class="red-link" onclick="event.stopPropagation()">TikTok</a>`    : ''}
+          ${r.linkAmazon    ? `<a href="${r.linkAmazon}"    target="_blank" class="red-link" onclick="event.stopPropagation()">Amazon</a>`    : ''}
+          ${r.linkGoodreads ? `<a href="${r.linkGoodreads}" target="_blank" class="red-link" onclick="event.stopPropagation()">Goodreads</a>` : ''}
         </div>
       </div>
     </div>
   `;
+}
+
+/**
+ * Abre el modal de detalle de una reseña puntual del historial del
+ * reseñador (mismo componente de solo lectura que usa el autor), incluyendo
+ * el "recuerdito" de agradecimiento si el autor le escribió uno.
+ * @param {string} idReseña
+ */
+function abrirResenaInternaHistorial(idReseña) {
+  const r = (_historialReseñador || []).find(x => x.idReseña === idReseña);
+  if (!r) return;
+  const c = r.campaña;
+
+  _pintarResenaInterna({
+    portadaUrl: c?.linkPortada,
+    nombreLibro: c?.nombreLibro,
+    nombreAutor: c?.nombreAutor,
+    puntuacionLibro: r.puntuacionLibro,
+    fechaEntrega: r.fechaEntrega,
+    moods: r.moods,
+    frases: [r.frase1, r.frase2, r.frase3],
+    ratings: {
+      romance: r.ratingRomance,
+      spice: r.ratingSpice,
+      drama: r.ratingDrama,
+      estilo: r.ratingEstilo,
+      tension: r.ratingTension,
+      ritmo: r.ratingRitmo,
+      worldbuilding: r.ratingWorldbuilding
+    },
+    comentario: r.comentarios,
+    links: {
+      instagram: r.linkInstagram,
+      tiktok: r.linkTikTok,
+      amazon: r.linkAmazon,
+      goodreads: r.linkGoodreads
+    },
+    mensajeAgradecimiento: r.mensajeAgradecimiento,
+    fechaAgradecimiento: r.fechaAgradecimiento
+  });
 }
 
 

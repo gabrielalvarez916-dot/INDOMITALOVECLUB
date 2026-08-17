@@ -1026,6 +1026,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     .from('resenas')
     .select(`
       id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios, puntuacion_autor, puntuacion_libro,
+      mensaje_agradecimiento, fecha_agradecimiento,
       moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
       rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
       usuarios!resenas_id_usuario_resenador_fkey (
@@ -1054,6 +1055,8 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     comentarios: r.comentarios,
     puntuacion: r.puntuacion_autor,
     puntuacionLibro: r.puntuacion_libro,
+    mensajeAgradecimiento: r.mensaje_agradecimiento,
+    fechaAgradecimiento: r.fecha_agradecimiento,
     moods: r.moods || [],
     frase1: r.frase_favorita_1,
     frase2: r.frase_favorita_2,
@@ -1296,6 +1299,15 @@ function construirCardResenaCarpeta(r, linkPortada) {
         <button type="button" class="btn-secundario btn-sm btn-full" onclick="abrirModalCalificar('${r.idReseña}', '${(r.reseñador?.alias || 'este reseñador').replace(/'/g, "\\'")}')">Calificar reseña</button>
       </div>`;
 
+  const aliasEscapado = (r.reseñador?.alias || 'este reseñador').replace(/'/g, "\\'");
+  const agradecerHtml = (r.puntuacion >= 4)
+    ? (r.mensajeAgradecimiento
+        ? `<div class="resena-carpeta-agradecido" id="resena-agradecer-${r.idReseña}">💌 Ya le agradeciste esta reseña</div>`
+        : `<div id="resena-agradecer-${r.idReseña}">
+            <button type="button" class="btn-secundario btn-sm btn-full btn-agradecer" onclick="abrirModalAgradecer('${r.idReseña}', '${aliasEscapado}')">💌 Agradecer</button>
+          </div>`)
+    : '';
+
   return `
     <div class="resena-carpeta">
       <div class="resena-carpeta-portada-wrap">
@@ -1310,6 +1322,7 @@ function construirCardResenaCarpeta(r, linkPortada) {
       <div class="resena-carpeta-body">
         <p class="resena-carpeta-fecha">Entregada: ${formatearFechaAmigable(r.fechaEntrega)}</p>
         ${ratingHtml}
+        ${agradecerHtml}
         <button class="btn-secundario btn-sm btn-full resena-carpeta-btn-comentarios" onclick="abrirResenaInternaAutor('${r.idReseña}')">Ver reseña completa</button>
       </div>
     </div>
@@ -1349,7 +1362,9 @@ function abrirResenaInternaAutor(idResena) {
       tiktok: r.linkTikTok,
       amazon: r.linkAmazon,
       goodreads: r.linkGoodreads
-    }
+    },
+    mensajeAgradecimiento: r.mensajeAgradecimiento,
+    fechaAgradecimiento: r.fechaAgradecimiento
   });
 }
 
@@ -1427,7 +1442,109 @@ async function enviarCalificacion() {
   const r = (_reseñasCampanaActual || []).find(x => x.idReseña === idResena);
   if (r) r.puntuacion = puntuacion;
 
+  if (puntuacion >= 4) {
+    const contenedorAgradecer = document.getElementById(`resena-agradecer-${idResena}`);
+    const alias = r?.reseñador?.alias || 'este reseñador';
+    if (contenedorAgradecer) {
+      contenedorAgradecer.outerHTML = `<div id="resena-agradecer-${idResena}">
+        <button type="button" class="btn-secundario btn-sm btn-full btn-agradecer" onclick="abrirModalAgradecer('${idResena}', '${alias.replace(/'/g, "\\'")}')">💌 Agradecer</button>
+      </div>`;
+    } else {
+      const btnComentarios = document.querySelector(`#resena-rating-${idResena}`)?.closest('.resena-carpeta-body')?.querySelector('.resena-carpeta-btn-comentarios');
+      if (btnComentarios) {
+        btnComentarios.insertAdjacentHTML('beforebegin', `<div id="resena-agradecer-${idResena}">
+          <button type="button" class="btn-secundario btn-sm btn-full btn-agradecer" onclick="abrirModalAgradecer('${idResena}', '${alias.replace(/'/g, "\\'")}')">💌 Agradecer</button>
+        </div>`);
+      }
+    }
+  }
+
   mostrarMensajeOk('calificar-ok', '¡Reseña calificada!');
+  setTimeout(() => cerrarModales(), 1500);
+}
+
+// ────────────────────────────────────────────────────────────
+// AGRADECER RESEÑA
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Abre el modal para que el autor le escriba un agradecimiento a la
+ * reseñadora. Solo disponible para reseñas calificadas con 4 o 5 estrellas.
+ * @param {string} idResena
+ * @param {string} alias
+ */
+function abrirModalAgradecer(idResena, alias) {
+  document.getElementById('agradecer-id-resena').value = idResena;
+  const nombreEl = document.getElementById('agradecer-nombre-resenador');
+  if (nombreEl) nombreEl.textContent = `Para ${alias}`;
+
+  const textarea = document.getElementById('agradecer-texto');
+  if (textarea) textarea.value = '';
+  actualizarContadorAgradecer();
+  ocultarMensajes('agradecer-error', 'agradecer-ok');
+
+  mostrarModal('modal-agradecer-resena');
+}
+
+/**
+ * Actualiza el contador de caracteres del textarea de agradecimiento (máx 300).
+ */
+function actualizarContadorAgradecer() {
+  const textarea = document.getElementById('agradecer-texto');
+  const contador = document.getElementById('agradecer-contador');
+  if (!textarea || !contador) return;
+
+  const largo = textarea.value.length;
+  contador.textContent = `${largo} / 300`;
+  contador.classList.toggle('form-contador-limite', largo >= 300);
+}
+
+/**
+ * Guarda el mensaje de agradecimiento en la reseña. Solo se puede enviar una
+ * vez: queda como un "recuerdito" permanente en el detalle de la reseña.
+ */
+async function enviarAgradecimiento() {
+  const idResena = document.getElementById('agradecer-id-resena')?.value;
+  const textarea = document.getElementById('agradecer-texto');
+  const mensaje = textarea?.value?.trim();
+
+  if (!mensaje) {
+    mostrarMensajeError('agradecer-error', 'Escribí un mensaje antes de enviarlo.');
+    return;
+  }
+  if (mensaje.length > 300) {
+    mostrarMensajeError('agradecer-error', 'El mensaje no puede superar los 300 caracteres.');
+    return;
+  }
+
+  const btn = document.getElementById('agradecer-btn-enviar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+  const fecha = new Date().toISOString();
+  const { error } = await supabaseClient
+    .from('resenas')
+    .update({ mensaje_agradecimiento: mensaje, fecha_agradecimiento: fecha })
+    .eq('id', idResena);
+
+  if (error) {
+    mostrarMensajeError('agradecer-error', error.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar agradecimiento'; }
+    return;
+  }
+
+  const r = (_reseñasCampanaActual || []).find(x => x.idReseña === idResena);
+  if (r) {
+    r.mensajeAgradecimiento = mensaje;
+    r.fechaAgradecimiento = fecha;
+  }
+
+  const contenedor = document.getElementById(`resena-agradecer-${idResena}`);
+  if (contenedor) {
+    contenedor.outerHTML = `<div class="resena-carpeta-agradecido" id="resena-agradecer-${idResena}">💌 Ya le agradeciste esta reseña</div>`;
+  }
+
+  mostrarMensajeOk('agradecer-ok', '¡Agradecimiento enviado!');
+  if (btn) { btn.disabled = false; btn.textContent = 'Enviar agradecimiento'; }
   setTimeout(() => cerrarModales(), 1500);
 }
 

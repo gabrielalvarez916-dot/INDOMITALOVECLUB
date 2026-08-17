@@ -1285,6 +1285,12 @@
         <label class="form-label">Comentario</label>
         <p class="resena-interna-comentario" id="ri-comentario"></p>
       </div>
+
+      <div class="resena-agradecimiento-box" id="ri-agradecimiento-grupo" style="display:none;">
+        <p class="resena-agradecimiento-titulo">💌 El autor te agradeció esta reseña</p>
+        <p class="resena-agradecimiento-texto" id="ri-agradecimiento-texto"></p>
+        <p class="resena-agradecimiento-fecha" id="ri-agradecimiento-fecha"></p>
+      </div>
     </div>
   </div>
   
@@ -1428,6 +1434,27 @@
       <div class="modal-footer">
         <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
         <button type="button" class="btn-primario" onclick="enviarCalificacion()">Confirmar calificación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: agradecer reseña -->
+  <div id="modal-agradecer-resena" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">Agradecer reseña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="agradecer-id-resena" />
+      <p class="form-info" id="agradecer-nombre-resenador"></p>
+      <p class="form-info">Este mensaje va a quedar guardado para siempre en el detalle de esta reseña, como un recuerdito. No se puede editar después de enviarlo.</p>
+      <textarea id="agradecer-texto" class="form-textarea" maxlength="300" rows="5" placeholder="Escribí tu agradecimiento..." oninput="actualizarContadorAgradecer()"></textarea>
+      <p class="form-contador" id="agradecer-contador">0 / 300</p>
+      <div id="agradecer-error" class="mensaje-error" style="display:none;"></div>
+      <div id="agradecer-ok" class="mensaje-ok" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+        <button type="button" class="btn-primario" id="agradecer-btn-enviar" onclick="enviarAgradecimiento()">Enviar agradecimiento</button>
       </div>
     </div>
   </div>

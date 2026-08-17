@@ -1338,6 +1338,18 @@ function _pintarResenaInterna(datos) {
     comentarioEl.textContent = '"' + datos.comentario + '"';
   }
 
+  const agradecimientoGrupo = document.getElementById('ri-agradecimiento-grupo');
+  if (agradecimientoGrupo) {
+    if (!datos.mensajeAgradecimiento) {
+      agradecimientoGrupo.style.display = 'none';
+    } else {
+      agradecimientoGrupo.style.display = '';
+      document.getElementById('ri-agradecimiento-texto').textContent = datos.mensajeAgradecimiento;
+      const fechaEl = document.getElementById('ri-agradecimiento-fecha');
+      if (fechaEl) fechaEl.textContent = datos.fechaAgradecimiento ? formatearFechaAmigable(datos.fechaAgradecimiento) : '';
+    }
+  }
+
   mostrarModal('modal-resena-interna');
 }
 

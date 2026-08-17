@@ -1282,6 +1282,8 @@ img { max-width: 100%; display: block; }
 
 .lista-item:hover { box-shadow: var(--sombra); }
 
+.lista-item--clickeable:hover { border-color: var(--bordo); }
+
 .lista-item-portada {
   width: 56px;
   height: 76px;
@@ -5112,6 +5114,61 @@ img { max-width: 100%; display: block; }
 .resena-carpeta-estrellas-interactivas {
   display: flex;
   gap: 6px;
+}
+
+.btn-agradecer {
+  margin-top: 6px;
+}
+
+.resena-carpeta-agradecido {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--bordo);
+  text-align: center;
+  font-style: italic;
+}
+
+.form-contador {
+  font-size: 12px;
+  color: var(--gris-suave);
+  text-align: right;
+  margin-top: 2px;
+}
+
+.form-contador.form-contador-limite {
+  color: var(--bordo);
+  font-weight: 600;
+}
+
+.resena-agradecimiento-box {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: #FBF3E9;
+  border: 1px solid #E8D5B5;
+  border-radius: var(--radio);
+}
+
+.resena-agradecimiento-titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 13px;
+  color: var(--bordo);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resena-agradecimiento-texto {
+  font-size: 14px;
+  color: var(--gris-texto);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.resena-agradecimiento-fecha {
+  font-size: 11px;
+  color: var(--gris-suave);
+  margin-top: 6px;
 }
 
 .resena-carpeta-estrella-btn {
