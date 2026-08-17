@@ -125,6 +125,16 @@ function mostrarSeccion(nombre) {
   // Scroll al tope
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
+  // Avisa a Google Analytics que se "cambió de página" (vista virtual),
+  // ya que la app es de una sola página y la URL nunca cambia. Sin esto,
+  // Analytics solo contaría 1 vista por toda la sesión del usuario.
+  if (typeof gtag === 'function') {
+    gtag('event', 'page_view', {
+      page_title: `Indómita Love Club — ${nombre}`,
+      page_path: `/app/${nombre}`
+    });
+  }
+
   // Acciones específicas al mostrar cada sección
   switch (nombre) {
     case 'feed':
