@@ -220,8 +220,28 @@ async function cargarFeed() {
     });
   }
 
+  // Antes esto se pedía adentro de normalizarCampana, una llamada RPC
+  // por cada campaña del feed (podían ser 100+ conexiones simultáneas a
+  // la vez que alguien abría el feed). Ahora se piden todos los matches
+  // del usuario en una sola llamada batch, misma lógica y mismo caché de
+  // siempre (obtener_match_resenador_campana), solo que consolidado en
+  // una única conexión. Ver incidente 17/08/2026 (colapso por saturación
+  // de conexiones en un pico de tráfico).
+  const usuario = Sesion.obtener();
+  let matchesPorCampana = {};
+  if (usuario?.rol === 'reseñador' && usuario.id && idsCampanas.length > 0) {
+    const { data: matchesRows, error: errorMatches } = await supabaseClient
+      .rpc('obtener_matches_resenador_batch', {
+        p_id_usuario: usuario.id,
+        p_ids_campana: idsCampanas
+      });
+    if (!errorMatches) {
+      (matchesRows || []).forEach(m => { matchesPorCampana[m.id_campana] = m; });
+    }
+  }
+
   _campañasTodas = await Promise.all(
-    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[_claveLibroCampana(c)], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id], idsCampanasImpulsadas.has(c.id)))
+    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[_claveLibroCampana(c)], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id], idsCampanasImpulsadas.has(c.id), matchesPorCampana[c.id]))
   );
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
@@ -305,8 +325,7 @@ function botonSoloParaVosHtml(c) {
   return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Sin cupos</button>`;
 }
 
-async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero, impulsada = false) {
-  const usuario = Sesion.obtener();
+async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero, impulsada = false, match) {
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
 
@@ -317,15 +336,9 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
   const tieneRanking = !!ranking?.pos_top;
   const esNovedad = !tieneRanking && diasDesdeInicio !== null && diasDesdeInicio >= 0 && diasDesdeInicio <= 5;
 
-  let match;
-  if (usuario?.rol === 'reseñador' && usuario.id) {
-    const { data, error } = await supabaseClient
-      .rpc('obtener_match_resenador_campana', {
-        p_id_usuario: usuario.id,
-        p_id_campana: c.id
-      });
-    if (!error) match = data;
-  }
+  // El match ya viene calculado desde cargarFeed (pedido en batch para
+  // todas las campañas de una sola vez, ver comentario ahí) — acá ya no
+  // se pide nada a la base, solo se usa lo que llegó.
 
   const etiquetaGenero = await obtenerEtiquetaGeneroMulti(c.id_genero, idsSubgenero && idsSubgenero.length > 0 ? idsSubgenero : (c.id_subgenero ? [c.id_subgenero] : []));
 
@@ -761,7 +774,21 @@ async function verDetalleCampaña(idCampaña) {
 
   const idsSubgeneroDetalle = (subgenerosRaw || []).map(s => s.id_subgenero);
 
-  const c = await normalizarCampana(campanaRaw, undefined, archivoRaw, tropesCatalogoDetalle, idsSubgeneroDetalle);
+  // Acá es una sola campaña (vista de detalle), no el feed completo, así
+  // que pedir el match individual sigue siendo correcto — no es el
+  // patrón que generaba decenas de pedidos simultáneos.
+  const usuarioDetalle = Sesion.obtener();
+  let matchDetalle;
+  if (usuarioDetalle?.rol === 'reseñador' && usuarioDetalle.id) {
+    const { data: matchData, error: errorMatch } = await supabaseClient
+      .rpc('obtener_match_resenador_campana', {
+        p_id_usuario: usuarioDetalle.id,
+        p_id_campana: idCampaña
+      });
+    if (!errorMatch) matchDetalle = matchData;
+  }
+
+  const c = await normalizarCampana(campanaRaw, undefined, archivoRaw, tropesCatalogoDetalle, idsSubgeneroDetalle, false, matchDetalle);
   if (titulo) titulo.textContent = c.nombreLibro;
 
   const portadaHtml = c.linkPortada
