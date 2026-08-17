@@ -174,9 +174,12 @@ async function cargarFeed() {
   const clavesLibros = [...new Set((campanas || []).map(c => _claveLibroCampana(c)))];
   let rankingsPorLibro = {};
   if (clavesLibros.length > 0) {
-    // Usamos el ranking MENSUAL (misma tabla y mismo mes que la pantalla
-    // pública de "Ranking de libros"), no el histórico de todos los
-    // tiempos — para que el badge de la card coincida con esa pantalla.
+    // El badge de posición (🏆 Top 5 / ⭐ Top 20) sigue viniendo del ranking
+    // MENSUAL, para que coincida con la pantalla pública de "Ranking de
+    // libros". El promedio de estrellas y la cantidad de reseñas, en
+    // cambio, se muestran a nivel HISTÓRICO (todas las campañas del libro,
+    // de cualquier mes) — se pisan más abajo con los datos de
+    // ranking_libros_historico.
     const mesActual = new Date().toISOString().slice(0, 7);
     const { data: rankings } = await supabaseClient
       .from('ranking_libros')
@@ -184,6 +187,21 @@ async function cargarFeed() {
       .eq('mes_año', mesActual)
       .in('clave_libro', clavesLibros);
     (rankings || []).forEach(r => { rankingsPorLibro[r.clave_libro] = r; });
+
+    const { data: rankingsHistoricos } = await supabaseClient
+      .from('ranking_libros_historico')
+      .select('clave_libro, promedio_puntuacion, total_resenas')
+      .in('clave_libro', clavesLibros);
+    (rankingsHistoricos || []).forEach(rh => {
+      if (!rankingsPorLibro[rh.clave_libro]) {
+        // Libro sin fila en el ranking mensual (no tuvo reseñas este mes),
+        // pero sí tiene histórico: igual mostramos estrellas/reseñas,
+        // simplemente sin badge de posición.
+        rankingsPorLibro[rh.clave_libro] = {};
+      }
+      rankingsPorLibro[rh.clave_libro].promedio_puntuacion = rh.promedio_puntuacion;
+      rankingsPorLibro[rh.clave_libro].total_resenas = rh.total_resenas;
+    });
   }
 
   const idsCampanas = (campanas || []).map(c => c.id);
