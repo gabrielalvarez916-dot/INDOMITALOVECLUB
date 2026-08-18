@@ -54,10 +54,18 @@ function irA(seccion) {
 /**
  * Arma la URL pública para mostrar una foto de perfil propia (subida por el
  * usuario), a partir del "key" guardado en usuarios.foto_perfil_url.
+ *
+ * El key no cambia entre subidas (se pisa el mismo archivo), así que la URL
+ * sin más sería siempre idéntica a la anterior y el navegador serviría la
+ * versión vieja desde caché aunque el archivo en el servidor ya haya
+ * cambiado. Por eso se agrega `&t=` con la hora actual: así cada vez que se
+ * resuelve la foto (al cargar cualquier pantalla) se fuerza a pedirla de
+ * nuevo, en vez de depender de que quien subió la foto recuerde
+ * cache-bustear a mano (ver subirFotoPerfilPropia en perfil.js).
  */
 function construirUrlAvatarPropio(fotoPerfilKey) {
   if (!fotoPerfilKey) return null;
-  return `${SUPABASE_URL}/functions/v1/ver-avatar-perfil?key=${encodeURIComponent(fotoPerfilKey)}`;
+  return `${SUPABASE_URL}/functions/v1/ver-avatar-perfil?key=${encodeURIComponent(fotoPerfilKey)}&t=${Date.now()}`;
 }
 
 /**

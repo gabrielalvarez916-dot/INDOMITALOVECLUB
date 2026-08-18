@@ -732,7 +732,9 @@ async function subirFotoPerfilPropia(event) {
       throw new Error(confirmar?.error || 'No se pudo guardar la foto.');
     }
 
-    const urlFinal = construirUrlAvatarPropio(confirmar.key) + `&t=${Date.now()}`;
+    // construirUrlAvatarPropio ya agrega su propio cache-bust (config.js),
+    // no hace falta pegarle otro acá.
+    const urlFinal = construirUrlAvatarPropio(confirmar.key);
     const fotoEl = document.getElementById('perfil-foto');
     if (fotoEl) fotoEl.src = urlFinal;
     Sesion.guardar({ ...usuario, fotoPerfil: urlFinal });
