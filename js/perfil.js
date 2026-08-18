@@ -741,6 +741,10 @@ async function subirFotoPerfilPropia(event) {
     if (typeof registrarAccionEventoSiCorresponde === 'function') {
       registrarAccionEventoSiCorresponde('cambiar_avatar');
     }
+
+    // Repinta la pantalla con los datos ya actualizados, igual que hace
+    // el guardado normal de perfil (evita que quede mostrando el avatar viejo).
+    cargarPerfil();
   } catch (e) {
     mostrarMensajeError('avatar-error', e.message || 'Error al subir la foto.');
   } finally {
