@@ -23,6 +23,11 @@ var _pdfPaginaActual = 1;
 var _pdfTotalPaginas = 0;
 var _visorIdPostulacion = null; // para el tracker automático de seguimiento de lectura
 var _timeoutProgresoLectura = null;
+var _visorClaveLS = null; // clave de localStorage para recordar en qué página/posición se quedó
+
+function _visorObtenerClaveLS(idCampana, formato) {
+  return 'indomita_visor_pos_' + formato + '_' + idCampana;
+}
 
 
 // ────────────────────────────────────────────────────────────
@@ -114,6 +119,7 @@ async function descargarLibro(idCampana, tituloLibro, formato) {
 async function abrirVisorEpub(idCampana, tituloLibro, idPostulacion) {
   if (!idCampana) { mostrarToast('💀 El EPUB decidió no colaborar. Qué inoportuno.', 'error'); return; }
   _visorIdPostulacion = idPostulacion || null;
+  _visorClaveLS = _visorObtenerClaveLS(idCampana, 'epub');
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'epub');
   mostrarModal('modal-visor');
@@ -131,6 +137,7 @@ await cargarLibreriaEpub();
 async function abrirVisorPdf(idCampana, tituloLibro, idPostulacion) {
   if (!idCampana) { mostrarToast('😈 El PDF no apareció. Y sin PDF, no hacemos magia.', 'error'); return; }
   _visorIdPostulacion = idPostulacion || null;
+  _visorClaveLS = _visorObtenerClaveLS(idCampana, 'pdf');
 
   crearModalVisor();
   configurarModalVisor(tituloLibro, 'pdf');
@@ -185,10 +192,17 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
       if (loc && loc.start) {
         const totalCapitulos = (_visorEpub.spine && _visorEpub.spine.length) || 0;
         avisarProgresoLecturaAuto(loc.start.index, totalCapitulos);
+        if (_visorClaveLS) {
+          try { localStorage.setItem(_visorClaveLS, loc.start.cfi); } catch (e) {}
+        }
       }
     });
 
-    await rendicion.display();
+    let posicionGuardada = null;
+    if (_visorClaveLS) {
+      try { posicionGuardada = localStorage.getItem(_visorClaveLS); } catch (e) {}
+    }
+    await rendicion.display(posicionGuardada || undefined);
 
     if (cargando) cargando.style.display = 'none';
     epubDiv.style.visibility = 'visible';
@@ -229,12 +243,20 @@ async function inicializarPdf(url) {
 
     _visorPdf = await pdfjsLib.getDocument(url).promise;
     _pdfTotalPaginas = _visorPdf.numPages;
-    _pdfPaginaActual = 1;
+
+    let paginaInicial = 1;
+    if (_visorClaveLS) {
+      try {
+        const guardada = parseInt(localStorage.getItem(_visorClaveLS), 10);
+        if (!isNaN(guardada) && guardada >= 1 && guardada <= _pdfTotalPaginas) paginaInicial = guardada;
+      } catch (e) {}
+    }
+    _pdfPaginaActual = paginaInicial;
 
     if (cargando) cargando.style.display = 'none';
     canvas.style.display = 'block';
 
-    await renderizarPaginaPdf(1);
+    await renderizarPaginaPdf(paginaInicial);
     actualizarControlesPdf();
 
     const ctrlPdf = document.getElementById('visor-controles-pdf');
@@ -272,6 +294,9 @@ async function renderizarPaginaPdf(numero) {
   await pagina.render({ canvasContext: context, viewport: vp }).promise;
 
   avisarProgresoLecturaAuto(numero, _pdfTotalPaginas);
+  if (_visorClaveLS) {
+    try { localStorage.setItem(_visorClaveLS, String(numero)); } catch (e) {}
+  }
 }
 
 async function pdfPaginaAnterior() {
@@ -387,6 +412,7 @@ function cerrarVisor() {
   _pdfPaginaActual = 1;
   _pdfTotalPaginas = 0;
   _visorIdPostulacion = null;
+  _visorClaveLS = null;
   if (_timeoutProgresoLectura) { clearTimeout(_timeoutProgresoLectura); _timeoutProgresoLectura = null; }
   const canvas  = document.getElementById('visor-canvas');
   const epubDiv = document.getElementById('visor-epub');
