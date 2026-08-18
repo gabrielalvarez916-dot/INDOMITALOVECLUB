@@ -790,6 +790,7 @@ avatarEl.src = _resolverAvatar(perfil.avatarUrl);
     } else if (perfil.amazon) {
       redes.push(`<a href="${_esc(perfil.amazon)}" target="_blank" class="pp-red-link pp-red-amazon">Amazon</a>`);
     }
+    if (perfil.goodreads) redes.push(`<a href="${_esc(perfil.goodreads)}" target="_blank" class="pp-red-link pp-red-goodreads">Goodreads</a>`);
     redesEl.innerHTML = redes.join('');
     redesEl.style.display = redes.length ? '' : 'none';
   }

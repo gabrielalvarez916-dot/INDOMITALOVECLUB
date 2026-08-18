@@ -96,6 +96,7 @@ async function cargarFormularioEdicionPerfil() {
     instagram: perfilRaw.instagram,
     tiktok: perfilRaw.tiktok,
     amazon: perfilRaw.amazon,
+    goodreads: perfilRaw.goodreads,
     idGenero: perfilRaw.id_genero,
     idSubgenero: perfilRaw.id_subgenero,
     sitioWeb: perfilRaw.sitio_web,
@@ -208,6 +209,7 @@ function rellenarFormularioPerfil(perfil) {
   setVal('perfil-instagram',   perfil.instagram);
   setVal('perfil-tiktok',      perfil.tiktok);
   setVal('perfil-amazon',      perfil.amazon);
+  setVal('perfil-goodreads',   perfil.goodreads);
   setVal('perfil-sitio-web',   perfil.sitioWeb);
 
   // Foto de perfil
@@ -440,6 +442,7 @@ async function guardarPerfil(event) {
     instagram: document.getElementById('perfil-instagram')?.value?.trim(),
     tiktok:   document.getElementById('perfil-tiktok')?.value?.trim(),
     amazon:   document.getElementById('perfil-amazon')?.value?.trim(),
+    goodreads: document.getElementById('perfil-goodreads')?.value?.trim(),
   };
 
  let idsTropesFavoritosPerfil = null;
@@ -470,6 +473,7 @@ async function guardarPerfil(event) {
       instagram: datos.instagram,
       tiktok: datos.tiktok,
       amazon: datos.amazon,
+      goodreads: datos.goodreads,
       generos: datos.generos,
       descripcion_lector: datos.descripcionLector,
       sitio_web: datos.sitioWeb
