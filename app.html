@@ -1694,6 +1694,7 @@
         <button type="button" id="btn-subir-foto-perfil" class="btn-secundario btn-sm" onclick="document.getElementById('input-foto-perfil').click()">Subir mi foto</button>
         <input type="file" id="input-foto-perfil" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="subirFotoPerfilPropia(event)" />
       </div>
+      <div id="foto-perfil-propia-error" class="mensaje-error" style="display:none;"></div>
     </div>
 
     <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">
@@ -1975,7 +1976,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/storage.js"></script>
-<script src="js/config.js"></script>
+<script src="js/config.js?v=2"></script>
 <script src="js/tropes.js"></script>
 <script src="js/wizard-onboarding.js"></script>
 <script src="js/ui.js?v=3"></script>
@@ -1991,7 +1992,7 @@
 <script src="js/colaboraciones-fisicas.js"></script>
 <script src="js/resenador.js?v=3"></script>
 <script src="js/admin.js?v=4"></script>
-<script src="js/perfil.js"></script>
+<script src="js/perfil.js?v=2"></script>
 <script src="js/verificacion-seguidores.js"></script>
 <script src="js/visor.js"></script>
 <script src="js/soporte.js"></script>

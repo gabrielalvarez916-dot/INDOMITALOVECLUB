@@ -694,7 +694,10 @@ async function subirFotoPerfilPropia(event) {
   const archivo = input.files?.[0];
   if (!archivo) return;
 
-  ocultarMensajes('avatar-error');
+  // Ojo: NO es el mismo 'avatar-error' del modal de avatares preseteados
+  // (ese vive en #modal-selector-avatar, que acá ni está abierto). Este es
+  // el propio de la sección "Subir mi foto" en #modal-editar-perfil.
+  ocultarMensajes('foto-perfil-propia-error');
   const botonSubir = document.getElementById('btn-subir-foto-perfil');
   if (botonSubir) { botonSubir.disabled = true; botonSubir.textContent = 'Subiendo...'; }
 
@@ -748,7 +751,7 @@ async function subirFotoPerfilPropia(event) {
     // el guardado normal de perfil (evita que quede mostrando el avatar viejo).
     cargarPerfil();
   } catch (e) {
-    mostrarMensajeError('avatar-error', e.message || 'Error al subir la foto.');
+    mostrarMensajeError('foto-perfil-propia-error', e.message || 'Error al subir la foto.');
   } finally {
     if (botonSubir) { botonSubir.disabled = false; botonSubir.textContent = 'Subir mi foto'; }
     input.value = '';
