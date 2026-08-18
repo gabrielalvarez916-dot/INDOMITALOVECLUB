@@ -1025,7 +1025,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
   const { data, error } = await supabaseClient
     .from('resenas')
     .select(`
-      id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios, puntuacion_autor, puntuacion_libro,
+      id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios, puntuacion_autor, puntuacion_libro,
       mensaje_agradecimiento, fecha_agradecimiento,
       moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
       rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
@@ -1052,6 +1052,9 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     linkTikTok: r.link_tiktok,
     linkAmazon: r.link_amazon,
     linkGoodreads: r.link_goodreads,
+    linkStoryGraph: r.link_storygraph,
+    linkYouTube: r.link_youtube,
+    linkBlog: r.link_blog,
     comentarios: r.comentarios,
     puntuacion: r.puntuacion_autor,
     puntuacionLibro: r.puntuacion_libro,
@@ -1361,7 +1364,10 @@ function abrirResenaInternaAutor(idResena) {
       instagram: r.linkInstagram,
       tiktok: r.linkTikTok,
       amazon: r.linkAmazon,
-      goodreads: r.linkGoodreads
+      goodreads: r.linkGoodreads,
+      storygraph: r.linkStoryGraph,
+      youtube: r.linkYouTube,
+      blog: r.linkBlog
     },
     mensajeAgradecimiento: r.mensajeAgradecimiento,
     fechaAgradecimiento: r.fechaAgradecimiento
@@ -1743,7 +1749,7 @@ async function crearNuevaCampana(event) {
     if (errPlat) errPlat.style.display = 'none';
   }
 
-  const plataformasValidas = ['Amazon', 'Goodreads', 'Instagram', 'TikTok'];
+  const plataformasValidas = ['Amazon', 'Goodreads', 'Instagram', 'TikTok', 'StoryGraph', 'YouTube', 'Blog'];
 if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
   const errPlat = document.getElementById('plataformas-error');
   if (errPlat) { errPlat.textContent = 'Plataforma de reseña inválida.'; errPlat.style.display = 'block'; }

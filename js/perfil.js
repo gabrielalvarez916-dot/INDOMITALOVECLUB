@@ -97,6 +97,9 @@ async function cargarFormularioEdicionPerfil() {
     tiktok: perfilRaw.tiktok,
     amazon: perfilRaw.amazon,
     goodreads: perfilRaw.goodreads,
+    storygraph: perfilRaw.storygraph,
+    youtube: perfilRaw.youtube,
+    blog: perfilRaw.blog,
     idGenero: perfilRaw.id_genero,
     idSubgenero: perfilRaw.id_subgenero,
     sitioWeb: perfilRaw.sitio_web,
@@ -210,6 +213,9 @@ function rellenarFormularioPerfil(perfil) {
   setVal('perfil-tiktok',      perfil.tiktok);
   setVal('perfil-amazon',      perfil.amazon);
   setVal('perfil-goodreads',   perfil.goodreads);
+  setVal('perfil-storygraph',  perfil.storygraph);
+  setVal('perfil-youtube',     perfil.youtube);
+  setVal('perfil-blog',        perfil.blog);
   setVal('perfil-sitio-web',   perfil.sitioWeb);
 
   // Foto de perfil
@@ -443,6 +449,9 @@ async function guardarPerfil(event) {
     tiktok:   document.getElementById('perfil-tiktok')?.value?.trim(),
     amazon:   document.getElementById('perfil-amazon')?.value?.trim(),
     goodreads: document.getElementById('perfil-goodreads')?.value?.trim(),
+    storygraph: document.getElementById('perfil-storygraph')?.value?.trim(),
+    youtube: document.getElementById('perfil-youtube')?.value?.trim(),
+    blog: document.getElementById('perfil-blog')?.value?.trim(),
   };
 
  let idsTropesFavoritosPerfil = null;
@@ -474,6 +483,9 @@ async function guardarPerfil(event) {
       tiktok: datos.tiktok,
       amazon: datos.amazon,
       goodreads: datos.goodreads,
+      storygraph: datos.storygraph,
+      youtube: datos.youtube,
+      blog: datos.blog,
       generos: datos.generos,
       descripcion_lector: datos.descripcionLector,
       sitio_web: datos.sitioWeb
@@ -660,6 +672,10 @@ async function guardarPerfilYPostularse(event) {
     instagram:         document.getElementById('completar-instagram')?.value?.trim(),
     tiktok:            document.getElementById('completar-tiktok')?.value?.trim(),
     amazon:            document.getElementById('completar-amazon')?.value?.trim(),
+    goodreads:         document.getElementById('completar-goodreads')?.value?.trim(),
+    storygraph:        document.getElementById('completar-storygraph')?.value?.trim(),
+    youtube:           document.getElementById('completar-youtube')?.value?.trim(),
+    blog:              document.getElementById('completar-blog')?.value?.trim(),
     descripcionLector: document.getElementById('completar-descripcion')?.value?.trim(),
     generos:           document.getElementById('completar-generos')?.value?.trim(),
   };
@@ -677,6 +693,10 @@ async function guardarPerfilYPostularse(event) {
       instagram: datos.instagram,
       tiktok: datos.tiktok,
       amazon: datos.amazon,
+      goodreads: datos.goodreads,
+      storygraph: datos.storygraph,
+      youtube: datos.youtube,
+      blog: datos.blog,
       descripcion_lector: datos.descripcionLector,
       generos: datos.generos
     })

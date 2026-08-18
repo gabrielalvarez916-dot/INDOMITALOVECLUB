@@ -496,7 +496,7 @@ function construirCardCampaña(c) {
     `<span class="campana-trope">${t}</span>`
   ).join('');
 
-const iconoPlataforma = { Amazon: '🛒', TikTok: '🎵', Instagram: '📸', Goodreads: '📚' };
+const iconoPlataforma = { Amazon: '🛒', TikTok: '🎵', Instagram: '📸', Goodreads: '📚', StoryGraph: '📈', YouTube: '🎬', Blog: '✍️' };
 const requisitosHtml = c.plataformasReseña && c.plataformasReseña.length > 0
  ? `<p style="font-size:12px; color:var(--bordo); background:var(--rosa-claro); padding:4px 10px; border-radius:20px; margin:4px 0; display:inline-block;">
        📋 <strong>Requisitos:</strong> Cuenta activa en
@@ -971,11 +971,13 @@ async function confirmarPostulacion(idCampaña) {
     const mapeo = {
       Amazon:    usuario.amazon,
       TikTok:    usuario.tiktok,
-      Instagram: usuario.instagram
+      Instagram: usuario.instagram,
+      StoryGraph: usuario.storygraph,
+      YouTube:   usuario.youtube
     };
     const faltantes = campaña.plataformasReseña
       .map(p => p.trim())
-      .filter(p => p !== 'Goodreads')
+      .filter(p => p !== 'Goodreads' && p !== 'Blog')
       .filter(p => !mapeo[p]);
 
     if (faltantes.length > 0) {

@@ -791,6 +791,9 @@ avatarEl.src = _resolverAvatar(perfil.avatarUrl);
       redes.push(`<a href="${_esc(perfil.amazon)}" target="_blank" class="pp-red-link pp-red-amazon">Amazon</a>`);
     }
     if (perfil.goodreads) redes.push(`<a href="${_esc(perfil.goodreads)}" target="_blank" class="pp-red-link pp-red-goodreads">Goodreads</a>`);
+    if (perfil.storygraph) redes.push(`<a href="${_esc(perfil.storygraph)}" target="_blank" class="pp-red-link pp-red-storygraph">StoryGraph</a>`);
+    if (perfil.youtube) redes.push(`<a href="${_esc(perfil.youtube)}" target="_blank" class="pp-red-link pp-red-youtube">YouTube</a>`);
+    if (perfil.blog) redes.push(`<a href="${_esc(perfil.blog)}" target="_blank" class="pp-red-link pp-red-blog">Blog</a>`);
     redesEl.innerHTML = redes.join('');
     redesEl.style.display = redes.length ? '' : 'none';
   }
@@ -1322,7 +1325,10 @@ function _pintarResenaInterna(datos) {
     l.instagram ? `<a href="${l.instagram}" target="_blank" class="red-link">Instagram</a>` : '',
     l.tiktok    ? `<a href="${l.tiktok}" target="_blank" class="red-link">TikTok</a>` : '',
     l.amazon    ? `<a href="${l.amazon}" target="_blank" class="red-link">Amazon</a>` : '',
-    l.goodreads ? `<a href="${l.goodreads}" target="_blank" class="red-link">Goodreads</a>` : ''
+    l.goodreads ? `<a href="${l.goodreads}" target="_blank" class="red-link">Goodreads</a>` : '',
+    l.storygraph ? `<a href="${l.storygraph}" target="_blank" class="red-link">StoryGraph</a>` : '',
+    l.youtube   ? `<a href="${l.youtube}" target="_blank" class="red-link">YouTube</a>` : '',
+    l.blog      ? `<a href="${l.blog}" target="_blank" class="red-link">Blog</a>` : ''
   ].filter(Boolean).join('');
   if (!linksHtml) {
     document.getElementById('ri-links-grupo').style.display = 'none';

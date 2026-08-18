@@ -935,6 +935,15 @@
     <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
       <input type="checkbox" name="plataformas" value="TikTok"> TikTok
     </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="StoryGraph"> StoryGraph
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="YouTube"> YouTube
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" name="plataformas" value="Blog"> Blog / otro
+    </label>
   </div>
 </div>
     <div class="form-grupo">
@@ -1201,6 +1210,18 @@
           <div class="form-grupo">
             <label class="form-label">Goodreads</label>
             <input type="text" id="resena-goodreads" class="form-input" placeholder="https://goodreads.com/review/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">StoryGraph</label>
+            <input type="text" id="resena-storygraph" class="form-input" placeholder="https://app.thestorygraph.com/reviews/..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">YouTube</label>
+            <input type="text" id="resena-youtube" class="form-input" placeholder="https://youtube.com/watch?v=..." />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label">Blog / otro</label>
+            <input type="text" id="resena-blog" class="form-input" placeholder="https://..." />
           </div>
           <div class="form-grupo">
             <label class="form-label">Comentarios (opcional)</label>
@@ -1538,6 +1559,22 @@
           <input type="url" id="completar-amazon" class="form-input" />
         </div>
         <div class="form-grupo">
+          <label class="form-label">Goodreads</label>
+          <input type="url" id="completar-goodreads" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">StoryGraph</label>
+          <input type="url" id="completar-storygraph" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">YouTube</label>
+          <input type="url" id="completar-youtube" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label">Blog / otro</label>
+          <input type="url" id="completar-blog" class="form-input" />
+        </div>
+        <div class="form-grupo">
           <label class="form-label">Descripción lector@</label>
           <textarea id="completar-descripcion" class="form-textarea" rows="3" placeholder="Contanos quién sos como lect@r..."></textarea>
         </div>
@@ -1715,6 +1752,18 @@
       <div class="form-grupo">
         <label class="form-label">Goodreads</label>
         <input type="url" id="perfil-goodreads" class="form-input" placeholder="https://goodreads.com/tu_usuario" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">StoryGraph</label>
+        <input type="url" id="perfil-storygraph" class="form-input" placeholder="https://app.thestorygraph.com/profile/tu_usuario" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">YouTube</label>
+        <input type="url" id="perfil-youtube" class="form-input" placeholder="https://youtube.com/@tu_canal" />
+      </div>
+      <div class="form-grupo">
+        <label class="form-label">Blog / otro</label>
+        <input type="url" id="perfil-blog" class="form-input" placeholder="https://tublog.com" />
       </div>
 
       <div id="perfil-error" class="mensaje-error" style="display:none;"></div>

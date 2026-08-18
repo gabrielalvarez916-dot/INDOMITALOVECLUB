@@ -471,7 +471,9 @@ function _hostnameDeLink(link) {
 const _DOMINIOS_VALIDOS_RESENA = {
   Instagram: ['instagram.com'],
   TikTok: ['tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'],
-  Goodreads: ['goodreads.com']
+  Goodreads: ['goodreads.com'],
+  StoryGraph: ['thestorygraph.com', 'app.thestorygraph.com'],
+  YouTube: ['youtube.com', 'youtu.be', 'm.youtube.com']
 };
 const _DOMINIOS_AMAZON_ACORTADOS = ['amzn.to', 'amzn.eu', 'a.co'];
 
@@ -488,6 +490,10 @@ function _validarDominioLinkResena(link, plataforma) {
     if (!esAmazon) {
       return `El link que pusiste en Amazon no parece ser de amazon.* (también podés usar un acortador oficial como amzn.to, amzn.eu o a.co).`;
     }
+    return null;
+  }
+
+  if (plataforma === 'Blog') {
     return null;
   }
 
@@ -520,6 +526,14 @@ function _linkPareceDePerfil(link, plataforma) {
     if (_DOMINIOS_AMAZON_ACORTADOS.includes(host)) return false;
     return !/(review|customer-reviews)/i.test(link);
   }
+  if (plataforma === 'StoryGraph') {
+    return /\/profile\//i.test(path) && !/\/reviews?\//i.test(path);
+  }
+  if (plataforma === 'YouTube') {
+    if (host === 'youtu.be') return false;
+    if (/^\/watch/i.test(path) || /^\/shorts\//i.test(path)) return false;
+    return /^\/(@|channel\/|c\/|user\/)/i.test(path);
+  }
   return false;
 }
 
@@ -543,6 +557,9 @@ async function enviarResena(event) {
     linkTikTok:       document.getElementById('resena-tiktok')?.value?.trim(),
     linkAmazon:       document.getElementById('resena-amazon')?.value?.trim(),
     linkGoodreads:    document.getElementById('resena-goodreads')?.value?.trim(),
+    linkStoryGraph:   document.getElementById('resena-storygraph')?.value?.trim(),
+    linkYouTube:      document.getElementById('resena-youtube')?.value?.trim(),
+    linkBlog:         document.getElementById('resena-blog')?.value?.trim(),
     comentarios:      document.getElementById('resena-comentarios')?.value?.trim(),
     puntuacionLibro:  document.getElementById('resena-puntuacion-libro')?.value || '',
     frase1,
@@ -561,14 +578,17 @@ async function enviarResena(event) {
     Instagram: datos.linkInstagram,
     TikTok: datos.linkTikTok,
     Amazon: datos.linkAmazon,
-    Goodreads: datos.linkGoodreads
+    Goodreads: datos.linkGoodreads,
+    StoryGraph: datos.linkStoryGraph,
+    YouTube: datos.linkYouTube,
+    Blog: datos.linkBlog
   };
   const plataformasPedidas = _resenaEnCurso?.campaña?.plataformasResena?.map(p => p.trim()).filter(Boolean) || [];
   const plataformasAChequear = plataformasPedidas.length > 0 ? plataformasPedidas : Object.keys(linksCargados);
   const hayAlMenosUnLink = plataformasAChequear.some(p => linksCargados[p]);
 
   if (!hayAlMenosUnLink) {
-    const listaPedida = plataformasPedidas.length > 0 ? plataformasPedidas.join(' o ') : 'Instagram, TikTok, Amazon o Goodreads';
+    const listaPedida = plataformasPedidas.length > 0 ? plataformasPedidas.join(' o ') : 'Instagram, TikTok, Amazon, Goodreads, StoryGraph, YouTube o Blog';
     mostrarMensajeError('resena-error', `Necesitás cargar al menos un link de reseña (${listaPedida}) para poder entregar.`);
     _mostrarPasoResena(2);
     return;
@@ -629,6 +649,9 @@ async function _finalizarEnvioResena(idCampaña, datos, moods) {
     link_tiktok: datos.linkTikTok || '',
     link_amazon: datos.linkAmazon || '',
     link_goodreads: datos.linkGoodreads || '',
+    link_storygraph: datos.linkStoryGraph || '',
+    link_youtube: datos.linkYouTube || '',
+    link_blog: datos.linkBlog || '',
     comentarios: datos.comentarios || '',
     puntuacion_libro: datos.puntuacionLibro ? parseInt(datos.puntuacionLibro) : null,
     moods: moods.length ? moods : null,
@@ -690,7 +713,7 @@ if (!user) return;
 
 const { data: reseñas, error } = await supabaseClient
   .from('resenas')
-  .select(`id, fecha_entrega, puntuacion_autor, puntuacion_libro, link_instagram, link_tiktok, link_amazon, link_goodreads, comentarios,
+  .select(`id, fecha_entrega, puntuacion_autor, puntuacion_libro, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios,
     moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
     rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
     mensaje_agradecimiento, fecha_agradecimiento,
@@ -719,6 +742,9 @@ _historialReseñador = (reseñas || []).map(r => ({
   linkTikTok: r.link_tiktok,
   linkAmazon: r.link_amazon,
   linkGoodreads: r.link_goodreads,
+  linkStoryGraph: r.link_storygraph,
+  linkYouTube: r.link_youtube,
+  linkBlog: r.link_blog,
   comentarios: r.comentarios,
   moods: r.moods || [],
   frase1: r.frase_favorita_1,
@@ -833,6 +859,9 @@ function construirCardHistorialReseña(r) {
           ${r.linkTikTok    ? `<a href="${r.linkTikTok}"    target="_blank" class="red-link" onclick="event.stopPropagation()">TikTok</a>`    : ''}
           ${r.linkAmazon    ? `<a href="${r.linkAmazon}"    target="_blank" class="red-link" onclick="event.stopPropagation()">Amazon</a>`    : ''}
           ${r.linkGoodreads ? `<a href="${r.linkGoodreads}" target="_blank" class="red-link" onclick="event.stopPropagation()">Goodreads</a>` : ''}
+          ${r.linkStoryGraph ? `<a href="${r.linkStoryGraph}" target="_blank" class="red-link" onclick="event.stopPropagation()">StoryGraph</a>` : ''}
+          ${r.linkYouTube   ? `<a href="${r.linkYouTube}"   target="_blank" class="red-link" onclick="event.stopPropagation()">YouTube</a>`   : ''}
+          ${r.linkBlog      ? `<a href="${r.linkBlog}"      target="_blank" class="red-link" onclick="event.stopPropagation()">Blog</a>`      : ''}
         </div>
       </div>
     </div>
@@ -872,7 +901,10 @@ function abrirResenaInternaHistorial(idReseña) {
       instagram: r.linkInstagram,
       tiktok: r.linkTikTok,
       amazon: r.linkAmazon,
-      goodreads: r.linkGoodreads
+      goodreads: r.linkGoodreads,
+      storygraph: r.linkStoryGraph,
+      youtube: r.linkYouTube,
+      blog: r.linkBlog
     },
     mensajeAgradecimiento: r.mensajeAgradecimiento,
     fechaAgradecimiento: r.fechaAgradecimiento
