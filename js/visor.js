@@ -36,7 +36,7 @@ function _visorObtenerClaveLS(idCampana, formato) {
 // progreso_lectura / actualizar_progreso_lectura_auto en Supabase)
 // ────────────────────────────────────────────────────────────
 
-function avisarProgresoLecturaAuto(posicionActual, posicionTotal) {
+function avisarProgresoLecturaAuto(posicionActual, posicionTotal, formato, posicionDetalle) {
   if (!_visorIdPostulacion) return; // se abrió el visor sin postulación asociada
   if (_timeoutProgresoLectura) clearTimeout(_timeoutProgresoLectura);
   _timeoutProgresoLectura = setTimeout(async () => {
@@ -45,12 +45,32 @@ function avisarProgresoLecturaAuto(posicionActual, posicionTotal) {
         p_id_postulacion: _visorIdPostulacion,
         p_posicion_actual: posicionActual ?? null,
         p_posicion_total: posicionTotal ?? null,
+        p_formato: formato ?? null,
+        p_posicion_detalle: posicionDetalle != null ? String(posicionDetalle) : null,
       });
     } catch (e) {
       // silencioso: no debe interrumpir la lectura si falla la red
       console.error('Error mandando progreso de lectura:', e);
     }
   }, 400);
+}
+
+// Trae la última posición guardada en Supabase para esta postulación (viaja entre dispositivos)
+async function obtenerProgresoLecturaGuardado(idPostulacion, formatoEsperado) {
+  if (!idPostulacion) return null;
+  try {
+    const { data, error } = await supabaseClient
+      .from('progreso_lectura')
+      .select('formato, posicion_detalle')
+      .eq('id_postulacion', idPostulacion)
+      .maybeSingle();
+    if (error || !data) return null;
+    if (formatoEsperado && data.formato && data.formato !== formatoEsperado) return null;
+    return data.posicion_detalle || null;
+  } catch (e) {
+    console.error('Error leyendo progreso de lectura guardado:', e);
+    return null;
+  }
 }
 
 
@@ -191,15 +211,15 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
     rendicion.on('relocated', function (loc) {
       if (loc && loc.start) {
         const totalCapitulos = (_visorEpub.spine && _visorEpub.spine.length) || 0;
-        avisarProgresoLecturaAuto(loc.start.index, totalCapitulos);
+        avisarProgresoLecturaAuto(loc.start.index, totalCapitulos, 'epub', loc.start.cfi);
         if (_visorClaveLS) {
           try { localStorage.setItem(_visorClaveLS, loc.start.cfi); } catch (e) {}
         }
       }
     });
 
-    let posicionGuardada = null;
-    if (_visorClaveLS) {
+    let posicionGuardada = await obtenerProgresoLecturaGuardado(_visorIdPostulacion, 'epub');
+    if (!posicionGuardada && _visorClaveLS) {
       try { posicionGuardada = localStorage.getItem(_visorClaveLS); } catch (e) {}
     }
     await rendicion.display(posicionGuardada || undefined);
@@ -245,7 +265,11 @@ async function inicializarPdf(url) {
     _pdfTotalPaginas = _visorPdf.numPages;
 
     let paginaInicial = 1;
-    if (_visorClaveLS) {
+    const posicionRemota = await obtenerProgresoLecturaGuardado(_visorIdPostulacion, 'pdf');
+    if (posicionRemota) {
+      const remota = parseInt(posicionRemota, 10);
+      if (!isNaN(remota) && remota >= 1 && remota <= _pdfTotalPaginas) paginaInicial = remota;
+    } else if (_visorClaveLS) {
       try {
         const guardada = parseInt(localStorage.getItem(_visorClaveLS), 10);
         if (!isNaN(guardada) && guardada >= 1 && guardada <= _pdfTotalPaginas) paginaInicial = guardada;
@@ -293,7 +317,7 @@ async function renderizarPaginaPdf(numero) {
 
   await pagina.render({ canvasContext: context, viewport: vp }).promise;
 
-  avisarProgresoLecturaAuto(numero, _pdfTotalPaginas);
+  avisarProgresoLecturaAuto(numero, _pdfTotalPaginas, 'pdf', numero);
   if (_visorClaveLS) {
     try { localStorage.setItem(_visorClaveLS, String(numero)); } catch (e) {}
   }
