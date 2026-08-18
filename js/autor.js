@@ -793,7 +793,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
      id, estado, motivo_abandono, fecha_limite_entrega,
       usuarios!postulaciones_id_usuario_resenador_fkey (
         id, alias, pais, ciudad, instagram, tiktok, amazon, tropes_favoritos, descripcion_lector, verificacion_seguidores_estado,
-        avatares ( imagen_url )
+        foto_perfil_url, avatares ( imagen_url )
       )
     `)
     .eq('id_campana', idCampana)
@@ -837,7 +837,7 @@ async function verPostulacionesCampana(idCampana, nombreLibro) {
         instagram: u.instagram,
         tiktok: u.tiktok,
         amazon: u.amazon,
-        fotoPerfil: u.avatares?.imagen_url || null,
+        fotoPerfil: resolverFotoPerfil(u),
         seguidoresVerificados: u.verificacion_seguidores_estado === 'aprobado',
         labelNivel: rankingUsuario ? _labelLiga(rankingUsuario.categoria) : null,
         match: (matches || []).find(m => m.id === u?.id)?.valor ?? null,
@@ -1031,7 +1031,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
       rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
       usuarios!resenas_id_usuario_resenador_fkey (
         id, alias, verificacion_seguidores_estado,
-        avatares ( imagen_url )
+        foto_perfil_url, avatares ( imagen_url )
       )
     `)
     .eq('id_campana', idCampana)
@@ -1077,7 +1077,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     reseñador: r.usuarios ? {
       id: r.usuarios.id,
       alias: r.usuarios.alias,
-      fotoPerfil: r.usuarios.avatares?.imagen_url || null,
+      fotoPerfil: resolverFotoPerfil(r.usuarios),
       seguidoresVerificados: r.usuarios.verificacion_seguidores_estado === 'aprobado'
     } : null
   }));

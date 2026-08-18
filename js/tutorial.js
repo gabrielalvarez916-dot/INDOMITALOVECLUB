@@ -46,11 +46,11 @@ async function _tutGatePerfilReseñador(idUsuario) {
 async function _tutGateAvatarAutor(idUsuario) {
   const { data, error } = await supabaseClient
     .from('usuarios')
-    .select('avatar_id')
+    .select('avatar_id, foto_perfil_url')
     .eq('id', idUsuario)
     .maybeSingle();
   if (error) { console.error('Error gate avatar:', error); return false; }
-  return data?.avatar_id != null;
+  return data?.avatar_id != null || !!data?.foto_perfil_url;
 }
 
 async function _tutGateLibroAutor(idUsuario) {

@@ -1689,7 +1689,11 @@
 
     <div class="perfil-foto-container">
       <img id="perfil-foto" src="/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK" alt="Avatar de perfil" class="perfil-foto" />
-      <button class="btn-secundario btn-sm" onclick="abrirSelectorAvatar()">Cambiar avatar</button>
+      <div class="perfil-foto-acciones" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+        <button class="btn-secundario btn-sm" onclick="abrirSelectorAvatar()">Elegir avatar</button>
+        <button type="button" id="btn-subir-foto-perfil" class="btn-secundario btn-sm" onclick="document.getElementById('input-foto-perfil').click()">Subir mi foto</button>
+        <input type="file" id="input-foto-perfil" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="subirFotoPerfilPropia(event)" />
+      </div>
     </div>
 
     <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">

@@ -103,7 +103,7 @@ async function cargarFormularioEdicionPerfil() {
     idGenero: perfilRaw.id_genero,
     idSubgenero: perfilRaw.id_subgenero,
     sitioWeb: perfilRaw.sitio_web,
-    fotoPerfil: perfilRaw.avatares?.imagen_url
+    fotoPerfil: resolverFotoPerfil(perfilRaw)
   };
 
   rellenarFormularioPerfil(perfil);
@@ -624,9 +624,11 @@ async function guardarAvatar() {
 
   const usuario = Sesion.obtener();
 
+  // Elegir un avatar preseteado desactiva la foto propia (si tenía una subida),
+  // para que no quede una tapando a la otra.
   const { error } = await supabaseClient
     .from('usuarios')
-    .update({ avatar_id: _avatarSeleccionado })
+    .update({ avatar_id: _avatarSeleccionado, foto_perfil_url: null })
     .eq('id', usuario.id);
 
   if (error) {
@@ -646,6 +648,105 @@ async function guardarAvatar() {
   }
 
   _avatarSeleccionado = null;
+}
+
+// ────────────────────────────────────────────────────────────
+// FOTO DE PERFIL PROPIA (alternativa al avatar preseteado)
+// ────────────────────────────────────────────────────────────
+
+const MAX_LADO_FOTO_PERFIL = 512; // redimensiona a max 512x512 antes de subir
+
+/**
+ * Redimensiona/comprime un archivo de imagen en el navegador (sin backend)
+ * y devuelve un Blob webp liviano, listo para subir.
+ */
+function comprimirImagenPerfil(archivo) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const lector = new FileReader();
+    lector.onload = () => { img.src = lector.result; };
+    lector.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    img.onload = () => {
+      const escala = Math.min(1, MAX_LADO_FOTO_PERFIL / Math.max(img.width, img.height));
+      const ancho = Math.round(img.width * escala);
+      const alto = Math.round(img.height * escala);
+      const canvas = document.createElement('canvas');
+      canvas.width = ancho;
+      canvas.height = alto;
+      canvas.getContext('2d').drawImage(img, 0, 0, ancho, alto);
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error('No se pudo procesar la imagen.')),
+        'image/webp',
+        0.85
+      );
+    };
+    img.onerror = () => reject(new Error('El archivo no es una imagen válida.'));
+    lector.readAsDataURL(archivo);
+  });
+}
+
+/**
+ * Se dispara al elegir un archivo en el input "Subir mi foto".
+ * Comprime, sube a R2 vía la función subir-avatar-perfil y actualiza la UI.
+ */
+async function subirFotoPerfilPropia(event) {
+  const input = event.target;
+  const archivo = input.files?.[0];
+  if (!archivo) return;
+
+  ocultarMensajes('avatar-error');
+  const botonSubir = document.getElementById('btn-subir-foto-perfil');
+  if (botonSubir) { botonSubir.disabled = true; botonSubir.textContent = 'Subiendo...'; }
+
+  try {
+    if (!archivo.type.startsWith('image/')) {
+      throw new Error('Elegí un archivo de imagen (jpg, png o webp).');
+    }
+
+    const blob = await comprimirImagenPerfil(archivo);
+    const usuario = Sesion.obtener();
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('Necesitás iniciar sesión de nuevo.');
+
+    const { data: presign, error: errPresign } = await supabaseClient.functions.invoke('subir-avatar-perfil', {
+      body: { accion: 'presignar', formato: 'webp' },
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (errPresign || presign?.error) {
+      throw new Error(presign?.error || 'No se pudo preparar la subida.');
+    }
+
+    const respPut = await fetch(presign.url, {
+      method: 'PUT',
+      headers: { 'Content-Type': presign.content_type },
+      body: blob
+    });
+    if (!respPut.ok) throw new Error('No se pudo subir la foto. Probá de nuevo.');
+
+    const { data: confirmar, error: errConfirmar } = await supabaseClient.functions.invoke('subir-avatar-perfil', {
+      body: { accion: 'confirmar', formato: 'webp' },
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (errConfirmar || confirmar?.error) {
+      throw new Error(confirmar?.error || 'No se pudo guardar la foto.');
+    }
+
+    const urlFinal = construirUrlAvatarPropio(confirmar.key) + `&t=${Date.now()}`;
+    const fotoEl = document.getElementById('perfil-foto');
+    if (fotoEl) fotoEl.src = urlFinal;
+    Sesion.guardar({ ...usuario, fotoPerfil: urlFinal });
+    mostrarToast('¡Foto de perfil actualizada! 📸', 'ok');
+
+    if (typeof registrarAccionEventoSiCorresponde === 'function') {
+      registrarAccionEventoSiCorresponde('cambiar_avatar');
+    }
+  } catch (e) {
+    mostrarMensajeError('avatar-error', e.message || 'Error al subir la foto.');
+  } finally {
+    if (botonSubir) { botonSubir.disabled = false; botonSubir.textContent = 'Subir mi foto'; }
+    input.value = '';
+  }
 }
 
 // ────────────────────────────────────────────────────────────

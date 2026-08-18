@@ -50,3 +50,22 @@ function mostrarCarga(elementoId, mostrar) {
 function irA(seccion) {
   window.location.hash = seccion;
 }
+
+/**
+ * Arma la URL pública para mostrar una foto de perfil propia (subida por el
+ * usuario), a partir del "key" guardado en usuarios.foto_perfil_url.
+ */
+function construirUrlAvatarPropio(fotoPerfilKey) {
+  if (!fotoPerfilKey) return null;
+  return `${SUPABASE_URL}/functions/v1/ver-avatar-perfil?key=${encodeURIComponent(fotoPerfilKey)}`;
+}
+
+/**
+ * Resuelve la foto a mostrar para una fila de usuario: prioriza la foto
+ * propia subida por el usuario; si no tiene, cae al avatar preseteado
+ * (viene del join `avatares(imagen_url)` en el select).
+ */
+function resolverFotoPerfil(row) {
+  if (!row) return null;
+  return construirUrlAvatarPropio(row.foto_perfil_url) || row.avatares?.imagen_url || null;
+}

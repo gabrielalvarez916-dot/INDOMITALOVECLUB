@@ -186,7 +186,7 @@ async function _obtenerEventosCalendarioAutor() {
         .from('postulaciones')
         .select(`
           id, fecha_respuesta, fecha_limite_entrega, id_campana,
-          usuarios!postulaciones_id_usuario_resenador_fkey ( id, alias, avatares ( imagen_url ) )
+          usuarios!postulaciones_id_usuario_resenador_fkey ( id, alias, foto_perfil_url, avatares ( imagen_url ) )
         `)
         .eq('estado', 'aprobada')
         .in('id_campana', idsCampanasAutor)
@@ -210,7 +210,7 @@ async function _obtenerEventosCalendarioAutor() {
     const c = mapaCampañas[p.id_campana];
     const r = p.usuarios;
     if (!c || !r) return;
-    const avatar = r.avatares?.imagen_url || null;
+    const avatar = resolverFotoPerfil(r);
 
     if (p.fecha_respuesta) {
       agregar(p.fecha_respuesta, {
