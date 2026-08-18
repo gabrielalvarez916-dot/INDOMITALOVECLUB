@@ -725,7 +725,7 @@ async function subirFotoPerfilPropia(event) {
     if (!respPut.ok) throw new Error('No se pudo subir la foto. Probá de nuevo.');
 
     const { data: confirmar, error: errConfirmar } = await supabaseClient.functions.invoke('subir-avatar-perfil', {
-      body: { accion: 'confirmar', formato: 'webp' },
+      body: { accion: 'confirmar', formato: 'webp', key: presign.key },
       headers: { Authorization: `Bearer ${token}` }
     });
     if (errConfirmar || confirmar?.error) {
@@ -832,3 +832,4 @@ async function guardarPerfilYPostularse(event) {
 
   if (typeof cargarFeed === 'function') cargarFeed();
 }
+
