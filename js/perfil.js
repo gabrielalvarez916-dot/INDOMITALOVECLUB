@@ -686,8 +686,28 @@ function comprimirImagenPerfil(archivo) {
 }
 
 /**
+ * Convierte un Blob a base64 (sin el prefijo data:...;base64,) para poder
+ * mandarlo dentro de un body JSON a la función edge.
+ */
+async function blobABase64(blob) {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binario = '';
+  const tamanioChunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += tamanioChunk) {
+    binario += String.fromCharCode.apply(null, bytes.subarray(i, i + tamanioChunk));
+  }
+  return btoa(binario);
+}
+
+/**
  * Se dispara al elegir un archivo en el input "Subir mi foto".
  * Comprime, sube a R2 vía la función subir-avatar-perfil y actualiza la UI.
+ *
+ * La imagen viaja en base64 dentro del request a la función edge, que es
+ * quien la sube a R2 del lado del servidor. Antes el navegador subía
+ * directo a R2 con una URL firmada, pero eso requiere CORS configurado en
+ * el bucket de R2 y fallaba con "Failed to fetch" al no estar configurado.
  */
 async function subirFotoPerfilPropia(event) {
   const input = event.target;
@@ -712,32 +732,19 @@ async function subirFotoPerfilPropia(event) {
     const token = session?.access_token;
     if (!token) throw new Error('Necesitás iniciar sesión de nuevo.');
 
-    const { data: presign, error: errPresign } = await supabaseClient.functions.invoke('subir-avatar-perfil', {
-      body: { accion: 'presignar', formato: 'webp' },
+    const contenidoBase64 = await blobABase64(blob);
+
+    const { data: resultado, error: errSubir } = await supabaseClient.functions.invoke('subir-avatar-perfil', {
+      body: { formato: 'webp', contenido_base64: contenidoBase64 },
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (errPresign || presign?.error) {
-      throw new Error(presign?.error || 'No se pudo preparar la subida.');
-    }
-
-    const respPut = await fetch(presign.url, {
-      method: 'PUT',
-      headers: { 'Content-Type': presign.content_type },
-      body: blob
-    });
-    if (!respPut.ok) throw new Error('No se pudo subir la foto. Probá de nuevo.');
-
-    const { data: confirmar, error: errConfirmar } = await supabaseClient.functions.invoke('subir-avatar-perfil', {
-      body: { accion: 'confirmar', formato: 'webp', key: presign.key },
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (errConfirmar || confirmar?.error) {
-      throw new Error(confirmar?.error || 'No se pudo guardar la foto.');
+    if (errSubir || resultado?.error) {
+      throw new Error(resultado?.error || 'No se pudo subir la foto.');
     }
 
     // construirUrlAvatarPropio ya agrega su propio cache-bust (config.js),
     // no hace falta pegarle otro acá.
-    const urlFinal = construirUrlAvatarPropio(confirmar.key);
+    const urlFinal = construirUrlAvatarPropio(resultado.key);
     const fotoEl = document.getElementById('perfil-foto');
     if (fotoEl) fotoEl.src = urlFinal;
     Sesion.guardar({ ...usuario, fotoPerfil: urlFinal });
