@@ -577,6 +577,31 @@ function _navegarPorNotificacion(notif) {
     if (typeof mostrarSeccion === 'function') mostrarSeccion('perfil');
     return;
   }
+
+  // Insignias y badge histórico: bloques embebidos en la sección Perfil
+  // propia (ver #pp-r-insignias-propio / #pp-r-badge-historico-propio
+  // en perfil.js).
+  if (notif.tipo === 'insignia_obtenida' || notif.tipo === 'badge_historico') {
+    if (typeof mostrarSeccion === 'function') mostrarSeccion('perfil');
+    return;
+  }
+
+  // Retos y eventos completados: sección Evento propia.
+  if (notif.tipo === 'evento_reto_completado' || notif.tipo === 'evento_completado') {
+    if (typeof mostrarSeccion === 'function') mostrarSeccion('evento');
+    return;
+  }
+
+  // Impulsos (match/rechazo) y ajuste de calificación: viven en el
+  // panel del rol (ranking, mis campañas).
+  if (
+    notif.tipo === 'impulso_alta_coincidencia' ||
+    notif.tipo === 'impulso_rechazado' ||
+    notif.tipo === 'ajuste_calificacion'
+  ) {
+    if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
+    return;
+  }
 }
 
 
