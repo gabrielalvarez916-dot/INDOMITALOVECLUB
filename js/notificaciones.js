@@ -275,6 +275,54 @@ const VARIANTES = {
       (d) => `Completaste "${d.nombreEvento || ''}". +${d.puntosGanados || 0} puntos. ¿Quién te para ahora?`,
     ],
   },
+
+  // Copy calcado 1 a 1 de enviar-push-notificacion (Edge Function) —
+  // ya existía ahí, solo faltaba traerlo a la campanita in-app.
+  promocion_planes: {
+    emoji: '🚀',
+    textos: [
+      () => `¿Querés más? Subí de plan y desbloqueá más reseñadores y campañas.`,
+      () => `Más campañas. Más reseñadores. Más visibilidad. ¿Subimos de plan?`,
+      () => `¿Vas a dejar que un límite te diga qué hacer? ¿Subimos el plan?`,
+    ],
+  },
+  inactividad_resenador: {
+    emoji: '😈',
+    textos: [
+      () => `¿Seguís vivo/a? Hace días que no te vemos por Indómita.`,
+      () => `Hace días que no entrás. Esto ya parece una relación tóxica.`,
+      () => `Hace días que no entrás. ¿Ya nos cambiaste por otra plataforma?`,
+    ],
+  },
+  inactividad_autor: {
+    emoji: '👻',
+    textos: [
+      () => `Desapareciste. Tus campañas no se van a mirar solas.`,
+      () => `¿Ya nos cambiaste por otra plataforma?`,
+      () => `Tu libro está recibiendo atención y vos ni enterado/a. Linda estrategia.`,
+    ],
+  },
+  impulso_sugerido: {
+    emoji: '🌶️',
+    textos: [
+      (d) => `Tu campaña "${d.nombreLibro || ''}" está esperando que alguien se postule. ¿La ayudamos con un impulso?`,
+      (d) => `No seas tímido/a, dale un poco más de visibilidad a "${d.nombreLibro || ''}" con un impulso.`,
+      (d) => `¿Vas a dejar que otra campaña se lleve la atención? Mejor sumale un impulso a "${d.nombreLibro || ''}".`,
+    ],
+  },
+
+  // NUEVO — plan_activado no tenía copy en ningún lado (ni push, ni
+  // campanita, ni Edge Function). Mismo tono que pago_aprobado / el
+  // asunto del mail ("Plan {{plan}} activado. Ahora sí, a jugar en
+  // grande. 🔥").
+  plan_activado: {
+    emoji: '🔥',
+    textos: [
+      (d) => `Plan ${d.plan || ''} activado. Ahora sí, a jugar en grande.`,
+      () => `Subiste de plan. Mirá cómo te creciste de golpe.`,
+      (d) => `Tu plan ${d.plan || ''} ya está activo. Se acabaron las excusas.`,
+    ],
+  },
 };
 
 // INSIGNIAS: mismo criterio de variantes, elegidas por subtipo (d.tipo)
@@ -599,6 +647,28 @@ function _navegarPorNotificacion(notif) {
     notif.tipo === 'impulso_rechazado' ||
     notif.tipo === 'ajuste_calificacion'
   ) {
+    if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
+    return;
+  }
+
+  // Recordatorios de inactividad: llevarlo a mirar campañas, no a un
+  // panel vacío.
+  if (notif.tipo === 'inactividad_resenador' || notif.tipo === 'inactividad_autor') {
+    if (typeof mostrarSeccion === 'function') mostrarSeccion('feed');
+    return;
+  }
+
+  // Promoción de planes y plan recién activado: "Mis planes" vive
+  // dentro del panel del rol.
+  if (notif.tipo === 'promocion_planes' || notif.tipo === 'plan_activado') {
+    if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
+    return;
+  }
+
+  // Impulso sugerido: es sobre una campaña propia del autor, mismo
+  // destino que el resto de notis de campaña (no lo pediste explícito,
+  // pero es el mismo criterio usado arriba).
+  if (notif.tipo === 'impulso_sugerido') {
     if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
     return;
   }
