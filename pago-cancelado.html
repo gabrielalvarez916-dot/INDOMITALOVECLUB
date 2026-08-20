@@ -112,5 +112,23 @@
   </div>
 </div>
 
+<script>
+  // Avisa al sistema que el cliente llegó a PayPal y canceló ahí (a
+  // diferencia de nunca haber abierto el link) — así el panel de admin
+  // puede distinguir "nunca lo tocó" de "lo abrió y se arrepintió".
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    var baToken = params.get('ba_token') || params.get('token');
+    if (!baToken) return;
+    fetch('https://zthimkucjtuffzcmdbtf.supabase.co/functions/v1/marcar-pago-cancelado', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ba_token: baToken }),
+    }).catch(function () {
+      // Si esto falla no afecta al usuario, solo perdemos el dato de seguimiento.
+    });
+  })();
+</script>
+
 </body>
 </html>
