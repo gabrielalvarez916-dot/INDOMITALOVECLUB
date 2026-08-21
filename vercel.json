@@ -5,7 +5,8 @@
     { "source": "/privacidad", "destination": "/privacidad.html" },
     { "source": "/eliminar-cuenta", "destination": "/eliminar-cuenta.html" },
     { "source": "/terminos", "destination": "/terminos.html" },
-    { "source": "/app", "destination": "/app.html" }
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/tester-confirmado", "destination": "/tester-confirmado.html" }
   ],
   "redirects": [
     { "source": "/app/", "destination": "/app", "permanent": false }
