@@ -30,13 +30,9 @@
     --gris-texto: #2A2A2A;
     --gris-medio: #666666;
     --gris-borde: #E5E0D8;
-    --error: #C0392B;
-    --ok: #27AE60;
     --fuente-titulo: 'Playfair Display', Georgia, serif;
     --fuente-texto: 'Lato', sans-serif;
-    --radio: 10px;
     --radio-grande: 18px;
-    --sombra: 0 2px 20px rgba(139, 26, 43, 0.08);
     --sombra-fuerte: 0 8px 40px rgba(139, 26, 43, 0.15);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -79,32 +75,6 @@
     line-height: 1.3;
   }
   .pantalla-estado p { color: var(--gris-medio); font-size: 14px; line-height: 1.6; }
-  .spinner {
-    width: 34px; height: 34px;
-    border: 3px solid var(--gris-borde);
-    border-top-color: var(--bordo);
-    border-radius: 50%;
-    margin: 0 auto 18px;
-    animation: girar 0.8s linear infinite;
-  }
-  @keyframes girar { to { transform: rotate(360deg); } }
-  .btn-primario {
-    display: inline-block;
-    margin-top: 24px;
-    background: var(--bordo);
-    color: var(--blanco);
-    border: none;
-    border-radius: var(--radio);
-    padding: 13px 28px;
-    font-family: var(--fuente-texto);
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background 0.18s ease;
-  }
-  .btn-primario:hover { background: var(--bordo-oscuro); }
-  #vista-ok, #vista-error { display: none; }
 </style>
 </head>
 <body>
@@ -112,69 +82,25 @@
 <div class="tarjeta">
   <div class="logo-texto">Indómita Love Club</div>
 
-  <!-- Vista: confirmando -->
-  <div id="vista-cargando" class="pantalla-estado">
-    <div class="spinner"></div>
-    <h1>Anotándote como tester…</h1>
-    <p>Un segundo, estamos registrando tu confirmación.</p>
-  </div>
-
-  <!-- Vista: confirmado con éxito -->
-  <div id="vista-ok" class="pantalla-estado">
+  <div id="vista" class="pantalla-estado">
     <div class="icono">🖤</div>
-    <h1 id="titulo-ok">¡Gracias por sumarte!</h1>
-    <p>Quedaste anotad@ como tester. En cuanto esté listo el acceso a la prueba cerrada te mandamos el link para instalar la app. Falta poco.</p>
-  </div>
-
-  <!-- Vista: link inválido o vencido -->
-  <div id="vista-error" class="pantalla-estado">
-    <div class="icono">✨</div>
-    <h1>Link inválido</h1>
-    <p>Este link no es válido o venció. Escribinos si necesitás uno nuevo.</p>
+    <h1 id="titulo">¡Gracias por sumarte!</h1>
+    <p id="mensaje">Quedaste anotad@ como tester. En cuanto esté listo el acceso a la prueba cerrada te mandamos el link para instalar la app. Falta poco.</p>
   </div>
 </div>
 
 <script>
-  const EDGE_FUNCTION_URL = 'https://zthimkucjtuffzcmdbtf.supabase.co/functions/v1/confirmar-tester';
+  const params = new URLSearchParams(window.location.search);
+  const estado = params.get('estado');
+  const alias = params.get('alias');
 
-  const vistaCargando = document.getElementById('vista-cargando');
-  const vistaOk = document.getElementById('vista-ok');
-  const vistaError = document.getElementById('vista-error');
-
-  function mostrarSolo(vista) {
-    [vistaCargando, vistaOk, vistaError].forEach(v => v.style.display = 'none');
-    vista.style.display = 'block';
+  if (estado === 'error') {
+    document.querySelector('#vista .icono').textContent = '✨';
+    document.getElementById('titulo').textContent = 'Link inválido';
+    document.getElementById('mensaje').textContent = 'Este link no es válido o venció. Escribinos si necesitás uno nuevo.';
+  } else if (alias) {
+    document.getElementById('titulo').textContent = `¡Gracias por sumarte, ${alias}!`;
   }
-
-  async function confirmarTester() {
-    const params = new URLSearchParams(window.location.search);
-    const email = params.get('email');
-    const firma = params.get('firma');
-
-    if (!email || !firma) {
-      mostrarSolo(vistaError);
-      return;
-    }
-
-    try {
-      const resp = await fetch(`${EDGE_FUNCTION_URL}?email=${encodeURIComponent(email)}&firma=${encodeURIComponent(firma)}`);
-      const data = await resp.json().catch(() => ({}));
-
-      if (!resp.ok || !data.ok) {
-        mostrarSolo(vistaError);
-        return;
-      }
-
-      if (data.alias) {
-        document.getElementById('titulo-ok').textContent = `¡Gracias por sumarte, ${data.alias}!`;
-      }
-      mostrarSolo(vistaOk);
-    } catch (e) {
-      mostrarSolo(vistaError);
-    }
-  }
-
-  confirmarTester();
 </script>
 
 </body>
