@@ -378,6 +378,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
     linkAmazon: c.link_amazon_libro,
     cuposDisponibles: c.cupos_disponibles,
     cuposTotal: c.cupos_total,
+    cantidadPaginas: c.cantidad_paginas,
     fechaLimite: c.fecha_limite,
     estaVencida: fechaLimite < hoy,
     esNovedad,
@@ -524,6 +525,13 @@ let botonHtml = '';
   
   const icoSilla = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1H6v-1a2 2 0 0 0-4 0Z"/><path d="M6 19v2"/><path d="M18 19v2"/></svg>`;
   const icoReloj = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+  const icoPaginas = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>`;
+  const datoPaginasHtml = c.cantidadPaginas
+    ? `<div class="campana-dato">
+            <span class="campana-dato-label">${icoPaginas}Páginas</span>
+            <span class="campana-dato-valor">${c.cantidadPaginas}</span>
+          </div>`
+    : '';
 
   return `
     <div class="campana-card-horizontal${c.estaVencida ? ' campana-vencida' : ''}" onclick="verDetalleCampaña('${c.id}')">
@@ -560,6 +568,7 @@ ${requisitosHtml}
             <span class="campana-dato-label">${icoSilla}Cupos</span>
             <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>
           </div>
+          ${datoPaginasHtml}
           <div class="campana-dato">
             <span class="campana-dato-label">${icoReloj}Fecha límite</span>
             <span class="campana-dato-valor">${formatearFechaAmigable(c.fechaLimite)}</span>

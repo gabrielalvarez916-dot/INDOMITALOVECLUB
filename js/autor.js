@@ -76,6 +76,7 @@ function _mapCampana(c) {
     linkAmazon:        c.link_amazon_libro,
     cuposTotal:        c.cupos_total,
     cuposDisponibles:  c.cupos_disponibles,
+    cantidadPaginas:   c.cantidad_paginas,
     fechaInicio:       c.fecha_inicio,
     fechaLimite:       c.fecha_limite,
     estado:            c.estado,
@@ -1810,6 +1811,7 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     linkPortada:       linkPortada,
     linkAmazon:        document.getElementById('nc-link-amazon')?.value?.trim(),
     cuposTotal:        parseInt(document.getElementById('nc-cupos')?.value),
+    cantidadPaginas:   document.getElementById('nc-paginas')?.value ? parseInt(document.getElementById('nc-paginas').value) : null,
     modalidadLectura:  document.querySelector('input[name="nc-modalidad-lectura"]:checked')?.value || 'visor',
     plataformasResena: plataformasSeleccionadas,
     tipoColaboracion:  document.querySelector('input[name="nc-tipo-colaboracion"]:checked')?.value || 'digital',
@@ -1828,6 +1830,7 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
       link_portada:       datos.linkPortada,
       link_amazon_libro:  datos.linkAmazon,
       cupos_total:        datos.cuposTotal,
+      cantidad_paginas:   datos.cantidadPaginas,
       modalidad_lectura:  datos.modalidadLectura,
       plataformas_resena: datos.plataformasResena,
       tipo_colaboracion:  datos.tipoColaboracion,
@@ -2377,6 +2380,7 @@ async function precargarLibroEnCampana() {
     document.getElementById('nc-sinopsis').value     = '';
     document.getElementById('nc-link-portada').value = '';
     document.getElementById('nc-link-amazon').value  = '';
+    document.getElementById('nc-paginas').value      = '';
     _portadaPrecargadaCampana = null;
     if (previewPortada) previewPortada.innerHTML = '';
     await renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
