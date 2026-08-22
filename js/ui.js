@@ -258,7 +258,8 @@ function mostrarHeaderLogueado(usuario) {
  * Muestra el botón Ingresar, oculta el menú de usuario.
  */
 function mostrarHeaderDeslogueado() {
-  detenerNotificaciones(); 
+  detenerNotificaciones();
+  detenerBandejaSoporteUsuario();
   const btnLogin = document.getElementById('btn-login-header');
   if (btnLogin) btnLogin.style.display = 'inline-block';
 
@@ -479,6 +480,7 @@ function cambiarTab(tabClickeado, idContenido) {
  */
 function cerrarSesion() {
   detenerNotificaciones();
+  detenerBandejaSoporteUsuario();
   if (typeof _detenerPollingEventoGlobal === 'function') _detenerPollingEventoGlobal(); // ← LÍNEA NUEVA
   supabaseClient.auth.signOut(); // ← agregar esta línea
   if (typeof google !== 'undefined' && google.accounts) {

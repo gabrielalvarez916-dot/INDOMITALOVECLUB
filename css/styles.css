@@ -6153,3 +6153,115 @@ img { max-width: 100%; display: block; }
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
+
+/* ============================================================
+   soporte-usuario.css (agregado dentro de styles.css)
+   Canal de chat de soporte desde adentro de la app para el
+   usuario: menú del botón flotante, historial de tickets y
+   vista de chat por ticket. No modifica nada de lo existente.
+   ============================================================ */
+
+/* El botón flotante pasa a ser el ancla posicional del badge y el menú */
+#btn-soporte-flotante {
+  position: fixed; /* ya lo era: además de fijar el botón, sirve de containing block para el badge absoluto */
+}
+
+.soporte-menu {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  z-index: 251;
+  background: var(--blanco);
+  border-radius: var(--radio-grande);
+  box-shadow: var(--sombra-fuerte);
+  overflow: hidden;
+  min-width: 190px;
+}
+
+.soporte-menu.activo { display: flex; }
+
+.soporte-menu-opcion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--gris-borde);
+  cursor: pointer;
+  font-family: var(--fuente-texto);
+  font-size: 13px;
+  color: var(--gris-texto, #2A2A2A);
+  transition: var(--transicion);
+}
+
+.soporte-menu-opcion:last-child { border-bottom: none; }
+
+.soporte-menu-opcion:hover {
+  background: var(--crema-suave);
+}
+
+@media (max-width: 480px) {
+  .soporte-menu { bottom: 76px; right: 16px; }
+}
+
+/* ── Historial de tickets (reusa el look de .notif-item) ─── */
+.soporte-volver {
+  display: inline-block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--fuente-texto);
+  font-size: 12px;
+  color: var(--bordo);
+  padding: 0 0 14px;
+}
+
+.soporte-volver:hover { text-decoration: underline; }
+
+/* ── Hilo de chat de un ticket ───────────────────────────── */
+.soporte-hilo {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 14px;
+  padding-right: 4px;
+}
+
+.soporte-msg {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  max-width: 88%;
+}
+
+.soporte-msg-usuario {
+  background: var(--rosa-claro);
+  margin-left: auto;
+}
+
+.soporte-msg-admin {
+  background: var(--crema-suave);
+  margin-right: auto;
+}
+
+.soporte-msg-autor {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gris-suave);
+  margin-bottom: 4px;
+}
+
+.soporte-msg-cuerpo {
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: var(--gris-texto, #2A2A2A);
+}
+
+.soporte-msg-fecha {
+  font-size: 10px;
+  color: var(--gris-suave);
+  margin-top: 4px;
+}

@@ -1614,7 +1614,52 @@
 </div>
 
   <!-- Botón flotante de soporte -->
-<button id="btn-soporte-flotante" onclick="mostrarModal('modal-soporte')" title="Ayuda">💬</button>
+<button id="btn-soporte-flotante" onclick="toggleMenuSoporte()" title="Ayuda">
+  💬
+  <span id="soporte-badge" class="notif-badge" style="display:none;">0</span>
+</button>
+<div id="soporte-menu" class="soporte-menu">
+  <button type="button" class="soporte-menu-opcion" onclick="cerrarMenuSoporte(); mostrarModal('modal-soporte');">✉️ Enviar mensaje</button>
+  <button type="button" class="soporte-menu-opcion" onclick="cerrarMenuSoporte(); abrirHistorialSoporte();">🗂️ Ver mensajes</button>
+</div>
+
+<!-- Modal: historial de tickets de soporte (usuario) -->
+<div id="modal-historial-soporte" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">Tus mensajes</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div id="historial-soporte-lista">
+      <div class="cargando-container"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: detalle/chat de un ticket de soporte (usuario) -->
+<div id="modal-ticket-soporte-usuario" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="ticket-soporte-usuario-asunto">Ticket</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <button type="button" class="soporte-volver" onclick="volverAHistorialSoporte()">← Volver a tus mensajes</button>
+    <div id="ticket-soporte-usuario-hilo" class="soporte-hilo">
+      <div class="cargando-container"><div class="spinner"></div></div>
+    </div>
+    <div id="ticket-soporte-usuario-form">
+      <div class="form-grupo">
+        <textarea id="ticket-soporte-usuario-mensaje" class="form-textarea" rows="3" placeholder="Escribí tu respuesta..."></textarea>
+      </div>
+      <div id="ticket-soporte-usuario-error" class="mensaje-error" style="display:none;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" onclick="cerrarModales()">Cerrar</button>
+        <button type="button" class="btn-primario" id="ticket-soporte-usuario-btn-enviar" onclick="enviarRespuestaTicketUsuario()">Enviar</button>
+      </div>
+    </div>
+    <p id="ticket-soporte-usuario-cerrado-nota" class="form-info" style="display:none;">Este ticket está cerrado. Si necesitás algo más, envianos un mensaje nuevo desde "✉️ Enviar mensaje".</p>
+  </div>
+</div>
 
 <!-- Modal: soporte -->
 <div id="modal-soporte" class="modal">
@@ -2001,6 +2046,7 @@
 <script src="js/verificacion-seguidores.js"></script>
 <script src="js/visor.js"></script>
 <script src="js/soporte.js"></script>
+<script src="js/soporte-usuario.js"></script>
 <script src="js/denuncias.js"></script>
 <script src="js/faq-autor.js"></script>
 <script src="js/guia-resenador.js"></script>

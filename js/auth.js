@@ -197,6 +197,7 @@ async function completarLogin(usuario) {
 
   mostrarHeaderLogueado(usuario);
   iniciarNotificaciones();
+  iniciarBandejaSoporteUsuario();
   if (typeof inicializarEventos === 'function' && typeof _EventosState !== 'undefined') {
     _EventosState.promesaInit = inicializarEventos();
   }
@@ -299,6 +300,7 @@ async function verificarSesionActiva() {
 
   mostrarHeaderLogueado(perfil);
   iniciarNotificaciones();
+  iniciarBandejaSoporteUsuario();
   if (typeof inicializarEventos === 'function' && typeof _EventosState !== 'undefined') {
     _EventosState.promesaInit = inicializarEventos();
   }
