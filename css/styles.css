@@ -5488,6 +5488,30 @@ img { max-width: 100%; display: block; }
   height: 100%;
   object-fit: cover;
 }
+
+/* ── Mapa tipo "cartas" — mismo tamaño de contenedor que el mapa de nodos, para que el fondo cubra toda la superficie ── */
+.evento-mapa-cartas-contenedor {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 768px) {
+  .evento-mapa-cartas-contenedor {
+    aspect-ratio: auto;
+    min-height: 640px;
+  }
+}
+@media (max-width: 480px) {
+  .evento-mapa-cartas-contenedor {
+    min-height: 560px;
+  }
+}
 .evento-mapa-nodos { position: absolute; inset: 0; }
 .evento-mapa-nodo {
   position: absolute;

@@ -566,13 +566,12 @@ function _renderMapaCartas(progreso, fondo, imagenFrente) {
     `;
   }).join('');
 
-  const estiloFondo = fondo
-    ? `background-image:linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url('${fondo}'); background-size:cover; background-position:center; border-radius:16px;`
-    : '';
-
   return `
-    <div class="evento-mapa-cartas-fila" style="position:relative; display:grid; grid-template-columns:repeat(2, 1fr); justify-items:center; gap:20px 16px; max-width:360px; margin:0 auto; padding:18px 10px; ${estiloFondo}">
-      ${cartas}
+    <div class="evento-mapa-cartas-contenedor">
+      ${fondo ? `<img class="evento-mapa-fondo" src="${fondo}" alt="" />` : ''}
+      <div class="evento-mapa-cartas-fila" style="position:relative; z-index:1; display:grid; grid-template-columns:repeat(2, 1fr); justify-items:center; gap:20px 16px; max-width:360px; padding:18px 10px;">
+        ${cartas}
+      </div>
     </div>
   `;
 }
