@@ -179,7 +179,6 @@ EventosJuegos[1] = _iniciarJuego1;
 // ────────────────────────────────────────────────────────────
 
 const _DURACION_FASE_JUEGO2_MS = 5000; // tiempo de cada fase (memorización y mezcla)
-const _LETRAS_JUEGO2 = ['A', 'B', 'C', 'D'];
 const _INTENTOS_JUEGO2 = 4;
 
 let _estadoJuego2 = null;
@@ -218,7 +217,7 @@ async function _jugarRondaJuego2() {
 
   footer.innerHTML = '';
 
-  // FASE A: memorización, en el orden original (posiciones 1 a 4)
+  // FASE A: memorización, en el orden correcto (posiciones 1 a 4)
   body.innerHTML = `
     <p style="text-align:center; font-weight:600; margin-bottom:14px;">Memorizá el orden…</p>
     <div class="juego-tapas-fila" style="display:flex; gap:10px; justify-content:center;">
@@ -233,29 +232,24 @@ async function _jugarRondaJuego2() {
   `;
   await _countdownJuego2('juego2-countdown-a', _DURACION_FASE_JUEGO2_MS);
 
-  // FASE B: se mezclan y aparece la letra de cada una según dónde cayó
+  // FASE B: se mezclan (sin ninguna marca de posición) durante un instante,
+  // y después pasa directo a la pantalla de armar el orden arrastrando.
   const ordenMezclado = _mezclarArrayJuego(libros.map((_, i) => i)); // array de índices originales, en el nuevo orden visual
   body.innerHTML = `
-    <p style="text-align:center; font-weight:600; margin-bottom:14px;">¡Se mezclaron! Fijate bien dónde cayó cada una…</p>
+    <p style="text-align:center; font-weight:600; margin-bottom:14px;">¡Se mezclaron!…</p>
     <div class="juego-tapas-fila" style="display:flex; gap:10px; justify-content:center;">
-      ${ordenMezclado.map((idxOriginal, k) => `
-        <div style="text-align:center;">
-          <p style="font-size:16px; font-weight:700; color:var(--bordo); margin-bottom:4px;">${_LETRAS_JUEGO2[k]}</p>
-          <img src="${_escaparHtml(libros[idxOriginal].link_portada)}" alt="" style="width:80px; height:120px; object-fit:cover; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" />
-        </div>
+      ${ordenMezclado.map(idxOriginal => `
+        <img src="${_escaparHtml(libros[idxOriginal].link_portada)}" alt="" style="width:80px; height:120px; object-fit:cover; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" />
       `).join('')}
     </div>
     <div id="juego2-countdown-b" style="text-align:center; margin-top:14px; font-size:13px; color:var(--gris-suave);"></div>
   `;
   await _countdownJuego2('juego2-countdown-b', _DURACION_FASE_JUEGO2_MS);
 
-  // Mapa: para cada posición ORIGINAL (0 a 3), qué letra le correspondió
-  const letraDePosicionOriginal = [];
-  ordenMezclado.forEach((idxOriginal, k) => {
-    letraDePosicionOriginal[idxOriginal] = _LETRAS_JUEGO2[k];
-  });
+  _estadoJuego2.libros = libros; // índice original i = posición correcta de libros[i]
+  _estadoJuego2.ordenActual = ordenMezclado; // ordenActual[slot] = índice original que está hoy en ese slot
 
-  _mostrarPreguntaJuego2(letraDePosicionOriginal);
+  _renderTableroJuego2();
 }
 
 function _countdownJuego2(idContenedor, duracionMs) {
@@ -275,43 +269,116 @@ function _countdownJuego2(idContenedor, duracionMs) {
   });
 }
 
-function _mostrarPreguntaJuego2(letraDePosicionOriginal) {
+/**
+ * Dibuja las 4 tapas en su orden actual (_estadoJuego2.ordenActual), cada
+ * una arrastrable con mouse o dedo. Arrastrar una tapa sobre otra las
+ * intercambia de lugar. El objetivo es dejarlas en el orden original.
+ */
+function _renderTableroJuego2() {
   const body = document.getElementById('juego-evento-body');
   const footer = document.getElementById('juego-evento-footer');
-  if (!body || !footer) return;
+  if (!body || !footer || !_estadoJuego2) return;
+
+  const { libros, ordenActual, intentosRestantes } = _estadoJuego2;
 
   body.innerHTML = `
-    <p style="text-align:center; font-weight:600; margin-bottom:6px;">¿Cuál es el orden correcto?</p>
-    <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:12px;">Intentos restantes: <strong>${_estadoJuego2.intentosRestantes}</strong></p>
-    <div id="juego2-respuestas" style="display:flex; flex-direction:column; gap:10px;">
-      ${[0, 1, 2, 3].map(i => `
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-weight:600; min-width:70px;">Posición ${i + 1}</span>
-          <select class="form-input" id="juego2-select-${i}" style="flex:1;">
-            <option value="">Elegí una letra</option>
-            ${_LETRAS_JUEGO2.map(letra => `<option value="${letra}">${letra}</option>`).join('')}
-          </select>
-        </div>
+    <p style="text-align:center; font-weight:600; margin-bottom:6px;">Arrastrá las tapas para volver a dejarlas en el orden original</p>
+    <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:12px;">Intentos restantes: <strong>${intentosRestantes}</strong></p>
+    <div id="juego2-tablero" class="juego-tapas-fila" style="display:flex; gap:10px; justify-content:center;">
+      ${ordenActual.map((idxOriginal, slot) => `
+        <img src="${_escaparHtml(libros[idxOriginal].link_portada)}" alt=""
+          class="juego2-carta-drag" draggable="true" data-slot="${slot}"
+          ondragstart="_dragJuego2Start(event, ${slot})"
+          ondragover="_dragJuego2Over(event)"
+          ondrop="_dragJuego2Drop(event, ${slot})"
+          ondragend="_dragJuego2End(event)"
+          style="width:80px; height:120px; object-fit:cover; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.15); cursor:grab; touch-action:none;" />
       `).join('')}
     </div>
     <p id="juego2-feedback" style="text-align:center; margin-top:14px; font-size:14px;"></p>
   `;
 
+  // Soporte táctil: los eventos "drag" nativos no disparan en la mayoría
+  // de los navegadores móviles, así que se agrega arrastre por punteros
+  // (mouse y dedo) que intercambia la tapa soltada con la que tiene debajo.
+  const tablero = document.getElementById('juego2-tablero');
+  if (tablero) {
+    tablero.querySelectorAll('.juego2-carta-drag').forEach(carta => {
+      carta.addEventListener('pointerdown', _dragJuego2PointerDown);
+    });
+  }
+
   footer.innerHTML = `
-    <button type="button" class="btn-primario" onclick="_confirmarJuego2(${JSON.stringify(letraDePosicionOriginal)})">Confirmar</button>
+    <button type="button" class="btn-primario" onclick="_confirmarJuego2()">Confirmar orden</button>
   `;
 }
 
-async function _confirmarJuego2(letraDePosicionOriginal) {
+function _intercambiarSlotsJuego2(slotA, slotB) {
+  if (slotA === slotB || !_estadoJuego2) return;
+  const { ordenActual } = _estadoJuego2;
+  [ordenActual[slotA], ordenActual[slotB]] = [ordenActual[slotB], ordenActual[slotA]];
+  _renderTableroJuego2();
+}
+
+// ── Drag & drop nativo (desktop) ──
+let _juego2SlotArrastrado = null;
+
+function _dragJuego2Start(e, slot) {
+  _juego2SlotArrastrado = slot;
+  e.dataTransfer.effectAllowed = 'move';
+}
+function _dragJuego2Over(e) {
+  e.preventDefault();
+}
+function _dragJuego2Drop(e, slotDestino) {
+  e.preventDefault();
+  if (_juego2SlotArrastrado === null) return;
+  _intercambiarSlotsJuego2(_juego2SlotArrastrado, slotDestino);
+  _juego2SlotArrastrado = null;
+}
+function _dragJuego2End() {
+  _juego2SlotArrastrado = null;
+}
+
+// ── Arrastre por puntero (funciona también con el dedo en el celular) ──
+function _dragJuego2PointerDown(e) {
+  const origen = e.currentTarget;
+  const slotOrigen = parseInt(origen.dataset.slot, 10);
+  origen.setPointerCapture(e.pointerId);
+  origen.style.zIndex = '5';
+  origen.style.cursor = 'grabbing';
+  const startX = e.clientX;
+  const startY = e.clientY;
+
+  const mover = (ev) => {
+    origen.style.transform = `translate(${ev.clientX - startX}px, ${ev.clientY - startY}px)`;
+  };
+  const soltar = (ev) => {
+    origen.removeEventListener('pointermove', mover);
+    origen.removeEventListener('pointerup', soltar);
+    origen.style.transform = '';
+    origen.style.zIndex = '';
+    origen.style.cursor = 'grab';
+
+    origen.style.pointerEvents = 'none';
+    const destino = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.juego2-carta-drag');
+    origen.style.pointerEvents = '';
+
+    if (destino) {
+      const slotDestino = parseInt(destino.dataset.slot, 10);
+      _intercambiarSlotsJuego2(slotOrigen, slotDestino);
+    }
+  };
+
+  origen.addEventListener('pointermove', mover);
+  origen.addEventListener('pointerup', soltar);
+}
+
+async function _confirmarJuego2() {
   const feedback = document.getElementById('juego2-feedback');
-  const respuestas = [0, 1, 2, 3].map(i => document.getElementById(`juego2-select-${i}`)?.value);
+  if (!_estadoJuego2) return;
 
-  if (respuestas.some(r => !r)) {
-    if (feedback) feedback.textContent = 'Completá las 4 posiciones antes de confirmar.';
-    return;
-  }
-
-  const esCorrecto = respuestas.every((letra, i) => letra === letraDePosicionOriginal[i]);
+  const esCorrecto = _estadoJuego2.ordenActual.every((idxOriginal, slot) => idxOriginal === slot);
 
   const footer = document.getElementById('juego-evento-footer');
   if (footer) footer.innerHTML = '';
