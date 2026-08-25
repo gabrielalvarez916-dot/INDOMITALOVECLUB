@@ -993,7 +993,7 @@ async function cargarEstadisticasAdmin() {
 
     <div class="form-separador">Ratio de incumplimiento por campaña</div>
     <p style="font-size:12px; color:#888; margin:0 0 12px;">
-      Por cada campaña: de las postulaciones aprobadas cuyo plazo ya venció, qué % nunca entregó reseña (incumplidas / vencidas). Ordenado de mayor a menor ratio, para detectar primero las campañas que más están sufriendo incumplimientos. Ratio en rojo a partir de 60%. Las campañas sin postulaciones vencidas todavía muestran 0% (no significa que estén bien, es que aún no hay base para medir).
+      Por cada campaña: de las postulaciones aprobadas que ya tienen un desenlace conocido (se entregó la reseña, en cualquier momento, o venció el plazo sin entregarla), qué % nunca entregó (incumplidas / (entregadas + incumplidas)). Las que todavía están en curso y sin vencer no suman ni restan. Ordenado de mayor a menor ratio, para detectar primero las campañas que más están sufriendo incumplimientos. Ratio en rojo a partir de 60%.
     </p>
     ${ratioPorCampaña.length === 0
       ? `<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay campañas con postulaciones aprobadas.</p></div>`
@@ -1102,7 +1102,7 @@ function actualizarActividadAdmin() {
  * Construye la fila de una campaña para la tabla de ratio de entrega.
  *
  * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, vencidas, entregadas, incumplidas, ratio }
- *   ratio = % de incumplimiento (incumplidas / vencidas). Se resalta en rojo a partir de 60%.
+ *   ratio = % de incumplimiento = incumplidas / (entregadas + incumplidas). Se resalta en rojo a partir de 60%.
  * @returns {string} HTML de la fila
  */
 function construirFilaRatioCampañaAdmin(c) {
