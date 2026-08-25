@@ -991,9 +991,9 @@ async function cargarEstadisticasAdmin() {
       </div>
     </div>
 
-    <div class="form-separador">Ratio de entrega por campaña</div>
+    <div class="form-separador">Ratio de incumplimiento por campaña</div>
     <p style="font-size:12px; color:#888; margin:0 0 12px;">
-      Por cada campaña: cuántas postulaciones aprobadas (incluye abandonadas) terminaron en una reseña entregada, y cuántas ya están vencidas (deadline pasado, sin reseña). Ordenado de menor a mayor ratio, para detectar rápido las campañas con peor cumplimiento.
+      Por cada campaña: de las postulaciones aprobadas cuyo plazo ya venció, qué % nunca entregó reseña (incumplidas / vencidas). Ordenado de mayor a menor ratio, para detectar primero las campañas que más están sufriendo incumplimientos. Ratio en rojo a partir de 60%. Las campañas sin postulaciones vencidas todavía muestran 0% (no significa que estén bien, es que aún no hay base para medir).
     </p>
     ${ratioPorCampaña.length === 0
       ? `<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay campañas con postulaciones aprobadas.</p></div>`
@@ -1007,7 +1007,7 @@ async function cargarEstadisticasAdmin() {
               <th>Vencidas</th>
               <th>Entregadas</th>
               <th>Incumplidas</th>
-              <th>Ratio</th>
+              <th>Ratio incumplimiento</th>
             </tr>
           </thead>
           <tbody>
@@ -1102,6 +1102,7 @@ function actualizarActividadAdmin() {
  * Construye la fila de una campaña para la tabla de ratio de entrega.
  *
  * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, vencidas, entregadas, incumplidas, ratio }
+ *   ratio = % de incumplimiento (incumplidas / vencidas). Se resalta en rojo a partir de 60%.
  * @returns {string} HTML de la fila
  */
 function construirFilaRatioCampañaAdmin(c) {
@@ -1113,7 +1114,7 @@ function construirFilaRatioCampañaAdmin(c) {
       <td style="${c.vencidas > 0 ? 'color:#c0392b;' : ''}">${c.vencidas}</td>
       <td>${c.entregadas}</td>
       <td style="${c.incumplidas > 0 ? 'color:#c0392b;' : ''}">${c.incumplidas}</td>
-      <td>${c.ratio}%</td>
+      <td style="${c.ratio >= 60 ? 'color:#c0392b; font-weight:600;' : ''}">${c.ratio}%</td>
     </tr>
   `;
 }
