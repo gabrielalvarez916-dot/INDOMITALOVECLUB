@@ -523,9 +523,20 @@ function _renderMapaCartas(progreso, fondo, imagenFrente) {
     const yaRevelada = juegoGanado || reto.completo;
     const puedeJugar = reto.desbloqueado && subRetoJuego && !juegoGanado && !!EventosJuegos[reto.orden];
 
+    // El reto real (no el juego) es siempre subRetos[1]; se usa tanto para
+    // mostrar lo que falta como, una vez completo, lo que se cumplió — así
+    // la carta nunca queda "vacía" (solo un ✓) y siempre se puede leer qué
+    // reto fue el que se resolvió.
+    const retoReal = (reto.subRetos || [])[1];
+
     let contenidoFrente; // lo que se ve del lado revelado
     if (reto.completo) {
-      contenidoFrente = `<span style="font-size:60px; color:#3a9d5c;">✓</span>`;
+      contenidoFrente = `
+        <div style="padding:14px; text-align:center;">
+          <span style="font-size:34px; display:block; margin-bottom:8px; color:var(--bordo, #8B1A2B);">✓</span>
+          ${retoReal ? `<span style="font-size:15px; line-height:1.3; color:var(--gris-texto, #2A2A2A); font-weight:600;">${_escaparHtml(retoReal.descripcion)}</span>` : ''}
+        </div>
+      `;
     } else if (juegoGanado && retoPendiente) {
       contenidoFrente = `
         <div style="padding:14px; text-align:center;">
@@ -534,7 +545,7 @@ function _renderMapaCartas(progreso, fondo, imagenFrente) {
         </div>
       `;
     } else {
-      contenidoFrente = `<span style="font-size:34px; font-weight:700; color:var(--evento-color, #e05a8a);">✓</span>`;
+      contenidoFrente = `<span style="font-size:34px; font-weight:700; color:var(--gris-texto, #2A2A2A);">✓</span>`;
     }
 
     // La última carta (5ta) ocupa las dos columnas y queda centrada abajo.
