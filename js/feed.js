@@ -436,7 +436,6 @@ function renderizarFeed(campañas) {
 function filtrarFeed() {
   const textoBuscar = (document.getElementById('filtro-buscar')?.value || '').toLowerCase().trim();
   const idGeneroFiltro = document.getElementById('filtro-genero')?.value || '';
-  const soloNovedades = document.getElementById('filtro-novedad')?.checked || false;
 
   let campañasFiltradas = _campañasTodas;
 
@@ -447,14 +446,12 @@ function filtrarFeed() {
     );
   }
 
-  if (idGeneroFiltro) {
+  if (idGeneroFiltro === 'novedad') {
+    campañasFiltradas = campañasFiltradas.filter(c => c.esNovedad);
+  } else if (idGeneroFiltro) {
     campañasFiltradas = campañasFiltradas.filter(c =>
       c.idGenero === parseInt(idGeneroFiltro, 10)
     );
-  }
-
-  if (soloNovedades) {
-    campañasFiltradas = campañasFiltradas.filter(c => c.esNovedad);
   }
 
   renderizarFeed(campañasFiltradas);
@@ -478,6 +475,7 @@ async function poblarFiltroGenero() {
 
   select.innerHTML = `
     <option value="">Todos los géneros</option>
+    <option value="novedad">✨ Novedades</option>
     ${(data || []).map(g => `<option value="${g.id}">${g.nombre}</option>`).join('')}
   `;
 }
