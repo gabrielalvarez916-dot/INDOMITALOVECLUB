@@ -533,15 +533,15 @@ function _renderMapaCartas(progreso, fondo, imagenFrente) {
     if (reto.completo) {
       contenidoFrente = `
         <div style="padding:14px; text-align:center;">
-          <span style="font-size:34px; display:block; margin-bottom:8px; color:var(--bordo, #8B1A2B);">✓</span>
-          ${retoReal ? `<span style="font-size:15px; line-height:1.3; color:var(--gris-texto, #2A2A2A); font-weight:600;">${_escaparHtml(retoReal.descripcion)}</span>` : ''}
+          <span style="font-size:34px; display:block; margin-bottom:8px; color:#1A1A1A;">✓</span>
+          ${retoReal ? `<span style="font-size:15px; line-height:1.3; color:#1A1A1A; font-weight:600;">${_escaparHtml(retoReal.descripcion)}</span>` : ''}
         </div>
       `;
     } else if (juegoGanado && retoPendiente) {
       contenidoFrente = `
         <div style="padding:14px; text-align:center;">
           <span style="font-size:34px; display:block; margin-bottom:8px;">🎯</span>
-          <span style="font-size:15px; line-height:1.3; color:var(--gris-texto, #2A2A2A); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
+          <span style="font-size:15px; line-height:1.3; color:#1A1A1A; font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
         </div>
       `;
     } else {

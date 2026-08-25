@@ -209,7 +209,7 @@ async function _mostrarRetoTrasJuego(ordenReto) {
       <p style="font-weight:600; margin-bottom:10px;">¡Ganaste el juego!</p>
       ${retoReal.completo ? `
         <p>Y ya cumpliste el reto real de esta etapa:</p>
-        <p style="margin-top:8px; font-weight:600; color:var(--gris-texto, #2A2A2A);">✓ ${_escaparHtml(retoReal.descripcion)}</p>
+        <p style="margin-top:8px; font-weight:600; color:#1A1A1A;">✓ ${_escaparHtml(retoReal.descripcion)}</p>
         <p style="margin-top:10px; font-size:14px;">¡Etapa completa! 🎉</p>
       ` : `
         <p>Ahora te falta este reto para completar la etapa:</p>

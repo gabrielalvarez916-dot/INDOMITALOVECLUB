@@ -4305,8 +4305,8 @@ img { max-width: 100%; display: block; }
 
 /* ── Historia / texto introductorio del evento ────────────── */
 .evento-historia {
-  background: var(--rosa-claro);
-  border: 1px solid var(--rosa);
+  background: rgba(var(--evento-color-rgb, 224, 90, 138), 0.12);
+  border: 1px solid var(--evento-color, var(--rosa));
   border-radius: var(--radio-grande);
   padding: 20px 24px;
   margin-bottom: 24px;
@@ -4317,7 +4317,7 @@ img { max-width: 100%; display: block; }
   font-size: 17px;
   font-weight: 700;
   font-style: italic;
-  color: var(--bordo);
+  color: var(--evento-color, var(--bordo));
   margin-bottom: 8px;
 }
 
@@ -4379,7 +4379,7 @@ img { max-width: 100%; display: block; }
   font-size: 17px;
   font-weight: 700;
   font-style: italic;
-  color: var(--bordo-oscuro);
+  color: #1A1A1A;
 }
 
 .evento-reto-puntos {
@@ -4432,12 +4432,12 @@ img { max-width: 100%; display: block; }
   color: var(--gris-suave);
 }
 
-.evento-subreto-desc { flex: 1; }
+.evento-subreto-desc { flex: 1; color: #1A1A1A; }
 
 .evento-subreto-progreso {
   font-size: 12px;
   font-weight: 700;
-  color: var(--gris-suave);
+  color: #1A1A1A;
   white-space: nowrap;
 }
 
@@ -4458,7 +4458,7 @@ img { max-width: 100%; display: block; }
 }
 
 .evento-subreto--completo .evento-subreto-desc {
-  color: var(--gris-suave);
+  color: #1A1A1A;
   text-decoration: line-through;
 }
 
