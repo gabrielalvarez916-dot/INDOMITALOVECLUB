@@ -541,7 +541,7 @@ function _renderMapaCartas(progreso, fondo, imagenFrente) {
       contenidoFrente = `
         <div style="padding:14px; text-align:center;">
           <span style="font-size:34px; display:block; margin-bottom:8px;">🎯</span>
-          <span style="font-size:15px; line-height:1.3; color:var(--evento-color, #e05a8a); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
+          <span style="font-size:15px; line-height:1.3; color:var(--gris-texto, #2A2A2A); font-weight:600;">${_escaparHtml(retoPendiente.descripcion)}</span>
         </div>
       `;
     } else {
