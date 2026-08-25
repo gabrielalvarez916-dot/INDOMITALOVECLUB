@@ -1004,8 +1004,9 @@ async function cargarEstadisticasAdmin() {
               <th>Libro</th>
               <th>Autor</th>
               <th>Aprobadas</th>
-              <th>Entregadas</th>
               <th>Vencidas</th>
+              <th>Entregadas</th>
+              <th>Incumplidas</th>
               <th>Ratio</th>
             </tr>
           </thead>
@@ -1100,7 +1101,7 @@ function actualizarActividadAdmin() {
 /**
  * Construye la fila de una campaña para la tabla de ratio de entrega.
  *
- * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, entregadas, vencidas, ratio }
+ * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, vencidas, entregadas, incumplidas, ratio }
  * @returns {string} HTML de la fila
  */
 function construirFilaRatioCampañaAdmin(c) {
@@ -1109,8 +1110,9 @@ function construirFilaRatioCampañaAdmin(c) {
       <td>${c.nombre_libro}</td>
       <td style="font-size:12px;">${c.nombre_autor}</td>
       <td>${c.aprobadas}</td>
-      <td>${c.entregadas}</td>
       <td style="${c.vencidas > 0 ? 'color:#c0392b;' : ''}">${c.vencidas}</td>
+      <td>${c.entregadas}</td>
+      <td style="${c.incumplidas > 0 ? 'color:#c0392b;' : ''}">${c.incumplidas}</td>
       <td>${c.ratio}%</td>
     </tr>
   `;
