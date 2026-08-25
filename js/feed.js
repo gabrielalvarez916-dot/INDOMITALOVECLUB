@@ -436,6 +436,7 @@ function renderizarFeed(campañas) {
 function filtrarFeed() {
   const textoBuscar = (document.getElementById('filtro-buscar')?.value || '').toLowerCase().trim();
   const idGeneroFiltro = document.getElementById('filtro-genero')?.value || '';
+  const soloNovedades = document.getElementById('filtro-novedad')?.checked || false;
 
   let campañasFiltradas = _campañasTodas;
 
@@ -450,6 +451,10 @@ function filtrarFeed() {
     campañasFiltradas = campañasFiltradas.filter(c =>
       c.idGenero === parseInt(idGeneroFiltro, 10)
     );
+  }
+
+  if (soloNovedades) {
+    campañasFiltradas = campañasFiltradas.filter(c => c.esNovedad);
   }
 
   renderizarFeed(campañasFiltradas);
