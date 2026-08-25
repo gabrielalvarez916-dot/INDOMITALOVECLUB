@@ -141,7 +141,7 @@ async function _responderJuego1(respuesta, correcta) {
     }
 
     setTimeout(() => {
-      cerrarModales();
+      _mostrarRetoTrasJuego(1);
     }, 1200);
   } else {
     _estadoJuego1.intentosRestantes -= 1;
@@ -166,6 +166,59 @@ async function _responderJuego1(respuesta, correcta) {
 // atributo onclick="..." armado con template literals.
 function _escaparAtributoJs(str) {
   return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/**
+ * Se llama SIEMPRE al ganar cualquier minijuego de evento (juego1 a juego5),
+ * en vez de cerrar el modal directamente. Muestra el reto real de esa etapa
+ * (el subReto que no es el juego) para que quede visible que existe, aunque
+ * ya estuviera cumplido de antes por otra actividad — así nunca "desaparece"
+ * sin que el usuario lo vea. Recién al tocar "Entendido" se cierra el modal
+ * (con _cerrarModalJuegoEvento, que refresca el progreso y re-renderiza).
+ */
+async function _mostrarRetoTrasJuego(ordenReto) {
+  const titulo = document.getElementById('juego-evento-titulo');
+  const body = document.getElementById('juego-evento-body');
+  const footer = document.getElementById('juego-evento-footer');
+  if (!titulo || !body || !footer) {
+    _cerrarModalJuegoEvento();
+    return;
+  }
+
+  footer.innerHTML = '';
+  body.innerHTML = `
+    <div class="juego-evento-cargando" style="text-align:center; padding:30px 0;">
+      <div class="spinner"></div>
+    </div>
+  `;
+
+  await _refrescarProgresoEventoGlobal();
+  const progreso = _EventosState.progreso;
+  const reto = progreso?.retos?.find(r => r.orden === ordenReto);
+  const retoReal = reto?.subRetos?.[1]; // subRetos[0] es siempre el juego
+
+  if (!reto || !retoReal) {
+    _cerrarModalJuegoEvento();
+    return;
+  }
+
+  titulo.textContent = reto.nombre;
+  body.innerHTML = `
+    <div style="text-align:center; padding:6px 0 10px;">
+      <p style="font-size:38px; margin-bottom:6px;">🌸</p>
+      <p style="font-weight:600; margin-bottom:10px;">¡Ganaste el juego!</p>
+      ${retoReal.completo ? `
+        <p>Y ya cumpliste el reto real de esta etapa:</p>
+        <p style="margin-top:8px; font-weight:600; color:var(--evento-color, #e05a8a);">✓ ${_escaparHtml(retoReal.descripcion)}</p>
+        <p style="margin-top:10px; font-size:14px;">¡Etapa completa! 🎉</p>
+      ` : `
+        <p>Ahora te falta este reto para completar la etapa:</p>
+        <p style="margin-top:8px; font-weight:600;">${_escaparHtml(retoReal.descripcion)}</p>
+        <p style="margin-top:8px; font-size:13px; color:var(--gris-suave);">${retoReal.cantidadActual}/${retoReal.meta}</p>
+      `}
+    </div>
+  `;
+  footer.innerHTML = `<button type="button" class="btn-primario" onclick="_cerrarModalJuegoEvento()">Entendido</button>`;
 }
 
 EventosJuegos[1] = _iniciarJuego1;
@@ -391,7 +444,7 @@ async function _confirmarJuego2() {
     }
 
     setTimeout(() => {
-      cerrarModales();
+      _mostrarRetoTrasJuego(2);
     }, 1200);
   } else {
     _estadoJuego2.intentosRestantes -= 1;
@@ -535,7 +588,7 @@ async function _voltearCartaJuego3(idx) {
         await registrarAccionEventoSiCorresponde('juego3_completado');
       }
       setTimeout(() => {
-        cerrarModales();
+        _mostrarRetoTrasJuego(3);
       }, 1200);
       return;
     }
@@ -778,7 +831,7 @@ async function _resolverSoltadaTropeJuego4(idx, idCampanaDestino) {
         await registrarAccionEventoSiCorresponde('juego4_completado');
       }
       setTimeout(() => {
-        cerrarModales();
+        _mostrarRetoTrasJuego(4);
       }, 1200);
       return;
     }
@@ -934,7 +987,7 @@ async function _responderJuego5(respuesta, correcta) {
         await registrarAccionEventoSiCorresponde('juego5_completado');
       }
       setTimeout(() => {
-        cerrarModales();
+        _mostrarRetoTrasJuego(5);
       }, 1200);
       return;
     }
