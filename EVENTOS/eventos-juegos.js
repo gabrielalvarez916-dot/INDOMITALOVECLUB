@@ -423,7 +423,7 @@ EventosJuegos[2] = _iniciarJuego2;
 // usuario, sin persistencia entre sesiones).
 // ────────────────────────────────────────────────────────────
 
-const _INTENTOS_JUEGO3 = 4;
+const _INTENTOS_JUEGO3 = 8;
 
 // Estado del juego en curso (se recrea en cada _jugarRondaJuego3)
 let _estadoJuego3 = null;
