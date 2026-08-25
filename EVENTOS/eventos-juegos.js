@@ -287,7 +287,10 @@ async function _jugarRondaJuego2() {
 
   // FASE B: se mezclan (sin ninguna marca de posición) durante un instante,
   // y después pasa directo a la pantalla de armar el orden arrastrando.
-  const ordenMezclado = _mezclarArrayJuego(libros.map((_, i) => i)); // array de índices originales, en el nuevo orden visual
+  let ordenMezclado;
+  do {
+    ordenMezclado = _mezclarArrayJuego(libros.map((_, i) => i));
+  } while (ordenMezclado.every((v, i) => v === i)); // array de índices originales, en el nuevo orden visual
   body.innerHTML = `
     <p style="text-align:center; font-weight:600; margin-bottom:14px;">¡Se mezclaron!…</p>
     <div class="juego-tapas-fila" style="display:flex; gap:10px; justify-content:center;">
