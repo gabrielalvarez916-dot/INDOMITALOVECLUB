@@ -679,6 +679,7 @@ function _renderTableroJuego4() {
     <div class="juego4-portadas" style="display:flex; gap:20px; justify-content:center; margin-bottom:18px;">
       ${portadas.map(p => `
         <div class="juego4-portada-drop"
+             data-campana="${p.id_campana}"
              ondragover="event.preventDefault()"
              ondrop="_soltarTropeJuego4(event, '${p.id_campana}')"
              style="text-align:center; width:110px;">
@@ -695,22 +696,72 @@ function _renderTableroJuego4() {
       ${tropes.map((t, idx) => t.colocado ? '' : `
         <div class="juego4-trope-chip"
              draggable="true"
+             data-idx="${idx}"
              ondragstart="event.dataTransfer.setData('text/plain', '${idx}')"
-             style="padding:8px 14px; border-radius:20px; background:var(--rosa-suave, #f7d9e3); border:1px solid var(--bordo); font-size:13px; cursor:grab;">
+             style="padding:8px 14px; border-radius:20px; background:var(--rosa-suave, #f7d9e3); border:1px solid var(--bordo); font-size:13px; cursor:grab; touch-action:none;">
           ${_escaparHtml(t.nombre)}
         </div>
       `).join('')}
     </div>
     <p id="juego4-feedback" style="text-align:center; margin-top:14px; font-size:14px;"></p>
   `;
+
+  // Soporte táctil: igual que en el juego 2, los eventos "drag" nativos
+  // no disparan en la mayoría de los navegadores móviles, así que se
+  // agrega arrastre por punteros (mouse y dedo) para soltar el trope
+  // sobre la portada correspondiente.
+  const pool = document.getElementById('juego4-pool');
+  if (pool) {
+    pool.querySelectorAll('.juego4-trope-chip').forEach(chip => {
+      chip.addEventListener('pointerdown', _dragJuego4PointerDown);
+    });
+  }
+}
+
+// ── Arrastre por puntero (funciona también con el dedo en el celular) ──
+function _dragJuego4PointerDown(e) {
+  const origen = e.currentTarget;
+  const idx = parseInt(origen.dataset.idx, 10);
+  origen.setPointerCapture(e.pointerId);
+  origen.style.zIndex = '5';
+  origen.style.position = 'relative';
+  origen.style.cursor = 'grabbing';
+  const startX = e.clientX;
+  const startY = e.clientY;
+
+  const mover = (ev) => {
+    origen.style.transform = `translate(${ev.clientX - startX}px, ${ev.clientY - startY}px)`;
+  };
+  const soltar = (ev) => {
+    origen.removeEventListener('pointermove', mover);
+    origen.removeEventListener('pointerup', soltar);
+    origen.style.transform = '';
+    origen.style.zIndex = '';
+    origen.style.cursor = 'grab';
+
+    origen.style.pointerEvents = 'none';
+    const destino = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.juego4-portada-drop');
+    origen.style.pointerEvents = '';
+
+    if (destino) {
+      _resolverSoltadaTropeJuego4(idx, destino.dataset.campana);
+    }
+  };
+
+  origen.addEventListener('pointermove', mover);
+  origen.addEventListener('pointerup', soltar);
 }
 
 async function _soltarTropeJuego4(event, idCampanaDestino) {
   event.preventDefault();
+  const idx = parseInt(event.dataTransfer.getData('text/plain'), 10);
+  await _resolverSoltadaTropeJuego4(idx, idCampanaDestino);
+}
+
+async function _resolverSoltadaTropeJuego4(idx, idCampanaDestino) {
   const estado = _estadoJuego4;
   if (!estado) return;
 
-  const idx = parseInt(event.dataTransfer.getData('text/plain'), 10);
   const trope = estado.tropes[idx];
   if (!trope || trope.colocado) return;
 
