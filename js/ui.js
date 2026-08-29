@@ -467,6 +467,16 @@ function cambiarTab(tabClickeado, idContenido) {
   if (contenidoObjetivo) {
     contenidoObjetivo.classList.add('activo');
   }
+
+  // El bloque con banners (.panel-layout) no es un tab-contenido, así que
+  // queda siempre visible salvo que lo ocultemos a mano al entrar a
+  // "Mi ranking" (que ahora vive fuera de ese bloque, a ancho completo).
+  if (panelPadre) {
+    const panelLayout = panelPadre.querySelector('.panel-layout');
+    if (panelLayout) {
+      panelLayout.style.display = (idContenido === 'tab-ranking') ? 'none' : '';
+    }
+  }
 }
 
 
