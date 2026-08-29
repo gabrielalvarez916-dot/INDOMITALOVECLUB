@@ -3597,7 +3597,7 @@ img { max-width: 100%; display: block; }
 
 .banner-lateral {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 9 / 16;
   border-radius: 12px;
   overflow: hidden;
   background: var(--crema);

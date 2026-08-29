@@ -75,7 +75,7 @@ function renderizarFormBanner() {
         <label class="form-label">Ubicación</label>
         <select id="banner-ubicacion" class="form-input" onchange="_actualizarHintBanner()">
           <option value="feed">Feed (banner ancho arriba de todo)</option>
-          <option value="panel_resenador">Panel del reseñador (columna lateral, formato post)</option>
+          <option value="panel_resenador">Panel del reseñador (columna lateral, formato historia)</option>
         </select>
       </div>
       <div class="form-grupo" id="banner-grupo-slot" style="display:none;">
@@ -165,7 +165,7 @@ function _actualizarHintBanner() {
 
   if (grupoSlot) grupoSlot.style.display = ubicacion === 'panel_resenador' ? 'block' : 'none';
 
-  const medida = ubicacion === 'panel_resenador' ? '1080x1350px (formato post, vertical 4:5)' : '1200x300px';
+  const medida = ubicacion === 'panel_resenador' ? '1080x1920px (formato historia, vertical 9:16)' : '1200x300px';
 
   if (tipo === 'video') {
     hint.innerHTML = `Tamaño recomendado: ${medida}. El video se muestra sin sonido, en loop automático.`;
