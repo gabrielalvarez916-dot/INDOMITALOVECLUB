@@ -127,6 +127,11 @@ function renderizarFormBanner() {
         <label class="form-label">Duración en pantalla (segundos)</label>
         <input type="number" id="banner-duracion" class="form-input" value="10" min="1" />
       </div>
+      <div class="form-grupo">
+        <label class="form-label">Desactivar automáticamente el (opcional)</label>
+        <input type="datetime-local" id="banner-fecha-fin" class="form-input" />
+        <p class="form-info">Si lo dejás vacío, el banner se queda activo hasta que lo apagues a mano.</p>
+      </div>
       <div id="banner-error" class="mensaje-error" style="display:none;"></div>
       <div id="banner-ok" class="mensaje-ok" style="display:none;"></div>
       <button type="submit" class="btn-primario" id="btn-crear-banner">Subir y agregar banner</button>
@@ -261,6 +266,8 @@ async function crearBannerAdmin(event) {
   const duracion = document.getElementById('banner-duracion')?.value;
   const ubicacion = document.getElementById('banner-ubicacion')?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
   const slot = document.getElementById('banner-slot')?.value === '2' ? 2 : 1;
+  const fechaFinInput = document.getElementById('banner-fecha-fin')?.value;
+  const fechaFin = fechaFinInput ? new Date(fechaFinInput).toISOString() : null;
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
     p_imagen_url: urlPublica,
@@ -270,7 +277,8 @@ async function crearBannerAdmin(event) {
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
     p_id_campana: idCampana || null,
     p_ubicacion: ubicacion,
-    p_slot: slot
+    p_slot: slot,
+    p_fecha_fin: fechaFin
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
@@ -337,6 +345,8 @@ function construirCardBannerAdmin(b) {
     ? `<video src="${b.imagenUrl}" muted loop playsinline style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'"></video>`
     : `<img src="${b.imagenUrl}" alt="Banner" style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'" />`;
 
+  const fechaFinTexto = b.fechaFin ? `⏰ Se apaga solo el ${formatearFechaAmigable(b.fechaFin)}` : '';
+
   return `
     <div class="lista-item" style="align-items:center;">
       ${miniatura}
@@ -348,6 +358,7 @@ function construirCardBannerAdmin(b) {
           &nbsp;Orden: ${b.orden ?? 0}
           &nbsp;Duración: ${b.duracionSegundos ?? 10}s
         </p>
+        ${fechaFinTexto ? `<p class="lista-item-meta" style="margin:0;">${fechaFinTexto}</p>` : ''}
         ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : ''}
         ${b.idCampana ? `<p class="lista-item-meta" style="margin:0;">Destino: campaña "${b.nombreCampana || 'sin nombre'}"</p>` : ''}
         ${!b.linkDestino && !b.idCampana ? '<p class="lista-item-meta" style="margin:0;">Sin destino</p>' : ''}
@@ -427,6 +438,11 @@ async function abrirEditarBannerAdmin(idBanner) {
           <input type="number" id="banner-edit-duracion-${idBanner}" class="form-input" value="${b.duracionSegundos ?? 10}" min="1" />
         </div>
       </div>
+      <div class="form-grupo" style="margin:0;">
+        <label class="form-label">Desactivar automáticamente el (opcional)</label>
+        <input type="datetime-local" id="banner-edit-fecha-fin-${idBanner}" class="form-input" value="${b.fechaFin ? _isoAFechaLocalInput(b.fechaFin) : ''}" />
+        <p class="form-info">Dejalo vacío y borrá el valor si querés que quede activo hasta apagarlo a mano.</p>
+      </div>
       <div style="display:flex; gap:8px;">
         <button class="btn-primario btn-sm" onclick="guardarEditarBannerAdmin('${idBanner}')">Guardar cambios</button>
         <button class="btn-secundario btn-sm" onclick="abrirEditarBannerAdmin('${idBanner}')">Cancelar</button>
@@ -435,6 +451,18 @@ async function abrirEditarBannerAdmin(idBanner) {
   `;
 
   await _cargarCampanasParaBanner(`banner-edit-campana-${idBanner}`, b.idCampana);
+}
+
+/**
+ * Convierte un timestamp ISO (como viene de Supabase) al formato que
+ * espera un <input type="datetime-local">, en hora local del navegador.
+ * @param {string} iso
+ * @returns {string}
+ */
+function _isoAFechaLocalInput(iso) {
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /**
@@ -479,6 +507,8 @@ async function guardarEditarBannerAdmin(idBanner) {
   const duracion = document.getElementById(`banner-edit-duracion-${idBanner}`)?.value;
   const ubicacion = document.getElementById(`banner-edit-ubicacion-${idBanner}`)?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
   const slot = document.getElementById(`banner-edit-slot-${idBanner}`)?.value === '2' ? 2 : 1;
+  const fechaFinInput = document.getElementById(`banner-edit-fecha-fin-${idBanner}`)?.value;
+  const fechaFin = fechaFinInput ? new Date(fechaFinInput).toISOString() : null;
 
   if (tipoDestino === 'campana' && !idCampana) {
     mostrarToast('Elegí una campaña.', 'error');
@@ -492,7 +522,9 @@ async function guardarEditarBannerAdmin(idBanner) {
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
     p_id_campana: idCampana || null,
     p_ubicacion: ubicacion,
-    p_slot: slot
+    p_slot: slot,
+    p_fecha_fin: fechaFin,
+    p_limpiar_fecha_fin: !fechaFinInput
   });
 
   if (error || !resultado || resultado.error) {
