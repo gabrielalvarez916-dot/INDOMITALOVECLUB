@@ -100,43 +100,104 @@ async function cargarPanelResenador() {
 // ────────────────────────────────────────────────────────────
 
 /**
- * Carga el banner publicitario de la columna lateral del panel del
- * reseñador (ubicacion = 'panel_resenador'). Muestra el de menor
- * "orden" entre los activos; si no hay ninguno, oculta la columna.
+ * Crea una instancia de carrusel para un slot lateral: guarda su propio
+ * estado (banners, índice actual, timer) para no pisarse con el otro slot.
+ *
+ * @param {string} idContenedor - id del div donde se renderiza la imagen/video actual
+ * @returns {{iniciar: (banners: Array) => void}}
+ */
+function _crearCarruselLateral(idContenedor) {
+  let banners = [];
+  let actual = 0;
+  let timer = null;
+
+  function render() {
+    const c = document.getElementById(idContenedor);
+    if (!c || banners.length === 0) return;
+    const b = banners[actual];
+    const media = b.tipo === 'video'
+      ? `<video src="${b.imagen_url}" autoplay muted loop playsinline></video>`
+      : `<img src="${b.imagen_url}" alt="Banner publicitario" />`;
+    let contenido = media;
+    if (b.id_campana) {
+      contenido = `<a href="javascript:void(0)" onclick="verDetalleCampaña('${b.id_campana}')">${media}</a>`;
+    } else if (b.link_destino) {
+      contenido = `<a href="${b.link_destino}" target="_blank" rel="noopener">${media}</a>`;
+    }
+    c.innerHTML = contenido;
+  }
+
+  function programarSiguiente() {
+    clearTimeout(timer);
+    if (banners.length <= 1) return;
+    const duracionMs = (banners[actual]?.duracion_segundos || 10) * 1000;
+    timer = setTimeout(() => {
+      actual = (actual + 1) % banners.length;
+      render();
+      programarSiguiente();
+    }, duracionMs);
+  }
+
+  return {
+    iniciar(nuevosBanners) {
+      clearTimeout(timer);
+      banners = nuevosBanners;
+      actual = 0;
+      render();
+      programarSiguiente();
+    }
+  };
+}
+
+let _carruselLateral1 = null;
+let _carruselLateral2 = null;
+
+/**
+ * Carga los dos espacios publicitarios de la columna lateral del panel
+ * del reseñador (ubicacion = 'panel_resenador'), separados por 'slot'
+ * (1 = de arriba, 2 = de abajo). Cada slot rota automáticamente entre
+ * todos los banners activos que tenga cargados, igual que el banner del feed.
  */
 async function cargarBannerLateralResenador() {
-  const wrapper = document.getElementById('banner-lateral-wrapper');
-  const contenedor = document.getElementById('banner-lateral');
-  if (!wrapper || !contenedor) return;
+  const wrapper1 = document.getElementById('banner-lateral-wrapper-1');
+  const wrapper2 = document.getElementById('banner-lateral-wrapper-2');
+  if (!wrapper1 && !wrapper2) return;
 
   const { data, error } = await supabaseClient
     .from('banners')
     .select('*')
     .eq('activo', true)
     .eq('ubicacion', 'panel_resenador')
-    .order('orden', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .order('orden', { ascending: true });
 
   if (error || !data) {
-    wrapper.style.display = 'none';
-    contenedor.innerHTML = '';
+    if (wrapper1) wrapper1.style.display = 'none';
+    if (wrapper2) wrapper2.style.display = 'none';
     return;
   }
 
-  const media = data.tipo === 'video'
-    ? `<video src="${data.imagen_url}" autoplay muted loop playsinline></video>`
-    : `<img src="${data.imagen_url}" alt="Banner publicitario" />`;
+  const slot1 = data.filter(b => (b.slot || 1) !== 2);
+  const slot2 = data.filter(b => b.slot === 2);
 
-  let contenido = media;
-  if (data.id_campana) {
-    contenido = `<a href="javascript:void(0)" onclick="verDetalleCampaña('${data.id_campana}')">${media}</a>`;
-  } else if (data.link_destino) {
-    contenido = `<a href="${data.link_destino}" target="_blank" rel="noopener">${media}</a>`;
+  if (wrapper1) {
+    if (slot1.length === 0) {
+      wrapper1.style.display = 'none';
+    } else {
+      wrapper1.style.display = 'block';
+      if (!_carruselLateral1) _carruselLateral1 = _crearCarruselLateral('banner-lateral-1');
+      _carruselLateral1.iniciar(slot1);
+    }
   }
 
-  contenedor.innerHTML = contenido;
-  wrapper.style.display = 'block';
+  if (wrapper2) {
+    if (slot2.length === 0) {
+      wrapper2.style.display = 'none';
+    } else {
+      wrapper2.style.display = 'block';
+      if (!_carruselLateral2) _carruselLateral2 = _crearCarruselLateral('banner-lateral-2');
+      _carruselLateral2.iniciar(slot2);
+    }
+  }
 }
 
 

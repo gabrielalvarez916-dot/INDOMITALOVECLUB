@@ -75,7 +75,14 @@ function renderizarFormBanner() {
         <label class="form-label">Ubicación</label>
         <select id="banner-ubicacion" class="form-input" onchange="_actualizarHintBanner()">
           <option value="feed">Feed (banner ancho arriba de todo)</option>
-          <option value="panel_resenador">Panel del reseñador (columna lateral, formato historia)</option>
+          <option value="panel_resenador">Panel del reseñador (columna lateral, formato post)</option>
+        </select>
+      </div>
+      <div class="form-grupo" id="banner-grupo-slot" style="display:none;">
+        <label class="form-label">Espacio</label>
+        <select id="banner-slot" class="form-input">
+          <option value="1">Espacio 1 (de arriba)</option>
+          <option value="2">Espacio 2 (de abajo)</option>
         </select>
       </div>
       <div class="form-grupo">
@@ -151,11 +158,14 @@ function _actualizarHintBanner() {
   const hint = document.getElementById('banner-hint');
   const label = document.getElementById('banner-archivo-label');
   const input = document.getElementById('banner-archivo');
+  const grupoSlot = document.getElementById('banner-grupo-slot');
   if (!hint || !label || !input) return;
 
   _limpiarUrlSubidaBanner();
 
-  const medida = ubicacion === 'panel_resenador' ? '1080x1920px (formato historia, vertical 9:16)' : '1200x300px';
+  if (grupoSlot) grupoSlot.style.display = ubicacion === 'panel_resenador' ? 'block' : 'none';
+
+  const medida = ubicacion === 'panel_resenador' ? '1080x1350px (formato post, vertical 4:5)' : '1200x300px';
 
   if (tipo === 'video') {
     hint.innerHTML = `Tamaño recomendado: ${medida}. El video se muestra sin sonido, en loop automático.`;
@@ -250,6 +260,7 @@ async function crearBannerAdmin(event) {
   const orden = document.getElementById('banner-orden')?.value;
   const duracion = document.getElementById('banner-duracion')?.value;
   const ubicacion = document.getElementById('banner-ubicacion')?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
+  const slot = document.getElementById('banner-slot')?.value === '2' ? 2 : 1;
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
     p_imagen_url: urlPublica,
@@ -258,7 +269,8 @@ async function crearBannerAdmin(event) {
     p_tipo: tipo,
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
     p_id_campana: idCampana || null,
-    p_ubicacion: ubicacion
+    p_ubicacion: ubicacion,
+    p_slot: slot
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
@@ -332,7 +344,7 @@ function construirCardBannerAdmin(b) {
         <p class="lista-item-meta" style="margin-bottom:4px;">
           ${b.activo ? '<span class="badge badge-activa">Activo</span>' : '<span class="badge badge-cancelada">Inactivo</span>'}
           &nbsp;${b.tipo === 'video' ? '<span class="badge">🎬 Video</span>' : '<span class="badge">🖼️ Imagen</span>'}
-          &nbsp;<span class="badge">${b.ubicacion === 'panel_resenador' ? '📱 Panel reseñador' : '🏠 Feed'}</span>
+          &nbsp;<span class="badge">${b.ubicacion === 'panel_resenador' ? `📱 Panel reseñador · Espacio ${b.slot === 2 ? 2 : 1}` : '🏠 Feed'}</span>
           &nbsp;Orden: ${b.orden ?? 0}
           &nbsp;Duración: ${b.duracionSegundos ?? 10}s
         </p>
@@ -375,9 +387,16 @@ async function abrirEditarBannerAdmin(idBanner) {
     <div style="background:var(--crema); border-radius:8px; padding:12px; margin:10px 0; display:flex; flex-direction:column; gap:10px;">
       <div class="form-grupo" style="margin:0;">
         <label class="form-label">Ubicación</label>
-        <select id="banner-edit-ubicacion-${idBanner}" class="form-input">
+        <select id="banner-edit-ubicacion-${idBanner}" class="form-input" onchange="_actualizarSlotEditBanner('${idBanner}')">
           <option value="feed" ${b.ubicacion !== 'panel_resenador' ? 'selected' : ''}>Feed</option>
           <option value="panel_resenador" ${b.ubicacion === 'panel_resenador' ? 'selected' : ''}>Panel del reseñador</option>
+        </select>
+      </div>
+      <div class="form-grupo" id="banner-edit-grupo-slot-${idBanner}" style="margin:0; display:${b.ubicacion === 'panel_resenador' ? 'block' : 'none'};">
+        <label class="form-label">Espacio</label>
+        <select id="banner-edit-slot-${idBanner}" class="form-input">
+          <option value="1" ${b.slot !== 2 ? 'selected' : ''}>Espacio 1 (de arriba)</option>
+          <option value="2" ${b.slot === 2 ? 'selected' : ''}>Espacio 2 (de abajo)</option>
         </select>
       </div>
       <div class="form-grupo" style="margin:0;">
@@ -435,6 +454,19 @@ function _actualizarDestinoEditBanner(idBanner) {
 }
 
 /**
+ * Muestra u oculta el selector de espacio (1/2) en el form de edición
+ * inline según la ubicación elegida (solo aplica a panel_resenador).
+ *
+ * @param {string} idBanner
+ */
+function _actualizarSlotEditBanner(idBanner) {
+  const ubicacion = document.getElementById(`banner-edit-ubicacion-${idBanner}`)?.value;
+  const grupoSlot = document.getElementById(`banner-edit-grupo-slot-${idBanner}`);
+  if (!grupoSlot) return;
+  grupoSlot.style.display = ubicacion === 'panel_resenador' ? 'block' : 'none';
+}
+
+/**
  * Guarda los cambios del mini-formulario de edición de un banner.
  *
  * @param {string} idBanner
@@ -446,6 +478,7 @@ async function guardarEditarBannerAdmin(idBanner) {
   const orden = document.getElementById(`banner-edit-orden-${idBanner}`)?.value;
   const duracion = document.getElementById(`banner-edit-duracion-${idBanner}`)?.value;
   const ubicacion = document.getElementById(`banner-edit-ubicacion-${idBanner}`)?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
+  const slot = document.getElementById(`banner-edit-slot-${idBanner}`)?.value === '2' ? 2 : 1;
 
   if (tipoDestino === 'campana' && !idCampana) {
     mostrarToast('Elegí una campaña.', 'error');
@@ -458,7 +491,8 @@ async function guardarEditarBannerAdmin(idBanner) {
     p_orden: orden ? parseInt(orden, 10) : 0,
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
     p_id_campana: idCampana || null,
-    p_ubicacion: ubicacion
+    p_ubicacion: ubicacion,
+    p_slot: slot
   });
 
   if (error || !resultado || resultado.error) {
