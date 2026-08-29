@@ -279,15 +279,20 @@ async function cargarFeed() {
     .select('*')
     .eq('mes_año', mesActual)
     .not('pos_top', 'is', null);
+  console.log('[DEBUG ranking] mesActual:', mesActual);
+  console.log('[DEBUG ranking] rankingsDelMes:', rankingsDelMes);
+  console.log('[DEBUG ranking] clavesLibros (activas):', clavesLibros);
   const rankingsFaltantes = (rankingsDelMes || []).filter(r =>
     r.id_libro && !clavesLibros.includes(r.clave_libro)
   );
+  console.log('[DEBUG ranking] rankingsFaltantes:', rankingsFaltantes);
   if (rankingsFaltantes.length > 0) {
     const { data: campanasCerradas } = await supabaseClient
       .from('campanas')
       .select('*')
       .in('id_libro', rankingsFaltantes.map(r => r.id_libro))
       .order('creado_en', { ascending: false });
+    console.log('[DEBUG ranking] campanasCerradas encontradas:', campanasCerradas);
     const cerradaPorLibro = {};
     (campanasCerradas || []).forEach(c => {
       if (!cerradaPorLibro[c.id_libro]) cerradaPorLibro[c.id_libro] = c;
