@@ -351,7 +351,7 @@ function construirCardBannerAdmin(b) {
     : 'width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;';
 
   const miniatura = b.tipo === 'video'
-    ? `<video src="${b.imagenUrl}" muted loop playsinline style="${estiloMiniatura}" onerror="this.style.display='none'"></video>`
+    ? `<video src="${b.imagenUrl}" muted loop playsinline autoplay preload="auto" style="${estiloMiniatura}" onerror="this.style.display='none'"></video>`
     : `<img src="${b.imagenUrl}" alt="Banner" style="${estiloMiniatura}" onerror="this.style.display='none'" />`;
 
   const fechaFinTexto = b.fechaFin ? `⏰ Se apaga solo el ${formatearFechaAmigable(b.fechaFin)}` : '';
