@@ -89,8 +89,54 @@ async function cargarPanelResenador() {
     cargarPostulacionesReseñador(email),
     cargarArcsActivos(email),
     cargarHistorialReseñador(email),
-    cargarRankingReseñador(email)
+    cargarRankingReseñador(email),
+    cargarBannerLateralResenador()
   ]);
+}
+
+
+// ────────────────────────────────────────────────────────────
+// BANNER LATERAL (columna al costado del panel, formato post)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Carga el banner publicitario de la columna lateral del panel del
+ * reseñador (ubicacion = 'panel_resenador'). Muestra el de menor
+ * "orden" entre los activos; si no hay ninguno, oculta la columna.
+ */
+async function cargarBannerLateralResenador() {
+  const wrapper = document.getElementById('banner-lateral-wrapper');
+  const contenedor = document.getElementById('banner-lateral');
+  if (!wrapper || !contenedor) return;
+
+  const { data, error } = await supabaseClient
+    .from('banners')
+    .select('*')
+    .eq('activo', true)
+    .eq('ubicacion', 'panel_resenador')
+    .order('orden', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    wrapper.style.display = 'none';
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  const media = data.tipo === 'video'
+    ? `<video src="${data.imagen_url}" autoplay muted loop playsinline></video>`
+    : `<img src="${data.imagen_url}" alt="Banner publicitario" />`;
+
+  let contenido = media;
+  if (data.id_campana) {
+    contenido = `<a href="javascript:void(0)" onclick="verDetalleCampaña('${data.id_campana}')">${media}</a>`;
+  } else if (data.link_destino) {
+    contenido = `<a href="${data.link_destino}" target="_blank" rel="noopener">${media}</a>`;
+  }
+
+  contenedor.innerHTML = contenido;
+  wrapper.style.display = 'block';
 }
 
 

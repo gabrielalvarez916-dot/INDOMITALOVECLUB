@@ -72,6 +72,13 @@ function renderizarFormBanner() {
     <h3 class="panel-titulo" style="font-size:20px;">Agregar banner</h3>
     <form id="form-nuevo-banner" onsubmit="crearBannerAdmin(event)">
       <div class="form-grupo">
+        <label class="form-label">Ubicación</label>
+        <select id="banner-ubicacion" class="form-input" onchange="_actualizarHintBanner()">
+          <option value="feed">Feed (banner ancho arriba de todo)</option>
+          <option value="panel_resenador">Panel del reseñador (columna lateral, formato post)</option>
+        </select>
+      </div>
+      <div class="form-grupo">
         <label class="form-label">Tipo de banner</label>
         <select id="banner-tipo" class="form-input" onchange="_actualizarHintBanner()">
           <option value="imagen">Imagen (jpg, png, gif animado)</option>
@@ -140,6 +147,7 @@ function _limpiarUrlSubidaBanner() {
  */
 function _actualizarHintBanner() {
   const tipo = document.getElementById('banner-tipo')?.value;
+  const ubicacion = document.getElementById('banner-ubicacion')?.value;
   const hint = document.getElementById('banner-hint');
   const label = document.getElementById('banner-archivo-label');
   const input = document.getElementById('banner-archivo');
@@ -147,12 +155,14 @@ function _actualizarHintBanner() {
 
   _limpiarUrlSubidaBanner();
 
+  const medida = ubicacion === 'panel_resenador' ? '1080x1350px (formato post, vertical 4:5)' : '1200x300px';
+
   if (tipo === 'video') {
-    hint.innerHTML = `Tamaño recomendado: 1200x300px. El video se muestra sin sonido, en loop automático.`;
+    hint.innerHTML = `Tamaño recomendado: ${medida}. El video se muestra sin sonido, en loop automático.`;
     label.textContent = 'Archivo de video (.mp4) *';
     input.setAttribute('accept', 'video/mp4');
   } else {
-    hint.innerHTML = `Tamaño recomendado: 1200x300px. Si subís un GIF, se va a animar solo.`;
+    hint.innerHTML = `Tamaño recomendado: ${medida}. Si subís un GIF, se va a animar solo.`;
     label.textContent = 'Archivo de imagen *';
     input.setAttribute('accept', 'image/jpeg,image/png,image/gif');
   }
@@ -239,6 +249,7 @@ async function crearBannerAdmin(event) {
 
   const orden = document.getElementById('banner-orden')?.value;
   const duracion = document.getElementById('banner-duracion')?.value;
+  const ubicacion = document.getElementById('banner-ubicacion')?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
     p_imagen_url: urlPublica,
@@ -246,7 +257,8 @@ async function crearBannerAdmin(event) {
     p_orden: orden ? parseInt(orden, 10) : 0,
     p_tipo: tipo,
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
-    p_id_campana: idCampana || null
+    p_id_campana: idCampana || null,
+    p_ubicacion: ubicacion
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
@@ -320,6 +332,7 @@ function construirCardBannerAdmin(b) {
         <p class="lista-item-meta" style="margin-bottom:4px;">
           ${b.activo ? '<span class="badge badge-activa">Activo</span>' : '<span class="badge badge-cancelada">Inactivo</span>'}
           &nbsp;${b.tipo === 'video' ? '<span class="badge">🎬 Video</span>' : '<span class="badge">🖼️ Imagen</span>'}
+          &nbsp;<span class="badge">${b.ubicacion === 'panel_resenador' ? '📱 Panel reseñador' : '🏠 Feed'}</span>
           &nbsp;Orden: ${b.orden ?? 0}
           &nbsp;Duración: ${b.duracionSegundos ?? 10}s
         </p>
@@ -360,6 +373,13 @@ async function abrirEditarBannerAdmin(idBanner) {
 
   contenedor.innerHTML = `
     <div style="background:var(--crema); border-radius:8px; padding:12px; margin:10px 0; display:flex; flex-direction:column; gap:10px;">
+      <div class="form-grupo" style="margin:0;">
+        <label class="form-label">Ubicación</label>
+        <select id="banner-edit-ubicacion-${idBanner}" class="form-input">
+          <option value="feed" ${b.ubicacion !== 'panel_resenador' ? 'selected' : ''}>Feed</option>
+          <option value="panel_resenador" ${b.ubicacion === 'panel_resenador' ? 'selected' : ''}>Panel del reseñador</option>
+        </select>
+      </div>
       <div class="form-grupo" style="margin:0;">
         <label class="form-label">Destino al hacer click</label>
         <select id="banner-edit-tipo-destino-${idBanner}" class="form-input" onchange="_actualizarDestinoEditBanner('${idBanner}')">
@@ -425,6 +445,7 @@ async function guardarEditarBannerAdmin(idBanner) {
   const idCampana = tipoDestino === 'campana' ? document.getElementById(`banner-edit-campana-${idBanner}`)?.value : null;
   const orden = document.getElementById(`banner-edit-orden-${idBanner}`)?.value;
   const duracion = document.getElementById(`banner-edit-duracion-${idBanner}`)?.value;
+  const ubicacion = document.getElementById(`banner-edit-ubicacion-${idBanner}`)?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
 
   if (tipoDestino === 'campana' && !idCampana) {
     mostrarToast('Elegí una campaña.', 'error');
@@ -436,7 +457,8 @@ async function guardarEditarBannerAdmin(idBanner) {
     p_link_destino: linkDestino,
     p_orden: orden ? parseInt(orden, 10) : 0,
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
-    p_id_campana: idCampana || null
+    p_id_campana: idCampana || null,
+    p_ubicacion: ubicacion
   });
 
   if (error || !resultado || resultado.error) {

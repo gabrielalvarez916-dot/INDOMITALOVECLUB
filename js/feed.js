@@ -1259,6 +1259,7 @@ const BannerPublicitario = (() => {
       .from('banners')
       .select('*')
       .eq('activo', true)
+      .eq('ubicacion', 'feed')
       .order('orden', { ascending: true });
 
     if (error) return;
