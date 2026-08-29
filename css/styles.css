@@ -3567,7 +3567,7 @@ img { max-width: 100%; display: block; }
 }
 
 .panel-layout-lateral {
-  width: 300px;
+  width: 260px;
   flex-shrink: 0;
   position: sticky;
   top: 24px;
@@ -3579,14 +3579,15 @@ img { max-width: 100%; display: block; }
   }
   .panel-layout-lateral {
     width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
     position: static;
-    order: -1; /* se muestra arriba del contenido apilado en mobile */
   }
 }
 
 .banner-lateral {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 9 / 16;
   border-radius: 12px;
   overflow: hidden;
   background: var(--crema);
