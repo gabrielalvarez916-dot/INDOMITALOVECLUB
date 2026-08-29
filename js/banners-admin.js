@@ -341,9 +341,18 @@ async function refrescarListaBanners() {
  * @returns {string} HTML de la card
  */
 function construirCardBannerAdmin(b) {
+  // El feed es un banner ancho (1200x300 ≈ 4:1) y el panel del reseñador es
+  // formato historia, vertical (1080x1920 ≈ 9:16). Cada miniatura respeta la
+  // proporción real de su espacio para que se vea completa y se entienda de
+  // qué campaña es, en vez de recortarla siempre en una franja horizontal.
+  const esPanelResenador = b.ubicacion === 'panel_resenador';
+  const estiloMiniatura = esPanelResenador
+    ? 'width:68px; height:121px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;'
+    : 'width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;';
+
   const miniatura = b.tipo === 'video'
-    ? `<video src="${b.imagenUrl}" muted loop playsinline style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'"></video>`
-    : `<img src="${b.imagenUrl}" alt="Banner" style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'" />`;
+    ? `<video src="${b.imagenUrl}" muted loop playsinline style="${estiloMiniatura}" onerror="this.style.display='none'"></video>`
+    : `<img src="${b.imagenUrl}" alt="Banner" style="${estiloMiniatura}" onerror="this.style.display='none'" />`;
 
   const fechaFinTexto = b.fechaFin ? `⏰ Se apaga solo el ${formatearFechaAmigable(b.fechaFin)}` : '';
 

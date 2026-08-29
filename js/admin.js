@@ -747,6 +747,15 @@ async function cargarPendientesAdmin() {
     return;
   }
 
+  // Las tareas de banner (feed / reseñadoras) cuya fecha de desactivación ya
+  // pasó se consideran finalizadas y van al final del listado, para que arriba
+  // queden siempre las tareas que todavía requieren acción.
+  const tareasOrdenadas = [...tareas].sort((a, b) => {
+    const vencidaA = _tareaImpulsoVencida(a) ? 1 : 0;
+    const vencidaB = _tareaImpulsoVencida(b) ? 1 : 0;
+    return vencidaA - vencidaB;
+  });
+
   contenedor.innerHTML = `
     <p class="form-info" style="margin-bottom:14px;">
       Cada vez que se activa un impulso se generan acá las tareas manuales que hay que hacer
@@ -754,7 +763,8 @@ async function cargarPendientesAdmin() {
       "Hecho" cuando la subas. Para los banners, te calcula la fecha en la que hay que
       desactivarlos manualmente desde Banner publicitario (una semana para Impulso/Select/
       Resistence, dos semanas para Complete); la historia de Instagram no tiene fecha de
-      desactivación.
+      desactivación. Los banners cuya fecha de desactivación ya pasó quedan marcados como
+      "Finalizado" y se muestran al final.
     </p>
     <table class="admin-tabla">
       <thead>
@@ -769,10 +779,25 @@ async function cargarPendientesAdmin() {
         </tr>
       </thead>
       <tbody>
-        ${tareas.map(t => construirFilaPendienteAdmin(t)).join('')}
+        ${tareasOrdenadas.map(t => construirFilaPendienteAdmin(t)).join('')}
       </tbody>
     </table>
   `;
+}
+
+/**
+ * Indica si una tarea de banner (feed o reseñadoras) ya venció, es decir
+ * si su fecha de desactivación programada ya pasó. Las historias de
+ * Instagram no tienen fecha de desactivación, así que nunca se consideran
+ * vencidas.
+ *
+ * @param {Object} t — datos de la tarea
+ * @returns {boolean}
+ */
+function _tareaImpulsoVencida(t) {
+  const esBanner = t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado';
+  if (!esBanner || !t.fechaDesactivarBanner) return false;
+  return new Date(t.fechaDesactivarBanner).getTime() < Date.now();
 }
 
 /**
@@ -790,9 +815,14 @@ function construirFilaPendienteAdmin(t) {
   };
   const nombreAccion = nombresAccion[t.tipoAccion] || t.tipoAccion || '—';
   const esBanner = t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado';
-  const estadoBadge = t.estado === 'hecho'
+  const vencida = _tareaImpulsoVencida(t);
+
+  let estadoBadge = t.estado === 'hecho'
     ? '<span class="badge badge-aprobada">Hecho</span>'
     : '<span class="badge badge-pendiente">Pendiente</span>';
+  if (vencida) {
+    estadoBadge += ' <span class="badge badge-finalizada">Finalizado</span>';
+  }
 
   const fechaDesactivar = t.fechaDesactivarBanner
     ? `<strong>${String(t.fechaDesactivarBanner).split('T')[0]}</strong>`
@@ -803,7 +833,7 @@ function construirFilaPendienteAdmin(t) {
     : `<button class="btn-primario btn-sm" onclick="marcarTareaImpulsoAdmin('${t.id}', 'hecho')">Hecho</button>`;
 
   return `
-    <tr>
+    <tr${vencida ? ' style="opacity:0.6;"' : ''}>
       <td style="font-size:12px;">${t.fechaCreacion ? String(t.fechaCreacion).split('T')[0] : '—'}</td>
       <td><span class="badge" style="background:var(--rosa-claro); color:var(--bordo);">${nombrePlan}</span></td>
       <td>${t.nombreLibro || '—'}</td>
