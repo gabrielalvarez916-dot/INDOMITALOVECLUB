@@ -3582,16 +3582,16 @@ img { max-width: 100%; display: block; }
   }
   .panel-layout-lateral {
     width: 100%;
-    max-width: 320px;
-    margin: 0 auto;
+    max-width: 360px;
+    margin: 20px auto 0;
     position: static;
     flex-direction: row;
-    flex-wrap: wrap;
+    gap: 12px;
     justify-content: center;
   }
   .banner-lateral-slot {
-    width: 100%;
-    max-width: 320px;
+    width: calc(50% - 6px);
+    max-width: 170px;
   }
 }
 
