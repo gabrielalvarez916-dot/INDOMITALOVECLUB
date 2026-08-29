@@ -2104,13 +2104,16 @@ async function cargarPlanAutor(idUsuario) {
 
   const { data: u, error } = await supabaseClient
     .from('usuarios')
-    .select('plan, fecha_vencimiento_plan')
+    .select('plan, fecha_vencimiento_plan, limite_campanas_override, limite_resenadores_override')
     .eq('id', idUsuario)
     .single();
 
   if (error || !u) return;
   const plan = u.plan || 'free';
   const fechaVenc = u.fecha_vencimiento_plan || '';
+  // Suscriptor viejo (de antes de este cambio de planes): mantiene sus límites originales
+  // congelados, así que en "Mi plan" le mostramos SUS números reales, no los nuevos de marketing.
+  const esSuscriptorCongelado = u.limite_resenadores_override !== null && u.limite_resenadores_override !== undefined;
 
   const esEditorial = Sesion.rol() === 'editorial';
 
@@ -2162,7 +2165,9 @@ async function cargarPlanAutor(idUsuario) {
       }
     ];
   } else {
-    // ── Autor: exactamente igual que antes, sin ningún cambio ──
+    // ── Autor: Basic y Premium con las condiciones nuevas (para altas nuevas).
+    // Si el usuario ya es suscriptor de antes (congelado), su propia card de
+    // "Plan actual" muestra sus números originales en vez de los nuevos.
     planes = [
       {
         id: 'free',
@@ -2177,7 +2182,9 @@ async function cargarPlanAutor(idUsuario) {
         nombre: 'Basic',
         precio: '$20.000',
         subprecio: '$190.000/año',
-        beneficios: ['3 campañas por mes', 'Hasta 50 reseñadores'],
+        beneficios: (plan === 'basic' && esSuscriptorCongelado)
+          ? [`${u.limite_campanas_override} campañas por mes`, `Hasta ${u.limite_resenadores_override} reseñadores`]
+          : ['3 campañas por mes', 'Hasta 30 reseñadores', '1 Impulso gratis por mes'],
         esPremium: false
       },
       {
@@ -2185,7 +2192,9 @@ async function cargarPlanAutor(idUsuario) {
         nombre: 'Premium',
         precio: '$40.000',
         subprecio: '$380.000/año',
-        beneficios: ['5 campañas por mes', 'Hasta 100 reseñadores'],
+        beneficios: (plan === 'premium' && esSuscriptorCongelado)
+          ? [`${u.limite_campanas_override} campañas por mes`, `Hasta ${u.limite_resenadores_override} reseñadores`]
+          : ['5 campañas por mes', 'Hasta 70 reseñadores', '1 Complete gratis por mes'],
         esPremium: true
       }
     ];
