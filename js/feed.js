@@ -448,6 +448,13 @@ function filtrarFeed() {
 
   if (idGeneroFiltro === 'novedad') {
     campañasFiltradas = campañasFiltradas.filter(c => c.esNovedad);
+  } else if (idGeneroFiltro === 'ranking') {
+    // "Los más leídos": solo libros con posición en el ranking del mes
+    // actual (c.rankingLibro.posicion), ordenados 1, 2, 3... N. Los que
+    // no tienen ranking este mes quedan afuera (a propósito).
+    campañasFiltradas = campañasFiltradas
+      .filter(c => c.rankingLibro?.posicion)
+      .sort((a, b) => a.rankingLibro.posicion - b.rankingLibro.posicion);
   } else if (idGeneroFiltro) {
     campañasFiltradas = campañasFiltradas.filter(c =>
       c.idGenero === parseInt(idGeneroFiltro, 10)
@@ -474,8 +481,9 @@ async function poblarFiltroGenero() {
   if (error) { console.error('Error cargando generos para el filtro:', error); return; }
 
   select.innerHTML = `
-    <option value="">Todos los géneros</option>
+    <option value="">Filtrar por</option>
     <option value="novedad">✨ Novedades</option>
+    <option value="ranking">🏆 Los más leídos</option>
     ${(data || []).map(g => `<option value="${g.id}">${g.nombre}</option>`).join('')}
   `;
 }
