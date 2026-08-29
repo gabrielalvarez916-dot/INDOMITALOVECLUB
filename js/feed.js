@@ -489,7 +489,7 @@ function construirCardCampaña(c) {
   const rol = Sesion.rol();
 
   const portadaHtml = c.linkPortada
-  ? `<div style="position:relative;width:100%;height:100%;"><img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}${c.esNovedad ? `<span class="tag-novedad-portada">✨ Novedad</span>` : ''}</div>`
+  ? `<div class="campana-portada-lista-wrap"><img class="campana-portada-lista" src="${c.linkPortada}" alt="${c.nombreLibro}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="campana-portada-lista-placeholder" style="display:none">📖</div>${c.rankingLibro?.posicion ? `<span class="tag-ranking-portada">🏆 #${c.rankingLibro.posicion}</span>` : ''}${c.esNovedad ? `<span class="tag-novedad-portada">✨ Novedad</span>` : ''}</div>`
   : `<div class="campana-portada-lista-placeholder">📖</div>`;
 
  const listaTropes = (c.tropesCatalogo && c.tropesCatalogo.length > 0)
