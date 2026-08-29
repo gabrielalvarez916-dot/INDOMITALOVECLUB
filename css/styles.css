@@ -6350,3 +6350,13 @@ img { max-width: 100%; display: block; }
   color: var(--gris-suave);
   margin-top: 4px;
 }
+
+/* Resalte temporal al ubicar tu propio puesto en "Mi ranking" */
+.ranking-mi-puesto {
+  animation: rankingPulso 1.3s ease-in-out 2;
+  border-radius: var(--radio-grande);
+}
+@keyframes rankingPulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 26, 43, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(139, 26, 43, 0.35); }
+}

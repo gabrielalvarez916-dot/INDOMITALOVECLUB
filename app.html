@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=3" />
+  <link rel="stylesheet" href="css/styles.css?v=4" />
 </head>
 <body>
 
@@ -320,7 +320,7 @@
         <button class="tab activo" id="tabbtn-mis-postulaciones" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
-        <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
+        <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking'); if(typeof enfocarMiPuestoRanking === 'function') enfocarMiPuestoRanking();">Mi ranking</button>
         <button class="tab" onclick="mostrarSeccion('biblioteca-resenador')">Mi biblioteca</button>
       </div>
 
@@ -2061,7 +2061,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=2"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/resenador.js?v=3"></script>
+<script src="js/resenador.js?v=4"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/perfil.js?v=2"></script>
 <script src="js/verificacion-seguidores.js"></script>

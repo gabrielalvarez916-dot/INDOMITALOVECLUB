@@ -1111,7 +1111,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
           const r = top5[i];
           const altura = ALTURA_POR_INDICE[i];
           return `
-            <div class="ranking-podio-columna">
+            <div class="ranking-podio-columna" data-id-usuario="${r.id || ''}">
               <p class="ranking-podio-alias"
    ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.alias}${badgeSeguidoresVerificados(r.seguidoresVerificados)}</p>
               <div class="ranking-podio-avatar-wrap">
@@ -1136,7 +1136,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
       <h4 class="ranking-seccion-titulo">Top 20</h4>
       <div class="ranking-top-lista">
         ${top20.map(r => `
-          <div class="ranking-resenador-top-item">
+          <div class="ranking-resenador-top-item" data-id-usuario="${r.id || ''}">
             <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
             <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
             <div class="ranking-top-item-info">
@@ -1161,7 +1161,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
   };
 
   const _renderItemLiga = r => `
-    <div class="ranking-resenador-top-item">
+    <div class="ranking-resenador-top-item" data-id-usuario="${r.id || ''}">
       <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
       <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
       <div class="ranking-top-item-info">
@@ -1399,6 +1399,43 @@ function _toggleVerMasLiga(idResto, boton, cantidadResto) {
   const estaOculto = contenedor.style.display === 'none';
   contenedor.style.display = estaOculto ? '' : 'none';
   boton.textContent = estaOculto ? 'Ver menos' : `Ver ${cantidadResto} más`;
+}
+
+/**
+ * Al entrar a "Mi ranking", busca la fila del usuario actual (podio, top20
+ * o su liga) y lleva la pantalla hasta ahí con un resalte temporal, como
+ * en los juegos. No hace nada si no se encuentra (usuario sin ranking aún).
+ */
+async function enfocarMiPuestoRanking() {
+  const raiz = document.getElementById('resenador-ranking-info');
+  if (!raiz) return;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const intentar = () => {
+    const el = raiz.querySelector(`[data-id-usuario="${user.id}"]`);
+    if (!el) return false;
+
+    // Si está adentro de un "Ver más" todavía colapsado, lo desplegamos.
+    const contenedorResto = el.closest('.ranking-top-lista[id^="ranking-liga-resto-"]');
+    if (contenedorResto && contenedorResto.style.display === 'none') {
+      const boton = contenedorResto.nextElementSibling?.tagName === 'BUTTON'
+        ? contenedorResto.nextElementSibling
+        : contenedorResto.previousElementSibling;
+      contenedorResto.style.display = '';
+      if (boton && boton.tagName === 'BUTTON') boton.textContent = 'Ver menos';
+    }
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('ranking-mi-puesto');
+    setTimeout(() => el.classList.remove('ranking-mi-puesto'), 2600);
+    return true;
+  };
+
+  // El render de cargarRankingReseñador puede terminar justo después de este
+  // click; reintentamos un toque por si el innerHTML todavía no está listo.
+  if (!intentar()) setTimeout(intentar, 400);
 }
 // ────────────────────────────────────────────────────────────
 // ABANDONAR CAMPAÑA (DNF)
