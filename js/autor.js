@@ -13,6 +13,7 @@ let _postulacionesAutor = [];
 let _historialAutor     = [];
 let _librosAutor        = [];
 let _portadaPrecargadaCampana = null; // URL de portada existente cuando se precarga un libro de la biblioteca
+let _campanaOrigenRenovacion = null; // { linkEpub, linkPdf } de la campaña que se está renovando, o null si es alta normal
 let _reseñasCampanaActual = []; // cache de reseñas mostradas en el modal "Ver reseñas"
 
 function convertirLinkDrive(url) {
@@ -99,10 +100,15 @@ async function cargarPanelAutor() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
+  // cargarCampañasAutor y cargarHistorialAutor van secuenciales (no en el
+  // Promise.all) porque el botón "Renovar" del historial necesita comparar
+  // contra _campañasAutor ya cargado para saber si es la campaña más
+  // reciente de ese libro.
+  await cargarCampañasAutor(user.id);
+  await cargarHistorialAutor(user.id);
+
   await Promise.all([
     cargarEstadisticasAutor(user.id),
-    cargarCampañasAutor(user.id),
-    cargarHistorialAutor(user.id),
     cargarPlanAutor(user.id),
     cargarBibliotecaPanel(user.id),
     cargarCreditosAutor(user.id)
@@ -1557,6 +1563,24 @@ async function enviarAgradecimiento() {
 
 
 // ────────────────────────────────────────────────────────────
+// RENOVAR CAMPAÑA — helpers para saber si una campaña finalizada
+// es la más reciente de ese libro (para mostrar el botón Renovar)
+// ────────────────────────────────────────────────────────────
+
+function _libroKeyCampana(c) {
+  return c.idLibro ? `id:${c.idLibro}` : `nombre:${(c.nombreLibro || '').trim().toLowerCase()}`;
+}
+
+function _esUltimaCampanaDelLibro(campana) {
+  const key = _libroKeyCampana(campana);
+  const todas = [..._campañasAutor, ..._historialAutor];
+  const delMismoLibro = todas.filter(c => _libroKeyCampana(c) === key);
+  if (delMismoLibro.length === 0) return false;
+  delMismoLibro.sort((a, b) => new Date(b.creadoEn) - new Date(a.creadoEn));
+  return delMismoLibro[0].id === campana.id;
+}
+
+// ────────────────────────────────────────────────────────────
 // HISTORIAL
 // ────────────────────────────────────────────────────────────
 
@@ -1623,6 +1647,9 @@ async function cargarHistorialAutor(idUsuario) {
         </div>
         <div class="campana-panel-acciones">
           <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+          ${(c.estado === 'finalizada' && _esUltimaCampanaDelLibro(c))
+            ? `<button class="btn-primario btn-sm btn-full" onclick="abrirRenovarCampana('${c.id}')">🔁 Renovar campaña</button>`
+            : ''}
         </div>
       </div>
     </div>
@@ -1692,6 +1719,24 @@ async function _leerErrorEdgeFunction(error, mensajePorDefecto) {
     }
   }
   return error?.message || mensajePorDefecto;
+}
+
+/**
+ * Vincula un archivo ya existente en R2 (de la campaña original que se
+ * está renovando) a la campaña nueva, sin volver a subirlo.
+ *
+ * @param {string} idCampana  — id de la campaña NUEVA
+ * @param {'link_epub'|'link_pdf'} columna
+ * @param {string} key        — key en R2 (ej: "campanas/{id_vieja}.pdf")
+ */
+async function _clonarArchivoCampana(idCampana, columna, key) {
+  const { error } = await supabaseClient
+    .from('campanas_archivos')
+    .upsert({ id_campana: idCampana, [columna]: key }, { onConflict: 'id_campana' });
+
+  if (error) {
+    throw new Error(`No se pudo vincular el archivo reutilizado (${columna}): ${error.message}`);
+  }
 }
 
 async function subirArchivoLibro(idCampana, formato, archivo) {
@@ -1781,10 +1826,23 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
 
 const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
   const archivoPdf   = document.getElementById('nc-archivo-pdf')?.files?.[0];
+  const esRenovacion = !!_campanaOrigenRenovacion;
 
-  if (!archivoEpub || !archivoPdf) {
+  if (!esRenovacion && (!archivoEpub || !archivoPdf)) {
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
     mostrarMensajeError('nc-error', 'Subí el archivo EPUB y el archivo PDF.');
+    return;
+  }
+
+  if (esRenovacion && !archivoEpub && !_campanaOrigenRenovacion.linkEpub) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', 'La campaña original no tiene EPUB cargado — subí uno para renovar.');
+    return;
+  }
+
+  if (esRenovacion && !archivoPdf && !_campanaOrigenRenovacion.linkPdf) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', 'La campaña original no tiene PDF cargado — subí uno para renovar.');
     return;
   }
 
@@ -1873,8 +1931,16 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
   }
 
  try {
-    await subirArchivoLibro(campanaCreada.id, 'epub', archivoEpub);
-    await subirArchivoLibro(campanaCreada.id, 'pdf', archivoPdf);
+    if (archivoEpub) {
+      await subirArchivoLibro(campanaCreada.id, 'epub', archivoEpub);
+    } else {
+      await _clonarArchivoCampana(campanaCreada.id, 'link_epub', _campanaOrigenRenovacion.linkEpub);
+    }
+    if (archivoPdf) {
+      await subirArchivoLibro(campanaCreada.id, 'pdf', archivoPdf);
+    } else {
+      await _clonarArchivoCampana(campanaCreada.id, 'link_pdf', _campanaOrigenRenovacion.linkPdf);
+    }
   } catch (errArchivo) {
     // Si falla la subida, cancelamos la campaña recién creada para que
     // no quede "activa" y visible en el feed sin archivos cargados.
@@ -1889,12 +1955,14 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
   }
 
   toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-  mostrarMensajeOk('nc-ok', '¡Campaña creada exitosamente!');
+  mostrarMensajeOk('nc-ok', esRenovacion ? '¡Campaña renovada exitosamente!' : '¡Campaña creada exitosamente!');
   document.getElementById('form-nueva-campana')?.reset();
+  _resetModoRenovacionCampana();
 
   setTimeout(async () => {
     cerrarModales();
     await cargarCampañasAutor(user.id);
+    await cargarHistorialAutor(user.id);
     await cargarEstadisticasAutor(user.id);
   }, 1500);
 }
@@ -2326,7 +2394,35 @@ mostrarToast('😈 Libro eliminado. Lo que pasó con ese libro queda entre vos y
 // SELECTOR DE LIBRO EN NUEVA CAMPAÑA
 // ────────────────────────────────────────────────────────────
 
+/**
+ * Devuelve el modal "nueva campaña" a su estado normal (alta desde cero),
+ * deshaciendo lo que haya dejado un abrirRenovarCampana() anterior:
+ * título, texto del botón, EPUB/PDF vuelven a ser obligatorios y se
+ * ocultan los avisos de "se reutiliza el archivo".
+ */
+function _resetModoRenovacionCampana() {
+  _campanaOrigenRenovacion = null;
+
+  const titulo = document.getElementById('nc-modal-titulo');
+  if (titulo) titulo.textContent = 'Nueva campaña';
+
+  const btnSubmit = document.getElementById('nc-btn-submit');
+  if (btnSubmit) btnSubmit.textContent = 'Crear campaña';
+
+  const inputEpub = document.getElementById('nc-archivo-epub');
+  const inputPdf  = document.getElementById('nc-archivo-pdf');
+  if (inputEpub) inputEpub.required = true;
+  if (inputPdf)  inputPdf.required  = true;
+
+  const hintEpub = document.getElementById('nc-epub-hint-renovacion');
+  const hintPdf  = document.getElementById('nc-pdf-hint-renovacion');
+  if (hintEpub) hintEpub.style.display = 'none';
+  if (hintPdf)  hintPdf.style.display  = 'none';
+}
+
 async function inicializarModalNuevaCampana() {
+  _resetModoRenovacionCampana();
+
   await renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
 
    // Muestra la fecha de cierre calculada (hoy + 30 días). Ya no la elige el autor.
@@ -2369,6 +2465,8 @@ async function inicializarModalNuevaCampana() {
 }
 
 async function precargarLibroEnCampana() {
+  _resetModoRenovacionCampana();
+
   const selector = document.getElementById('nc-libro-selector');
   const idLibro  = selector?.value;
 
@@ -2478,6 +2576,101 @@ async function compartirCampana(idCampana, nombreLibro) {
   } catch (e) {
     mostrarToast('😈 El link se rebeló. Copialo manualmente: ' + url, 'error');
   }
+}
+
+/**
+ * Abre el modal de "nueva campaña" en modo renovación: precarga todos los
+ * datos de la campaña finalizada (nombre, sinopsis, tropes, portada,
+ * link de Amazon, cupos, páginas, tipo de colaboración) y reutiliza el
+ * EPUB/PDF ya subidos a R2 sin volver a pedirlos. Fecha, modalidad de
+ * lectura y plataformas de reseña quedan en blanco a propósito: son lo
+ * único que puede cambiar de una campaña a la siguiente. Al guardar se
+ * crea una campaña 100% nueva e independiente (propias postulaciones,
+ * reseñas, reseñadores, etc.) — no se reutiliza ni se modifica la vieja.
+ *
+ * @param {string} idCampana — campaña finalizada de origen
+ */
+async function abrirRenovarCampana(idCampana) {
+  await abrirModalNuevaCampana(); // abre el modal (esto también resetea el form a modo alta normal)
+
+  const { data: campana, error } = await supabaseClient
+    .from('campanas')
+    .select('nombre_libro, nombre_autor, sinopsis, id_genero, id_subgenero, link_portada, link_amazon_libro, cantidad_paginas, cupos_total, tipo_colaboracion, alcance_envio')
+    .eq('id', idCampana)
+    .single();
+
+  if (error || !campana) {
+    mostrarToast('No se pudo cargar la campaña para renovar.', 'error');
+    return;
+  }
+
+  const [{ data: tropesRows }, { data: subgenerosRows }, { data: archivo }] = await Promise.all([
+    supabaseClient.from('campana_tropes').select('tropes ( id, nombre )').eq('id_campana', idCampana),
+    supabaseClient.from('campana_subgeneros').select('id_subgenero').eq('id_campana', idCampana),
+    supabaseClient.from('campanas_archivos').select('link_epub, link_pdf').eq('id_campana', idCampana).maybeSingle()
+  ]);
+
+  const tropesCatalogo = (tropesRows || []).filter(r => r.tropes).map(r => ({ id: r.tropes.id, nombre: r.tropes.nombre }));
+  const idsSubgenero   = (subgenerosRows || []).map(r => r.id_subgenero);
+
+  const titulo = document.getElementById('nc-modal-titulo');
+  if (titulo) titulo.textContent = `Renovar campaña — ${campana.nombre_libro}`;
+  const btnSubmit = document.getElementById('nc-btn-submit');
+  if (btnSubmit) btnSubmit.textContent = 'Renovar campaña';
+
+  // Datos del libro/campaña: se copian de la campaña vieja, todos editables.
+  document.getElementById('nc-nombre-libro').value = campana.nombre_libro || '';
+  document.getElementById('nc-nombre-autor').value = campana.nombre_autor || '';
+  document.getElementById('nc-sinopsis').value     = campana.sinopsis || '';
+  document.getElementById('nc-link-amazon').value  = campana.link_amazon_libro || '';
+  document.getElementById('nc-cupos').value        = campana.cupos_total || '';
+  document.getElementById('nc-paginas').value      = campana.cantidad_paginas || '';
+
+  await renderizarSelectorTropes('nc-tropes-contenedor', 'nc', {
+    id_genero: campana.id_genero,
+    ids_subgenero: idsSubgenero.length > 0 ? idsSubgenero : (campana.id_subgenero ? [campana.id_subgenero] : []),
+    tropes: tropesCatalogo
+  });
+
+  // Portada: se reutiliza la de la campaña anterior sin volver a subir nada.
+  _portadaPrecargadaCampana = campana.link_portada || null;
+  const previewPortada = document.getElementById('nc-portada-preview');
+  if (previewPortada) {
+    previewPortada.innerHTML = campana.link_portada
+      ? `<img src="${campana.link_portada}" alt="Portada del libro" style="max-width:120px; display:block; margin-top:8px; border-radius:6px;" />`
+      : '';
+  }
+
+  // EPUB/PDF: se reutilizan los ya cargados en R2; dejan de ser obligatorios.
+  const inputEpub = document.getElementById('nc-archivo-epub');
+  const inputPdf  = document.getElementById('nc-archivo-pdf');
+  if (inputEpub) inputEpub.required = false;
+  if (inputPdf)  inputPdf.required  = false;
+  const hintEpub = document.getElementById('nc-epub-hint-renovacion');
+  const hintPdf  = document.getElementById('nc-pdf-hint-renovacion');
+  if (hintEpub) hintEpub.style.display = 'block';
+  if (hintPdf)  hintPdf.style.display  = 'block';
+
+  _campanaOrigenRenovacion = {
+    linkEpub: archivo?.link_epub || null,
+    linkPdf:  archivo?.link_pdf  || null
+  };
+
+  // Tipo de colaboración / alcance de envío, si el feature de físico está activo.
+  const radioColab = document.querySelector(`input[name="nc-tipo-colaboracion"][value="${campana.tipo_colaboracion || 'digital'}"]`);
+  if (radioColab) {
+    radioColab.checked = true;
+    radioColab.dispatchEvent(new Event('change'));
+  }
+  if (campana.alcance_envio) {
+    const radioAlcance = document.querySelector(`input[name="nc-alcance-envio"][value="${campana.alcance_envio}"]`);
+    if (radioAlcance) radioAlcance.checked = true;
+  }
+
+  // Fecha (se calcula sola en inicializarModalNuevaCampana), modalidad de
+  // lectura y plataformas de reseña quedan tal cual el default del form
+  // (sin preseleccionar) — a propósito, son lo único que cambia entre
+  // campaña y campaña.
 }
 
 async function abrirEditarCampana(idCampana) {

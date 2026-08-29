@@ -860,7 +860,7 @@
   <!-- Modal: nueva campaña -->
   <div id="modal-nueva-campana" class="modal modal-grande">
     <div class="modal-header">
-      <h3 class="modal-titulo">Nueva campaña</h3>
+      <h3 class="modal-titulo" id="nc-modal-titulo">Nueva campaña</h3>
       <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
     </div>
     <div class="modal-body">
@@ -895,12 +895,14 @@
         </div>
         <div class="form-fila">
   <div class="form-grupo">
-    <label class="form-label">Archivo EPUB *</label>
+    <label class="form-label" id="nc-epub-label">Archivo EPUB *</label>
     <input type="file" id="nc-archivo-epub" class="form-input" accept=".epub,application/epub+zip" required />
+    <p id="nc-epub-hint-renovacion" class="form-hint" style="display:none;">Se reutiliza el EPUB ya cargado. Subí uno nuevo solo si querés reemplazarlo.</p>
   </div>
   <div class="form-grupo">
-    <label class="form-label">Archivo PDF *</label>
+    <label class="form-label" id="nc-pdf-label">Archivo PDF *</label>
     <input type="file" id="nc-archivo-pdf" class="form-input" accept=".pdf,application/pdf" required />
+    <p id="nc-pdf-hint-renovacion" class="form-hint" style="display:none;">Se reutiliza el PDF ya cargado. Subí uno nuevo solo si querés reemplazarlo.</p>
   </div>
 </div>
         <div class="form-grupo">
@@ -1003,7 +1005,7 @@
         <div id="nc-ok" class="mensaje-ok" style="display:none;"></div>
         <div class="modal-footer">
           <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
-          <button type="submit" class="btn-primario">Crear campaña</button>
+          <button type="submit" id="nc-btn-submit" class="btn-primario">Crear campaña</button>
         </div>
       </form>
     </div>
