@@ -316,15 +316,16 @@
       </div>
       <div class="stats-grid" id="resenador-stats"></div>
 
+      <div class="tabs">
+        <button class="tab activo" id="tabbtn-mis-postulaciones" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
+        <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
+        <button class="tab" onclick="mostrarSeccion('biblioteca-resenador')">Mi biblioteca</button>
+      </div>
+
       <div class="panel-layout">
         <div class="panel-layout-principal">
-          <div class="tabs">
-            <button class="tab activo" id="tabbtn-mis-postulaciones" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
-            <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
-            <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
-            <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
-            <button class="tab" onclick="mostrarSeccion('biblioteca-resenador')">Mi biblioteca</button>
-          </div>
           <div id="tab-mis-postulaciones" class="tab-contenido activo">
             <div id="resenador-postulaciones-lista" class="postulaciones-lista"></div>
           </div>
@@ -340,7 +341,7 @@
           </div>
         </div>
 
-        <!-- Columna lateral: banner publicitario tipo post -->
+        <!-- Columna lateral: banner publicitario tipo historia -->
         <aside class="panel-layout-lateral" id="banner-lateral-wrapper" style="display:none;">
           <div id="banner-lateral" class="banner-lateral"></div>
         </aside>
