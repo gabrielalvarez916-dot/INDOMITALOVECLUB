@@ -279,31 +279,34 @@ async function cargarFeed() {
     .select('*')
     .eq('mes_año', mesActual)
     .not('pos_top', 'is', null);
-  console.log('[DEBUG ranking] mesActual:', mesActual);
-  console.log('[DEBUG ranking] rankingsDelMes:', rankingsDelMes);
-  console.log('[DEBUG ranking] clavesLibros (activas):', clavesLibros);
   const rankingsFaltantes = (rankingsDelMes || []).filter(r =>
-    r.id_libro && !clavesLibros.includes(r.clave_libro)
+    !clavesLibros.includes(r.clave_libro)
   );
-  console.log('[DEBUG ranking] rankingsFaltantes:', rankingsFaltantes);
   if (rankingsFaltantes.length > 0) {
-    const { data: campanasCerradas } = await supabaseClient
+    // No filtramos por id_libro acá porque muchas campañas viejas/cerradas
+    // no lo tienen cargado (ver comentario de _claveLibroCampana más arriba).
+    // Traemos todas las campañas no activas y las emparejamos por la misma
+    // clave que ya usa el resto del feed.
+    const { data: campanasNoActivas } = await supabaseClient
       .from('campanas')
       .select('*')
-      .in('id_libro', rankingsFaltantes.map(r => r.id_libro))
+      .neq('estado', 'activa')
       .order('creado_en', { ascending: false });
-    console.log('[DEBUG ranking] campanasCerradas encontradas:', campanasCerradas);
-    const cerradaPorLibro = {};
-    (campanasCerradas || []).forEach(c => {
-      if (!cerradaPorLibro[c.id_libro]) cerradaPorLibro[c.id_libro] = c;
+    const cerradaPorClave = {};
+    (campanasNoActivas || []).forEach(c => {
+      const clave = _claveLibroCampana(c);
+      if (!cerradaPorClave[clave]) cerradaPorClave[clave] = c;
     });
+    const candidatas = rankingsFaltantes
+      .map(r => ({ ranking: r, campana: cerradaPorClave[r.clave_libro] }))
+      .filter(x => x.campana);
     _campanasRankingCerradas = await Promise.all(
-      Object.values(cerradaPorLibro).map(c => normalizarCampana(
-        c,
-        rankingsFaltantes.find(r => r.id_libro === c.id_libro),
-        archivosPorCampana[c.id],
-        tropesPorCampana[c.id],
-        subgenerosPorCampana[c.id],
+      candidatas.map(({ ranking, campana }) => normalizarCampana(
+        campana,
+        ranking,
+        archivosPorCampana[campana.id],
+        tropesPorCampana[campana.id],
+        subgenerosPorCampana[campana.id],
         false
       ))
     );
