@@ -1003,7 +1003,6 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radio-grande);
   display: grid;
   grid-template-columns: 160px 1fr;
-  grid-template-rows: minmax(0, auto);
   overflow: hidden;
   transition: var(--transicion);
   cursor: pointer;
@@ -1017,19 +1016,9 @@ img { max-width: 100%; display: block; }
   border-color: var(--rosa);
 }
 
-.campana-portada-lista-wrap {
-  position: relative;
-  width: 160px;
-  max-height: 260px; /* techo de seguridad: solo actúa si una portada puntual es desproporcionada (ver bug "Planeta Lineal"); una portada normal nunca llega a este límite y se ve completa, sin recortarse */
-  overflow: hidden;
-  flex-shrink: 0;
-  align-self: start; /* no estirar la portada a la altura de la card completa */
-}
-
 .campana-card-horizontal .campana-portada-lista {
-  width: 100%;
-  height: auto;
-  max-height: 260px;
+  width: 160px;
+  height: 100%;
   object-fit: cover;
   object-position: center top;
   display: block;
@@ -2257,14 +2246,9 @@ img { max-width: 100%; display: block; }
 .campana-card-horizontal {
   grid-template-columns: 200px 1fr;
 }
-.campana-portada-lista-wrap {
-  width: 200px;
-  max-height: 340px;
-}
 .campana-card-horizontal .campana-portada-lista {
-  width: 100%;
-  height: auto;
-  max-height: 340px;
+  width: 200px;
+  height: 260px;
   object-fit: cover;
   object-position: center;
 }
