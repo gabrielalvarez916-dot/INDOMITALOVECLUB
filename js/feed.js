@@ -8,6 +8,7 @@
 // ────────────────────────────────────────────────────────────
 
 let _campañasTodas = [];
+let _campanasRankingCerradas = []; // libros con puesto en el ranking del mes cuya única campaña ya cerró (para el filtro "Los más leídos")
 let _idsCampanasFavoritas = new Set(); // ids de campaña que el usuario tiene en favoritos (RPC obtener_mis_favoritos)
 
 async function _cargarFavoritosDelUsuario() {
@@ -173,6 +174,7 @@ async function cargarFeed() {
 
   const clavesLibros = [...new Set((campanas || []).map(c => _claveLibroCampana(c)))];
   let rankingsPorLibro = {};
+  const mesActual = new Date().toISOString().slice(0, 7);
   if (clavesLibros.length > 0) {
     // El badge de posición (🏆 Top 5 / ⭐ Top 20) sigue viniendo del ranking
     // MENSUAL, para que coincida con la pantalla pública de "Ranking de
@@ -180,7 +182,6 @@ async function cargarFeed() {
     // cambio, se muestran a nivel HISTÓRICO (todas las campañas del libro,
     // de cualquier mes) — se pisan más abajo con los datos de
     // ranking_libros_historico.
-    const mesActual = new Date().toISOString().slice(0, 7);
     const { data: rankings } = await supabaseClient
       .from('ranking_libros')
       .select('*')
@@ -264,6 +265,43 @@ async function cargarFeed() {
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
     return;
+  }
+
+  // "Los más leídos" tiene que mostrar también los libros con puesto en el
+  // ranking de este mes aunque su campaña ya haya cerrado (esas campañas no
+  // están en `campanas` porque esa consulta de arriba solo trae
+  // estado='activa'). Las buscamos acá aparte y quedan en
+  // _campanasRankingCerradas — SIN tocar _campañasTodas, así el feed general
+  // y "Solo para vos" siguen exactamente igual que antes.
+  _campanasRankingCerradas = [];
+  const { data: rankingsDelMes } = await supabaseClient
+    .from('ranking_libros')
+    .select('*')
+    .eq('mes_año', mesActual)
+    .not('pos_top', 'is', null);
+  const rankingsFaltantes = (rankingsDelMes || []).filter(r =>
+    r.id_libro && !clavesLibros.includes(r.clave_libro)
+  );
+  if (rankingsFaltantes.length > 0) {
+    const { data: campanasCerradas } = await supabaseClient
+      .from('campanas')
+      .select('*')
+      .in('id_libro', rankingsFaltantes.map(r => r.id_libro))
+      .order('creado_en', { ascending: false });
+    const cerradaPorLibro = {};
+    (campanasCerradas || []).forEach(c => {
+      if (!cerradaPorLibro[c.id_libro]) cerradaPorLibro[c.id_libro] = c;
+    });
+    _campanasRankingCerradas = await Promise.all(
+      Object.values(cerradaPorLibro).map(c => normalizarCampana(
+        c,
+        rankingsFaltantes.find(r => r.id_libro === c.id_libro),
+        archivosPorCampana[c.id],
+        tropesPorCampana[c.id],
+        subgenerosPorCampana[c.id],
+        false
+      ))
+    );
   }
 
   _campañasTodas = ordenarFeed(_campañasTodas);
@@ -451,8 +489,17 @@ function filtrarFeed() {
   } else if (idGeneroFiltro === 'ranking') {
     // "Los más leídos": solo libros con posición en el ranking del mes
     // actual (c.rankingLibro.posicion), ordenados 1, 2, 3... N. Los que
-    // no tienen ranking este mes quedan afuera (a propósito).
-    campañasFiltradas = campañasFiltradas
+    // no tienen ranking este mes quedan afuera (a propósito). Este filtro,
+    // a diferencia de todos los demás, también suma los libros cuya
+    // campaña ya cerró (_campanasRankingCerradas).
+    let extraCerradas = _campanasRankingCerradas;
+    if (textoBuscar) {
+      extraCerradas = extraCerradas.filter(c =>
+        c.nombreLibro.toLowerCase().includes(textoBuscar) ||
+        c.nombreAutor.toLowerCase().includes(textoBuscar)
+      );
+    }
+    campañasFiltradas = [...campañasFiltradas, ...extraCerradas]
       .filter(c => c.rankingLibro?.posicion)
       .sort((a, b) => a.rankingLibro.posicion - b.rankingLibro.posicion);
   } else if (idGeneroFiltro) {
