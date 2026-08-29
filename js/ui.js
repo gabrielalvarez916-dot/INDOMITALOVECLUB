@@ -467,6 +467,18 @@ function cambiarTab(tabClickeado, idContenido) {
   if (contenidoObjetivo) {
     contenidoObjetivo.classList.add('activo');
   }
+
+  // Fix temporal: en el panel reseñador, la pestaña "Mi ranking" rompe el
+  // layout mobile cuando están los banners laterales. Se ocultan solo ahí.
+  if (panelPadre) {
+    const panelLayout = panelPadre.closest('.panel-layout');
+    if (panelLayout) {
+      const lateral = panelLayout.querySelector('.panel-layout-lateral');
+      if (lateral) {
+        lateral.style.display = (idContenido === 'tab-ranking') ? 'none' : '';
+      }
+    }
+  }
 }
 
 
