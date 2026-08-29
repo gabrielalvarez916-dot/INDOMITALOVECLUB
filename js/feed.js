@@ -9,6 +9,7 @@
 
 let _campañasTodas = [];
 let _campanasRankingCerradas = []; // libros con puesto en el ranking del mes cuya única campaña ya cerró (para el filtro "Los más leídos")
+let _generosCatalogoFiltro = []; // catálogo de géneros para el <select> de filtro (para poder recalcular los contadores)
 let _idsCampanasFavoritas = new Set(); // ids de campaña que el usuario tiene en favoritos (RPC obtener_mis_favoritos)
 
 async function _cargarFavoritosDelUsuario() {
@@ -314,6 +315,8 @@ async function cargarFeed() {
 
   _campañasTodas = ordenarFeed(_campañasTodas);
 
+  actualizarContadoresFiltroGenero();
+
   renderizarFeed(_campañasTodas);
   Slider.init();
   renderizarSoloParaVos();
@@ -535,12 +538,37 @@ async function poblarFiltroGenero() {
 
   if (error) { console.error('Error cargando generos para el filtro:', error); return; }
 
+  _generosCatalogoFiltro = data || [];
+  actualizarContadoresFiltroGenero();
+}
+
+/**
+ * Recalcula y muestra, entre paréntesis al lado de cada opción del filtro,
+ * cuántos libros hay disponibles en esa categoría (novedades, ranking y
+ * cada género). Se llama después de cargar tanto el catálogo de géneros
+ * como las campañas, sin importar cuál termine primero.
+ */
+function actualizarContadoresFiltroGenero() {
+  const select = document.getElementById('filtro-genero');
+  if (!select) return;
+
+  const valorActual = select.value;
+
+  const totalNovedades = _campañasTodas.filter(c => c.esNovedad).length;
+  const totalRanking = [..._campañasTodas, ..._campanasRankingCerradas]
+    .filter(c => c.rankingLibro?.posicion).length;
+
   select.innerHTML = `
     <option value="">Filtrar por</option>
-    <option value="novedad">✨ Novedades</option>
-    <option value="ranking">🏆 Los más leídos</option>
-    ${(data || []).map(g => `<option value="${g.id}">${g.nombre}</option>`).join('')}
+    <option value="novedad">✨ Novedades (${totalNovedades})</option>
+    <option value="ranking">🏆 Los más leídos (${totalRanking})</option>
+    ${_generosCatalogoFiltro.map(g => {
+      const total = _campañasTodas.filter(c => c.idGenero === g.id).length;
+      return `<option value="${g.id}">${g.nombre} (${total})</option>`;
+    }).join('')}
   `;
+
+  select.value = valorActual;
 }
 
 
