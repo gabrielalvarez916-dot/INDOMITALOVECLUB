@@ -107,6 +107,12 @@ async function cargarPanelAutor() {
   await cargarCampañasAutor(user.id);
   await cargarHistorialAutor(user.id);
 
+  // Ambas listas ya están cargadas: se vuelven a pintar juntas para que el
+  // botón "Renovar" (que compara campañas activas + historial) tenga los
+  // dos lados completos sin importar cuál terminó de cargar primero.
+  _renderListaCampanasActivas();
+  _renderListaHistorial();
+
   await Promise.all([
     cargarEstadisticasAutor(user.id),
     cargarPlanAutor(user.id),
@@ -312,6 +318,20 @@ async function cargarCampañasAutor(idUsuario) {
     });
   }
 
+  _renderListaCampanasActivas();
+}
+
+/**
+ * Pinta la lista de campañas activas usando el estado ya cargado en
+ * _campañasAutor. Separado de cargarCampañasAutor para poder volver a
+ * pintarla después de que cargue el historial (el botón Renovar necesita
+ * ambas listas cargadas para saber si una campaña es la más reciente
+ * de su libro).
+ */
+function _renderListaCampanasActivas() {
+  const contenedor = document.getElementById('autor-campanas-lista');
+  if (!contenedor) return;
+
   if (_campañasAutor.length === 0) {
     contenedor.innerHTML = `
       <div class="estado-vacio">
@@ -384,6 +404,9 @@ function construirCardCampañaAutor(c) {
           ` : `
           <button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>
           <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+          ${(c.estado === 'finalizada' && _esUltimaCampanaDelLibro(c))
+            ? `<button class="btn-primario btn-sm btn-full" onclick="abrirRenovarCampana('${c.id}')">🔁 Renovar campaña</button>`
+            : ''}
           `}
         </div>
       </div>
@@ -1625,6 +1648,28 @@ async function cargarHistorialAutor(idUsuario) {
     return;
   }
 
+  _renderListaHistorial();
+}
+
+/**
+ * Pinta la lista de historial usando el estado ya cargado en
+ * _historialAutor. Separado de cargarHistorialAutor por el mismo motivo
+ * que _renderListaCampanasActivas: el botón Renovar necesita comparar
+ * contra _campañasAutor, que puede haber cambiado después.
+ */
+function _renderListaHistorial() {
+  const contenedor = document.getElementById('autor-historial-lista');
+  if (!contenedor) return;
+
+  if (_historialAutor.length === 0) {
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <p class="estado-vacio-texto">No tenés campañas en el historial todavía.</p>
+      </div>
+    `;
+    return;
+  }
+
   contenedor.innerHTML = _historialAutor.map(c => {
     const variante = c.estado === 'cancelada' ? 'cancelada' : 'finalizada';
     const icono = c.estado === 'cancelada' ? '✕' : '✓';
@@ -1655,7 +1700,7 @@ async function cargarHistorialAutor(idUsuario) {
     </div>
   `;
   }).join('');
-  }
+}
 
 // ────────────────────────────────────────────────────────────
 // CANCELAR CAMPAÑA
@@ -1963,6 +2008,8 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     cerrarModales();
     await cargarCampañasAutor(user.id);
     await cargarHistorialAutor(user.id);
+    _renderListaCampanasActivas();
+    _renderListaHistorial();
     await cargarEstadisticasAutor(user.id);
   }, 1500);
 }
