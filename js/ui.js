@@ -470,8 +470,11 @@ function cambiarTab(tabClickeado, idContenido) {
 
   // Fix temporal: en el panel reseñador, la pestaña "Mi ranking" rompe el
   // layout mobile cuando están los banners laterales. Se ocultan solo ahí.
-  if (panelPadre) {
-    const panelLayout = panelPadre.closest('.panel-layout');
+  // (buscamos desde el contenido activado, no desde panelPadre, porque
+  // .tabs y .panel-layout son hermanos dentro de .seccion-inner, no hay
+  // relación ancestro-descendiente entre ellos)
+  if (contenidoObjetivo) {
+    const panelLayout = contenidoObjetivo.closest('.panel-layout');
     if (panelLayout) {
       const lateral = panelLayout.querySelector('.panel-layout-lateral');
       if (lateral) {
