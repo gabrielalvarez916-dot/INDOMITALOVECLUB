@@ -440,7 +440,8 @@ const PLANES_CAMPANA_INFO = [
     descripcion: (libro) => `Dale a <strong>${libro}</strong> los reseñadores que verdaderamente matchean con tu libro y tienen gustos en común. Impulso es la forma más rápida y confiable de encontrar reseñadores con 70% de match con tu campaña para asegurarte de que realmente van a disfrutar de tu libro.`,
     incluye: (dias, compatMin) => [
       `Portada destacada: tu libro en el slider principal ${dias === '7' ? 'una semana' : `${dias} días`}, lo primero que ven los reseñadores al entrar.`,
-      `Publicitamos tu campaña con un post en el Instagram de Indómita.`,
+      `Banner en el panel de reseñadoras durante una semana.`,
+      `Publicitamos tu campaña con una historia en el Instagram de Indómita.`,
       `Notificación directa: avisamos a los reseñadores con mejor compatibilidad con tu libro (${compatMin}% o más), tantos como cupos libres tenga, para que se postulen enseguida.`
     ],
     nota: 'Cada campaña puede impulsarse una sola vez, así que elegí sabiamente el momento.'
@@ -450,12 +451,13 @@ const PLANES_CAMPANA_INFO = [
     nombre: 'Select',
     subtitulo: 'Reseñadores con más visibilidad',
     habilitado: true,
-    precioArs: 9000,
-    precioUsd: 6,
+    precioArs: 12000,
+    precioUsd: 8,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> reseñadores con más visibilidad en redes sociales. Select prioriza reseñadores con 50% o más de confiabilidad y más de 1.500 seguidores, para que tu campaña llegue a más lectores además de sumar cupos.`,
     incluye: () => [
-      `Portada destacada: tu libro en el banner principal de la plataforma durante una semana.`,
-      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita (esa misma semana).`,
+      `Banner destacado en el feed principal de la plataforma durante una semana.`,
+      `Banner en el panel de reseñadoras durante una semana.`,
+      `Publicitamos tu campaña con una historia en el Instagram de Indómita.`,
       `Notificación directa: durante toda la semana avisamos a nuevos reseñadores que cumplan el perfil (50% o más de confiabilidad y más de 1.500 seguidores), buscando activamente candidatos con ese formato.`
     ]
   },
@@ -464,12 +466,14 @@ const PLANES_CAMPANA_INFO = [
     nombre: 'Resistence',
     subtitulo: 'Más reseñas entregadas',
     habilitado: true,
-    precioArs: 12000,
-    precioUsd: 8,
+    precioArs: 15000,
+    precioUsd: 10,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> más reseñas entregadas, con reseñadores confiables y buen match. Resistence combina 70% o más de confiabilidad con un mínimo de 51% de match, para asegurar cupos que realmente se completen.`,
     incluye: () => [
-      `Portada destacada: tu libro en banner y slider principal durante una semana.`,
-      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita por semana.`,
+      `Portada destacada: tu libro en el slider principal durante una semana.`,
+      `Banner destacado en el feed principal de la plataforma durante una semana.`,
+      `Banner en el panel de reseñadoras durante una semana.`,
+      `Publicitamos tu campaña con una historia en el Instagram de Indómita.`,
       `Notificación directa: durante toda la semana avisamos a nuevos reseñadores que cumplan el perfil (70% o más de confiabilidad y mínimo 51% de match), buscando activamente candidatos con ese formato.`
     ]
   },
@@ -478,13 +482,15 @@ const PLANES_CAMPANA_INFO = [
     nombre: 'Complete',
     subtitulo: 'Personalizado con auditoría',
     habilitado: true,
-    precioArs: 15000,
-    precioUsd: 10,
+    precioArs: 20000,
+    precioUsd: 14,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> una estrategia 100% personalizada. Hacemos una auditoría de tu campaña para definir qué conviene priorizar —match, confiabilidad o seguidores— y armamos el orden de búsqueda de reseñadores a medida.`,
     incluye: () => [
       `Auditoría personalizada: analizamos tu campaña y te decimos qué priorizar.`,
-      `Portada destacada: tu libro en banner y slider principal durante dos semanas.`,
-      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita, durante dos semanas.`,
+      `Portada destacada: tu libro en el slider principal durante dos semanas.`,
+      `Banner destacado en el feed principal de la plataforma durante dos semanas.`,
+      `Banner en el panel de reseñadoras durante dos semanas.`,
+      `Publicitamos tu campaña con dos historias en el Instagram de Indómita.`,
       `Notificación directa en formato invitación: durante las dos semanas buscamos activamente nuevos reseñadores según la escala de tu auditoría (por ejemplo: primero 70% de confiabilidad, 1.500 seguidores y 70% de match; luego 70% de match y 70% de confiabilidad; luego 70% de match).`
     ]
   }

@@ -717,14 +717,15 @@ async function _ejecutarAccionImpulsoAdmin(nombreFuncion, params) {
 
 
 // ────────────────────────────────────────────────────────────
-// PENDIENTES (tareas manuales: banner / post instagram por impulso)
+// PENDIENTES (tareas manuales: banner feed / banner cuadrado / historia IG)
 // ────────────────────────────────────────────────────────────
 
 /**
- * Carga y muestra la lista de tareas manuales pendientes (banner / post
- * instagram) generadas automáticamente al activar cada impulso. Cada plan
- * genera una cantidad distinta de líneas: Impulso 1 post; Select y
- * Resistence 1 banner + 2 posts; Complete 1 banner + 4 posts.
+ * Carga y muestra la lista de tareas manuales pendientes (banner feed /
+ * banner cuadrado / historia de Instagram) generadas automáticamente al
+ * activar cada impulso. Impulso genera 1 banner cuadrado + 1 historia;
+ * Select y Resistence generan 1 banner + 1 banner cuadrado + 1 historia;
+ * Complete genera 1 banner + 1 banner cuadrado + 2 historias.
  */
 async function cargarPendientesAdmin() {
   const contenedor = document.getElementById('admin-pendientes-lista');
@@ -749,9 +750,11 @@ async function cargarPendientesAdmin() {
   contenedor.innerHTML = `
     <p class="form-info" style="margin-bottom:14px;">
       Cada vez que se activa un impulso se generan acá las tareas manuales que hay que hacer
-      (subir el post de Instagram, activar el banner). Marcá "Hecho" cuando la hagas. Si es un
-      banner de Select/Resistence o Complete, al marcarlo Hecho te calcula la fecha en la que
-      hay que desactivarlo manualmente desde Banner publicitario.
+      (banner del feed, banner del panel de reseñadoras y/o historia de Instagram). Marcá
+      "Hecho" cuando la subas. Para los banners, te calcula la fecha en la que hay que
+      desactivarlos manualmente desde Banner publicitario (una semana para Impulso/Select/
+      Resistence, dos semanas para Complete); la historia de Instagram no tiene fecha de
+      desactivación.
     </p>
     <table class="admin-tabla">
       <thead>
@@ -780,14 +783,20 @@ async function cargarPendientesAdmin() {
  */
 function construirFilaPendienteAdmin(t) {
   const nombrePlan = t.plan ? t.plan.charAt(0).toUpperCase() + t.plan.slice(1) : '—';
-  const nombreAccion = t.tipoAccion === 'banner' ? 'Banner' : 'Post Instagram';
+  const nombresAccion = {
+    banner: 'Banner (feed)',
+    banner_cuadrado: 'Banner (reseñadoras)',
+    historia_instagram: 'Historia Instagram'
+  };
+  const nombreAccion = nombresAccion[t.tipoAccion] || t.tipoAccion || '—';
+  const esBanner = t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado';
   const estadoBadge = t.estado === 'hecho'
     ? '<span class="badge badge-aprobada">Hecho</span>'
     : '<span class="badge badge-pendiente">Pendiente</span>';
 
   const fechaDesactivar = t.fechaDesactivarBanner
     ? `<strong>${String(t.fechaDesactivarBanner).split('T')[0]}</strong>`
-    : (t.tipoAccion === 'banner' ? '—' : '');
+    : (esBanner ? '—' : '');
 
   const boton = t.estado === 'hecho'
     ? `<button class="btn-secundario btn-sm" onclick="marcarTareaImpulsoAdmin('${t.id}', 'pendiente')">Volver a pendiente</button>`
