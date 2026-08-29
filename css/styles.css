@@ -52,6 +52,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 a { color: var(--bordo); text-decoration: none; transition: var(--transicion); }
 a:hover { color: var(--bordo-claro); }
@@ -6348,4 +6349,58 @@ img { max-width: 100%; display: block; }
   font-size: 10px;
   color: var(--gris-suave);
   margin-top: 4px;
+}
+
+/* ============================================================
+   FIX MOBILE: "Mi ranking" (panel reseñador) no estaba adaptado
+   a pantallas chicas. Achicamos y forzamos que todo entre en el
+   ancho disponible, con overflow-x:auto en las tiras horizontales
+   como red de seguridad.
+   ============================================================ */
+@media (max-width: 480px) {
+  #tab-ranking, .ranking-info {
+    padding: 14px 10px;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  #tab-ranking h3 {
+    font-size: 17px !important;
+  }
+
+  /* Podio: columnas más angostas y gap más chico para que 5 entren */
+  .ranking-podio-wrap {
+    gap: 4px;
+    padding: 0 2px;
+    flex-wrap: nowrap;
+  }
+  .ranking-podio-columna { width: 48px; }
+  .ranking-podio-alias { font-size: 9px; max-width: 48px; }
+  .ranking-podio-avatar { width: 36px; height: 36px; }
+  .ranking-podio-avatar--oro { width: 44px; height: 44px; }
+  .ranking-podio-puntos { font-size: 9px; }
+  .ranking-podio-bloque-numero { font-size: 12px; }
+  .ranking-podio-bloque-icono { font-size: 9px; }
+
+  /* Carrusel de destacados: avatares más chicos */
+  .ranking-resenador-avatar-item { width: 62px; }
+  .ranking-resenador-avatar-img { width: 50px; height: 50px; }
+  .ranking-resenador-avatar-alias { font-size: 10px; }
+  .ranking-resenador-badge-nivel { font-size: 9px; }
+
+  /* Top 20 / listas de liga: que el texto se achique y no empuje ancho */
+  .ranking-resenador-top-item, .ranking-top-item {
+    gap: 6px;
+    padding: 8px 6px;
+  }
+  .ranking-resenador-top-avatar, .ranking-top-item img { width: 34px; height: 34px; }
+  .ranking-top-item-titulo, .ranking-resenador-top-item p { font-size: 12px; }
+  .ranking-seccion-titulo { font-size: 14px; }
+
+  /* Red de seguridad: cualquier tira horizontal que exceda el ancho
+     scrollea en su propio contenedor en vez de estirar la pantalla */
+  .ranking-resenadores-carrusel, .ranking-top-lista {
+    overflow-x: auto;
+    max-width: 100%;
+  }
 }
