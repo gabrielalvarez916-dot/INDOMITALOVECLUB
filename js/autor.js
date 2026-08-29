@@ -117,8 +117,81 @@ async function cargarPanelAutor() {
     cargarEstadisticasAutor(user.id),
     cargarPlanAutor(user.id),
     cargarBibliotecaPanel(user.id),
-    cargarCreditosAutor(user.id)
+    cargarCreditosAutor(user.id),
+    cargarCreditoMensualGratis(user.id)
   ]);
+}
+
+
+// ────────────────────────────────────────────────────────────
+// CRÉDITO MENSUAL GRATIS (Impulso para Basic, Complete para Premium)
+// Solo para suscriptores nuevos (bajo las condiciones de plan actuales).
+// Se muestra arriba del banner de créditos por bajo rendimiento.
+// ────────────────────────────────────────────────────────────
+
+async function cargarCreditoMensualGratis(idUsuario) {
+  const contenedor = document.getElementById('autor-credito-mensual-banner');
+  if (!contenedor) return;
+
+  const { data: usuarioRow, error } = await supabaseClient
+    .from('usuarios')
+    .select('plan, credito_mensual_disponible')
+    .eq('id', idUsuario)
+    .single();
+
+  if (error || !usuarioRow || !usuarioRow.credito_mensual_disponible) {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  const esBasic = usuarioRow.plan === 'basic';
+  const nombrePlan = esBasic ? 'Impulso' : 'Complete';
+
+  contenedor.innerHTML = `
+    <div class="creditos-autor-banner">
+      🚀 Tenés 1 <strong>${nombrePlan} gratis</strong> este mes.
+      <button class="btn-secundario btn-sm" style="margin-left:8px;" onclick="abrirSelectorCreditoMensualGratis()">Activarlo en una campaña</button>
+    </div>
+  `;
+}
+
+/**
+ * Muestra un selector simple con las campañas activas del autor para elegir
+ * dónde usar el Impulso/Complete gratis del mes.
+ */
+function abrirSelectorCreditoMensualGratis() {
+  if (!_campañasAutor || _campañasAutor.length === 0) {
+    mostrarToast('Necesitás tener al menos una campaña activa para usar tu crédito gratis.', 'error');
+    return;
+  }
+
+  const opciones = _campañasAutor
+    .map((c, i) => `${i + 1}) ${c.nombreLibro || c.titulo || 'Campaña ' + c.id}`)
+    .join('\n');
+  const eleccion = prompt(`¿En qué campaña activás tu crédito gratis de este mes?\n\n${opciones}\n\nEscribí el número:`);
+  const indice = parseInt(eleccion, 10) - 1;
+  if (isNaN(indice) || indice < 0 || indice >= _campañasAutor.length) return;
+
+  activarCreditoMensualGratis(_campañasAutor[indice].id);
+}
+
+async function activarCreditoMensualGratis(idCampana) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { data: resultado, error } = await supabaseClient.rpc('activar_credito_mensual_gratis', {
+    p_usuario: user.id,
+    p_campana: idCampana
+  });
+
+  if (error || resultado?.error) {
+    mostrarToast(resultado?.error || 'No se pudo activar el crédito gratis.', 'error');
+    return;
+  }
+
+  mostrarToast('¡Listo! Se activó gratis en tu campaña.', 'ok');
+  cargarCreditoMensualGratis(user.id);
+  cargarCampañasAutor(user.id);
 }
 
 
