@@ -495,7 +495,12 @@ function construirCardCampañaAutor(c) {
  * plan por plan, en _renderPlanCampanaDetalle.
  */
 function botonImpulsarCampanaHtml(c) {
-  return `<button class="btn-primario btn-sm btn-full btn-impulsar-campana" onclick="abrirModalImpulsarCampana('${c.id}')">🚀 Impulsar campaña</button>`;
+  // Si se llegó desde el link del mail "Impulsá tu campaña"
+  // (?ir=panel-autor&impulsar=ID), marca con un pulso el botón de ESA
+  // campaña puntual, para que sea obvio dónde hacer click.
+  const idImpulsarURL = new URLSearchParams(window.location.search).get('impulsar');
+  const destacado = idImpulsarURL && idImpulsarURL === c.id;
+  return `<button class="btn-primario btn-sm btn-full btn-impulsar-campana${destacado ? ' btn-impulsar-campana--destacado' : ''}" onclick="abrirModalImpulsarCampana('${c.id}')">🚀 Impulsar campaña</button>`;
 }
 
 /**

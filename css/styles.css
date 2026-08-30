@@ -6360,3 +6360,16 @@ img { max-width: 100%; display: block; }
   0%, 100% { box-shadow: 0 0 0 0 rgba(139, 26, 43, 0); }
   50% { box-shadow: 0 0 0 4px rgba(139, 26, 43, 0.35); }
 }
+
+/* Marcador sobre "Impulsar campaña" cuando se llega desde el link del
+   mail "Impulsá tu campaña" (?ir=panel-autor&impulsar=ID). Pulso
+   continuo (no solo 2 veces como el de ranking) para que se note
+   incluso si el autor tarda en mirar la pantalla después de loguearse. */
+.btn-impulsar-campana--destacado {
+  position: relative;
+  animation: impulsoPulso 1.6s ease-in-out infinite;
+}
+@keyframes impulsoPulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 26, 43, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(139, 26, 43, 0); }
+}
