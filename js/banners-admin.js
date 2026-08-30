@@ -72,6 +72,20 @@ function renderizarFormBanner() {
     <h3 class="panel-titulo" style="font-size:20px;">Agregar banner</h3>
     <form id="form-nuevo-banner" onsubmit="crearBannerAdmin(event)">
       <div class="form-grupo">
+        <label class="form-label">Ubicación</label>
+        <select id="banner-ubicacion" class="form-input" onchange="_actualizarHintBanner()">
+          <option value="feed">Feed (banner ancho arriba de todo)</option>
+          <option value="panel_resenador">Panel del reseñador (columna lateral, formato historia)</option>
+        </select>
+      </div>
+      <div class="form-grupo" id="banner-grupo-slot" style="display:none;">
+        <label class="form-label">Espacio</label>
+        <select id="banner-slot" class="form-input">
+          <option value="1">Espacio 1 (de arriba)</option>
+          <option value="2">Espacio 2 (de abajo)</option>
+        </select>
+      </div>
+      <div class="form-grupo">
         <label class="form-label">Tipo de banner</label>
         <select id="banner-tipo" class="form-input" onchange="_actualizarHintBanner()">
           <option value="imagen">Imagen (jpg, png, gif animado)</option>
@@ -113,6 +127,11 @@ function renderizarFormBanner() {
         <label class="form-label">Duración en pantalla (segundos)</label>
         <input type="number" id="banner-duracion" class="form-input" value="10" min="1" />
       </div>
+      <div class="form-grupo">
+        <label class="form-label">Desactivar automáticamente el (opcional)</label>
+        <input type="datetime-local" id="banner-fecha-fin" class="form-input" />
+        <p class="form-info">Si lo dejás vacío, el banner se queda activo hasta que lo apagues a mano.</p>
+      </div>
       <div id="banner-error" class="mensaje-error" style="display:none;"></div>
       <div id="banner-ok" class="mensaje-ok" style="display:none;"></div>
       <button type="submit" class="btn-primario" id="btn-crear-banner">Subir y agregar banner</button>
@@ -140,19 +159,25 @@ function _limpiarUrlSubidaBanner() {
  */
 function _actualizarHintBanner() {
   const tipo = document.getElementById('banner-tipo')?.value;
+  const ubicacion = document.getElementById('banner-ubicacion')?.value;
   const hint = document.getElementById('banner-hint');
   const label = document.getElementById('banner-archivo-label');
   const input = document.getElementById('banner-archivo');
+  const grupoSlot = document.getElementById('banner-grupo-slot');
   if (!hint || !label || !input) return;
 
   _limpiarUrlSubidaBanner();
 
+  if (grupoSlot) grupoSlot.style.display = ubicacion === 'panel_resenador' ? 'block' : 'none';
+
+  const medida = ubicacion === 'panel_resenador' ? '1080x1920px (formato historia, vertical 9:16)' : '1200x300px';
+
   if (tipo === 'video') {
-    hint.innerHTML = `Tamaño recomendado: 1200x300px. El video se muestra sin sonido, en loop automático.`;
+    hint.innerHTML = `Tamaño recomendado: ${medida}. El video se muestra sin sonido, en loop automático.`;
     label.textContent = 'Archivo de video (.mp4) *';
     input.setAttribute('accept', 'video/mp4');
   } else {
-    hint.innerHTML = `Tamaño recomendado: 1200x300px. Si subís un GIF, se va a animar solo.`;
+    hint.innerHTML = `Tamaño recomendado: ${medida}. Si subís un GIF, se va a animar solo.`;
     label.textContent = 'Archivo de imagen *';
     input.setAttribute('accept', 'image/jpeg,image/png,image/gif');
   }
@@ -239,6 +264,10 @@ async function crearBannerAdmin(event) {
 
   const orden = document.getElementById('banner-orden')?.value;
   const duracion = document.getElementById('banner-duracion')?.value;
+  const ubicacion = document.getElementById('banner-ubicacion')?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
+  const slot = document.getElementById('banner-slot')?.value === '2' ? 2 : 1;
+  const fechaFinInput = document.getElementById('banner-fecha-fin')?.value;
+  const fechaFin = fechaFinInput ? new Date(fechaFinInput).toISOString() : null;
 
   const { data: resultado, error } = await supabaseClient.rpc('admin_crear_banner', {
     p_imagen_url: urlPublica,
@@ -246,7 +275,10 @@ async function crearBannerAdmin(event) {
     p_orden: orden ? parseInt(orden, 10) : 0,
     p_tipo: tipo,
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
-    p_id_campana: idCampana || null
+    p_id_campana: idCampana || null,
+    p_ubicacion: ubicacion,
+    p_slot: slot,
+    p_fecha_fin: fechaFin
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
@@ -309,9 +341,20 @@ async function refrescarListaBanners() {
  * @returns {string} HTML de la card
  */
 function construirCardBannerAdmin(b) {
+  // El feed es un banner ancho (1200x300 ≈ 4:1) y el panel del reseñador es
+  // formato historia, vertical (1080x1920 ≈ 9:16). Cada miniatura respeta la
+  // proporción real de su espacio para que se vea completa y se entienda de
+  // qué campaña es, en vez de recortarla siempre en una franja horizontal.
+  const esPanelResenador = b.ubicacion === 'panel_resenador';
+  const estiloMiniatura = esPanelResenador
+    ? 'width:68px; height:121px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;'
+    : 'width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;';
+
   const miniatura = b.tipo === 'video'
-    ? `<video src="${b.imagenUrl}" muted loop playsinline style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'"></video>`
-    : `<img src="${b.imagenUrl}" alt="Banner" style="width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;" onerror="this.style.display='none'" />`;
+    ? `<video src="${b.imagenUrl}" muted loop playsinline autoplay preload="auto" style="${estiloMiniatura}" onerror="this.style.display='none'"></video>`
+    : `<img src="${b.imagenUrl}" alt="Banner" style="${estiloMiniatura}" onerror="this.style.display='none'" />`;
+
+  const fechaFinTexto = b.fechaFin ? `⏰ Se apaga solo el ${formatearFechaAmigable(b.fechaFin)}` : '';
 
   return `
     <div class="lista-item" style="align-items:center;">
@@ -320,9 +363,11 @@ function construirCardBannerAdmin(b) {
         <p class="lista-item-meta" style="margin-bottom:4px;">
           ${b.activo ? '<span class="badge badge-activa">Activo</span>' : '<span class="badge badge-cancelada">Inactivo</span>'}
           &nbsp;${b.tipo === 'video' ? '<span class="badge">🎬 Video</span>' : '<span class="badge">🖼️ Imagen</span>'}
+          &nbsp;<span class="badge">${b.ubicacion === 'panel_resenador' ? `📱 Panel reseñador · Espacio ${b.slot === 2 ? 2 : 1}` : '🏠 Feed'}</span>
           &nbsp;Orden: ${b.orden ?? 0}
           &nbsp;Duración: ${b.duracionSegundos ?? 10}s
         </p>
+        ${fechaFinTexto ? `<p class="lista-item-meta" style="margin:0;">${fechaFinTexto}</p>` : ''}
         ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : ''}
         ${b.idCampana ? `<p class="lista-item-meta" style="margin:0;">Destino: campaña "${b.nombreCampana || 'sin nombre'}"</p>` : ''}
         ${!b.linkDestino && !b.idCampana ? '<p class="lista-item-meta" style="margin:0;">Sin destino</p>' : ''}
@@ -361,6 +406,20 @@ async function abrirEditarBannerAdmin(idBanner) {
   contenedor.innerHTML = `
     <div style="background:var(--crema); border-radius:8px; padding:12px; margin:10px 0; display:flex; flex-direction:column; gap:10px;">
       <div class="form-grupo" style="margin:0;">
+        <label class="form-label">Ubicación</label>
+        <select id="banner-edit-ubicacion-${idBanner}" class="form-input" onchange="_actualizarSlotEditBanner('${idBanner}')">
+          <option value="feed" ${b.ubicacion !== 'panel_resenador' ? 'selected' : ''}>Feed</option>
+          <option value="panel_resenador" ${b.ubicacion === 'panel_resenador' ? 'selected' : ''}>Panel del reseñador</option>
+        </select>
+      </div>
+      <div class="form-grupo" id="banner-edit-grupo-slot-${idBanner}" style="margin:0; display:${b.ubicacion === 'panel_resenador' ? 'block' : 'none'};">
+        <label class="form-label">Espacio</label>
+        <select id="banner-edit-slot-${idBanner}" class="form-input">
+          <option value="1" ${b.slot !== 2 ? 'selected' : ''}>Espacio 1 (de arriba)</option>
+          <option value="2" ${b.slot === 2 ? 'selected' : ''}>Espacio 2 (de abajo)</option>
+        </select>
+      </div>
+      <div class="form-grupo" style="margin:0;">
         <label class="form-label">Destino al hacer click</label>
         <select id="banner-edit-tipo-destino-${idBanner}" class="form-input" onchange="_actualizarDestinoEditBanner('${idBanner}')">
           <option value="ninguno" ${tipoDestinoActual === 'ninguno' ? 'selected' : ''}>Sin destino (no clickeable)</option>
@@ -388,6 +447,11 @@ async function abrirEditarBannerAdmin(idBanner) {
           <input type="number" id="banner-edit-duracion-${idBanner}" class="form-input" value="${b.duracionSegundos ?? 10}" min="1" />
         </div>
       </div>
+      <div class="form-grupo" style="margin:0;">
+        <label class="form-label">Desactivar automáticamente el (opcional)</label>
+        <input type="datetime-local" id="banner-edit-fecha-fin-${idBanner}" class="form-input" value="${b.fechaFin ? _isoAFechaLocalInput(b.fechaFin) : ''}" />
+        <p class="form-info">Dejalo vacío y borrá el valor si querés que quede activo hasta apagarlo a mano.</p>
+      </div>
       <div style="display:flex; gap:8px;">
         <button class="btn-primario btn-sm" onclick="guardarEditarBannerAdmin('${idBanner}')">Guardar cambios</button>
         <button class="btn-secundario btn-sm" onclick="abrirEditarBannerAdmin('${idBanner}')">Cancelar</button>
@@ -396,6 +460,18 @@ async function abrirEditarBannerAdmin(idBanner) {
   `;
 
   await _cargarCampanasParaBanner(`banner-edit-campana-${idBanner}`, b.idCampana);
+}
+
+/**
+ * Convierte un timestamp ISO (como viene de Supabase) al formato que
+ * espera un <input type="datetime-local">, en hora local del navegador.
+ * @param {string} iso
+ * @returns {string}
+ */
+function _isoAFechaLocalInput(iso) {
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /**
@@ -415,6 +491,19 @@ function _actualizarDestinoEditBanner(idBanner) {
 }
 
 /**
+ * Muestra u oculta el selector de espacio (1/2) en el form de edición
+ * inline según la ubicación elegida (solo aplica a panel_resenador).
+ *
+ * @param {string} idBanner
+ */
+function _actualizarSlotEditBanner(idBanner) {
+  const ubicacion = document.getElementById(`banner-edit-ubicacion-${idBanner}`)?.value;
+  const grupoSlot = document.getElementById(`banner-edit-grupo-slot-${idBanner}`);
+  if (!grupoSlot) return;
+  grupoSlot.style.display = ubicacion === 'panel_resenador' ? 'block' : 'none';
+}
+
+/**
  * Guarda los cambios del mini-formulario de edición de un banner.
  *
  * @param {string} idBanner
@@ -425,6 +514,10 @@ async function guardarEditarBannerAdmin(idBanner) {
   const idCampana = tipoDestino === 'campana' ? document.getElementById(`banner-edit-campana-${idBanner}`)?.value : null;
   const orden = document.getElementById(`banner-edit-orden-${idBanner}`)?.value;
   const duracion = document.getElementById(`banner-edit-duracion-${idBanner}`)?.value;
+  const ubicacion = document.getElementById(`banner-edit-ubicacion-${idBanner}`)?.value === 'panel_resenador' ? 'panel_resenador' : 'feed';
+  const slot = document.getElementById(`banner-edit-slot-${idBanner}`)?.value === '2' ? 2 : 1;
+  const fechaFinInput = document.getElementById(`banner-edit-fecha-fin-${idBanner}`)?.value;
+  const fechaFin = fechaFinInput ? new Date(fechaFinInput).toISOString() : null;
 
   if (tipoDestino === 'campana' && !idCampana) {
     mostrarToast('Elegí una campaña.', 'error');
@@ -436,7 +529,11 @@ async function guardarEditarBannerAdmin(idBanner) {
     p_link_destino: linkDestino,
     p_orden: orden ? parseInt(orden, 10) : 0,
     p_duracion_segundos: duracion ? parseInt(duracion, 10) : 10,
-    p_id_campana: idCampana || null
+    p_id_campana: idCampana || null,
+    p_ubicacion: ubicacion,
+    p_slot: slot,
+    p_fecha_fin: fechaFin,
+    p_limpiar_fecha_fin: !fechaFinInput
   });
 
   if (error || !resultado || resultado.error) {

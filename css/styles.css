@@ -52,6 +52,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 a { color: var(--bordo); text-decoration: none; transition: var(--transicion); }
 a:hover { color: var(--bordo-claro); }
@@ -3551,6 +3552,66 @@ img { max-width: 100%; display: block; }
   border-bottom: 1px solid var(--gris-borde);
 }
 
+/* ============================================================
+   PANEL LAYOUT (columna principal + lateral, ej. panel reseñador)
+   ============================================================ */
+
+.panel-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.panel-layout-principal {
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-layout-lateral {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 24px;
+}
+
+@media (max-width: 768px) {
+  .panel-layout {
+    flex-direction: column;
+  }
+  .panel-layout-lateral {
+    width: 100%;
+    max-width: 360px;
+    margin: 20px auto 0;
+    position: static;
+    flex-direction: row;
+    gap: 12px;
+    justify-content: center;
+  }
+  .banner-lateral-slot {
+    width: calc(50% - 6px);
+    max-width: 170px;
+  }
+}
+
+.banner-lateral {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--crema);
+}
+
+.banner-lateral img,
+.banner-lateral video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .banner-publicitario {
   position: relative;
   max-width: 1200px;
@@ -6288,4 +6349,14 @@ img { max-width: 100%; display: block; }
   font-size: 10px;
   color: var(--gris-suave);
   margin-top: 4px;
+}
+
+/* Resalte temporal al ubicar tu propio puesto en "Mi ranking" */
+.ranking-mi-puesto {
+  animation: rankingPulso 1.3s ease-in-out 2;
+  border-radius: var(--radio-grande);
+}
+@keyframes rankingPulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 26, 43, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(139, 26, 43, 0.35); }
 }

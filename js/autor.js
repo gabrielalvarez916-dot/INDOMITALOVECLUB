@@ -117,8 +117,81 @@ async function cargarPanelAutor() {
     cargarEstadisticasAutor(user.id),
     cargarPlanAutor(user.id),
     cargarBibliotecaPanel(user.id),
-    cargarCreditosAutor(user.id)
+    cargarCreditosAutor(user.id),
+    cargarCreditoMensualGratis(user.id)
   ]);
+}
+
+
+// ────────────────────────────────────────────────────────────
+// CRÉDITO MENSUAL GRATIS (Impulso para Basic, Complete para Premium)
+// Solo para suscriptores nuevos (bajo las condiciones de plan actuales).
+// Se muestra arriba del banner de créditos por bajo rendimiento.
+// ────────────────────────────────────────────────────────────
+
+async function cargarCreditoMensualGratis(idUsuario) {
+  const contenedor = document.getElementById('autor-credito-mensual-banner');
+  if (!contenedor) return;
+
+  const { data: usuarioRow, error } = await supabaseClient
+    .from('usuarios')
+    .select('plan, credito_mensual_disponible')
+    .eq('id', idUsuario)
+    .single();
+
+  if (error || !usuarioRow || !usuarioRow.credito_mensual_disponible) {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  const esBasic = usuarioRow.plan === 'basic';
+  const nombrePlan = esBasic ? 'Impulso' : 'Complete';
+
+  contenedor.innerHTML = `
+    <div class="creditos-autor-banner">
+      🚀 Tenés 1 <strong>${nombrePlan} gratis</strong> este mes.
+      <button class="btn-secundario btn-sm" style="margin-left:8px;" onclick="abrirSelectorCreditoMensualGratis()">Activarlo en una campaña</button>
+    </div>
+  `;
+}
+
+/**
+ * Muestra un selector simple con las campañas activas del autor para elegir
+ * dónde usar el Impulso/Complete gratis del mes.
+ */
+function abrirSelectorCreditoMensualGratis() {
+  if (!_campañasAutor || _campañasAutor.length === 0) {
+    mostrarToast('Necesitás tener al menos una campaña activa para usar tu crédito gratis.', 'error');
+    return;
+  }
+
+  const opciones = _campañasAutor
+    .map((c, i) => `${i + 1}) ${c.nombreLibro || c.titulo || 'Campaña ' + c.id}`)
+    .join('\n');
+  const eleccion = prompt(`¿En qué campaña activás tu crédito gratis de este mes?\n\n${opciones}\n\nEscribí el número:`);
+  const indice = parseInt(eleccion, 10) - 1;
+  if (isNaN(indice) || indice < 0 || indice >= _campañasAutor.length) return;
+
+  activarCreditoMensualGratis(_campañasAutor[indice].id);
+}
+
+async function activarCreditoMensualGratis(idCampana) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const { data: resultado, error } = await supabaseClient.rpc('activar_credito_mensual_gratis', {
+    p_usuario: user.id,
+    p_campana: idCampana
+  });
+
+  if (error || resultado?.error) {
+    mostrarToast(resultado?.error || 'No se pudo activar el crédito gratis.', 'error');
+    return;
+  }
+
+  mostrarToast('¡Listo! Se activó gratis en tu campaña.', 'ok');
+  cargarCreditoMensualGratis(user.id);
+  cargarCampañasAutor(user.id);
 }
 
 
@@ -440,7 +513,8 @@ const PLANES_CAMPANA_INFO = [
     descripcion: (libro) => `Dale a <strong>${libro}</strong> los reseñadores que verdaderamente matchean con tu libro y tienen gustos en común. Impulso es la forma más rápida y confiable de encontrar reseñadores con 70% de match con tu campaña para asegurarte de que realmente van a disfrutar de tu libro.`,
     incluye: (dias, compatMin) => [
       `Portada destacada: tu libro en el slider principal ${dias === '7' ? 'una semana' : `${dias} días`}, lo primero que ven los reseñadores al entrar.`,
-      `Publicitamos tu campaña con un post en el Instagram de Indómita.`,
+      `Banner en el panel de reseñadoras durante una semana.`,
+      `Publicitamos tu campaña con una historia en el Instagram de Indómita.`,
       `Notificación directa: avisamos a los reseñadores con mejor compatibilidad con tu libro (${compatMin}% o más), tantos como cupos libres tenga, para que se postulen enseguida.`
     ],
     nota: 'Cada campaña puede impulsarse una sola vez, así que elegí sabiamente el momento.'
@@ -450,12 +524,13 @@ const PLANES_CAMPANA_INFO = [
     nombre: 'Select',
     subtitulo: 'Reseñadores con más visibilidad',
     habilitado: true,
-    precioArs: 9000,
-    precioUsd: 6,
+    precioArs: 12000,
+    precioUsd: 8,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> reseñadores con más visibilidad en redes sociales. Select prioriza reseñadores con 50% o más de confiabilidad y más de 1.500 seguidores, para que tu campaña llegue a más lectores además de sumar cupos.`,
     incluye: () => [
-      `Portada destacada: tu libro en el banner principal de la plataforma durante una semana.`,
-      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita (esa misma semana).`,
+      `Banner destacado en el feed principal de la plataforma durante una semana.`,
+      `Banner en el panel de reseñadoras durante una semana.`,
+      `Publicitamos tu campaña con una historia en el Instagram de Indómita.`,
       `Notificación directa: durante toda la semana avisamos a nuevos reseñadores que cumplan el perfil (50% o más de confiabilidad y más de 1.500 seguidores), buscando activamente candidatos con ese formato.`
     ]
   },
@@ -464,12 +539,14 @@ const PLANES_CAMPANA_INFO = [
     nombre: 'Resistence',
     subtitulo: 'Más reseñas entregadas',
     habilitado: true,
-    precioArs: 12000,
-    precioUsd: 8,
+    precioArs: 15000,
+    precioUsd: 10,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> más reseñas entregadas, con reseñadores confiables y buen match. Resistence combina 70% o más de confiabilidad con un mínimo de 51% de match, para asegurar cupos que realmente se completen.`,
     incluye: () => [
-      `Portada destacada: tu libro en banner y slider principal durante una semana.`,
-      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita por semana.`,
+      `Portada destacada: tu libro en el slider principal durante una semana.`,
+      `Banner destacado en el feed principal de la plataforma durante una semana.`,
+      `Banner en el panel de reseñadoras durante una semana.`,
+      `Publicitamos tu campaña con una historia en el Instagram de Indómita.`,
       `Notificación directa: durante toda la semana avisamos a nuevos reseñadores que cumplan el perfil (70% o más de confiabilidad y mínimo 51% de match), buscando activamente candidatos con ese formato.`
     ]
   },
@@ -478,13 +555,15 @@ const PLANES_CAMPANA_INFO = [
     nombre: 'Complete',
     subtitulo: 'Personalizado con auditoría',
     habilitado: true,
-    precioArs: 15000,
-    precioUsd: 10,
+    precioArs: 20000,
+    precioUsd: 14,
     descripcion: (libro) => `Dale a <strong>${libro}</strong> una estrategia 100% personalizada. Hacemos una auditoría de tu campaña para definir qué conviene priorizar —match, confiabilidad o seguidores— y armamos el orden de búsqueda de reseñadores a medida.`,
     incluye: () => [
       `Auditoría personalizada: analizamos tu campaña y te decimos qué priorizar.`,
-      `Portada destacada: tu libro en banner y slider principal durante dos semanas.`,
-      `Publicitamos tu campaña con 2 posts en el Instagram de Indómita, durante dos semanas.`,
+      `Portada destacada: tu libro en el slider principal durante dos semanas.`,
+      `Banner destacado en el feed principal de la plataforma durante dos semanas.`,
+      `Banner en el panel de reseñadoras durante dos semanas.`,
+      `Publicitamos tu campaña con dos historias en el Instagram de Indómita.`,
       `Notificación directa en formato invitación: durante las dos semanas buscamos activamente nuevos reseñadores según la escala de tu auditoría (por ejemplo: primero 70% de confiabilidad, 1.500 seguidores y 70% de match; luego 70% de match y 70% de confiabilidad; luego 70% de match).`
     ]
   }
@@ -2025,13 +2104,16 @@ async function cargarPlanAutor(idUsuario) {
 
   const { data: u, error } = await supabaseClient
     .from('usuarios')
-    .select('plan, fecha_vencimiento_plan')
+    .select('plan, fecha_vencimiento_plan, limite_campanas_override, limite_resenadores_override')
     .eq('id', idUsuario)
     .single();
 
   if (error || !u) return;
   const plan = u.plan || 'free';
   const fechaVenc = u.fecha_vencimiento_plan || '';
+  // Suscriptor viejo (de antes de este cambio de planes): mantiene sus límites originales
+  // congelados, así que en "Mi plan" le mostramos SUS números reales, no los nuevos de marketing.
+  const esSuscriptorCongelado = u.limite_resenadores_override !== null && u.limite_resenadores_override !== undefined;
 
   const esEditorial = Sesion.rol() === 'editorial';
 
@@ -2083,7 +2165,9 @@ async function cargarPlanAutor(idUsuario) {
       }
     ];
   } else {
-    // ── Autor: exactamente igual que antes, sin ningún cambio ──
+    // ── Autor: Basic y Premium con las condiciones nuevas (para altas nuevas).
+    // Si el usuario ya es suscriptor de antes (congelado), su propia card de
+    // "Plan actual" muestra sus números originales en vez de los nuevos.
     planes = [
       {
         id: 'free',
@@ -2098,7 +2182,9 @@ async function cargarPlanAutor(idUsuario) {
         nombre: 'Basic',
         precio: '$20.000',
         subprecio: '$190.000/año',
-        beneficios: ['3 campañas por mes', 'Hasta 50 reseñadores'],
+        beneficios: (plan === 'basic' && esSuscriptorCongelado)
+          ? [`${u.limite_campanas_override} campañas por mes`, `Hasta ${u.limite_resenadores_override} reseñadores`]
+          : ['3 campañas por mes', 'Hasta 30 reseñadores', '1 Impulso gratis por mes'],
         esPremium: false
       },
       {
@@ -2106,7 +2192,9 @@ async function cargarPlanAutor(idUsuario) {
         nombre: 'Premium',
         precio: '$40.000',
         subprecio: '$380.000/año',
-        beneficios: ['5 campañas por mes', 'Hasta 100 reseñadores'],
+        beneficios: (plan === 'premium' && esSuscriptorCongelado)
+          ? [`${u.limite_campanas_override} campañas por mes`, `Hasta ${u.limite_resenadores_override} reseñadores`]
+          : ['5 campañas por mes', 'Hasta 70 reseñadores', '1 Complete gratis por mes'],
         esPremium: true
       }
     ];

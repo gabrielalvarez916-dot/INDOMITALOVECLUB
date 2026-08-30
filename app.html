@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=4" />
 </head>
 <body>
 
@@ -116,7 +116,7 @@
             <span class="login-sep-corazon">♥</span>
             <span class="login-sep-linea"></span>
           </div>
-          <p class="login-subtitulo">La comunidad de romance donde aut@res y reseñad@res se encuentran</p>
+          <p class="login-subtitulo">La comunidad donde autores y reseñadores se encuentran</p>
         </div>
 
         <!-- Paso 1: botón Google -->
@@ -289,6 +289,7 @@
 <button class="tab" id="tabbtn-ranking-libros" onclick="cambiarTab(this, 'tab-ranking-libros'); if(typeof cargarRankingLibros === 'function') cargarRankingLibros(); else setTimeout(cargarRankingLibros, 100)">Ranking libros</button>
       </div>
       <div id="tab-campanas-activas" class="tab-contenido activo">
+        <div id="autor-credito-mensual-banner"></div>
         <div id="autor-creditos-banner"></div>
         <div id="autor-campanas-lista" class="campanas-lista"></div>
       </div>
@@ -315,24 +316,41 @@
         <h2 class="panel-titulo">Mi panel</h2>
       </div>
       <div class="stats-grid" id="resenador-stats"></div>
+
       <div class="tabs">
         <button class="tab activo" id="tabbtn-mis-postulaciones" onclick="cambiarTab(this, 'tab-mis-postulaciones')">Mis postulaciones</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
-        <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking')">Mi ranking</button>
+        <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking'); if(typeof enfocarMiPuestoRanking === 'function') enfocarMiPuestoRanking();">Mi ranking</button>
         <button class="tab" onclick="mostrarSeccion('biblioteca-resenador')">Mi biblioteca</button>
       </div>
-      <div id="tab-mis-postulaciones" class="tab-contenido activo">
-        <div id="resenador-postulaciones-lista" class="postulaciones-lista"></div>
+
+      <div class="panel-layout">
+        <div class="panel-layout-principal">
+          <div id="tab-mis-postulaciones" class="tab-contenido activo">
+            <div id="resenador-postulaciones-lista" class="postulaciones-lista"></div>
+          </div>
+          <div id="tab-arcs-activos" class="tab-contenido">
+            <div id="resenador-arcs-lista" class="arcs-lista"></div>
+          </div>
+          <div id="tab-historial-resenador" class="tab-contenido">
+            <div id="resenador-historial-lista" class="campanas-lista"></div>
+          </div>
+        </div>
+
+        <!-- Columna lateral: dos espacios publicitarios tipo post, cada uno rota entre las imágenes cargadas -->
+        <aside class="panel-layout-lateral">
+          <div class="banner-lateral-slot" id="banner-lateral-wrapper-1" style="display:none;">
+            <div id="banner-lateral-1" class="banner-lateral"></div>
+          </div>
+          <div class="banner-lateral-slot" id="banner-lateral-wrapper-2" style="display:none;">
+            <div id="banner-lateral-2" class="banner-lateral"></div>
+          </div>
+        </aside>
       </div>
-      <div id="tab-arcs-activos" class="tab-contenido">
-        <div id="resenador-arcs-lista" class="arcs-lista"></div>
-      </div>
-      <div id="tab-historial-resenador" class="tab-contenido">
-        <div id="resenador-historial-lista" class="campanas-lista"></div>
-      </div>
-  
-  <div id="tab-ranking" class="tab-contenido">
+
+      <!-- Mi ranking: a ancho completo, fuera del layout con banners -->
+      <div id="tab-ranking" class="tab-contenido">
         <div id="resenador-ranking-info" class="ranking-info"></div>
       </div>
     </div>
@@ -2033,7 +2051,7 @@
 <script src="js/config.js?v=2"></script>
 <script src="js/tropes.js"></script>
 <script src="js/wizard-onboarding.js"></script>
-<script src="js/ui.js?v=3"></script>
+<script src="js/ui.js?v=8"></script>
 <script src="js/calendario.js"></script>
 <script src="js/admin-impersonar.js"></script>
 <script src="js/auth.js?v=2"></script>
@@ -2044,7 +2062,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=2"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/resenador.js?v=3"></script>
+<script src="js/resenador.js?v=4"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/perfil.js?v=2"></script>
 <script src="js/verificacion-seguidores.js"></script>

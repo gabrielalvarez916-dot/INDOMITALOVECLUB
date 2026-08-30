@@ -89,8 +89,115 @@ async function cargarPanelResenador() {
     cargarPostulacionesReseñador(email),
     cargarArcsActivos(email),
     cargarHistorialReseñador(email),
-    cargarRankingReseñador(email)
+    cargarRankingReseñador(email),
+    cargarBannerLateralResenador()
   ]);
+}
+
+
+// ────────────────────────────────────────────────────────────
+// BANNER LATERAL (columna al costado del panel, formato post)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Crea una instancia de carrusel para un slot lateral: guarda su propio
+ * estado (banners, índice actual, timer) para no pisarse con el otro slot.
+ *
+ * @param {string} idContenedor - id del div donde se renderiza la imagen/video actual
+ * @returns {{iniciar: (banners: Array) => void}}
+ */
+function _crearCarruselLateral(idContenedor) {
+  let banners = [];
+  let actual = 0;
+  let timer = null;
+
+  function render() {
+    const c = document.getElementById(idContenedor);
+    if (!c || banners.length === 0) return;
+    const b = banners[actual];
+    const media = b.tipo === 'video'
+      ? `<video src="${b.imagen_url}" autoplay muted loop playsinline></video>`
+      : `<img src="${b.imagen_url}" alt="Banner publicitario" />`;
+    let contenido = media;
+    if (b.id_campana) {
+      contenido = `<a href="javascript:void(0)" onclick="verDetalleCampaña('${b.id_campana}')">${media}</a>`;
+    } else if (b.link_destino) {
+      contenido = `<a href="${b.link_destino}" target="_blank" rel="noopener">${media}</a>`;
+    }
+    c.innerHTML = contenido;
+  }
+
+  function programarSiguiente() {
+    clearTimeout(timer);
+    if (banners.length <= 1) return;
+    const duracionMs = (banners[actual]?.duracion_segundos || 10) * 1000;
+    timer = setTimeout(() => {
+      actual = (actual + 1) % banners.length;
+      render();
+      programarSiguiente();
+    }, duracionMs);
+  }
+
+  return {
+    iniciar(nuevosBanners) {
+      clearTimeout(timer);
+      banners = nuevosBanners;
+      actual = 0;
+      render();
+      programarSiguiente();
+    }
+  };
+}
+
+let _carruselLateral1 = null;
+let _carruselLateral2 = null;
+
+/**
+ * Carga los dos espacios publicitarios de la columna lateral del panel
+ * del reseñador (ubicacion = 'panel_resenador'), separados por 'slot'
+ * (1 = de arriba, 2 = de abajo). Cada slot rota automáticamente entre
+ * todos los banners activos que tenga cargados, igual que el banner del feed.
+ */
+async function cargarBannerLateralResenador() {
+  const wrapper1 = document.getElementById('banner-lateral-wrapper-1');
+  const wrapper2 = document.getElementById('banner-lateral-wrapper-2');
+  if (!wrapper1 && !wrapper2) return;
+
+  const { data, error } = await supabaseClient
+    .from('banners')
+    .select('*')
+    .eq('activo', true)
+    .eq('ubicacion', 'panel_resenador')
+    .order('orden', { ascending: true });
+
+  if (error || !data) {
+    if (wrapper1) wrapper1.style.display = 'none';
+    if (wrapper2) wrapper2.style.display = 'none';
+    return;
+  }
+
+  const slot1 = data.filter(b => (b.slot || 1) !== 2);
+  const slot2 = data.filter(b => b.slot === 2);
+
+  if (wrapper1) {
+    if (slot1.length === 0) {
+      wrapper1.style.display = 'none';
+    } else {
+      wrapper1.style.display = 'block';
+      if (!_carruselLateral1) _carruselLateral1 = _crearCarruselLateral('banner-lateral-1');
+      _carruselLateral1.iniciar(slot1);
+    }
+  }
+
+  if (wrapper2) {
+    if (slot2.length === 0) {
+      wrapper2.style.display = 'none';
+    } else {
+      wrapper2.style.display = 'block';
+      if (!_carruselLateral2) _carruselLateral2 = _crearCarruselLateral('banner-lateral-2');
+      _carruselLateral2.iniciar(slot2);
+    }
+  }
 }
 
 
@@ -1004,7 +1111,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
           const r = top5[i];
           const altura = ALTURA_POR_INDICE[i];
           return `
-            <div class="ranking-podio-columna">
+            <div class="ranking-podio-columna" data-id-usuario="${r.id || ''}">
               <p class="ranking-podio-alias"
    ${r.id ? `onclick="abrirPerfilPublico('${r.id}', 'reseñador')" style="cursor:pointer;"` : ''}>${r.alias}${badgeSeguidoresVerificados(r.seguidoresVerificados)}</p>
               <div class="ranking-podio-avatar-wrap">
@@ -1029,7 +1136,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
       <h4 class="ranking-seccion-titulo">Top 20</h4>
       <div class="ranking-top-lista">
         ${top20.map(r => `
-          <div class="ranking-resenador-top-item">
+          <div class="ranking-resenador-top-item" data-id-usuario="${r.id || ''}">
             <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
             <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
             <div class="ranking-top-item-info">
@@ -1054,7 +1161,7 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
   };
 
   const _renderItemLiga = r => `
-    <div class="ranking-resenador-top-item">
+    <div class="ranking-resenador-top-item" data-id-usuario="${r.id || ''}">
       <p class="ranking-top-item-pos" style="font-size:16px;">#${r.posicion}</p>
       <img src="${r.avatar || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="${r.alias}" class="ranking-resenador-top-avatar" onerror="this.src='/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'" />
       <div class="ranking-top-item-info">
@@ -1292,6 +1399,43 @@ function _toggleVerMasLiga(idResto, boton, cantidadResto) {
   const estaOculto = contenedor.style.display === 'none';
   contenedor.style.display = estaOculto ? '' : 'none';
   boton.textContent = estaOculto ? 'Ver menos' : `Ver ${cantidadResto} más`;
+}
+
+/**
+ * Al entrar a "Mi ranking", busca la fila del usuario actual (podio, top20
+ * o su liga) y lleva la pantalla hasta ahí con un resalte temporal, como
+ * en los juegos. No hace nada si no se encuentra (usuario sin ranking aún).
+ */
+async function enfocarMiPuestoRanking() {
+  const raiz = document.getElementById('resenador-ranking-info');
+  if (!raiz) return;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+
+  const intentar = () => {
+    const el = raiz.querySelector(`[data-id-usuario="${user.id}"]`);
+    if (!el) return false;
+
+    // Si está adentro de un "Ver más" todavía colapsado, lo desplegamos.
+    const contenedorResto = el.closest('.ranking-top-lista[id^="ranking-liga-resto-"]');
+    if (contenedorResto && contenedorResto.style.display === 'none') {
+      const boton = contenedorResto.nextElementSibling?.tagName === 'BUTTON'
+        ? contenedorResto.nextElementSibling
+        : contenedorResto.previousElementSibling;
+      contenedorResto.style.display = '';
+      if (boton && boton.tagName === 'BUTTON') boton.textContent = 'Ver menos';
+    }
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('ranking-mi-puesto');
+    setTimeout(() => el.classList.remove('ranking-mi-puesto'), 2600);
+    return true;
+  };
+
+  // El render de cargarRankingReseñador puede terminar justo después de este
+  // click; reintentamos un toque por si el innerHTML todavía no está listo.
+  if (!intentar()) setTimeout(intentar, 400);
 }
 // ────────────────────────────────────────────────────────────
 // ABANDONAR CAMPAÑA (DNF)

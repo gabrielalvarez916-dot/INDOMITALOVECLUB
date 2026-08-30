@@ -8,6 +8,8 @@
 // ────────────────────────────────────────────────────────────
 
 let _campañasTodas = [];
+let _campanasRankingCerradas = []; // libros con puesto en el ranking del mes cuya única campaña ya cerró (para el filtro "Los más leídos")
+let _generosCatalogoFiltro = []; // catálogo de géneros para el <select> de filtro (para poder recalcular los contadores)
 let _idsCampanasFavoritas = new Set(); // ids de campaña que el usuario tiene en favoritos (RPC obtener_mis_favoritos)
 
 async function _cargarFavoritosDelUsuario() {
@@ -173,6 +175,7 @@ async function cargarFeed() {
 
   const clavesLibros = [...new Set((campanas || []).map(c => _claveLibroCampana(c)))];
   let rankingsPorLibro = {};
+  const mesActual = new Date().toISOString().slice(0, 7);
   if (clavesLibros.length > 0) {
     // El badge de posición (🏆 Top 5 / ⭐ Top 20) sigue viniendo del ranking
     // MENSUAL, para que coincida con la pantalla pública de "Ranking de
@@ -180,7 +183,6 @@ async function cargarFeed() {
     // cambio, se muestran a nivel HISTÓRICO (todas las campañas del libro,
     // de cualquier mes) — se pisan más abajo con los datos de
     // ranking_libros_historico.
-    const mesActual = new Date().toISOString().slice(0, 7);
     const { data: rankings } = await supabaseClient
       .from('ranking_libros')
       .select('*')
@@ -266,7 +268,54 @@ async function cargarFeed() {
     return;
   }
 
+  // "Los más leídos" tiene que mostrar también los libros con puesto en el
+  // ranking de este mes aunque su campaña ya haya cerrado (esas campañas no
+  // están en `campanas` porque esa consulta de arriba solo trae
+  // estado='activa'). Las buscamos acá aparte y quedan en
+  // _campanasRankingCerradas — SIN tocar _campañasTodas, así el feed general
+  // y "Solo para vos" siguen exactamente igual que antes.
+  _campanasRankingCerradas = [];
+  const { data: rankingsDelMes } = await supabaseClient
+    .from('ranking_libros')
+    .select('*')
+    .eq('mes_año', mesActual)
+    .not('pos_top', 'is', null);
+  const rankingsFaltantes = (rankingsDelMes || []).filter(r =>
+    !clavesLibros.includes(r.clave_libro)
+  );
+  if (rankingsFaltantes.length > 0) {
+    // No filtramos por id_libro acá porque muchas campañas viejas/cerradas
+    // no lo tienen cargado (ver comentario de _claveLibroCampana más arriba).
+    // Traemos todas las campañas no activas y las emparejamos por la misma
+    // clave que ya usa el resto del feed.
+    const { data: campanasNoActivas } = await supabaseClient
+      .from('campanas')
+      .select('*')
+      .neq('estado', 'activa')
+      .order('creado_en', { ascending: false });
+    const cerradaPorClave = {};
+    (campanasNoActivas || []).forEach(c => {
+      const clave = _claveLibroCampana(c);
+      if (!cerradaPorClave[clave]) cerradaPorClave[clave] = c;
+    });
+    const candidatas = rankingsFaltantes
+      .map(r => ({ ranking: r, campana: cerradaPorClave[r.clave_libro] }))
+      .filter(x => x.campana);
+    _campanasRankingCerradas = await Promise.all(
+      candidatas.map(({ ranking, campana }) => normalizarCampana(
+        campana,
+        ranking,
+        archivosPorCampana[campana.id],
+        tropesPorCampana[campana.id],
+        subgenerosPorCampana[campana.id],
+        false
+      ))
+    );
+  }
+
   _campañasTodas = ordenarFeed(_campañasTodas);
+
+  actualizarContadoresFiltroGenero();
 
   renderizarFeed(_campañasTodas);
   Slider.init();
@@ -451,8 +500,17 @@ function filtrarFeed() {
   } else if (idGeneroFiltro === 'ranking') {
     // "Los más leídos": solo libros con posición en el ranking del mes
     // actual (c.rankingLibro.posicion), ordenados 1, 2, 3... N. Los que
-    // no tienen ranking este mes quedan afuera (a propósito).
-    campañasFiltradas = campañasFiltradas
+    // no tienen ranking este mes quedan afuera (a propósito). Este filtro,
+    // a diferencia de todos los demás, también suma los libros cuya
+    // campaña ya cerró (_campanasRankingCerradas).
+    let extraCerradas = _campanasRankingCerradas;
+    if (textoBuscar) {
+      extraCerradas = extraCerradas.filter(c =>
+        c.nombreLibro.toLowerCase().includes(textoBuscar) ||
+        c.nombreAutor.toLowerCase().includes(textoBuscar)
+      );
+    }
+    campañasFiltradas = [...campañasFiltradas, ...extraCerradas]
       .filter(c => c.rankingLibro?.posicion)
       .sort((a, b) => a.rankingLibro.posicion - b.rankingLibro.posicion);
   } else if (idGeneroFiltro) {
@@ -480,12 +538,37 @@ async function poblarFiltroGenero() {
 
   if (error) { console.error('Error cargando generos para el filtro:', error); return; }
 
+  _generosCatalogoFiltro = data || [];
+  actualizarContadoresFiltroGenero();
+}
+
+/**
+ * Recalcula y muestra, entre paréntesis al lado de cada opción del filtro,
+ * cuántos libros hay disponibles en esa categoría (novedades, ranking y
+ * cada género). Se llama después de cargar tanto el catálogo de géneros
+ * como las campañas, sin importar cuál termine primero.
+ */
+function actualizarContadoresFiltroGenero() {
+  const select = document.getElementById('filtro-genero');
+  if (!select) return;
+
+  const valorActual = select.value;
+
+  const totalNovedades = _campañasTodas.filter(c => c.esNovedad).length;
+  const totalRanking = [..._campañasTodas, ..._campanasRankingCerradas]
+    .filter(c => c.rankingLibro?.posicion).length;
+
   select.innerHTML = `
     <option value="">Filtrar por</option>
-    <option value="novedad">✨ Novedades</option>
-    <option value="ranking">🏆 Los más leídos</option>
-    ${(data || []).map(g => `<option value="${g.id}">${g.nombre}</option>`).join('')}
+    <option value="novedad">✨ Novedades (${totalNovedades})</option>
+    <option value="ranking">🏆 Los más leídos (${totalRanking})</option>
+    ${_generosCatalogoFiltro.map(g => {
+      const total = _campañasTodas.filter(c => c.idGenero === g.id).length;
+      return `<option value="${g.id}">${g.nombre} (${total})</option>`;
+    }).join('')}
   `;
+
+  select.value = valorActual;
 }
 
 
@@ -1176,6 +1259,7 @@ const BannerPublicitario = (() => {
       .from('banners')
       .select('*')
       .eq('activo', true)
+      .eq('ubicacion', 'feed')
       .order('orden', { ascending: true });
 
     if (error) return;
