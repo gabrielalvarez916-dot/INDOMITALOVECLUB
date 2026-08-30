@@ -423,6 +423,13 @@ function redirigirSegunRol(usuario) {
     default:
       mostrarSeccion('feed');
   }
+
+  // Si el login se disparó porque el autor vino de un link con
+  // ?ir=panel-autor&impulsar=ID (ej: mail "Impulsá tu campaña") y no
+  // tenía sesión guardada, retoma ese redirect ahora que ya se logueó.
+  if (typeof _manejarRedirectImpulsarDesdeURL === 'function') {
+    _manejarRedirectImpulsarDesdeURL();
+  }
 }
 
 // mostrarGatePerfilObligatorio(usuario) ahora vive en js/wizard-onboarding.js

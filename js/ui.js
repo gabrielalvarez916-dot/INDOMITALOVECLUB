@@ -8,6 +8,32 @@
 // INICIALIZACIÓN
 // ────────────────────────────────────────────────────────────
 
+// ────────────────────────────────────────────────────────────
+// REDIRECT DE ?ir=panel-autor&impulsar=ID (mail "Impulsá tu campaña")
+//
+// Se llama en dos momentos posibles:
+//   1) DOMContentLoaded, si ya había sesión activa al abrir el link.
+//   2) redirigirSegunRol() en auth.js, justo después de un login recién
+//      hecho — así si el autor abrió el mail sin sesión guardada, entra
+//      a login, se loguea, y IGUAL termina en el modal de impulsar (antes
+//      se perdía el parámetro y quedaba tirado en el feed/panel a secas).
+// ────────────────────────────────────────────────────────────
+function _manejarRedirectImpulsarDesdeURL() {
+  const params = new URLSearchParams(window.location.search);
+  const irA = params.get('ir');
+  if (irA !== 'panel-autor') return;
+
+  setTimeout(() => {
+    mostrarSeccion('panel-autor');
+    const idImpulsarURL = params.get('impulsar');
+    if (idImpulsarURL && typeof abrirModalImpulsarCampana === 'function') {
+      // Espera a que cargarCampañasAutor() (disparada por mostrarSeccion)
+      // termine de traer _campañasAutor antes de abrir el modal.
+      setTimeout(() => abrirModalImpulsarCampana(idImpulsarURL), 900);
+    }
+  }, 300);
+}
+
 /**
  * Se ejecuta cuando el DOM está listo.
  * Decide qué mostrar según si hay sesión activa o no.
@@ -36,21 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => verDetalleCampaña(idCampanaURL), 300);
   }
 
-  // Si el link trae ?ir=panel-autor (ej: botón "Impulsar campaña" de la app
-  // mobile), lleva directo al panel de autor — la tab "Campañas activas" ya
-  // es la que está activa por defecto ahí. Si además trae ?impulsar=ID,
-  // abre directamente el modal de impulsar esa campaña puntual.
-  const irA = params.get('ir');
-  if (irA === 'panel-autor' && usuario) {
-    setTimeout(() => {
-      mostrarSeccion('panel-autor');
-      const idImpulsarURL = params.get('impulsar');
-      if (idImpulsarURL && typeof abrirModalImpulsarCampana === 'function') {
-        // Espera a que cargarCampañasAutor() (disparada por mostrarSeccion)
-        // termine de traer _campañasAutor antes de abrir el modal.
-        setTimeout(() => abrirModalImpulsarCampana(idImpulsarURL), 900);
-      }
-    }, 300);
+  // Si el link trae ?ir=panel-autor&impulsar=ID (ej: mail "Impulsá tu
+  // campaña"), y ya hay sesión activa en este momento, procesa el
+  // redirect ahora. Si NO hay sesión, _manejarRedirectImpulsarDesdeURL()
+  // se llama de nuevo después del login (ver redirigirSegunRol en auth.js)
+  // así el link no se pierde por tener que loguearse primero.
+  if (usuario) {
+    _manejarRedirectImpulsarDesdeURL();
   }
 
   // Si el link trae ?reconexion=..., avisa si se reclamó el regalo por reingresar
