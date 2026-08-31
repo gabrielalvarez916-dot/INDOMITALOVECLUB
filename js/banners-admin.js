@@ -17,6 +17,28 @@ async function cargarBannersAdmin() {
 }
 
 /**
+ * Actualiza los contadores de banners activos por espacio (Feed,
+ * Panel reseñador Espacio 1, Panel reseñador Espacio 2), para que no
+ * haga falta contarlos a mano en la lista de abajo.
+ */
+function _actualizarContadoresBanner() {
+  const contenedor = document.getElementById('banner-contadores');
+  if (!contenedor) return;
+
+  const activos = _bannersAdmin.filter(b => b.activo);
+  const nFeed = activos.filter(b => b.ubicacion !== 'panel_resenador').length;
+  const nEsp1 = activos.filter(b => b.ubicacion === 'panel_resenador' && b.slot !== 2).length;
+  const nEsp2 = activos.filter(b => b.ubicacion === 'panel_resenador' && b.slot === 2).length;
+
+  const badge = (texto, n) => `<span class="badge">${texto} (${n})</span>`;
+
+  contenedor.innerHTML =
+    badge('Feed', nFeed) +
+    badge('Panel reseñador · Espacio 1', nEsp1) +
+    badge('Panel reseñador · Espacio 2', nEsp2);
+}
+
+/**
  * Muestra el campo de link externo o el de campaña según lo elegido,
  * asegurando que solo uno de los dos se envíe (son excluyentes).
  */
@@ -69,6 +91,7 @@ function renderizarFormBanner() {
   if (!contenedor) return;
 
   contenedor.innerHTML = `
+    <div id="banner-contadores" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;"></div>
     <h3 class="panel-titulo" style="font-size:20px;">Agregar banner</h3>
     <form id="form-nuevo-banner" onsubmit="crearBannerAdmin(event)">
       <div class="form-grupo">
@@ -323,6 +346,7 @@ async function refrescarListaBanners() {
         <p class="estado-vacio-texto">No hay banners cargados todavía.</p>
       </div>
     `;
+    _actualizarContadoresBanner();
     return;
   }
 
@@ -332,6 +356,7 @@ async function refrescarListaBanners() {
       ${_bannersAdmin.map(b => construirCardBannerAdmin(b)).join('')}
     </div>
   `;
+  _actualizarContadoresBanner();
 }
 
 /**
