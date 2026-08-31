@@ -795,22 +795,14 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
     const descuento = creditosNecesarios * valorCredito;
     const montoAPagar = Math.max(0, Math.round((precioLista - descuento) * 100) / 100);
 
-    // Descuenta los créditos consumidos (FIFO por vencimiento más próximo).
-    // Si el autor eligió no usarlos, creditosNecesarios es 0 y este bloque no hace nada.
-    let restante = creditosNecesarios;
-    for (const c of creditosDisponibles) {
-      if (restante <= 0) break;
-      const usar = Math.min(c.disponible, restante);
-      restante -= usar;
-      const nuevoMontoUsado = c.montoUsado + usar;
-      await supabaseClient
-        .from('creditos_autor')
-        .update({
-          monto_usado: nuevoMontoUsado,
-          estado: nuevoMontoUsado >= c.monto ? 'usado' : 'vigente'
-        })
-        .eq('id', c.id);
-    }
+    // NOTA: el descuento real de creditos_autor.monto_usado ya NO se hace acá.
+    // Antes se intentaba actualizar creditos_autor directamente desde la sesión
+    // del autor, pero las políticas de RLS solo permiten SELECT al autor sobre
+    // su propia fila (no UPDATE), así que esa actualización fallaba siempre en
+    // silencio: el impulso quedaba con creditos_aplicados > 0 pero el saldo real
+    // de créditos nunca bajaba. El descuento ahora se hace del lado del servidor,
+    // en admin_activar_impulso, en el momento en que el admin activa el plan
+    // (así, si el admin rechaza la solicitud, nunca se llegó a tocar el saldo).
 
     const { data: impulsoCreado, error } = await supabaseClient
       .from('impulsos_campana')
