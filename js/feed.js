@@ -1072,23 +1072,25 @@ async function confirmarPostulacion(idCampaña) {
 
   if (campaña && campaña.plataformasReseña && campaña.plataformasReseña.length > 0) {
     const mapeo = {
-      Amazon:    usuario.amazon,
-      TikTok:    usuario.tiktok,
-      Instagram: usuario.instagram,
+      Amazon:     usuario.amazon,
+      TikTok:     usuario.tiktok,
+      Instagram:  usuario.instagram,
       StoryGraph: usuario.storygraph,
-      YouTube:   usuario.youtube
+      YouTube:    usuario.youtube,
+      Goodreads:  usuario.goodreads
     };
     const plataformas = campaña.plataformasReseña.map(p => p.trim());
 
-    // El reseñador cumple con al menos UNA de las plataformas que pide la campaña
-    // (no hace falta tenerlas todas). Goodreads y Blog no tienen campo de perfil
-    // dedicado, así que siempre cuentan como disponibles.
-    const cumpleAlgunaPlataforma = plataformas.some(
-      p => p === 'Goodreads' || p === 'Blog' || !!mapeo[p]
-    );
+    // Blog no se valida contra el perfil: no cuenta ni a favor ni en contra,
+    // simplemente se ignora a la hora de chequear requisitos.
+    const plataformasEvaluables = plataformas.filter(p => p !== 'Blog');
+
+    // Alcanza con tener UNA sola de las plataformas evaluables cargada en el perfil.
+    const cumpleAlgunaPlataforma = plataformasEvaluables.length === 0
+      || plataformasEvaluables.some(p => !!mapeo[p]);
 
     if (!cumpleAlgunaPlataforma) {
-      mostrarToast(`👀 Te falta cargar alguna de estas plataformas en tu perfil: ${plataformas.join(' o ')}. No podemos mandarte a la batalla así.`, 'error');
+      mostrarToast(`👀 Te falta cargar alguna de estas plataformas en tu perfil: ${plataformasEvaluables.join(' o ')}. No podemos mandarte a la batalla así.`, 'error');
       return;
     }
   }
