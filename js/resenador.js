@@ -456,7 +456,7 @@ function construirCardArcActivo(p) {
   ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">Leer PDF</button>`   : ''}
   ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
   ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
-  ${c.modalidadLectura === 'descarga' ? `<button class="btn-secundario btn-full" onclick="abrirModalAnunciarAvance('${p.idPostulacion}', '${c.nombreLibro}')">📣 Anunciar avances</button>` : ''}
+  <button class="btn-secundario btn-full" onclick="abrirModalAnunciarAvance('${p.idPostulacion}', '${c.nombreLibro}')">📣 Anunciar avances</button>
   <button class="btn-secundario btn-full arc-btn-resena" onclick="abrirCargarResena('${c.id}')">✓ Entregar reseña</button>
   <button class="btn-peligro btn-full" onclick="abrirModalDNF('${p.idPostulacion}', '${c.nombreLibro}', '${c.nombreAutor}')">Abandonar libro (DNF)</button>
 </div>
@@ -1507,9 +1507,13 @@ if (error || data?.error) {
 }
 
 // ────────────────────────────────────────────────────────────
-// ANUNCIAR AVANCE DE LECTURA (campañas de descarga)
-// Reporte manual del reseñador — para campañas con visor, el progreso ya
-// se manda solo (ver avisarProgresoLecturaAuto en visor.js).
+// ANUNCIAR AVANCE DE LECTURA (descarga y visor)
+// Reporte manual del reseñador. En campañas con visor el progreso ya se
+// manda solo (ver avisarProgresoLecturaAuto en visor.js), pero el botón
+// queda disponible igual como respaldo por si el tracker automático no
+// registra actividad (falla de red, visor que no dispara el evento, etc.):
+// el autor puede liberar el cupo a los 10 días sin ninguna señal, así que
+// más vale que la reseñadora tenga siempre una forma manual de avisar.
 // ────────────────────────────────────────────────────────────
 
 /**

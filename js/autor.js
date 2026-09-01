@@ -1319,17 +1319,25 @@ async function verSeguimientoLectura(idCampana, nombreLibro) {
     // Botón "Dar un toque": solo tiene sentido si todavía no entregó la
     // reseña (dar_toque_seguimiento ya valida esto server-side, pero acá
     // evitamos mostrarlo directamente en esos casos). Respeta el cooldown
-    // de 10 días que aplica la función.
+    // de 5 días que aplica la función.
     const puedeToque = !['entregada', 'abandonada'].includes(estado);
-    const enCooldown = r.ultimo_toque && (new Date() - new Date(r.ultimo_toque)) < (10 * 24 * 60 * 60 * 1000);
+    const enCooldown = r.ultimo_toque && (new Date() - new Date(r.ultimo_toque)) < (5 * 24 * 60 * 60 * 1000);
     const diasRestantes = enCooldown
-      ? Math.ceil((new Date(r.ultimo_toque).getTime() + 10 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000))
+      ? Math.ceil((new Date(r.ultimo_toque).getTime() + 5 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000))
       : 0;
 
     const toqueHtml = puedeToque
       ? (enCooldown
           ? `<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Ya le diste un toque · esperá ${diasRestantes} día${diasRestantes === 1 ? '' : 's'}</span>`
           : `<button class="btn-secundario btn-sm" style="white-space:nowrap;" onclick="darToqueSeguimiento('${r.id_postulacion}', this)">👉 Dar un toque</button>`)
+      : '';
+
+    // Botón "Liberar cupo": aparece solo cuando el server confirma que ya
+    // pasaron 10 días desde la aprobación sin NINGUNA señal de lectura (ni
+    // trackeo automático del visor ni aviso manual). La decisión es del
+    // autor — nunca se libera solo.
+    const liberarCupoHtml = r.puede_liberar_cupo
+      ? `<button class="btn-peligro btn-sm" style="white-space:nowrap;" onclick="liberarCupoSinAvance('${r.id_postulacion}', '${(r.alias || 'esta reseñadora').replace(/'/g, "\\'")}', this)">🔓 Liberar cupo</button>`
       : '';
 
     return `
@@ -1346,6 +1354,7 @@ async function verSeguimientoLectura(idCampana, nombreLibro) {
           ${LABELS_ESTADO_LECTURA[estado] || estado}
         </span>
         ${toqueHtml}
+        ${liberarCupoHtml}
       </div>
     `;
   }).join('');
@@ -1382,6 +1391,44 @@ async function darToqueSeguimiento(idPostulacion, btn) {
 
   if (typeof registrarAccionEventoSiCorresponde === 'function') {
     registrarAccionEventoSiCorresponde('enviar_toque_seguimiento');
+  }
+}
+
+/**
+ * Libera el cupo de una reseñadora que a los 10 días no mostró ninguna
+ * señal de lectura (ni trackeo automático del visor ni aviso manual).
+ * Es una decisión del autor, nunca automática — server-side
+ * (liberar_cupo_sin_avance) vuelve a validar los 10 días y la ausencia de
+ * señales antes de ejecutar nada. Marca la postulación como abandonada,
+ * devuelve el cupo a la campaña y avisa a la reseñadora.
+ *
+ * @param {string} idPostulacion
+ * @param {string} alias
+ * @param {HTMLElement} btn — botón clickeado, para deshabilitarlo mientras corre
+ */
+async function liberarCupoSinAvance(idPostulacion, alias, btn) {
+  const confirmado = confirm(
+    `¿Liberar el cupo de ${alias}? Pasaron 10 días sin ninguna señal de lectura. ` +
+    `Esto va a marcar su postulación como abandonada, el cupo queda libre para otra reseñadora, ` +
+    `y ella recibe la notificación de que perdió el lugar. No se puede deshacer.`
+  );
+  if (!confirmado) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Liberando…'; }
+
+  const { data: resultado, error } = await supabaseClient.rpc('liberar_cupo_sin_avance', {
+    p_id_postulacion: idPostulacion
+  });
+
+  if (error || !resultado?.ok) {
+    mostrarToast(resultado?.error || error?.message || '❌ No se pudo liberar el cupo.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '🔓 Liberar cupo'; }
+    return;
+  }
+
+  mostrarToast('🔓 Cupo liberado. Ya está disponible para otra reseñadora.', 'ok');
+  if (btn) {
+    btn.outerHTML = '<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Cupo liberado</span>';
   }
 }
 

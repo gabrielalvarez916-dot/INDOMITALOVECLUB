@@ -169,33 +169,57 @@ const VARIANTES = {
   toque_no_empezado: {
     emoji: '👉',
     textos: [
-      (d) => `El autor de "${d.nombreLibro || ''}" te está mirando. Todavía no arrancaste.`,
-      (d) => `Toque suave: "${d.nombreLibro || ''}" sigue esperando que lo abras.`,
-      (d) => `Alguien se acordó de vos: falta que empieces "${d.nombreLibro || ''}".`,
+      (d) => `El autor de "${d.nombreLibro || ''}" te está mirando. Todavía no arrancaste. Recordá que podés perder el cupo si no anunciás avances de lectura.`,
+      (d) => `Toque: "${d.nombreLibro || ''}" sigue esperando que lo abras. Si no avisás que estás leyendo, el autor puede liberar tu cupo.`,
+      (d) => `Alguien se acordó de vos: falta que empieces "${d.nombreLibro || ''}". Ojo, podés perder el cupo si no anunciás avances.`,
     ],
   },
   toque_leyendo: {
     emoji: '👀',
     textos: [
-      (d) => `El autor de "${d.nombreLibro || ''}" pasó a ver cómo vas.`,
-      (d) => `Toque: seguís leyendo "${d.nombreLibro || ''}"… ¿cómo va?`,
-      (d) => `Te tocaron el hombro. "${d.nombreLibro || ''}" sigue en curso.`,
+      (d) => `El autor de "${d.nombreLibro || ''}" pasó a ver cómo vas. Recordá que podés perder el cupo si no anunciás avances de lectura.`,
+      (d) => `Toque: seguís leyendo "${d.nombreLibro || ''}"… ¿cómo va? Sin avisos de avance, el autor puede liberar tu cupo.`,
+      (d) => `Te tocaron el hombro. "${d.nombreLibro || ''}" sigue en curso, pero acordate: sin avance registrado podés perder el lugar.`,
     ],
   },
   toque_mitad: {
     emoji: '📖',
     textos: [
-      (d) => `Vas por la mitad de "${d.nombreLibro || ''}" y el autor lo sabe.`,
-      (d) => `Toque: ya casi. Falta la otra mitad de "${d.nombreLibro || ''}".`,
-      (d) => `El autor de "${d.nombreLibro || ''}" te manda ánimo para que termines.`,
+      (d) => `Vas por la mitad de "${d.nombreLibro || ''}" y el autor lo sabe. Recordá que podés perder el cupo si no seguís anunciando avances.`,
+      (d) => `Toque: ya casi. Falta la otra mitad de "${d.nombreLibro || ''}". No dejes de avisar tu avance o podés perder el cupo.`,
+      (d) => `El autor de "${d.nombreLibro || ''}" te manda ánimo para que termines. Ojo: sin novedades tuyas, el cupo se puede liberar.`,
     ],
   },
   toque_finalizado: {
     emoji: '✍️',
     textos: [
-      (d) => `Terminaste "${d.nombreLibro || ''}"… ¿y la reseña?`,
-      (d) => `Toque: falta lo último. Escribí la reseña de "${d.nombreLibro || ''}".`,
-      (d) => `El autor de "${d.nombreLibro || ''}" espera tu reseña, ya leíste todo.`,
+      (d) => `Terminaste "${d.nombreLibro || ''}"… ¿y la reseña? Recordá que podés perder el cupo si no la entregás.`,
+      (d) => `Toque: falta lo último. Escribí la reseña de "${d.nombreLibro || ''}" antes de que el autor libere tu cupo.`,
+      (d) => `El autor de "${d.nombreLibro || ''}" espera tu reseña, ya leíste todo. No lo dejes pasar: podés perder el lugar.`,
+    ],
+  },
+  toque_avance_lectura: {
+    emoji: '⚠️',
+    textos: [
+      (d) => `Van 5 días sin ningún avance registrado en "${d.nombreLibro || ''}". Recordá que podés perder el cupo si no anunciás avances de lectura.`,
+      (d) => `"${d.nombreLibro || ''}": no vemos actividad hace 5 días. Anunciá tu avance o el autor va a poder liberar tu cupo.`,
+      (d) => `Alerta: 5 días sin señales en "${d.nombreLibro || ''}". Podés perder el cupo si no avisás que seguís leyendo.`,
+    ],
+  },
+  perdiste_cupo_sin_avance: {
+    emoji: '💔',
+    textos: [
+      (d) => `Perdiste tu cupo en "${d.nombreLibro || ''}": pasaron 10 días sin ningún aviso de avance y el autor lo liberó.`,
+      (d) => `El autor liberó tu cupo en "${d.nombreLibro || ''}" por falta de avances de lectura durante 10 días.`,
+      (d) => `Se acabó el tiempo: tu cupo en "${d.nombreLibro || ''}" ya no es tuyo, no hubo avisos de avance en 10 días.`,
+    ],
+  },
+  penalizacion_anulaciones: {
+    emoji: '🚫',
+    textos: [
+      (d) => `Quedaste penalizada por incumplimiento reiterado: acumulaste 4 cupos anulados por falta de avisos, el último en "${d.nombreLibro || ''}".`,
+      (d) => `Alerta seria: 4 cupos perdidos por no anunciar avances te dejaron con el mismo estado que un incumplimiento real.`,
+      (d) => `Tu confiabilidad quedó afectada: 4 anulaciones consecutivas por falta de avisos de lectura, la última en "${d.nombreLibro || ''}".`,
     ],
   },
   resena_no_entregada: {
@@ -598,7 +622,8 @@ function _navegarPorNotificacion(notif) {
     'campaña_cancelada_autor', 'recordatorio_resena',
     'resena_no_entregada', 'nueva_campana_disponible',
     'resena_compatible_impulso', 'cupos_llenos',
-    'toque_no_empezado', 'toque_leyendo', 'toque_mitad', 'toque_finalizado'
+    'toque_no_empezado', 'toque_leyendo', 'toque_mitad', 'toque_finalizado',
+    'toque_avance_lectura', 'perdiste_cupo_sin_avance', 'penalizacion_anulaciones'
   ];
 
   if (notif.tipo === 'auditoria_complete') {
