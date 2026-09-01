@@ -1078,13 +1078,17 @@ async function confirmarPostulacion(idCampaña) {
       StoryGraph: usuario.storygraph,
       YouTube:   usuario.youtube
     };
-    const faltantes = campaña.plataformasReseña
-      .map(p => p.trim())
-      .filter(p => p !== 'Goodreads' && p !== 'Blog')
-      .filter(p => !mapeo[p]);
+    const plataformas = campaña.plataformasReseña.map(p => p.trim());
 
-    if (faltantes.length > 0) {
-      mostrarToast(`👀 Te falta ${faltantes.join(' y ')}. No podemos mandarte a la batalla así.`, 'error');
+    // El reseñador cumple con al menos UNA de las plataformas que pide la campaña
+    // (no hace falta tenerlas todas). Goodreads y Blog no tienen campo de perfil
+    // dedicado, así que siempre cuentan como disponibles.
+    const cumpleAlgunaPlataforma = plataformas.some(
+      p => p === 'Goodreads' || p === 'Blog' || !!mapeo[p]
+    );
+
+    if (!cumpleAlgunaPlataforma) {
+      mostrarToast(`👀 Te falta cargar alguna de estas plataformas en tu perfil: ${plataformas.join(' o ')}. No podemos mandarte a la batalla así.`, 'error');
       return;
     }
   }
