@@ -204,6 +204,24 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
       flow:   'paginated'
     });
 
+    // El contenido de cada capítulo vive en un iframe aparte (documento distinto);
+    // el CSS/JS del modal no lo alcanza, hay que inyectarlo por cada capítulo que se renderiza.
+    rendicion.themes.default({
+      '*': {
+        'user-select': 'none !important',
+        '-webkit-user-select': 'none !important',
+        '-webkit-touch-callout': 'none !important'
+      }
+    });
+    rendicion.hooks.content.register((contents) => {
+      try {
+        const doc = contents.document;
+        doc.addEventListener('contextmenu', (e) => e.preventDefault());
+        doc.addEventListener('selectstart', (e) => e.preventDefault());
+        doc.addEventListener('copy', (e) => e.preventDefault());
+      } catch (e) {}
+    });
+
     // Tracker automático: capítulo actual / total de capítulos (spine).
     // No es un % exacto de páginas leídas, pero alcanza para ubicar
     // "no empezado / leyendo / por la mitad / finalizado" sin generar el
@@ -400,8 +418,27 @@ function crearModalVisor() {
         #modal-visor { width:100%; max-width:100%; max-height:100vh; top:0; left:0; transform:none; border-radius:0; }
         #visor-contenido { height:78vh; }
       }
+      /* Fricciones anti-copia: no frenan a alguien decidido, pero evitan el copiado casual */
+      #visor-contenido, #visor-contenido * { user-select:none !important; -webkit-user-select:none !important; -moz-user-select:none !important; -webkit-touch-callout:none !important; }
+      @media print {
+        #modal-visor, #modal-visor * { display:none !important; visibility:hidden !important; }
+      }
     `;
     document.head.appendChild(style);
+  }
+
+  const visorContenido = document.getElementById('visor-contenido');
+  if (visorContenido && !visorContenido.dataset.friccionesListas) {
+    visorContenido.dataset.friccionesListas = '1';
+    visorContenido.addEventListener('contextmenu', (e) => e.preventDefault());
+    visorContenido.addEventListener('selectstart', (e) => e.preventDefault());
+    visorContenido.addEventListener('dragstart', (e) => e.preventDefault());
+    visorContenido.addEventListener('copy', (e) => e.preventDefault());
+    // Ctrl/Cmd+P, Ctrl/Cmd+S dentro del visor
+    visorContenido.addEventListener('keydown', (e) => {
+      const combo = (e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 's' || e.key === 'P' || e.key === 'S');
+      if (combo) e.preventDefault();
+    });
   }
 }
 
