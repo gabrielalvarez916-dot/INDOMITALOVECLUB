@@ -6,7 +6,8 @@
     { "source": "/eliminar-cuenta", "destination": "/eliminar-cuenta.html" },
     { "source": "/terminos", "destination": "/terminos.html" },
     { "source": "/app", "destination": "/app.html" },
-    { "source": "/tester-confirmado", "destination": "/tester-confirmado.html" }
+    { "source": "/tester-confirmado", "destination": "/tester-confirmado.html" },
+    { "source": "/reserva-storymatch", "destination": "/reserva-storymatch.html" }
   ],
   "redirects": [
     { "source": "/app/", "destination": "/app", "permanent": false }
