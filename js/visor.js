@@ -145,6 +145,15 @@ async function abrirVisorEpub(idCampana, tituloLibro, idPostulacion) {
   mostrarModal('modal-visor');
   await cargarLibreriaJszip();
 await cargarLibreriaEpub();
+
+  // Reseñador: flujo offline (licencia + IndexedDB cifrado). Autor: igual que siempre.
+  if (Sesion.rol() === 'reseñador' && typeof obtenerLibroConOffline === 'function') {
+    const resultado = await obtenerLibroConOffline(idCampana, 'epub', idPostulacion);
+    if (resultado.error) { mostrarErrorVisor(resultado.error); return; }
+    await inicializarEpub(resultado.arrayBuffer);
+    return;
+  }
+
   const url = await obtenerUrlLibro(idCampana, 'epub');
   if (!url) return;
   await inicializarEpub(url);
@@ -164,11 +173,19 @@ async function abrirVisorPdf(idCampana, tituloLibro, idPostulacion) {
   mostrarModal('modal-visor');
 
   await cargarLibreriaPdf();
-  const url = await obtenerUrlLibro(idCampana, 'pdf');
-  if (!url) return;
-  await inicializarPdf(url);
 
-  if (Sesion.rol() === 'reseñador' && typeof registrarAccionEventoSiCorresponde === 'function') {
+  const esResenador = Sesion.rol() === 'reseñador';
+  if (esResenador && typeof obtenerLibroConOffline === 'function') {
+    const resultado = await obtenerLibroConOffline(idCampana, 'pdf', idPostulacion);
+    if (resultado.error) { mostrarErrorVisor(resultado.error); return; }
+    await inicializarPdf(resultado.arrayBuffer);
+  } else {
+    const url = await obtenerUrlLibro(idCampana, 'pdf');
+    if (!url) return;
+    await inicializarPdf(url);
+  }
+
+  if (esResenador && typeof registrarAccionEventoSiCorresponde === 'function') {
     registrarAccionEventoSiCorresponde('leer_pdf');
   }
 }
@@ -178,7 +195,7 @@ async function abrirVisorPdf(idCampana, tituloLibro, idPostulacion) {
 // EPUB
 // ────────────────────────────────────────────────────────────
 
-async function inicializarEpub(url) {
+async function inicializarEpub(fuente) {
   const epubDiv  = document.getElementById('visor-epub');
   const cargando = document.getElementById('visor-cargando');
 
@@ -192,9 +209,13 @@ async function inicializarEpub(url) {
     epubDiv.style.display = 'block';
 epubDiv.style.visibility = 'hidden';
 
-    const respuesta = await fetch(url);
-if (!respuesta.ok) throw new Error('No se pudo descargar el EPUB (' + respuesta.status + ')');
-const arrayBuffer = await respuesta.arrayBuffer();
+    // "fuente" puede ser una url (autor, como siempre) o un ArrayBuffer ya descifrado (reseñador, offline)
+    let arrayBuffer = fuente;
+    if (!(fuente instanceof ArrayBuffer)) {
+      const respuesta = await fetch(fuente);
+      if (!respuesta.ok) throw new Error('No se pudo descargar el EPUB (' + respuesta.status + ')');
+      arrayBuffer = await respuesta.arrayBuffer();
+    }
 _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
 
     const rendicion = _visorEpub.renderTo(epubDiv, {
@@ -267,7 +288,7 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
 // PDF
 // ────────────────────────────────────────────────────────────
 
-async function inicializarPdf(url) {
+async function inicializarPdf(fuente) {
   const canvas   = document.getElementById('visor-canvas');
   const cargando = document.getElementById('visor-cargando');
 
@@ -279,7 +300,9 @@ async function inicializarPdf(url) {
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = VISOR_CONFIG.pdfWorker;
 
-    _visorPdf = await pdfjsLib.getDocument(url).promise;
+    // "fuente" puede ser una url (autor, como siempre) o un ArrayBuffer ya descifrado (reseñador, offline)
+    const origenPdf = fuente instanceof ArrayBuffer ? { data: fuente } : fuente;
+    _visorPdf = await pdfjsLib.getDocument(origenPdf).promise;
     _pdfTotalPaginas = _visorPdf.numPages;
 
     let paginaInicial = 1;

@@ -2066,7 +2066,18 @@
 <script src="js/admin.js?v=4"></script>
 <script src="js/perfil.js?v=2"></script>
 <script src="js/verificacion-seguidores.js"></script>
+<script src="js/offline-libros.js"></script>
 <script src="js/visor.js"></script>
+<script>
+  // Service Worker del visor offline: si el navegador no lo soporta, no pasa nada, se ignora solo.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw-libro.js').catch((e) => {
+        console.error('No se pudo registrar el Service Worker del visor offline:', e);
+      });
+    });
+  }
+</script>
 <script src="js/soporte.js"></script>
 <script src="js/soporte-usuario.js"></script>
 <script src="js/denuncias.js"></script>
