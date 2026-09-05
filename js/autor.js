@@ -1365,7 +1365,7 @@ async function verSeguimientoLectura(idCampana, nombreLibro) {
 /**
  * Le da un "toque" a un reseñador desde el modal de seguimiento: manda una
  * notificación de recordatorio (con texto según su estado de lectura actual).
- * Limitado a un toque cada 10 días por postulación, validado en el server
+ * Limitado a un toque cada 5 días por postulación, validado en el server
  * (dar_toque_seguimiento) — acá solo reflejamos el resultado.
  *
  * @param {string} idPostulacion
@@ -1386,7 +1386,7 @@ async function darToqueSeguimiento(idPostulacion, btn) {
 
   mostrarToast('🔔 Toque enviado. A ver si aparece esa reseña…', 'ok');
   if (btn) {
-    btn.outerHTML = '<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Ya le diste un toque · esperá 10 días</span>';
+    btn.outerHTML = '<span style="font-size:10px; color:var(--gris-suave); white-space:nowrap;">Ya le diste un toque · esperá 5 días</span>';
   }
 
   if (typeof registrarAccionEventoSiCorresponde === 'function') {
