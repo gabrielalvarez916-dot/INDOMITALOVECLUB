@@ -740,6 +740,7 @@ async function _finalizarEnvioResena(idCampaña, datos, moods) {
     .from('postulaciones')
     .select('id')
     .eq('id_campana', idCampaña)
+    .eq('id_usuario_resenador', user.id)
     .eq('estado', 'aprobada')
     .maybeSingle();
 
