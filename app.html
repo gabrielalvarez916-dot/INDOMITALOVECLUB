@@ -771,6 +771,7 @@
       <div class="tabs">
         <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-verificacion'); cargarVerificacionesAdmin()">Verificación</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-tropes-propuestos'); cargarTropesPropuestosAdmin()">Tropes propuestos</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-cupones'); cargarCuponesAdmin()">Cupones</button>
       </div>
       <div id="tab-admin-verificacion" class="tab-contenido activo">
 
@@ -792,6 +793,47 @@
       </div>
       <div id="tab-admin-tropes-propuestos" class="tab-contenido">
         <div id="admin-tropes-propuestos-lista"></div>
+      </div>
+      <div id="tab-admin-cupones" class="tab-contenido">
+        <div class="admin-verificacion-manual">
+          <p class="admin-verificacion-manual-titulo">Crear cupón</p>
+          <p class="admin-verificacion-manual-texto">Aplica solo a planes de campaña (Impulso, Select, Resistence, Complete) — no a suscripciones. Un solo uso: se gasta apenas el autor lo aplica en una compra.</p>
+          <form id="form-crear-cupon" onsubmit="crearCuponAdmin(event)">
+            <div class="form-grupo">
+              <label for="cupon-email">Mail del autor</label>
+              <input type="email" id="cupon-email" required placeholder="autor@mail.com" />
+            </div>
+            <div class="form-grupo">
+              <label for="cupon-tipo">Tipo</label>
+              <select id="cupon-tipo" onchange="_toggleCampoPorcentajeCupon()">
+                <option value="gratis">Gratis (100%)</option>
+                <option value="porcentaje">Descuento por porcentaje</option>
+              </select>
+            </div>
+            <div class="form-grupo" id="cupon-grupo-porcentaje" style="display:none;">
+              <label for="cupon-porcentaje">Porcentaje de descuento</label>
+              <input type="number" id="cupon-porcentaje" min="1" max="100" step="1" placeholder="ej: 30" />
+            </div>
+            <div class="form-grupo">
+              <label for="cupon-plan">Plan</label>
+              <select id="cupon-plan">
+                <option value="">Cualquiera de los 4</option>
+                <option value="impulso">Impulso</option>
+                <option value="select">Select</option>
+                <option value="resistence">Resistence</option>
+                <option value="complete">Complete</option>
+              </select>
+            </div>
+            <div class="form-grupo">
+              <label for="cupon-nota">Nota interna (opcional)</label>
+              <input type="text" id="cupon-nota" placeholder="ej: compensación por bug del crédito mensual" />
+            </div>
+            <div id="cupon-error" class="mensaje-error" style="display:none;"></div>
+            <div id="cupon-ok" class="mensaje-ok" style="display:none;"></div>
+            <button type="submit" class="btn-primario" id="btn-crear-cupon">Crear cupón</button>
+          </form>
+        </div>
+        <div id="admin-cupones-lista"></div>
       </div>
     </div>
   </section>

@@ -607,8 +607,9 @@ async function abrirModalImpulsarCampana(idCampana) {
 
   const creditos = await _obtenerCreditosDisponiblesAutor(user.id);
   const creditosTotales = creditos.reduce((acc, c) => acc + c.disponible, 0);
+  const cuponesActivos = await _obtenerCuponesActivosAutor(user.id);
 
-  _ultimoContextoPlanesCampana = { idCampana, precioArsImpulso, precioUsdImpulso, dias, compatMin, creditosTotales, nombreLibro: campana.nombreLibro, impulsosPorPlan: campana.impulsosPorPlan || {} };
+  _ultimoContextoPlanesCampana = { idCampana, precioArsImpulso, precioUsdImpulso, dias, compatMin, creditosTotales, cuponesActivos, nombreLibro: campana.nombreLibro, impulsosPorPlan: campana.impulsosPorPlan || {} };
 
   if (body) body.innerHTML = `
     <div class="planes-campana-acordeon">
@@ -629,12 +630,16 @@ function _renderPlanCampanaItem(plan, ctx) {
   const badgeEstado = estadoEstePlan
     ? `<span class="badge-impulso-estado" style="margin-left:6px;">${estadoEstePlan === 'pagado' ? 'Activo' : 'Pendiente'}</span>`
     : '';
+  const cuponEstePlan = _cuponAplicablePlan(ctx.cuponesActivos, plan.id);
+  const badgeCupon = cuponEstePlan
+    ? `<span class="badge-impulso-estado" style="margin-left:6px; background:var(--burdeo, #7a1f3d); color:#fff;">🎟️ ${cuponEstePlan.tipo === 'gratis' ? 'Gratis' : cuponEstePlan.porcentaje_descuento + '% off'}</span>`
+    : '';
 
   return `
     <div class="plan-campana-item" id="plan-campana-item-${plan.id}">
       <button type="button" class="plan-campana-header" onclick="toggleAcordeonPlanCampana('${plan.id}')">
         <div class="plan-campana-header-info">
-          <span class="plan-campana-nombre">${plan.nombre}${badgeEstado}
+          <span class="plan-campana-nombre">${plan.nombre}${badgeEstado}${badgeCupon}
             <span class="plan-campana-subtitulo">${plan.subtitulo}</span>
           </span>
         </div>
@@ -709,10 +714,13 @@ function _renderPlanCampanaDetalle(plan, ctx) {
       </div>
     `;
   } else {
+    const cuponEstePlan = _cuponAplicablePlan(ctx.cuponesActivos, plan.id);
     accionesHtml = `
-      ${ctx.creditosTotales > 0
-        ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(ctx.creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — al confirmar te vamos a preguntar si querés usarlos en este plan.</div>`
-        : ''}
+      ${cuponEstePlan
+        ? `<div class="creditos-autor-banner">🎟️ Tenés un <strong>cupón ${cuponEstePlan.tipo === 'gratis' ? 'gratis' : `de ${cuponEstePlan.porcentaje_descuento}% off`}</strong> para este plan — se aplica solo al confirmar.</div>`
+        : (ctx.creditosTotales > 0
+          ? `<div class="creditos-autor-banner">🎁 Tenés <strong>${Math.round(ctx.creditosTotales).toLocaleString('es-AR')} créditos</strong> disponibles — al confirmar te vamos a preguntar si querés usarlos en este plan.</div>`
+          : '')}
       <p class="form-hint" style="margin-top:10px; margin-bottom:12px;">⏳ No se activa al instante: en breve te enviamos el link de pago para coordinarlo y, una vez confirmado, lo activamos.</p>
       <div id="impulsar-error" class="mensaje-error" style="display:none; margin-bottom:10px;"></div>
       <div id="impulsar-ok" class="mensaje-ok" style="display:none; margin-bottom:10px;"></div>
@@ -753,6 +761,30 @@ async function _obtenerCreditosDisponiblesAutor(idUsuario) {
 }
 
 /**
+ * Trae los cupones activos (no usados, no cancelados) del autor logueado.
+ * Cada cupón puede aplicar a un plan puntual (impulso/select/resistence/complete)
+ * o a cualquiera de los 4 si plan es null.
+ */
+async function _obtenerCuponesActivosAutor(idUsuario) {
+  const { data } = await supabaseClient
+    .from('cupones_autor')
+    .select('id, tipo, porcentaje_descuento, plan')
+    .eq('id_usuario_autor', idUsuario)
+    .eq('estado', 'activo');
+
+  return data || [];
+}
+
+/**
+ * Busca, entre los cupones activos del autor, el primero que aplique a un
+ * plan puntual (plan exacto, o un cupón "cualquier plan" con plan=null).
+ */
+function _cuponAplicablePlan(cuponesActivos, planId) {
+  if (!cuponesActivos || cuponesActivos.length === 0) return null;
+  return cuponesActivos.find(c => c.plan === planId) || cuponesActivos.find(c => c.plan === null) || null;
+}
+
+/**
  * Confirma el impulso: pregunta la moneda (mismo patrón que la suscripción de plan),
  * aplica el descuento de créditos disponibles y deja la solicitud pendiente de pago
  * para que el admin la active manualmente desde el panel.
@@ -779,21 +811,37 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
     const valorCredito = parseFloat(val(moneda === 'ARS' ? 'VALOR_CREDITO_ARS' : 'VALOR_CREDITO_USD', moneda === 'ARS' ? '1' : '0.67'));
 
     const precioLista = moneda === 'ARS' ? precioArs : precioUsd;
-    const creditosDisponibles = await _obtenerCreditosDisponiblesAutor(user.id);
-    const totalDisponible = creditosDisponibles.reduce((acc, c) => acc + c.disponible, 0);
 
-    // Si tiene créditos disponibles, le preguntamos si quiere usarlos en esta
-    // compra (ya no se aplican solos). Si no tiene créditos, seguimos derecho.
-    let usarCreditos = false;
-    if (totalDisponible > 0) {
-      usarCreditos = confirm(
-        `Tenés ${Math.round(totalDisponible).toLocaleString('es-AR')} créditos disponibles.\n\n¿Querés usarlos para pagar (o descontar) este plan ${nombrePlan}?\n\nAceptar = Sí, usarlos\nCancelar = No, pagar el precio completo`
-      );
+    // Un cupón (asignado puntualmente por el admin a este autor) tiene
+    // prioridad sobre los créditos por bajo rendimiento: si aplica uno para
+    // este plan, se usa directo y no se pregunta por créditos, para no mezclar
+    // dos descuentos distintos en la misma compra.
+    const cuponAplicable = _cuponAplicablePlan(_ultimoContextoPlanesCampana?.cuponesActivos, planId);
+
+    let creditosNecesarios = 0;
+    let montoAPagar;
+
+    if (cuponAplicable) {
+      montoAPagar = cuponAplicable.tipo === 'gratis'
+        ? 0
+        : Math.max(0, Math.round(precioLista * (1 - cuponAplicable.porcentaje_descuento / 100) * 100) / 100);
+    } else {
+      const creditosDisponibles = await _obtenerCreditosDisponiblesAutor(user.id);
+      const totalDisponible = creditosDisponibles.reduce((acc, c) => acc + c.disponible, 0);
+
+      // Si tiene créditos disponibles, le preguntamos si quiere usarlos en esta
+      // compra (ya no se aplican solos). Si no tiene créditos, seguimos derecho.
+      let usarCreditos = false;
+      if (totalDisponible > 0) {
+        usarCreditos = confirm(
+          `Tenés ${Math.round(totalDisponible).toLocaleString('es-AR')} créditos disponibles.\n\n¿Querés usarlos para pagar (o descontar) este plan ${nombrePlan}?\n\nAceptar = Sí, usarlos\nCancelar = No, pagar el precio completo`
+        );
+      }
+
+      creditosNecesarios = usarCreditos ? Math.min(totalDisponible, precioLista / valorCredito) : 0;
+      const descuento = creditosNecesarios * valorCredito;
+      montoAPagar = Math.max(0, Math.round((precioLista - descuento) * 100) / 100);
     }
-
-    const creditosNecesarios = usarCreditos ? Math.min(totalDisponible, precioLista / valorCredito) : 0;
-    const descuento = creditosNecesarios * valorCredito;
-    const montoAPagar = Math.max(0, Math.round((precioLista - descuento) * 100) / 100);
 
     // NOTA: el descuento real de creditos_autor.monto_usado ya NO se hace acá.
     // Antes se intentaba actualizar creditos_autor directamente desde la sesión
@@ -814,12 +862,26 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
         creditos_aplicados: Math.round(creditosNecesarios * 100) / 100,
         monto_a_pagar: montoAPagar,
         estado: 'pendiente',
-        plan: planId
+        plan: planId,
+        id_cupon_aplicado: cuponAplicable ? cuponAplicable.id : null
       })
       .select('id')
       .single();
 
     if (error) throw error;
+
+    // Marca el cupón como usado recién ahora que el impulso ya existe.
+    // Si el admin llega a rechazar este impulso, admin_rechazar_impulso lo
+    // devuelve automáticamente a 'activo' del lado del servidor.
+    if (cuponAplicable) {
+      const { data: resultadoCupon } = await supabaseClient.rpc('marcar_cupon_usado', {
+        p_id_cupon: cuponAplicable.id,
+        p_id_impulso: impulsoCreado.id
+      });
+      if (resultadoCupon?.error) {
+        console.error('Error marcando cupón como usado:', resultadoCupon.error);
+      }
+    }
 
     const ok = document.getElementById('impulsar-ok');
 

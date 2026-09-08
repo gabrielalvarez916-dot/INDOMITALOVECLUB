@@ -325,6 +325,125 @@ function construirFilaIncumplimientoAdmin(i) {
 /**
  * Carga y muestra en el panel admin las propuestas de tropes pendientes de revisión.
  */
+// ────────────────────────────────────────────────────────────
+// CUPONES (tab Check → Cupones)
+// Cupones puntuales por mail de autor, solo para planes de campaña
+// (Impulso, Select, Resistence, Complete). Un solo uso.
+// ────────────────────────────────────────────────────────────
+
+function _toggleCampoPorcentajeCupon() {
+  const tipo = document.getElementById('cupon-tipo')?.value;
+  const grupo = document.getElementById('cupon-grupo-porcentaje');
+  if (grupo) grupo.style.display = tipo === 'porcentaje' ? '' : 'none';
+}
+
+async function crearCuponAdmin(event) {
+  event.preventDefault();
+  ocultarMensajes('cupon-error', 'cupon-ok');
+
+  const btn = document.getElementById('btn-crear-cupon');
+  const email = document.getElementById('cupon-email')?.value.trim();
+  const tipo = document.getElementById('cupon-tipo')?.value;
+  const porcentajeRaw = document.getElementById('cupon-porcentaje')?.value;
+  const plan = document.getElementById('cupon-plan')?.value || null;
+  const nota = document.getElementById('cupon-nota')?.value.trim() || null;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Creando...'; }
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_crear_cupon', {
+    p_email: email,
+    p_tipo: tipo,
+    p_porcentaje: tipo === 'porcentaje' ? parseFloat(porcentajeRaw) : null,
+    p_plan: plan,
+    p_nota: nota
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Crear cupón'; }
+
+  if (error || resultado?.error) {
+    mostrarMensajeError('cupon-error', resultado?.error || error?.message || 'Error al crear el cupón.');
+    return;
+  }
+
+  const aviso = resultado.usuario_encontrado
+    ? '¡Cupón creado! El autor ya tiene cuenta, lo va a ver disponible al comprar un plan.'
+    : '¡Cupón creado! Ese mail todavía no tiene cuenta de autor en la plataforma — se va a asociar solo cuando se registre y coincida el mail.';
+  mostrarMensajeOk('cupon-ok', aviso);
+  document.getElementById('form-crear-cupon')?.reset();
+  _toggleCampoPorcentajeCupon();
+  await cargarCuponesAdmin();
+}
+
+async function cargarCuponesAdmin() {
+  const contenedor = document.getElementById('admin-cupones-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: cupones, error } = await supabaseClient.rpc('admin_listar_cupones');
+
+  if (error || cupones?.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">Error al cargar los cupones: ${error?.message || cupones?.error}</p>`;
+    return;
+  }
+
+  if (!cupones || cupones.length === 0) {
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <p class="estado-vacio-icono">🎟️</p>
+        <p class="estado-vacio-texto">Todavía no creaste ningún cupón.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const nombrePlan = { impulso: 'Impulso', select: 'Select', resistence: 'Resistence', complete: 'Complete' };
+  const badgeEstado = { activo: 'badge-pendiente', usado: 'badge-aprobada', cancelado: 'badge-rechazada' };
+
+  contenedor.innerHTML = `
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Mail autor</th>
+          <th>Tipo</th>
+          <th>Plan</th>
+          <th>Estado</th>
+          <th>Nota</th>
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cupones.map(c => `
+          <tr>
+            <td>${c.email_autor}${!c.usuario_encontrado ? ' <span class="form-hint">(sin cuenta todavía)</span>' : ''}</td>
+            <td>${c.tipo === 'gratis' ? 'Gratis' : `${c.porcentaje_descuento}% off`}</td>
+            <td>${c.plan ? nombrePlan[c.plan] || c.plan : 'Cualquiera'}</td>
+            <td><span class="badge ${badgeEstado[c.estado] || ''}">${c.estado}</span></td>
+            <td style="font-size:12px;">${c.nota || '—'}</td>
+            <td>${formatearFechaAmigable(c.creado_en)}</td>
+            <td>${c.estado === 'activo' ? `<button type="button" class="btn-secundario btn-sm" onclick="cancelarCuponAdmin('${c.id}')">Cancelar</button>` : '—'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function cancelarCuponAdmin(idCupon) {
+  if (!confirm('¿Cancelar este cupón? El autor ya no va a poder usarlo.')) return;
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_cancelar_cupon', { p_id_cupon: idCupon });
+
+  if (error || resultado?.error) {
+    mostrarToast(resultado?.error || error?.message || 'Error al cancelar el cupón.', 'error');
+    return;
+  }
+
+  mostrarToast('Cupón cancelado.', 'ok');
+  await cargarCuponesAdmin();
+}
+
 async function cargarTropesPropuestosAdmin() {
   const contenedor = document.getElementById('admin-tropes-propuestos-lista');
   if (!contenedor) return;
