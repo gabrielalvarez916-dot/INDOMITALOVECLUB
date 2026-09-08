@@ -912,10 +912,34 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
 
     const ok = document.getElementById('impulsar-ok');
 
-    // Si es ARS y queda un saldo a pagar, la Edge Function genera el link
-    // de Mercado Pago y le manda el mail al autor automáticamente. Para USD
-    // (o si el monto quedó en $0 por créditos) sigue el flujo manual de siempre.
-    if (moneda === 'ARS' && montoAPagar > 0) {
+    // Si el monto a pagar quedó en $0 (cupón gratis o créditos que cubren
+    // todo el precio) y el plan admite activación automática (impulso,
+    // select, resistence — Complete siempre requiere que el admin elija la
+    // prioridad de la auditoría), lo activamos ya mismo con la misma RPC
+    // que usa el webhook de pago. Así no queda esperando una activación
+    // manual que no tiene sentido si no hay nada que cobrar.
+    if (montoAPagar === 0 && planId !== 'complete') {
+      const { data: resultadoActivacion, error: errActivacion } = await supabaseClient.rpc('activar_impulso_gratis_autor', {
+        p_id_impulso: impulsoCreado.id
+      });
+
+      if (errActivacion || resultadoActivacion?.error) {
+        console.error('Error activando impulso gratis:', errActivacion || resultadoActivacion.error);
+        const msj = `Tu solicitud quedó registrada, pero no pudimos activarla al instante. En breve el equipo la activa a mano.`;
+        if (ok) {
+          ok.textContent = msj;
+          ok.style.display = 'block';
+        }
+        if (typeof mostrarToast === 'function') mostrarToast(msj, 'advertencia');
+      } else {
+        const msj = `¡Listo! Tu plan ${nombrePlan} ya está activo, sin costo.`;
+        if (ok) {
+          ok.textContent = msj;
+          ok.style.display = 'block';
+        }
+        if (typeof mostrarToast === 'function') mostrarToast(msj, 'ok');
+      }
+    } else if (moneda === 'ARS' && montoAPagar > 0) {
       const { error: errLink } = await supabaseClient.functions.invoke('crear-link-campana', {
         body: { id_impulso: impulsoCreado.id }
       });
