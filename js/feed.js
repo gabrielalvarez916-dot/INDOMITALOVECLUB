@@ -50,8 +50,11 @@ async function _toggleFavoritoCampanaModal(idCampaña, matchScore) {
     if (boton) boton.title = 'Sacar de favoritos';
     mostrarToast('💗 Guardado en favoritos.', 'ok');
 
-    if (scoreEntero !== null && scoreEntero >= 70 && typeof registrarAccionEventoSiCorresponde === 'function') {
-      registrarAccionEventoSiCorresponde('guardar_favorito_alta_coincidencia');
+    if (typeof registrarAccionEventoSiCorresponde === 'function') {
+      registrarAccionEventoSiCorresponde('guardar_favorito_campana');
+      if (scoreEntero !== null && scoreEntero >= 70) {
+        registrarAccionEventoSiCorresponde('guardar_favorito_alta_coincidencia');
+      }
     }
   } else {
     _idsCampanasFavoritas.delete(idCampaña);
@@ -1109,8 +1112,11 @@ async function confirmarPostulacion(idCampaña) {
   }
 
   mostrarToast(`💅 Te postulaste a "${campaña?.nombreLibro || 'la campaña'}". Ahora que el autor decida tu destino.`, 'ok');
-if (campaña?.matchScore >= 70 && typeof registrarAccionEventoSiCorresponde === 'function') {
-    registrarAccionEventoSiCorresponde('postular_alta_coincidencia');
+if (typeof registrarAccionEventoSiCorresponde === 'function') {
+    registrarAccionEventoSiCorresponde('postular_campana');
+    if (campaña?.matchScore >= 70) {
+      registrarAccionEventoSiCorresponde('postular_alta_coincidencia');
+    }
   }
 }
 
