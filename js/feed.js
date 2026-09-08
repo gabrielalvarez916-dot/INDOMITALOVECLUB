@@ -49,6 +49,10 @@ async function _toggleFavoritoCampanaModal(idCampaña, matchScore) {
     if (texto) texto.textContent = 'En favoritos';
     if (boton) boton.title = 'Sacar de favoritos';
     mostrarToast('💗 Guardado en favoritos.', 'ok');
+
+    if (scoreEntero !== null && scoreEntero >= 70 && typeof registrarAccionEventoSiCorresponde === 'function') {
+      registrarAccionEventoSiCorresponde('guardar_favorito_alta_coincidencia');
+    }
   } else {
     _idsCampanasFavoritas.delete(idCampaña);
     if (icono) icono.textContent = '🤍';
