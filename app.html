@@ -689,6 +689,7 @@
         <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-pagos')">Pagos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-impulsos'); cargarImpulsosAdmin()">Impulsos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-pendientes'); cargarPendientesAdmin()">Pendientes</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-descuentos')">Descuentos</button>
       </div>
       <div id="tab-admin-pagos" class="tab-contenido activo">
         <div id="admin-pagos-lista"></div>
@@ -698,6 +699,37 @@
       </div>
       <div id="tab-admin-pendientes" class="tab-contenido">
         <div id="admin-pendientes-lista"></div>
+      </div>
+      <div id="tab-admin-descuentos" class="tab-contenido">
+        <div class="admin-verificacion-manual">
+          <p class="admin-verificacion-manual-titulo">Crear suscripción con descuento</p>
+          <p class="admin-verificacion-manual-texto">Crea una suscripción nueva de PayPal para el usuario con un precio propio (con descuento) por 3 meses. Al guardarse, se manda automáticamente el mail al usuario con el link de pago.</p>
+          <form id="form-crear-descuento-suscripcion" onsubmit="crearDescuentoSuscripcionAdmin(event)">
+            <div class="form-grupo">
+              <label for="descuento-email">Mail del usuario</label>
+              <input type="email" id="descuento-email" required placeholder="usuario@mail.com" />
+            </div>
+            <div class="form-grupo">
+              <label for="descuento-plan">Plan</label>
+              <select id="descuento-plan" required>
+                <option value="basic">Basic</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div class="form-grupo">
+              <label for="descuento-porcentaje">Porcentaje de descuento</label>
+              <input type="number" id="descuento-porcentaje" min="1" max="99" step="1" required placeholder="ej: 30" />
+            </div>
+            <div class="form-grupo">
+              <label for="descuento-id-cancelar">ID de suscripción a cancelar (opcional)</label>
+              <input type="text" id="descuento-id-cancelar" placeholder="dejar vacío si no reemplaza ninguna" />
+              <p class="form-hint">Completar solo si esta nueva suscripción reemplaza una suscripción "pendiente" existente del mismo usuario — esa se cancela automáticamente.</p>
+            </div>
+            <div id="descuento-error" class="mensaje-error" style="display:none;"></div>
+            <div id="descuento-ok" class="mensaje-ok" style="display:none;"></div>
+            <button type="submit" class="btn-primario" id="btn-crear-descuento-suscripcion">Aceptar</button>
+          </form>
+        </div>
       </div>
     </div>
   </section>

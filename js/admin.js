@@ -444,6 +444,50 @@ async function cancelarCuponAdmin(idCupon) {
   await cargarCuponesAdmin();
 }
 
+// ────────────────────────────────────────────────────────────
+// DESCUENTOS DE SUSCRIPCIÓN (tab Planes → Descuentos)
+// Crea una suscripción nueva de PayPal con precio propio (con
+// descuento) para un usuario puntual. El mail al usuario con el
+// link de pago lo dispara automáticamente el backend al guardar.
+// ────────────────────────────────────────────────────────────
+
+async function crearDescuentoSuscripcionAdmin(event) {
+  event.preventDefault();
+  ocultarMensajes('descuento-error', 'descuento-ok');
+
+  const btn = document.getElementById('btn-crear-descuento-suscripcion');
+  const email = document.getElementById('descuento-email')?.value.trim();
+  const plan = document.getElementById('descuento-plan')?.value;
+  const porcentajeRaw = document.getElementById('descuento-porcentaje')?.value;
+  const idSuscripcionACancelar = document.getElementById('descuento-id-cancelar')?.value.trim() || null;
+
+  const porcentajeDescuento = parseFloat(porcentajeRaw);
+  if (!email || !['basic', 'premium'].includes(plan) || !Number.isFinite(porcentajeDescuento) || porcentajeDescuento <= 0 || porcentajeDescuento >= 100) {
+    mostrarMensajeError('descuento-error', 'Completá un mail válido, un plan y un porcentaje entre 1 y 99.');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Creando...'; }
+
+  const { data: resultado, error } = await supabaseClient.functions.invoke('admin-crear-descuento-suscripcion', {
+    body: { email, plan, porcentajeDescuento, idSuscripcionACancelar }
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Aceptar'; }
+
+  if (error || resultado?.error) {
+    mostrarMensajeError('descuento-error', resultado?.error || error?.message || 'Error al crear la suscripción con descuento.');
+    return;
+  }
+
+  const monto = resultado?.suscripcion?.monto;
+  const aviso = `¡Listo! Se creó la suscripción con descuento para ${resultado.alias || email}` +
+    (monto ? ` (USD ${monto}/mes)` : '') +
+    ` y ya se le mandó el mail con el link de pago.`;
+  mostrarMensajeOk('descuento-ok', aviso);
+  document.getElementById('form-crear-descuento-suscripcion')?.reset();
+}
+
 async function cargarTropesPropuestosAdmin() {
   const contenedor = document.getElementById('admin-tropes-propuestos-lista');
   if (!contenedor) return;
