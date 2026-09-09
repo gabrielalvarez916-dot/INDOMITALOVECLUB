@@ -29,6 +29,17 @@ var _visorFormatoActual = null;
 var _resaltandoActivo = false;
 var _visorResaltados = []; // resaltados guardados de esta campaña/formato
 
+// FONDO DE LECTURA (tapa lo que quede atrás del modal cuando no está en
+// pantalla completa — hasta ahora el overlay compartido de todos los
+// modales (rgba semitransparente + blur) dejaba ver la página de atrás).
+// Se guarda la preferencia en localStorage para que persista entre lecturas.
+var TEMAS_VISOR = ['blanco', 'sepia', 'oscuro'];
+var _visorTema = 'blanco';
+try {
+  const guardado = localStorage.getItem('visor_tema_lectura');
+  if (guardado && TEMAS_VISOR.includes(guardado)) _visorTema = guardado;
+} catch (e) {}
+
 function _visorObtenerClaveLS(idCampana, formato) {
   return 'indomita_visor_pos_' + formato + '_' + idCampana;
 }
@@ -291,6 +302,35 @@ function _resaltadosPintarEpub() {
       });
     });
   } catch (e) { console.error('Error pintando resaltados EPUB:', e); }
+}
+
+// _visorAplicarTema: pinta el overlay COMPARTIDO (#modal-overlay, lo usan
+// todos los modales del sitio) y #modal-visor con el color elegido, así
+// no queda nada de la página de atrás asomando. Se saca la clase al
+// cerrar el visor (cerrarVisor) para no dejarle el fondo oscuro/sepia
+// pegado a otro modal que se abra después.
+function _visorAplicarTema(tema) {
+  if (!TEMAS_VISOR.includes(tema)) tema = 'blanco';
+  _visorTema = tema;
+  try { localStorage.setItem('visor_tema_lectura', tema); } catch (e) {}
+  const overlay = document.getElementById('modal-overlay');
+  const modal = document.getElementById('modal-visor');
+  [overlay, modal].forEach((el) => {
+    if (!el) return;
+    TEMAS_VISOR.forEach((t) => el.classList.remove('visor-tema-' + t));
+    el.classList.add('visor-tema-' + tema);
+  });
+  document.querySelectorAll('#visor-popup-tema .visor-swatch-tema').forEach((btn) => {
+    btn.classList.toggle('activo', btn.dataset.tema === tema);
+  });
+}
+
+function toggleTemaVisor() {
+  const popup = document.getElementById('visor-popup-tema');
+  if (!popup) return;
+  const abierto = popup.style.display === 'flex';
+  _ocultarPopupResaltar();
+  popup.style.display = abierto ? 'none' : 'flex';
 }
 
 function _mostrarPopupResaltar(x, y, onElegirColor) {
@@ -762,6 +802,12 @@ function crearModalVisor() {
       <div class="modal-header" style="padding:8px 20px; gap:10px; justify-content:flex-end; border-top:1px solid var(--crema-oscura);">
         <button class="btn-secundario btn-sm" id="visor-btn-resaltar" onclick="toggleModoResaltar()" title="Seleccioná texto para resaltarlo">🖍️ Resaltar</button>
         <button class="btn-secundario btn-sm" id="visor-btn-lista-resaltados" onclick="toggleListaResaltados()">📌 Mis frases <span id="visor-resaltados-contador"></span></button>
+        <button class="btn-secundario btn-sm" id="visor-btn-tema" onclick="toggleTemaVisor()" title="Elegí el fondo de lectura">🎨 Fondo</button>
+      </div>
+      <div id="visor-popup-tema" style="display:none; position:absolute; z-index:25; top:96px; right:20px; background:var(--bordo,#8B1A2B); border-radius:10px; padding:8px; box-shadow:0 4px 12px rgba(0,0,0,.25); gap:6px; align-items:center;">
+        <button data-tema="blanco" class="visor-swatch-tema" style="background:#ffffff" title="Blanco"></button>
+        <button data-tema="sepia" class="visor-swatch-tema" style="background:#f4ecd8" title="Sepia"></button>
+        <button data-tema="oscuro" class="visor-swatch-tema" style="background:#1b1b1b" title="Oscuro"></button>
       </div>
       <div id="visor-contenido" style="padding:0 20px 20px; height:68vh; overflow-y:auto; position:relative;">
         <div id="visor-cargando" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:16px;">
@@ -830,6 +876,29 @@ function crearModalVisor() {
       #visor-popup-resaltar { display:none; }
       #visor-popup-resaltar .visor-swatch { width:22px; height:22px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.2); cursor:pointer; padding:0; }
       .visor-marca-resaltado { background:rgba(245,213,71,.55); border-radius:2px; }
+      #visor-popup-tema { display:none; }
+      #visor-popup-tema .visor-swatch-tema { width:22px; height:22px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.2); cursor:pointer; padding:0; }
+      #visor-popup-tema .visor-swatch-tema.activo { box-shadow:0 0 0 2px var(--bordo,#8B1A2B), 0 0 0 4px #fff; }
+      /* Fondo elegido: tapa TODO lo que quede atrás del modal (antes el
+         overlay compartido era semitransparente con blur y se veía la
+         página de atrás). Se aplica tanto al overlay como al propio modal
+         para que header/controles/contenido combinen con el fondo elegido. */
+      #modal-overlay.visor-tema-blanco { background:#ffffff; backdrop-filter:none; }
+      #modal-overlay.visor-tema-sepia { background:#f4ecd8; backdrop-filter:none; }
+      #modal-overlay.visor-tema-oscuro { background:#1b1b1b; backdrop-filter:none; }
+      #modal-visor.visor-tema-sepia { background:#f4ecd8; }
+      #modal-visor.visor-tema-sepia .modal-header,
+      #modal-visor.visor-tema-sepia #visor-controles-pdf,
+      #modal-visor.visor-tema-sepia #visor-controles-epub,
+      #modal-visor.visor-tema-sepia #visor-panel-resaltados { background:#f4ecd8; }
+      #modal-visor.visor-tema-oscuro { background:#242424; color:#eee; }
+      #modal-visor.visor-tema-oscuro .modal-header,
+      #modal-visor.visor-tema-oscuro #visor-controles-pdf,
+      #modal-visor.visor-tema-oscuro #visor-controles-epub,
+      #modal-visor.visor-tema-oscuro #visor-panel-resaltados { background:#242424; color:#eee; }
+      #modal-visor.visor-tema-oscuro .modal-titulo,
+      #modal-visor.visor-tema-oscuro .modal-cerrar,
+      #modal-visor.visor-tema-oscuro #visor-pagina-contador { color:#eee; }
       @media print {
         #modal-visor, #modal-visor * { display:none !important; visibility:hidden !important; }
       }
@@ -850,6 +919,17 @@ function crearModalVisor() {
       if (combo) e.preventDefault();
     });
   }
+
+  const popupTema = document.getElementById('visor-popup-tema');
+  if (popupTema && !popupTema.dataset.listenerListo) {
+    popupTema.dataset.listenerListo = '1';
+    popupTema.querySelectorAll('.visor-swatch-tema').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        _visorAplicarTema(btn.dataset.tema);
+        popupTema.style.display = 'none';
+      });
+    });
+  }
 }
 
 function configurarModalVisor(titulo, tipo) {
@@ -865,6 +945,8 @@ function configurarModalVisor(titulo, tipo) {
 
   const contenido = document.getElementById('visor-contenido');
   if (contenido) contenido.style.overflowY = tipo === 'epub' ? 'hidden' : 'auto';
+
+  _visorAplicarTema(_visorTema);
 }
 
 function mostrarErrorVisor(mensaje) {
@@ -896,6 +978,11 @@ function cerrarVisor() {
   const epubDiv = document.getElementById('visor-epub');
   if (canvas)  { const ctx = canvas.getContext('2d'); if (ctx) ctx.clearRect(0,0,canvas.width,canvas.height); }
   if (epubDiv) epubDiv.innerHTML = '';
+  // El overlay (#modal-overlay) es compartido con TODOS los modales del
+  // sitio — si se le deja pegada la clase de tema del visor, el próximo
+  // modal que se abra (que no es el visor) queda con el fondo oscuro/sepia.
+  const overlay = document.getElementById('modal-overlay');
+  if (overlay) TEMAS_VISOR.forEach((t) => overlay.classList.remove('visor-tema-' + t));
   cerrarModales();
 }
 
