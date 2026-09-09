@@ -854,7 +854,8 @@ function crearModalVisor() {
       #visor-contenido::-webkit-scrollbar-track { background:var(--crema-suave); }
       #visor-contenido::-webkit-scrollbar-thumb { background:var(--crema-oscura); border-radius:3px; }
       @media (max-width:768px) {
-        #modal-visor { width:100%; max-width:100%; height:100vh; max-height:100vh; top:0; left:0; transform:none; border-radius:0; display:flex; flex-direction:column; }
+        #modal-visor { width:100%; max-width:100%; height:100vh; max-height:100vh; top:0; left:0; transform:none; border-radius:0; }
+        #modal-visor.activo { display:flex; flex-direction:column; }
         #visor-contenido { height:auto; flex:1 1 auto; min-height:0; }
       }
       /* Fricciones anti-copia: no frenan a alguien decidido, pero evitan el copiado casual.
