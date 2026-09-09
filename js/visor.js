@@ -24,6 +24,10 @@ var _pdfTotalPaginas = 0;
 var _visorIdPostulacion = null; // para el tracker automático de seguimiento de lectura
 var _timeoutProgresoLectura = null;
 var _visorClaveLS = null; // clave de localStorage para recordar en qué página/posición se quedó
+var _visorIdCampana = null;
+var _visorFormatoActual = null;
+var _resaltandoActivo = false;
+var _visorResaltados = []; // resaltados guardados de esta campaña/formato
 
 function _visorObtenerClaveLS(idCampana, formato) {
   return 'indomita_visor_pos_' + formato + '_' + idCampana;
@@ -134,13 +138,197 @@ async function descargarLibro(idCampana, tituloLibro, formato) {
 }
 
 // ────────────────────────────────────────────────────────────
+// RESALTADOS DE LECTURA (resaltados_lectura en Supabase)
+// ────────────────────────────────────────────────────────────
+
+async function _resaltadosCargar(idCampana, formato) {
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { _visorResaltados = []; return; }
+    const { data, error } = await supabaseClient
+      .from('resaltados_lectura')
+      .select('id, cita, color, ubicacion, creado_en')
+      .eq('id_campana', idCampana)
+      .eq('formato', formato)
+      .eq('id_usuario', session.user.id)
+      .order('creado_en', { ascending: true });
+    _visorResaltados = (!error && data) ? data : [];
+  } catch (e) {
+    console.error('Error cargando resaltados:', e);
+    _visorResaltados = [];
+  }
+  _resaltadosRenderizarLista();
+}
+
+async function _resaltadosGuardar(cita, ubicacion, color) {
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { mostrarToast('Tu sesión expiró. Volvé a iniciar sesión.', 'error'); return; }
+    const fila = {
+      id_usuario: session.user.id,
+      id_campana: _visorIdCampana,
+      formato: _visorFormatoActual,
+      cita: String(cita).slice(0, 2000),
+      color: color || 'amarillo',
+      ubicacion: ubicacion || {},
+    };
+    const { data, error } = await supabaseClient.from('resaltados_lectura').insert(fila).select().single();
+    if (error) { mostrarToast('No se pudo guardar el resaltado.', 'error'); return; }
+    _visorResaltados.push(data);
+    _resaltadosRenderizarLista();
+    mostrarToast('✨ Frase resaltada', 'exito');
+  } catch (e) {
+    console.error('Error guardando resaltado:', e);
+    mostrarToast('No se pudo guardar el resaltado.', 'error');
+  }
+}
+
+async function eliminarResaltado(idResaltado) {
+  try {
+    const { error } = await supabaseClient.from('resaltados_lectura').delete().eq('id', idResaltado);
+    if (error) { mostrarToast('No se pudo eliminar el resaltado.', 'error'); return; }
+    _visorResaltados = _visorResaltados.filter(r => r.id !== idResaltado);
+    _resaltadosRenderizarLista();
+    if (_visorFormatoActual === 'epub' && _visorEpub) _resaltadosPintarEpub();
+  } catch (e) {
+    console.error('Error eliminando resaltado:', e);
+  }
+}
+
+function toggleModoResaltar() {
+  _resaltandoActivo = !_resaltandoActivo;
+  const btn = document.getElementById('visor-btn-resaltar');
+  if (btn) btn.classList.toggle('activo', _resaltandoActivo);
+  const contenido = document.getElementById('visor-contenido');
+  if (contenido) contenido.classList.toggle('visor-modo-resaltar', _resaltandoActivo);
+  if (_visorFormatoActual === 'epub') _epubActualizarSelectable();
+  if (!_resaltandoActivo) _ocultarPopupResaltar();
+}
+
+function toggleListaResaltados() {
+  const panel = document.getElementById('visor-panel-resaltados');
+  if (!panel) return;
+  const abrir = panel.style.display === 'none' || !panel.style.display;
+  panel.style.display = abrir ? 'block' : 'none';
+}
+
+function _resaltadosRenderizarLista() {
+  const cont = document.getElementById('visor-lista-resaltados');
+  const contador = document.getElementById('visor-resaltados-contador');
+  if (contador) contador.textContent = _visorResaltados.length ? String(_visorResaltados.length) : '';
+  if (!cont) return;
+  if (!_visorResaltados.length) {
+    cont.innerHTML = '<p style="font-size:13px;color:var(--gris-suave);padding:12px;text-align:center;">Todavía no resaltaste ninguna frase. Activá "Resaltar" y seleccioná texto.</p>';
+    return;
+  }
+  const coloresMapa = { amarillo:'#F5D547', rosa:'#F2A6C1', celeste:'#A6D4F2', verde:'#A6E3B8' };
+  cont.innerHTML = _visorResaltados.map(r => `
+    <div class="visor-resaltado-item" style="border-left:4px solid ${coloresMapa[r.color] || coloresMapa.amarillo}; padding:8px 10px; margin-bottom:8px; background:var(--blanco,#fff); border-radius:6px;">
+      <p style="font-size:13px; color:var(--negro,#2A2A2A); margin:0 0 6px;">"${(r.cita || '').replace(/</g,'&lt;')}"</p>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-secundario btn-sm" onclick="irAResaltado('${r.id}')">Ir a la frase</button>
+        <button class="btn-secundario btn-sm" onclick="eliminarResaltado('${r.id}')">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+var _epubContenidosActivos = [];
+var _epubRendicionActual = null;
+
+// Habilita/deshabilita la selección de texto dentro de cada iframe de capítulo
+// del EPUB según el modo "Resaltar". Fuera de ese modo, sigue todo bloqueado
+// (fricción anti-copia existente).
+function _epubActualizarSelectable() {
+  _epubContenidosActivos.forEach((contents) => {
+    try {
+      contents.window.getSelection().removeAllRanges();
+      const estilo = _resaltandoActivo
+        ? { 'user-select': 'text !important', '-webkit-user-select': 'text !important' }
+        : { 'user-select': 'none !important', '-webkit-user-select': 'none !important' };
+      contents.css('user-select', estilo['user-select']);
+    } catch (e) {}
+  });
+}
+
+function _epubCapturarSeleccion(contents) {
+  if (!_resaltandoActivo) return;
+  try {
+    const sel = contents.window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) { _ocultarPopupResaltar(); return; }
+    const rango = sel.getRangeAt(0);
+    const cfiRange = contents.cfiFromRange(rango);
+    const texto = sel.toString().trim();
+    const rect = rango.getBoundingClientRect();
+    const iframeEl = contents.document.defaultView.frameElement;
+    const rectIframe = iframeEl ? iframeEl.getBoundingClientRect() : { left: 0, top: 0 };
+    _mostrarPopupResaltar(rectIframe.left + rect.left + rect.width / 2, rectIframe.top + rect.top, (color) => {
+      _resaltadosGuardar(texto, { cfi: cfiRange }, color);
+      sel.removeAllRanges();
+    });
+  } catch (e) { console.error('Error capturando selección EPUB:', e); }
+}
+
+function _resaltadosPintarEpub() {
+  if (!_epubRendicionActual) return;
+  try {
+    _visorResaltados.forEach((r) => {
+      if (!r.ubicacion || !r.ubicacion.cfi) return;
+      try {
+        _epubRendicionActual.annotations.remove(r.ubicacion.cfi, 'highlight');
+      } catch (e) {}
+      const coloresMapa = { amarillo:'rgba(245,213,71,.55)', rosa:'rgba(242,166,193,.55)', celeste:'rgba(166,212,242,.55)', verde:'rgba(166,227,184,.55)' };
+      _epubRendicionActual.annotations.add('highlight', r.ubicacion.cfi, {}, null, 'visor-marca-resaltado', {
+        fill: coloresMapa[r.color] || coloresMapa.amarillo, 'fill-opacity': '1', 'mix-blend-mode': 'multiply'
+      });
+    });
+  } catch (e) { console.error('Error pintando resaltados EPUB:', e); }
+}
+
+function _mostrarPopupResaltar(x, y, onElegirColor) {
+  const popup = document.getElementById('visor-popup-resaltar');
+  const contenedor = document.getElementById('visor-contenido');
+  if (!popup || !contenedor) return;
+  const rectContenedor = contenedor.getBoundingClientRect();
+  popup.style.left = Math.max(8, x - rectContenedor.left - 60) + 'px';
+  popup.style.top = Math.max(8, y - rectContenedor.top - 44) + 'px';
+  popup.style.display = 'flex';
+  popup.querySelectorAll('.visor-swatch').forEach((btn) => {
+    btn.onclick = () => { onElegirColor(btn.dataset.color); _ocultarPopupResaltar(); };
+  });
+}
+
+function _ocultarPopupResaltar() {
+  const popup = document.getElementById('visor-popup-resaltar');
+  if (popup) popup.style.display = 'none';
+}
+
+async function irAResaltado(idResaltado) {
+  const r = _visorResaltados.find(x => x.id === idResaltado);
+  if (!r) return;
+  if (_visorFormatoActual === 'epub' && r.ubicacion && r.ubicacion.cfi && _visorEpub) {
+    const rendicion = _visorEpub.rendition || _epubRendicionActual;
+    if (rendicion) await rendicion.display(r.ubicacion.cfi);
+  } else if (_visorFormatoActual === 'pdf' && r.ubicacion && r.ubicacion.pagina) {
+    _pdfPaginaActual = r.ubicacion.pagina;
+    await renderizarPaginaPdf(_pdfPaginaActual);
+    actualizarControlesPdf();
+  }
+  toggleListaResaltados();
+}
+
+// ────────────────────────────────────────────────────────────
 // ABRIR VISOR EPUB
 // ────────────────────────────────────────────────────────────
 async function abrirVisorEpub(idCampana, tituloLibro, idPostulacion) {
   if (!idCampana) { mostrarToast('💀 El EPUB decidió no colaborar. Qué inoportuno.', 'error'); return; }
   _visorIdPostulacion = idPostulacion || null;
+  _visorIdCampana = idCampana;
+  _visorFormatoActual = 'epub';
+  _resaltandoActivo = false;
   _visorClaveLS = _visorObtenerClaveLS(idCampana, 'epub');
   crearModalVisor();
+  _resaltadosCargar(idCampana, 'epub');
   configurarModalVisor(tituloLibro, 'epub');
   mostrarModal('modal-visor');
   await cargarLibreriaJszip();
@@ -166,9 +354,13 @@ await cargarLibreriaEpub();
 async function abrirVisorPdf(idCampana, tituloLibro, idPostulacion) {
   if (!idCampana) { mostrarToast('😈 El PDF no apareció. Y sin PDF, no hacemos magia.', 'error'); return; }
   _visorIdPostulacion = idPostulacion || null;
+  _visorIdCampana = idCampana;
+  _visorFormatoActual = 'pdf';
+  _resaltandoActivo = false;
   _visorClaveLS = _visorObtenerClaveLS(idCampana, 'pdf');
 
   crearModalVisor();
+  _resaltadosCargar(idCampana, 'pdf');
   configurarModalVisor(tituloLibro, 'pdf');
   mostrarModal('modal-visor');
 
@@ -234,12 +426,16 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
         '-webkit-touch-callout': 'none !important'
       }
     });
+    _epubContenidosActivos = [];
     rendicion.hooks.content.register((contents) => {
       try {
         const doc = contents.document;
+        _epubContenidosActivos.push(contents);
         doc.addEventListener('contextmenu', (e) => e.preventDefault());
-        doc.addEventListener('selectstart', (e) => e.preventDefault());
+        doc.addEventListener('selectstart', (e) => { if (!_resaltandoActivo) e.preventDefault(); });
         doc.addEventListener('copy', (e) => e.preventDefault());
+        doc.addEventListener('mouseup', () => _epubCapturarSeleccion(contents));
+        contents.window.addEventListener('touchend', () => setTimeout(() => _epubCapturarSeleccion(contents), 50));
       } catch (e) {}
     });
 
@@ -257,11 +453,16 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
       }
     });
 
+    _epubRendicionActual = rendicion;
+    _visorEpub.rendition = rendicion;
+
     let posicionGuardada = await obtenerProgresoLecturaGuardado(_visorIdPostulacion, 'epub');
     if (!posicionGuardada && _visorClaveLS) {
       try { posicionGuardada = localStorage.getItem(_visorClaveLS); } catch (e) {}
     }
     await rendicion.display(posicionGuardada || undefined);
+    _resaltadosPintarEpub();
+    rendicion.on('rendered', () => _resaltadosPintarEpub());
 
     if (cargando) cargando.style.display = 'none';
     epubDiv.style.visibility = 'visible';
@@ -357,11 +558,65 @@ async function renderizarPaginaPdf(numero) {
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   await pagina.render({ canvasContext: context, viewport: vp }).promise;
+  await _pdfRenderizarTextLayer(pagina, vp, numero);
 
   avisarProgresoLecturaAuto(numero, _pdfTotalPaginas, 'pdf', numero);
   if (_visorClaveLS) {
     try { localStorage.setItem(_visorClaveLS, String(numero)); } catch (e) {}
   }
+}
+
+// Capa de texto invisible (posicionada igual que el canvas) para poder
+// seleccionar frases del PDF con el mouse/dedo. pdfjsLib.renderTextLayer
+// es parte del build UMD de pdf.js (no requiere pdf_viewer.js aparte).
+async function _pdfRenderizarTextLayer(pagina, vp, numeroPagina) {
+  const capa = document.getElementById('visor-textlayer');
+  const canvas = document.getElementById('visor-canvas');
+  if (!capa || !canvas || typeof pdfjsLib === 'undefined' || !pdfjsLib.renderTextLayer) {
+    if (capa) capa.style.display = 'none';
+    return;
+  }
+  try {
+    capa.innerHTML = '';
+    capa.style.width = canvas.style.width;
+    capa.style.height = canvas.style.height;
+    capa.style.left = canvas.offsetLeft + 'px';
+    capa.style.top = canvas.offsetTop + 'px';
+    capa.style.display = 'block';
+    capa.dataset.pagina = String(numeroPagina);
+
+    const textContent = await pagina.getTextContent();
+    const tarea = pdfjsLib.renderTextLayer({
+      textContentSource: textContent,
+      container: capa,
+      viewport: vp,
+      textDivs: [],
+    });
+    if (tarea && tarea.promise) await tarea.promise;
+
+    if (!capa.dataset.listenerListo) {
+      capa.dataset.listenerListo = '1';
+      capa.addEventListener('mouseup', () => _pdfCapturarSeleccion());
+      capa.addEventListener('touchend', () => setTimeout(_pdfCapturarSeleccion, 50));
+    }
+  } catch (e) {
+    console.error('Error armando capa de texto del PDF:', e);
+  }
+}
+
+function _pdfCapturarSeleccion() {
+  if (!_resaltandoActivo) return;
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.toString().trim()) { _ocultarPopupResaltar(); return; }
+  const texto = sel.toString().trim();
+  const capa = document.getElementById('visor-textlayer');
+  const pagina = capa ? parseInt(capa.dataset.pagina, 10) : _pdfPaginaActual;
+  const rango = sel.getRangeAt(0);
+  const rect = rango.getBoundingClientRect();
+  _mostrarPopupResaltar(rect.left + rect.width / 2, rect.top, (color) => {
+    _resaltadosGuardar(texto, { pagina }, color);
+    sel.removeAllRanges();
+  });
 }
 
 async function pdfPaginaAnterior() {
@@ -403,18 +658,36 @@ function crearModalVisor() {
         <h3 class="modal-titulo" id="visor-titulo">Leyendo...</h3>
         <button class="modal-cerrar" onclick="cerrarVisor()">✕</button>
       </div>
-      <div id="visor-contenido" style="padding:0 20px 20px; height:72vh; overflow-y:auto; position:relative;">
+      <div class="modal-header" style="padding:8px 20px; gap:10px; justify-content:flex-end; border-top:1px solid var(--crema-oscura);">
+        <button class="btn-secundario btn-sm" id="visor-btn-resaltar" onclick="toggleModoResaltar()" title="Seleccioná texto para resaltarlo">🖍️ Resaltar</button>
+        <button class="btn-secundario btn-sm" id="visor-btn-lista-resaltados" onclick="toggleListaResaltados()">📌 Mis frases <span id="visor-resaltados-contador"></span></button>
+      </div>
+      <div id="visor-contenido" style="padding:0 20px 20px; height:68vh; overflow-y:auto; position:relative;">
         <div id="visor-cargando" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:16px;">
           <div class="spinner"></div>
           <p style="color:var(--gris-suave); font-size:14px;">Cargando archivo...</p>
         </div>
         <canvas id="visor-canvas" style="display:none; width:100%; border-radius:4px;"></canvas>
+        <div id="visor-textlayer" style="display:none; position:absolute; top:0; left:0; overflow:hidden; line-height:1; transform-origin:0 0;"></div>
         <div id="visor-epub" style="display:none; height:100%;"></div>
         <div id="visor-error" style="display:none; text-align:center; padding:40px;">
           <p style="font-size:48px; margin-bottom:16px;">⚠️</p>
           <p id="visor-error-msg" style="font-family:var(--fuente-titulo); font-size:17px; color:var(--bordo); margin-bottom:12px;"></p>
           <p style="font-size:13px; color:var(--gris-suave);">El archivo debe estar compartido como<br><strong>"Cualquiera con el link puede ver"</strong></p>
         </div>
+        <div id="visor-popup-resaltar" style="display:none; position:absolute; z-index:20; background:var(--bordo,#8B1A2B); border-radius:10px; padding:8px; box-shadow:0 4px 12px rgba(0,0,0,.25); gap:6px; align-items:center;">
+          <button data-color="amarillo" class="visor-swatch" style="background:#F5D547"></button>
+          <button data-color="rosa" class="visor-swatch" style="background:#F2A6C1"></button>
+          <button data-color="celeste" class="visor-swatch" style="background:#A6D4F2"></button>
+          <button data-color="verde" class="visor-swatch" style="background:#A6E3B8"></button>
+        </div>
+      </div>
+      <div id="visor-panel-resaltados" style="display:none; position:absolute; top:56px; right:20px; left:20px; bottom:20px; background:var(--crema-suave); border:1px solid var(--crema-oscura); border-radius:12px; padding:14px; overflow-y:auto; z-index:15;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <strong style="font-size:14px;">Frases resaltadas</strong>
+          <button class="modal-cerrar" onclick="toggleListaResaltados()">✕</button>
+        </div>
+        <div id="visor-lista-resaltados"></div>
       </div>
       <div id="visor-controles-pdf" style="display:none; align-items:center; justify-content:center; gap:16px; padding:12px 20px; border-top:1px solid var(--crema-oscura); background:var(--crema-suave); border-radius:0 0 16px 16px;">
         <button class="btn-secundario btn-sm" id="visor-pdf-anterior" onclick="pdfPaginaAnterior()">← Anterior</button>
@@ -441,8 +714,20 @@ function crearModalVisor() {
         #modal-visor { width:100%; max-width:100%; max-height:100vh; top:0; left:0; transform:none; border-radius:0; }
         #visor-contenido { height:78vh; }
       }
-      /* Fricciones anti-copia: no frenan a alguien decidido, pero evitan el copiado casual */
+      /* Fricciones anti-copia: no frenan a alguien decidido, pero evitan el copiado casual.
+         Se desactivan solo dentro de #visor-textlayer (capa invisible sobre el PDF) y dentro
+         del iframe del EPUB cuando el modo "Resaltar" está activo (ver _epubActualizarSelectable). */
       #visor-contenido, #visor-contenido * { user-select:none !important; -webkit-user-select:none !important; -moz-user-select:none !important; -webkit-touch-callout:none !important; }
+      #visor-contenido.visor-modo-resaltar #visor-textlayer, #visor-contenido.visor-modo-resaltar #visor-textlayer * {
+        user-select:text !important; -webkit-user-select:text !important; -moz-user-select:text !important;
+      }
+      #visor-textlayer { color:transparent; user-select:none; }
+      #visor-textlayer span { position:absolute; white-space:pre; cursor:text; transform-origin:0% 0%; }
+      #visor-textlayer span::selection { background:rgba(245,213,71,.55); }
+      #visor-btn-resaltar.activo { background:var(--bordo,#8B1A2B); color:#fff; }
+      #visor-popup-resaltar { display:none; }
+      #visor-popup-resaltar .visor-swatch { width:22px; height:22px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.2); cursor:pointer; padding:0; }
+      .visor-marca-resaltado { background:rgba(245,213,71,.55); border-radius:2px; }
       @media print {
         #modal-visor, #modal-visor * { display:none !important; visibility:hidden !important; }
       }
@@ -466,8 +751,9 @@ function crearModalVisor() {
 }
 
 function configurarModalVisor(titulo, tipo) {
-  const ids = ['visor-cargando','visor-canvas','visor-epub','visor-error','visor-controles-pdf','visor-controles-epub'];
+  const ids = ['visor-cargando','visor-canvas','visor-textlayer','visor-epub','visor-error','visor-controles-pdf','visor-controles-epub','visor-panel-resaltados'];
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  _ocultarPopupResaltar();
 
   const tituloEl = document.getElementById('visor-titulo');
   if (tituloEl) tituloEl.textContent = titulo;
@@ -496,6 +782,12 @@ function cerrarVisor() {
   _pdfPaginaActual = 1;
   _pdfTotalPaginas = 0;
   _visorIdPostulacion = null;
+  _visorIdCampana = null;
+  _visorFormatoActual = null;
+  _resaltandoActivo = false;
+  _visorResaltados = [];
+  _epubContenidosActivos = [];
+  _epubRendicionActual = null;
   _visorClaveLS = null;
   if (_timeoutProgresoLectura) { clearTimeout(_timeoutProgresoLectura); _timeoutProgresoLectura = null; }
   const canvas  = document.getElementById('visor-canvas');
@@ -547,3 +839,7 @@ window.descargarLibro = descargarLibro;
 window.pdfPaginaAnterior  = pdfPaginaAnterior;
 window.pdfPaginaSiguiente = pdfPaginaSiguiente;
 window.cerrarVisor    = cerrarVisor;
+window.toggleModoResaltar     = toggleModoResaltar;
+window.toggleListaResaltados  = toggleListaResaltados;
+window.eliminarResaltado      = eliminarResaltado;
+window.irAResaltado           = irAResaltado;
