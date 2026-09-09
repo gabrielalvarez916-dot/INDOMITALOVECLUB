@@ -2251,7 +2251,82 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     _renderListaCampanasActivas();
     _renderListaHistorial();
     await cargarEstadisticasAutor(user.id);
+
+    // Publicidad interna: invita al autor a comprar un plan de impulso
+    // (Impulso/Select/Resistence/Complete) para la campaña que acaba de
+    // crear/renovar. Es la única publicidad que integramos a la plataforma.
+    if (typeof abrirModalImpulsoPostCreacion === 'function') {
+      abrirModalImpulsoPostCreacion(campanaCreada.id, datos.nombreLibro);
+    }
   }, 1500);
+}
+
+// ────────────────────────────────────────────────────────────
+// MODAL PROMOCIONAL: "Dale un impulso a tu campaña" (post-creación)
+// Aparece automáticamente después de crear o renovar una campaña.
+// No bloquea nada: el autor puede cerrarlo con "Ahora no" y listo.
+// ────────────────────────────────────────────────────────────
+
+let _idCampanaImpulsoPostCreacion = null;
+
+/**
+ * Abre el modal promocional que invita a impulsar la campaña recién creada.
+ * @param {string} idCampana
+ * @param {string} nombreLibro
+ */
+function abrirModalImpulsoPostCreacion(idCampana, nombreLibro) {
+  _idCampanaImpulsoPostCreacion = idCampana;
+
+  const texto = document.getElementById('ipc-texto');
+  if (texto) {
+    texto.innerHTML = `¡<strong>${nombreLibro}</strong> ya está publicada! Es el mejor momento para darle un empujón y conseguir reseñadores con match mucho más rápido.`;
+  }
+
+  mostrarModal('modal-impulso-post-creacion');
+}
+
+/**
+ * Acción del botón "Impulsar campaña" del modal promocional.
+ * Cierra el modal, lleva al autor directo a "Campañas activas" (panel
+ * autor) y remarca con un pulso el botón "Impulsar campaña" de la campaña
+ * recién creada, para que quede obvio dónde hacer click.
+ *
+ * Reutiliza el mismo mecanismo de "?impulsar=ID" que usa el link del mail
+ * "Impulsá tu campaña" (ver botonImpulsarCampanaHtml): se escribe el
+ * parámetro en la URL sin recargar la página, se renderizan las cards
+ * (que leen ese parámetro al armar el botón), y después se limpia la URL
+ * porque ya cumplió su función.
+ */
+function irAImpulsarCampanaRecienCreada() {
+  const idCampana = _idCampanaImpulsoPostCreacion;
+  cerrarModales();
+
+  if (!idCampana) {
+    mostrarSeccion('panel-autor');
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.set('impulsar', idCampana);
+  history.replaceState(null, '', url);
+
+  mostrarSeccion('panel-autor');
+
+  setTimeout(() => {
+    // Por si el autor había quedado en la pestaña "Historial", forzamos
+    // la pestaña "Campañas activas", que es donde vive el botón a destacar.
+    const tabBtn = document.getElementById('tabbtn-campanas-activas');
+    if (tabBtn && typeof cambiarTab === 'function') {
+      cambiarTab(tabBtn, 'tab-campanas-activas');
+    }
+
+    // Limpiamos el parámetro: ya se usó para pintar el botón destacado,
+    // no necesitamos que quede pegado en la URL.
+    history.replaceState(null, '', window.location.pathname + window.location.hash);
+
+    const btnDestacado = document.querySelector('.btn-impulsar-campana--destacado');
+    if (btnDestacado) btnDestacado.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 900);
 }
 
 

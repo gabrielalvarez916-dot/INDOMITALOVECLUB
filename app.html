@@ -1104,6 +1104,24 @@
     </div>
   </div>
 
+  <!-- Modal: impulso post-creación de campaña (publicidad interna de los planes) -->
+  <div id="modal-impulso-post-creacion" class="modal">
+    <div class="modal-header">
+      <h3 class="modal-titulo">🚀 Dale un impulso a tu campaña</h3>
+      <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="ipc-texto" class="form-info"></p>
+      <p class="form-hint" style="margin-top:10px;">
+        Con un plan de impulso (Impulso, Select, Resistence o Complete) tu campaña consigue portada destacada, notificación directa a reseñadores compatibles y mucha más visibilidad — así juntás postulaciones más rápido.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secundario" onclick="cerrarModales()">Ahora no</button>
+      <button type="button" class="btn-primario" onclick="irAImpulsarCampanaRecienCreada()">🚀 Impulsar campaña</button>
+    </div>
+  </div>
+
 <!-- Modal: cargar reseña (2 pasos: Reseña interna + Reseña pública) -->
   <div id="modal-cargar-resena" class="modal modal-grande">
     <div class="modal-header">
