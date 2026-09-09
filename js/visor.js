@@ -213,7 +213,27 @@ function toggleModoResaltar() {
   const contenido = document.getElementById('visor-contenido');
   if (contenido) contenido.classList.toggle('visor-modo-resaltar', _resaltandoActivo);
   if (_visorFormatoActual === 'epub') _epubActualizarSelectable();
+  if (_visorFormatoActual === 'pdf' && _resaltandoActivo) _pdfDiagnosticoResaltar();
   if (!_resaltandoActivo) _ocultarPopupResaltar();
+}
+
+// DIAGNÓSTICO TEMPORAL: muestra en un toast el estado real de la capa de
+// texto del PDF al activar "Resaltar", para saber sin DevTools si el
+// problema es "no hay spans" (texto no cargó), "la capa mide 0" (colapsó)
+// o "todo bien armado pero no se puede seleccionar" (bloqueo por CSS/eventos).
+function _pdfDiagnosticoResaltar() {
+  setTimeout(() => {
+    const capa = document.getElementById('visor-textlayer');
+    if (!capa) { mostrarToast('DIAG: no existe #visor-textlayer', 'error'); return; }
+    const spans = capa.querySelectorAll('span');
+    const rect = capa.getBoundingClientRect();
+    const estilo = getComputedStyle(capa);
+    mostrarToast(
+      `DIAG spans:${spans.length} w:${Math.round(rect.width)} h:${Math.round(rect.height)} ` +
+      `disp:${estilo.display} us:${estilo.userSelect} pe:${estilo.pointerEvents} z:${estilo.zIndex}`,
+      'info'
+    );
+  }, 150);
 }
 
 function toggleListaResaltados() {
