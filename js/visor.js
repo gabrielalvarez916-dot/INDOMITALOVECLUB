@@ -327,6 +327,7 @@ function toggleTemaVisor() {
   const abierto = popup.style.display === 'flex';
   _ocultarPopupResaltar();
   popup.style.display = abierto ? 'none' : 'flex';
+  popup.style.pointerEvents = abierto ? 'none' : 'auto';
 }
 
 function _mostrarPopupResaltar(x, y, onElegirColor) {
@@ -800,7 +801,7 @@ function crearModalVisor() {
         <button class="btn-secundario btn-sm" id="visor-btn-lista-resaltados" onclick="toggleListaResaltados()">📌 Mis frases <span id="visor-resaltados-contador"></span></button>
         <button class="btn-secundario btn-sm" id="visor-btn-tema" onclick="toggleTemaVisor()" title="Elegí el fondo de lectura">🎨 Fondo</button>
       </div>
-      <div id="visor-popup-tema" style="display:none; position:absolute; z-index:25; top:96px; right:20px; background:var(--bordo,#8B1A2B); border-radius:10px; padding:8px; box-shadow:0 4px 12px rgba(0,0,0,.25); gap:6px; align-items:center;">
+      <div id="visor-popup-tema" style="display:none; pointer-events:none; position:absolute; z-index:25; top:96px; right:20px; background:var(--bordo,#8B1A2B); border-radius:10px; padding:8px; box-shadow:0 4px 12px rgba(0,0,0,.25); gap:6px; align-items:center;">
         <button data-tema="blanco" class="visor-swatch-tema" style="background:#ffffff" title="Blanco"></button>
         <button data-tema="sepia" class="visor-swatch-tema" style="background:#f4ecd8" title="Sepia"></button>
         <button data-tema="oscuro" class="visor-swatch-tema" style="background:#1b1b1b" title="Oscuro"></button>
