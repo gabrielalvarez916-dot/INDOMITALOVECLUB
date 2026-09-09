@@ -805,7 +805,7 @@ function crearModalVisor() {
         <button data-tema="sepia" class="visor-swatch-tema" style="background:#f4ecd8" title="Sepia"></button>
         <button data-tema="oscuro" class="visor-swatch-tema" style="background:#1b1b1b" title="Oscuro"></button>
       </div>
-      <div id="visor-contenido" style="padding:0 20px 20px; flex:1 1 auto; min-height:0; overflow-y:auto; position:relative;">
+      <div id="visor-contenido" style="padding:0 20px 20px; height:68vh; overflow-y:auto; position:relative;">
         <div id="visor-cargando" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:16px;">
           <div class="spinner"></div>
           <p style="color:var(--gris-suave); font-size:14px;">Cargando archivo...</p>
@@ -849,12 +849,13 @@ function crearModalVisor() {
     const style = document.createElement('style');
     style.id = 'visor-styles';
     style.textContent = `
-      #modal-visor { max-width:860px; width:95%; max-height:96vh; overflow:hidden; display:flex; flex-direction:column; }
+      #modal-visor { max-width:860px; width:95%; max-height:96vh; overflow:hidden; }
       #visor-contenido::-webkit-scrollbar { width:6px; }
       #visor-contenido::-webkit-scrollbar-track { background:var(--crema-suave); }
       #visor-contenido::-webkit-scrollbar-thumb { background:var(--crema-oscura); border-radius:3px; }
       @media (max-width:768px) {
         #modal-visor { width:100%; max-width:100%; max-height:100vh; top:0; left:0; transform:none; border-radius:0; }
+        #visor-contenido { height:78vh; }
       }
       /* Fricciones anti-copia: no frenan a alguien decidido, pero evitan el copiado casual.
          Se desactivan solo dentro de #visor-textlayer (capa invisible sobre el PDF) y dentro
