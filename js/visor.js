@@ -320,6 +320,10 @@ function _visorAplicarTema(tema) {
     TEMAS_VISOR.forEach((t) => el.classList.remove('visor-tema-' + t));
     el.classList.add('visor-tema-' + tema);
   });
+  try {
+    const rendicion = (_visorEpub && _visorEpub.rendition) || _epubRendicionActual;
+    if (rendicion && rendicion.themes) rendicion.themes.select(tema);
+  } catch (e) {}
   document.querySelectorAll('#visor-popup-tema .visor-swatch-tema').forEach((btn) => {
     btn.classList.toggle('activo', btn.dataset.tema === tema);
   });
@@ -476,6 +480,9 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
     // podía seleccionar una sola letra, aunque el botón se pusiera rojo.
     // Ahora la regla depende de clases en <html> que si se pueden togglear
     // de verdad sobre el árbol completo.
+    rendicion.themes.register('blanco', { 'body': { 'background': '#ffffff !important', 'color': '#000000 !important' } });
+    rendicion.themes.register('sepia', { 'body': { 'background': '#f4ecd8 !important', 'color': '#000000 !important' } });
+    rendicion.themes.register('oscuro', { 'body': { 'background': '#242424 !important', 'color': '#eeeeee !important' } });
     rendicion.themes.default({
       '.visor-anti-copia *': {
         'user-select': 'none !important',
@@ -488,6 +495,7 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
         '-webkit-touch-callout': 'default !important'
       }
     });
+    rendicion.themes.select(_visorTema);
     _epubContenidosActivos = [];
     rendicion.hooks.content.register((contents) => {
       try {
@@ -899,6 +907,10 @@ function crearModalVisor() {
       #modal-visor.visor-tema-oscuro .modal-titulo,
       #modal-visor.visor-tema-oscuro .modal-cerrar,
       #modal-visor.visor-tema-oscuro #visor-pagina-contador { color:#eee; }
+      #modal-visor.visor-tema-oscuro .btn-secundario,
+      #modal-visor.visor-tema-sepia .btn-secundario { background:rgba(139,26,43,0.18); }
+      #modal-visor.visor-tema-oscuro .btn-secundario:hover,
+      #modal-visor.visor-tema-sepia .btn-secundario:hover { background:var(--bordo,#8B1A2B); color:#fff; }
       @media print {
         #modal-visor, #modal-visor * { display:none !important; visibility:hidden !important; }
       }
