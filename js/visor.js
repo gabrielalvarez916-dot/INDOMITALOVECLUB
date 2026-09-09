@@ -566,7 +566,7 @@ async function renderizarPaginaPdf(numero) {
 
   const pagina      = await _visorPdf.getPage(numero);
   const contenedor  = document.getElementById('visor-contenido');
-  const ancho       = contenedor ? contenedor.clientWidth - 48 : 600;
+  const ancho       = (contenedor && contenedor.clientWidth > 48) ? contenedor.clientWidth - 48 : 600;
   const viewport    = pagina.getViewport({ scale: 1 });
   const escala      = ancho / viewport.width;
   const vp          = pagina.getViewport({ scale: escala });
@@ -623,6 +623,15 @@ async function _pdfRenderizarTextLayer(pagina, vp, numeroPagina) {
       textDivs: [],
     });
     if (tarea && tarea.promise) await tarea.promise;
+
+    // pdf.js pisa width/height del contenedor con un calc(var(--scale-factor)*...)
+    // propio (ver setLayerDimensions en su código fuente). Si esa cuenta falla o
+    // da 0 en algún navegador, la capa de texto queda invisible y sin tamaño y
+    // no se puede seleccionar nada. Forzamos acá el tamaño real en píxeles fijos
+    // (el mismo que ya usa el canvas, que sabemos que sí funciona) para no
+    // depender de que ese calc() interno resuelva bien.
+    capa.style.width = canvas.style.width;
+    capa.style.height = canvas.style.height;
 
     if (!capa.dataset.listenerListo) {
       capa.dataset.listenerListo = '1';
