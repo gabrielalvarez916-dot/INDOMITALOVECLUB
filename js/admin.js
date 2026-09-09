@@ -459,7 +459,6 @@ async function crearDescuentoSuscripcionAdmin(event) {
   const email = document.getElementById('descuento-email')?.value.trim();
   const plan = document.getElementById('descuento-plan')?.value;
   const porcentajeRaw = document.getElementById('descuento-porcentaje')?.value;
-  const idSuscripcionACancelar = document.getElementById('descuento-id-cancelar')?.value.trim() || null;
 
   const porcentajeDescuento = parseFloat(porcentajeRaw);
   if (!email || !['basic', 'premium'].includes(plan) || !Number.isFinite(porcentajeDescuento) || porcentajeDescuento <= 0 || porcentajeDescuento >= 100) {
@@ -470,7 +469,7 @@ async function crearDescuentoSuscripcionAdmin(event) {
   if (btn) { btn.disabled = true; btn.textContent = 'Creando...'; }
 
   const { data: resultado, error } = await supabaseClient.functions.invoke('admin-crear-descuento-suscripcion', {
-    body: { email, plan, porcentajeDescuento, idSuscripcionACancelar }
+    body: { email, plan, porcentajeDescuento }
   });
 
   if (btn) { btn.disabled = false; btn.textContent = 'Aceptar'; }
@@ -481,9 +480,11 @@ async function crearDescuentoSuscripcionAdmin(event) {
   }
 
   const monto = resultado?.suscripcion?.monto;
+  const canceladas = resultado?.pendientesCanceladas || 0;
   const aviso = `¡Listo! Se creó la suscripción con descuento para ${resultado.alias || email}` +
     (monto ? ` (USD ${monto}/mes)` : '') +
-    ` y ya se le mandó el mail con el link de pago.`;
+    ` y ya se le mandó el mail con el link de pago.` +
+    (canceladas > 0 ? ` Se canceló automáticamente ${canceladas === 1 ? 'su suscripción pendiente anterior' : `${canceladas} suscripciones pendientes anteriores`}.` : '');
   mostrarMensajeOk('descuento-ok', aviso);
   document.getElementById('form-crear-descuento-suscripcion')?.reset();
 }

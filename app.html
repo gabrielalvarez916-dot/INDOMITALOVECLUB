@@ -720,11 +720,7 @@
               <label for="descuento-porcentaje">Porcentaje de descuento</label>
               <input type="number" id="descuento-porcentaje" min="1" max="99" step="1" required placeholder="ej: 30" />
             </div>
-            <div class="form-grupo">
-              <label for="descuento-id-cancelar">ID de suscripción a cancelar (opcional)</label>
-              <input type="text" id="descuento-id-cancelar" placeholder="dejar vacío si no reemplaza ninguna" />
-              <p class="form-hint">Completar solo si esta nueva suscripción reemplaza una suscripción "pendiente" existente del mismo usuario — esa se cancela automáticamente.</p>
-            </div>
+            <p class="form-hint">Si el usuario ya tenía una suscripción "pendiente", se cancela sola al crear esta nueva.</p>
             <div id="descuento-error" class="mensaje-error" style="display:none;"></div>
             <div id="descuento-ok" class="mensaje-ok" style="display:none;"></div>
             <button type="submit" class="btn-primario" id="btn-crear-descuento-suscripcion">Aceptar</button>
