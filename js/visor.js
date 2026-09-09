@@ -254,10 +254,7 @@ function _epubActualizarSelectable() {
   _epubContenidosActivos.forEach((contents) => {
     try {
       contents.window.getSelection().removeAllRanges();
-      const estilo = _resaltandoActivo
-        ? { 'user-select': 'text !important', '-webkit-user-select': 'text !important' }
-        : { 'user-select': 'none !important', '-webkit-user-select': 'none !important' };
-      contents.css('user-select', estilo['user-select']);
+      contents.document.documentElement.classList.toggle('visor-resaltando', _resaltandoActivo);
     } catch (e) {}
   });
 }
@@ -430,11 +427,24 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
 
     // El contenido de cada capítulo vive en un iframe aparte (documento distinto);
     // el CSS/JS del modal no lo alcanza, hay que inyectarlo por cada capítulo que se renderiza.
+    // OJO: antes esto era una regla fija con selector '*' bloqueando selección
+    // en TODO el documento. Al activar "Resaltar" se intentaba habilitar
+    // selección de nuevo, pero solo se aplicaba como estilo inline en el
+    // <body> (ver contents.css en _epubActualizarSelectable) — la regla '*'
+    // seguía matcheando cada <p>/<span> hijo directamente con la misma
+    // prioridad (!important), así que ganaba siempre el bloqueo y jamás se
+    // podía seleccionar una sola letra, aunque el botón se pusiera rojo.
+    // Ahora la regla depende de clases en <html> que si se pueden togglear
+    // de verdad sobre el árbol completo.
     rendicion.themes.default({
-      '*': {
+      '.visor-anti-copia *': {
         'user-select': 'none !important',
         '-webkit-user-select': 'none !important',
         '-webkit-touch-callout': 'none !important'
+      },
+      '.visor-anti-copia.visor-resaltando *': {
+        'user-select': 'text !important',
+        '-webkit-user-select': 'text !important'
       }
     });
     _epubContenidosActivos = [];
@@ -442,6 +452,8 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
       try {
         const doc = contents.document;
         _epubContenidosActivos.push(contents);
+        doc.documentElement.classList.add('visor-anti-copia');
+        if (_resaltandoActivo) doc.documentElement.classList.add('visor-resaltando');
         doc.addEventListener('contextmenu', (e) => e.preventDefault());
         doc.addEventListener('selectstart', (e) => { if (!_resaltandoActivo) e.preventDefault(); });
         doc.addEventListener('copy', (e) => e.preventDefault());
