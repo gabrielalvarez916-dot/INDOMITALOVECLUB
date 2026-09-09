@@ -444,7 +444,8 @@ _visorEpub = ePub(arrayBuffer, { openAs: 'binary' });
       },
       '.visor-anti-copia.visor-resaltando *': {
         'user-select': 'text !important',
-        '-webkit-user-select': 'text !important'
+        '-webkit-user-select': 'text !important',
+        '-webkit-touch-callout': 'default !important'
       }
     });
     _epubContenidosActivos = [];
@@ -820,6 +821,7 @@ function crearModalVisor() {
       #visor-contenido, #visor-contenido * { user-select:none !important; -webkit-user-select:none !important; -moz-user-select:none !important; -webkit-touch-callout:none !important; }
       #visor-contenido.visor-modo-resaltar #visor-textlayer, #visor-contenido.visor-modo-resaltar #visor-textlayer * {
         user-select:text !important; -webkit-user-select:text !important; -moz-user-select:text !important;
+        -webkit-touch-callout:default !important;
       }
       #visor-textlayer { color:transparent; user-select:none; }
       #visor-textlayer span { position:absolute; white-space:pre; cursor:text; transform-origin:0% 0%; }
