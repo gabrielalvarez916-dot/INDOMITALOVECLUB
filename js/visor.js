@@ -809,7 +809,7 @@ function crearModalVisor() {
         <button data-tema="sepia" class="visor-swatch-tema" style="background:#f4ecd8" title="Sepia"></button>
         <button data-tema="oscuro" class="visor-swatch-tema" style="background:#1b1b1b" title="Oscuro"></button>
       </div>
-      <div id="visor-contenido" style="padding:0 20px 20px; height:68vh; overflow-y:auto; position:relative;">
+      <div id="visor-contenido" style="padding:0 20px 20px; height:68vh; overflow-y:auto; position:relative; z-index:1;">
         <div id="visor-cargando" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:16px;">
           <div class="spinner"></div>
           <p style="color:var(--gris-suave); font-size:14px;">Cargando archivo...</p>
