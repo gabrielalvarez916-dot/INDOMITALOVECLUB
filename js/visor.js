@@ -176,6 +176,8 @@ async function _resaltadosGuardar(cita, ubicacion, color) {
     if (error) { mostrarToast('No se pudo guardar el resaltado.', 'error'); return; }
     _visorResaltados.push(data);
     _resaltadosRenderizarLista();
+    if (_visorFormatoActual === 'epub') _resaltadosPintarEpub();
+    else if (_visorFormatoActual === 'pdf') _pdfPintarResaltados(_pdfPaginaActual);
     mostrarToast('✨ Frase resaltada', 'exito');
   } catch (e) {
     console.error('Error guardando resaltado:', e);
@@ -187,9 +189,18 @@ async function eliminarResaltado(idResaltado) {
   try {
     const { error } = await supabaseClient.from('resaltados_lectura').delete().eq('id', idResaltado);
     if (error) { mostrarToast('No se pudo eliminar el resaltado.', 'error'); return; }
+    const eliminado = _visorResaltados.find(r => r.id === idResaltado);
+    // Se remueve la anotación puntual ANTES de sacarlo del array: una vez
+    // filtrado, _resaltadosPintarEpub() ya no vuelve a iterarlo, así que
+    // nunca le llamaría remove() a este cfi en particular y la marca
+    // quedaba pintada para siempre aunque el resaltado ya no existiera.
+    if (_visorFormatoActual === 'epub' && _visorEpub && _epubRendicionActual && eliminado?.ubicacion?.cfi) {
+      try { _epubRendicionActual.annotations.remove(eliminado.ubicacion.cfi, 'highlight'); } catch (e) {}
+    }
     _visorResaltados = _visorResaltados.filter(r => r.id !== idResaltado);
     _resaltadosRenderizarLista();
     if (_visorFormatoActual === 'epub' && _visorEpub) _resaltadosPintarEpub();
+    else if (_visorFormatoActual === 'pdf' && _visorPdf) await renderizarPaginaPdf(_pdfPaginaActual);
   } catch (e) {
     console.error('Error eliminando resaltado:', e);
   }
@@ -585,6 +596,13 @@ async function _pdfRenderizarTextLayer(pagina, vp, numeroPagina) {
     capa.style.display = 'block';
     capa.dataset.pagina = String(numeroPagina);
 
+    // OJO: sin esto, renderTextLayer dibuja los spans de texto desalineados
+    // respecto al canvas (pdf.js 3.x exige esta variable para calcular bien
+    // las posiciones). Sin alinear bien, el usuario "selecciona" sobre un
+    // hueco vacío de la capa invisible: window.getSelection() siempre viene
+    // colapsado y el popup de colores nunca llega a aparecer.
+    capa.style.setProperty('--scale-factor', vp.scale);
+
     const textContent = await pagina.getTextContent();
     const tarea = pdfjsLib.renderTextLayer({
       textContentSource: textContent,
@@ -599,9 +617,70 @@ async function _pdfRenderizarTextLayer(pagina, vp, numeroPagina) {
       capa.addEventListener('mouseup', () => _pdfCapturarSeleccion());
       capa.addEventListener('touchend', () => setTimeout(_pdfCapturarSeleccion, 50));
     }
+
+    // Repinta los resaltados guardados de esta página. Se hace acá (no en
+    // renderizarPaginaPdf) porque capa.innerHTML se vació arriba, así que
+    // hay que esperar a que existan los spans nuevos antes de colorearlos.
+    _pdfPintarResaltados(numeroPagina);
   } catch (e) {
     console.error('Error armando capa de texto del PDF:', e);
   }
+}
+
+// Pinta (con background-color) los spans de la capa de texto que
+// coinciden con la cita de cada resaltado guardado para esta página.
+// A diferencia del EPUB (que tiene CFIs exactos vía epub.js), acá solo
+// tenemos el texto plano + el número de página, así que hay que
+// encontrar dónde cae ese texto dentro de los spans que arma pdf.js.
+function _pdfPintarResaltados(numeroPagina) {
+  const capa = document.getElementById('visor-textlayer');
+  if (!capa) return;
+  const resaltadosPagina = _visorResaltados.filter(
+    (r) => r.ubicacion && r.ubicacion.pagina === numeroPagina
+  );
+  if (!resaltadosPagina.length) return;
+
+  const spans = Array.prototype.slice.call(capa.querySelectorAll('span'));
+  if (!spans.length) return;
+
+  let fullText = '';
+  const offsets = [];
+  spans.forEach((sp) => {
+    const start = fullText.length;
+    fullText += sp.textContent || '';
+    offsets.push({ span: sp, start, end: fullText.length });
+  });
+
+  // Índice "compacto" (sin espacios) -> índice real en fullText. pdf.js no
+  // siempre deja los mismos espacios/saltos de línea entre spans que el
+  // texto tal cual lo guardamos al seleccionarlo, así que buscar la cita
+  // literal puede fallar; comparando sin espacios es mucho más confiable.
+  let compacto = '';
+  const mapa = [];
+  for (let i = 0; i < fullText.length; i++) {
+    if (!/\s/.test(fullText[i])) {
+      compacto += fullText[i];
+      mapa.push(i);
+    }
+  }
+
+  const coloresMapa = { amarillo:'rgba(245,213,71,.55)', rosa:'rgba(242,166,193,.55)', celeste:'rgba(166,212,242,.55)', verde:'rgba(166,227,184,.55)' };
+
+  resaltadosPagina.forEach((r) => {
+    const buscado = String(r.cita || '').replace(/\s+/g, '');
+    if (!buscado) return;
+    const idxCompacto = compacto.indexOf(buscado);
+    if (idxCompacto === -1) return; // texto no encontrado en esta página (no debería pasar, pero no rompemos nada)
+    const iniReal = mapa[idxCompacto];
+    const finReal = mapa[idxCompacto + buscado.length - 1] + 1;
+    offsets.forEach((o) => {
+      if (o.end > iniReal && o.start < finReal) {
+        o.span.style.backgroundColor = coloresMapa[r.color] || coloresMapa.amarillo;
+        o.span.style.borderRadius = '2px';
+        o.span.dataset.resaltadoId = r.id;
+      }
+    });
+  });
 }
 
 function _pdfCapturarSeleccion() {
