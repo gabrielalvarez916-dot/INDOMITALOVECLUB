@@ -2059,7 +2059,7 @@ async function subirArchivoLibro(idCampana, formato, archivo) {
 async function crearNuevaCampana(event) {
   event.preventDefault();
 
-  ocultarMensajes('nc-error', 'nc-ok');
+  ocultarMensajes('nc-error', 'nc-ok', 'nc-limite-plan');
   toggleBoton('btn-crear-campana', false, 'Creando...');
 
   const plataformasSeleccionadas = Array.from(
@@ -2180,7 +2180,11 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
 
   if (error) {
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-    mostrarMensajeError('nc-error', error.message);
+    // Si el error es por límite de plan (campañas o reseñadores), mostramos
+    // una invitación a mejorar el plan en vez del cartel rojo de error.
+    if (!mostrarMensajeLimitePlan(error.message)) {
+      mostrarMensajeError('nc-error', error.message);
+    }
     return;
   }
 

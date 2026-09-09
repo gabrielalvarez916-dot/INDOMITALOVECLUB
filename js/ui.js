@@ -604,6 +604,48 @@ function mostrarMensajeOk(idElemento, mensaje) {
 }
 
 /**
+ * Muestra el aviso de "límite de plan alcanzado" al crear una campaña,
+ * en vez del mensaje de error genérico en rojo. Se usa específicamente
+ * para las dos excepciones que tira `validar_limites_plan_campana`
+ * (límite de campañas activas y límite de reseñadores del plan).
+ *
+ * @param {string} mensajeOriginal — el error.message que devolvió Supabase
+ * @returns {boolean} true si el mensaje era de límite de plan y se mostró el aviso
+ */
+function mostrarMensajeLimitePlan(mensajeOriginal) {
+  const esLimiteCampanas = mensajeOriginal.includes('límite de campañas');
+  const esLimiteResenadores = mensajeOriginal.includes('límite de reseñadores');
+
+  if (!esLimiteCampanas && !esLimiteResenadores) return false;
+
+  const texto = esLimiteCampanas
+    ? 'Ya usaste todas las campañas activas que permite tu plan actual. Mejorá tu plan para poder publicar esta campaña.'
+    : 'Esta campaña necesita más cupos de reseñadores de los que permite tu plan actual. Mejorá tu plan para poder publicarla con estos cupos.';
+
+  const el = document.getElementById('nc-limite-plan');
+  const elTexto = document.getElementById('nc-limite-plan-texto');
+  if (el && elTexto) {
+    elTexto.textContent = texto;
+    el.style.display = 'flex';
+  }
+  return true;
+}
+
+/**
+ * Lleva al autor desde el aviso de límite de plan (dentro del modal de
+ * nueva campaña) directamente a la pantalla de "Mi plan", donde puede
+ * contratar o mejorar su suscripción.
+ */
+function irAContratarPlanDesdeLimite() {
+  cerrarModales();
+  mostrarSeccion('panel-autor');
+  const tabBtnPlan = document.getElementById('tabbtn-plan');
+  if (tabBtnPlan) {
+    cambiarTab(tabBtnPlan, 'tab-plan');
+  }
+}
+
+/**
  * Oculta todos los mensajes de error y ok de un formulario.
  *
  * @param {...string} ids — IDs de los elementos a ocultar

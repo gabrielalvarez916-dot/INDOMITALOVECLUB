@@ -1446,6 +1446,32 @@ img { max-width: 100%; display: block; }
   font-size: 13px;
 }
 
+/* Aviso de límite de plan alcanzado: NO usa los colores de error (rojo).
+   Es una invitación a mejorar el plan, no una falla del sistema, así que
+   usa la paleta de marca (rosa/bordo) para que se sienta como una
+   oportunidad y no como un cartel de "algo salió mal". */
+.mensaje-limite-plan {
+  background: var(--rosa-claro);
+  color: var(--bordo-oscuro);
+  border: 1px solid var(--rosa);
+  border-radius: var(--radio);
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.mensaje-limite-plan p {
+  margin: 0;
+}
+
+.mensaje-limite-plan .btn-primario {
+  align-self: flex-start;
+}
+
 /* ── Modales ──────────────────────────────────────────────── */
 .modal-overlay {
   display: none;
