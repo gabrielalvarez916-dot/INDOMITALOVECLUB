@@ -3072,6 +3072,11 @@ async function abrirEditarCampana(idCampana) {
         <textarea id="ec-sinopsis" class="form-textarea" rows="4">${campana.sinopsis || ''}</textarea>
       </div>
       <div class="form-grupo">
+        <label class="form-label">Cupos totales</label>
+        <input type="number" id="ec-cupos" class="form-input" min="1" step="1" value="${campana.cuposTotal ?? ''}" />
+        <p class="form-hint">No se puede bajar por debajo de los cupos ya ocupados, ni superar el límite de reseñadores de tu plan.</p>
+      </div>
+      <div class="form-grupo">
         <div id="ec-tropes-contenedor"></div>
       </div>
       <div class="form-grupo">
@@ -3137,6 +3142,12 @@ async function guardarEditarCampana(idCampana) {
     return;
   }
 
+  const cuposTotalNuevo = parseInt(document.getElementById('ec-cupos')?.value, 10);
+  if (!cuposTotalNuevo || cuposTotalNuevo < 1) {
+    mostrarMensajeError('ec-error', 'Ingresá una cantidad válida de cupos totales.');
+    return;
+  }
+
   const datos = {
     sinopsis: document.getElementById('ec-sinopsis')?.value?.trim(),
     idGenero: seleccionTropes.id_genero,
@@ -3147,7 +3158,8 @@ async function guardarEditarCampana(idCampana) {
   const cambiosCampana = {
     sinopsis: datos.sinopsis,
     id_genero: datos.idGenero,
-    id_subgenero: datos.idSubgenero
+    id_subgenero: datos.idSubgenero,
+    cupos_total: cuposTotalNuevo
   };
   if (linkPortada) cambiosCampana.link_portada = linkPortada;
 
@@ -3157,6 +3169,8 @@ async function guardarEditarCampana(idCampana) {
     .eq('id', idCampana);
 
   if (error) {
+    // Los mensajes de límite de cupos vienen ya redactados en español desde
+    // la validación de la base de datos (trigger fn_validar_cupos_campana).
     mostrarMensajeError('ec-error', error.message);
     return;
   }
