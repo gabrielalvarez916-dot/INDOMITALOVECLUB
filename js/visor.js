@@ -375,18 +375,27 @@ async function abrirVisorEpub(idCampana, tituloLibro, idPostulacion) {
   _resaltadosCargar(idCampana, 'epub');
   configurarModalVisor(tituloLibro, 'epub');
   mostrarModal('modal-visor');
-  await cargarLibreriaJszip();
-await cargarLibreriaEpub();
+
+  // Las librerías (jszip/epub.js) y el origen del libro (offline o URL firmada)
+  // no dependen una de la otra: se piden en paralelo en vez de en fila, para
+  // no sumar tiempos de espera que no hacen falta.
+  const cargaLibrerias = cargarLibreriaJszip().then(cargarLibreriaEpub);
 
   // Reseñador: flujo offline (licencia + IndexedDB cifrado). Autor: igual que siempre.
   if (Sesion.rol() === 'reseñador' && typeof obtenerLibroConOffline === 'function') {
-    const resultado = await obtenerLibroConOffline(idCampana, 'epub', idPostulacion);
+    const [resultado] = await Promise.all([
+      obtenerLibroConOffline(idCampana, 'epub', idPostulacion),
+      cargaLibrerias
+    ]);
     if (resultado.error) { mostrarErrorVisor(resultado.error); return; }
     await inicializarEpub(resultado.arrayBuffer);
     return;
   }
 
-  const url = await obtenerUrlLibro(idCampana, 'epub');
+  const [url] = await Promise.all([
+    obtenerUrlLibro(idCampana, 'epub'),
+    cargaLibrerias
+  ]);
   if (!url) return;
   await inicializarEpub(url);
 }
@@ -408,18 +417,28 @@ async function abrirVisorPdf(idCampana, tituloLibro, idPostulacion) {
   configurarModalVisor(tituloLibro, 'pdf');
   mostrarModal('modal-visor');
 
-  await cargarLibreriaPdf();
+  // Misma idea que en el EPUB: la librería de PDF y el origen del libro
+  // (offline o URL firmada) se piden en paralelo, no uno atrás del otro.
+  const cargaLibreria = cargarLibreriaPdf();
 
   const esResenador = Sesion.rol() === 'reseñador';
+  let fuente;
   if (esResenador && typeof obtenerLibroConOffline === 'function') {
-    const resultado = await obtenerLibroConOffline(idCampana, 'pdf', idPostulacion);
+    const [resultado] = await Promise.all([
+      obtenerLibroConOffline(idCampana, 'pdf', idPostulacion),
+      cargaLibreria
+    ]);
     if (resultado.error) { mostrarErrorVisor(resultado.error); return; }
-    await inicializarPdf(resultado.arrayBuffer);
+    fuente = resultado.arrayBuffer;
   } else {
-    const url = await obtenerUrlLibro(idCampana, 'pdf');
+    const [url] = await Promise.all([
+      obtenerUrlLibro(idCampana, 'pdf'),
+      cargaLibreria
+    ]);
     if (!url) return;
-    await inicializarPdf(url);
+    fuente = url;
   }
+  await inicializarPdf(fuente);
 
   if (esResenador && typeof registrarAccionEventoSiCorresponde === 'function') {
     registrarAccionEventoSiCorresponde('leer_pdf');
