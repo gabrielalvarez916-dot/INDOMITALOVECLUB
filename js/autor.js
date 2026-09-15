@@ -2353,6 +2353,22 @@ async function cargarPlanAutor(idUsuario) {
 
   const esEditorial = Sesion.rol() === 'editorial';
 
+  // Fecha de próximo pago: solo aplica a suscriptores pagos (basic/premium)
+  // con una suscripción recurrente activa. Es un dato aparte de
+  // fecha_vencimiento_plan (que es el vencimiento del plan en sí).
+  let fechaProximoPago = '';
+  if (plan === 'basic' || plan === 'premium') {
+    const { data: sus } = await supabaseClient
+      .from('suscripciones')
+      .select('fecha_proximo_pago')
+      .eq('id_usuario', idUsuario)
+      .eq('estado', 'activa')
+      .order('fecha_creacion', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    fechaProximoPago = sus?.fecha_proximo_pago || '';
+  }
+
   let planes;
 
   if (esEditorial) {
@@ -2487,6 +2503,7 @@ async function cargarPlanAutor(idUsuario) {
       }).join('')}
     </div>
     ${fechaVenc ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
+    ${fechaProximoPago ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:4px;">Próximo pago: ${formatearFechaAmigable(fechaProximoPago)}</p>` : ''}
   `;
 }
 
