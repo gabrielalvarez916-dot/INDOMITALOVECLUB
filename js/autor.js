@@ -2353,20 +2353,33 @@ async function cargarPlanAutor(idUsuario) {
 
   const esEditorial = Sesion.rol() === 'editorial';
 
-  // Fecha de próximo pago: solo aplica a suscriptores pagos (basic/premium)
-  // con una suscripción recurrente activa. Es un dato aparte de
-  // fecha_vencimiento_plan (que es el vencimiento del plan en sí).
+  // Fecha de próximo pago / estado de la suscripción: aplica a suscriptores
+  // pagos (basic/premium). Es un dato aparte de fecha_vencimiento_plan (que
+  // es el vencimiento del plan en sí). Se trae también pausada y
+  // pago_fallido para poder avisarle al autor qué está pasando con el cobro,
+  // no solo cuando está activa.
   let fechaProximoPago = '';
+  let estadoSuscripcion = '';
   if (plan === 'basic' || plan === 'premium') {
     const { data: sus } = await supabaseClient
       .from('suscripciones')
-      .select('fecha_proximo_pago')
+      .select('fecha_proximo_pago, estado')
       .eq('id_usuario', idUsuario)
-      .eq('estado', 'activa')
+      .in('estado', ['activa', 'pausada', 'pago_fallido'])
       .order('fecha_creacion', { ascending: false })
       .limit(1)
       .maybeSingle();
     fechaProximoPago = sus?.fecha_proximo_pago || '';
+    estadoSuscripcion = sus?.estado || '';
+  }
+
+  let bloqueEstadoSuscripcion = '';
+  if (estadoSuscripcion === 'activa' && fechaProximoPago) {
+    bloqueEstadoSuscripcion = `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:4px;">Próximo pago: ${formatearFechaAmigable(fechaProximoPago)}</p>`;
+  } else if (estadoSuscripcion === 'pausada') {
+    bloqueEstadoSuscripcion = `<p style="text-align:center; font-size:12px; color:var(--bordo); font-weight:600; margin-top:4px;">⚠️ Pago pausado: se intentó cobrar varias veces y no se pudo. Contactá con soporte.</p>`;
+  } else if (estadoSuscripcion === 'pago_fallido') {
+    bloqueEstadoSuscripcion = `<p style="text-align:center; font-size:12px; color:var(--bordo); font-weight:600; margin-top:4px;">⚠️ Pago fallido: se volverá a intentar en unos días.</p>`;
   }
 
   let planes;
@@ -2503,7 +2516,7 @@ async function cargarPlanAutor(idUsuario) {
       }).join('')}
     </div>
     ${fechaVenc ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
-    ${fechaProximoPago ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:4px;">Próximo pago: ${formatearFechaAmigable(fechaProximoPago)}</p>` : ''}
+    ${bloqueEstadoSuscripcion}
   `;
 }
 
