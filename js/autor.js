@@ -2340,7 +2340,7 @@ async function cargarPlanAutor(idUsuario) {
 
   const { data: u, error } = await supabaseClient
     .from('usuarios')
-    .select('plan, fecha_vencimiento_plan, limite_campanas_override, limite_resenadores_override')
+    .select('plan, estado_plan, fecha_vencimiento_plan, limite_campanas_override, limite_resenadores_override')
     .eq('id', idUsuario)
     .single();
 
@@ -2515,7 +2515,7 @@ async function cargarPlanAutor(idUsuario) {
         `;
       }).join('')}
     </div>
-    ${fechaVenc ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
+    ${(fechaVenc && u.estado_plan !== 'pausado' && u.estado_plan !== 'pago_fallido') ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
     ${bloqueEstadoSuscripcion}
   `;
 }
