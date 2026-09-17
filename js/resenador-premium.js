@@ -17,11 +17,6 @@ const ResenadorPremium = (() => {
 
   let _idCampañaPendiente = null;
   let _cargandoPago = false;
-  let _modoActual = null;
-
-  function estaEnModoObligatorio() {
-    return _modoActual === 'obligatorio';
-  }
 
   function _mesActual() {
     return new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -100,13 +95,12 @@ const ResenadorPremium = (() => {
   // Modal
   // ------------------------------------------------------------
   function _renderModal(modo) {
-    _modoActual = modo;
     const cerrarEl = document.getElementById('premium-modal-cerrar');
     const footerEl = document.getElementById('premium-modal-footer');
     const avisoEl = document.getElementById('premium-modal-aviso-obligatorio');
 
     if (modo === 'obligatorio') {
-      if (cerrarEl) cerrarEl.style.display = 'none';
+      if (cerrarEl) cerrarEl.style.display = '';
       if (avisoEl) avisoEl.style.display = 'block';
       if (footerEl) {
         footerEl.innerHTML = `
@@ -190,7 +184,6 @@ const ResenadorPremium = (() => {
       console.error('Error registrando rechazo de Reseñadores Premium:', e);
     }
 
-    _modoActual = null;
     cerrarModales();
 
     const idCampaña = _idCampañaPendiente;
@@ -201,13 +194,16 @@ const ResenadorPremium = (() => {
     }
   }
 
-  function cerrarModalOpcional() {
-    // Solo se puede llegar acá cuando el modal no está en modo obligatorio
-    // (ese botón queda oculto en ese caso), pero por las dudas reseteamos
-    // el estado igual antes de cerrar.
-    _modoActual = null;
+  /**
+   * Limpia el estado interno del modal (campaña pendiente). Se llama tanto
+   * desde el botón ✕ propio como, de forma genérica, desde cerrarModales()
+   * en ui.js — así que cubre también el click en el overlay. El usuario
+   * puede cerrar este modal libremente en cualquier momento; el único
+   * bloqueo real (para reseñadores nuevos sin pagar) lo aplica el backend
+   * cuando intentan postularse, no este modal.
+   */
+  function resetEstadoModal() {
     _idCampañaPendiente = null;
-    cerrarModales();
   }
 
   function avisarSinPaypal() {
@@ -279,11 +275,10 @@ const ResenadorPremium = (() => {
     interceptarPostulacion,
     activarParticipacion,
     rechazarPorAhora,
-    cerrarModalOpcional,
+    resetEstadoModal,
     avisarSinPaypal,
     actualizarBannerPozo,
     retomarPostulacionPendienteSiHay,
-    estaEnModoObligatorio,
     COPY_TITULO,
     COPY_CUERPO
   };

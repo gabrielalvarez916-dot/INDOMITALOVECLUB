@@ -418,14 +418,18 @@ function cerrarModales() {
   const overlay = document.getElementById('modal-overlay');
   if (overlay) overlay.classList.remove('activo');
 
-  // Cierra todos los modales activos, excepto el del tutorial si está en
-  // curso, o el de Reseñadores Premium cuando está en modo obligatorio
-  // (ese mes, activar la participación es un paso necesario, no opcional).
+  // Cierra todos los modales activos, excepto el del tutorial si está en curso.
+  // El de Reseñadores Premium se puede cerrar siempre (aunque sea el modo
+  // obligatorio): el usuario puede seguir mirando la plataforma libremente,
+  // el único bloqueo real está del lado del backend al intentar postularse.
   document.querySelectorAll('.modal.activo').forEach(modal => {
     if (modal.id === 'modal-tutorial-mascota' && typeof _TutorialState !== 'undefined' && _TutorialState.activo) return;
-    if (modal.id === 'modal-resenador-premium' && typeof ResenadorPremium !== 'undefined' && ResenadorPremium.estaEnModoObligatorio()) return;
     modal.classList.remove('activo');
   });
+
+  if (typeof ResenadorPremium !== 'undefined') {
+    ResenadorPremium.resetEstadoModal();
+  }
 
   // Restaura el scroll
   document.body.style.overflow = '';
