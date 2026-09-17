@@ -1005,6 +1005,25 @@ async function iniciarPostulacion(idCampaña) {
     return;
   }
 
+  // Programa Reseñadores Premium: si corresponde, intercepta con el modal
+  // de activación (obligatorio para nuevos, opcional para el resto) antes
+  // de dejar seguir con la postulación. Si devuelve false, ya abrió el
+  // modal y el flujo continúa desde ahí (rechazarPorAhora / vuelta de pago).
+  if (typeof ResenadorPremium !== 'undefined') {
+    const puedeContinuar = await ResenadorPremium.interceptarPostulacion(idCampaña);
+    if (!puedeContinuar) return;
+  }
+
+  await continuarFlujoPostulacion(idCampaña);
+}
+
+/**
+ * Resto del flujo de postulación (completar perfil si falta, y postular).
+ * Separado de iniciarPostulacion para que el modal de Reseñadores Premium
+ * pueda retomarlo después de que el usuario decida "Ahora no" o vuelva de
+ * pagar en PayPal.
+ */
+async function continuarFlujoPostulacion(idCampaña) {
   const usuario = Sesion.obtener();
 
   if (!usuario.pais || !usuario.ciudad) {

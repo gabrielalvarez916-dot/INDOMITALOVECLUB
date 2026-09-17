@@ -142,6 +142,22 @@
     <p>PayPal confirmó tu suscripción. Iniciá sesión con tu cuenta para ver tu plan activo.</p>
     <a href="/app" class="btn-primario">Ir a iniciar sesión</a>
   </div>
+
+  <!-- Vista: pago único del Programa Reseñadores Premium (USD 1) confirmado -->
+  <div id="vista-premium-activa" class="pantalla-estado">
+    <div class="icono">🔥</div>
+    <h1>¡Tu participación ya está activa!</h1>
+    <p>Confirmamos tu pago de USD 1 con PayPal. Ya se sumó al pozo de este mes y podés volver a postularte a campañas.</p>
+    <a href="/app#feed" class="btn-primario">Volver a Indómita</a>
+  </div>
+
+  <!-- Vista: pago único todavía procesando -->
+  <div id="vista-premium-pendiente" class="pantalla-estado">
+    <div class="icono">✨</div>
+    <h1>Tu pago está siendo procesado</h1>
+    <p>PayPal confirmó la operación y en breve se activa automáticamente. No hace falta que hagas nada más — si en unos minutos no podés postularte, escribinos por soporte.</p>
+    <a href="/app#feed" class="btn-primario">Volver a Indómita</a>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -151,9 +167,12 @@
   const vistaActiva = document.getElementById('vista-activa');
   const vistaPendiente = document.getElementById('vista-pendiente');
   const vistaSinSesion = document.getElementById('vista-sin-sesion');
+  const vistaPremiumActiva = document.getElementById('vista-premium-activa');
+  const vistaPremiumPendiente = document.getElementById('vista-premium-pendiente');
 
   function mostrarSolo(vista) {
-    [vistaCargando, vistaActiva, vistaPendiente, vistaSinSesion].forEach(v => v.style.display = 'none');
+    [vistaCargando, vistaActiva, vistaPendiente, vistaSinSesion, vistaPremiumActiva, vistaPremiumPendiente]
+      .forEach(v => v.style.display = 'none');
     vista.style.display = 'block';
   }
 
@@ -190,7 +209,58 @@
     mostrarSolo(vistaPendiente);
   }
 
-  verificarSuscripcion();
+  /**
+   * Pago único vía PayPal Orders API (Reseñadores Premium, e impulsos de
+   * autor). PayPal redirige acá con "?token=<order_id>" en la URL.
+   * El webhook-paypal ya suele capturar la orden solo, pero por si todavía
+   * no llegó, esta página hace de fallback llamando a capturar-orden-paypal
+   * (es idempotente) y después confirma el estado final contra la tabla.
+   */
+  async function verificarPagoUnico(orderId) {
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/capturar-orden-paypal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+      });
+    } catch (e) {
+      console.error('Error llamando a capturar-orden-paypal:', e);
+    }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      mostrarSolo(vistaSinSesion);
+      return;
+    }
+
+    for (let intento = 0; intento < MAX_INTENTOS; intento++) {
+      const { data, error } = await supabaseClient
+        .from('resenadores_premium')
+        .select('pagado')
+        .eq('id_usuario', session.user.id)
+        .eq('paypal_order_id', orderId)
+        .maybeSingle();
+
+      if (!error && data?.pagado) {
+        mostrarSolo(vistaPremiumActiva);
+        return;
+      }
+
+      await new Promise(r => setTimeout(r, ESPERA_MS));
+    }
+
+    mostrarSolo(vistaPremiumPendiente);
+  }
+
+  const parametros = new URLSearchParams(window.location.search);
+  const idSuscripcion = parametros.get('subscription_id');
+  const tokenOrden = parametros.get('token');
+
+  if (!idSuscripcion && tokenOrden) {
+    verificarPagoUnico(tokenOrden);
+  } else {
+    verificarSuscripcion();
+  }
 </script>
 
 </body>
