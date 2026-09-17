@@ -216,40 +216,26 @@ const ResenadorPremium = (() => {
   }
 
   // ------------------------------------------------------------
-  // Header: banner del pozo acumulado
+  // Ticker del feed: reemplaza "Nuevo evento: X" por el pozo acumulado
   // ------------------------------------------------------------
-  async function actualizarBannerPozo() {
-    const banner = document.getElementById('banner-pozo-premium');
-    if (!banner) return;
-
-    if (Sesion.rol() !== 'reseñador') {
-      banner.style.display = 'none';
-      return;
-    }
-
+  async function obtenerTextoTicker() {
     try {
       const [{ data: pozo, error: errorPozo }, { data: config }] = await Promise.all([
         supabaseClient.rpc('obtener_pozo_actual'),
         supabaseClient.from('configuracion').select('valor').eq('clave', 'RESENADOR_PREMIUM_PRECIO_USD').maybeSingle()
       ]);
 
-      if (errorPozo || !pozo) {
-        banner.style.display = 'none';
-        return;
-      }
+      if (errorPozo || !pozo) return null;
 
       const precioUsd = Number(config?.valor) || 1;
       const recaudado = Number(pozo.pagos_contados || 0) * precioUsd;
       const piso = Number(pozo.monto_piso || 0);
       const monto = Math.max(piso, recaudado);
 
-      const montoEl = document.getElementById('banner-pozo-premium-monto');
-      if (montoEl) montoEl.textContent = `USD ${monto.toLocaleString('es-AR')}`;
-
-      banner.style.display = 'flex';
+      return `🔥 Programa Reseñadores Premium — Pozo acumulado: USD ${monto.toLocaleString('es-AR')}`;
     } catch (e) {
-      console.error('Error actualizando banner del pozo Premium:', e);
-      banner.style.display = 'none';
+      console.error('Error armando el texto del ticker de Reseñadores Premium:', e);
+      return null;
     }
   }
 
@@ -277,7 +263,7 @@ const ResenadorPremium = (() => {
     rechazarPorAhora,
     resetEstadoModal,
     avisarSinPaypal,
-    actualizarBannerPozo,
+    obtenerTextoTicker,
     retomarPostulacionPendienteSiHay,
     COPY_TITULO,
     COPY_CUERPO

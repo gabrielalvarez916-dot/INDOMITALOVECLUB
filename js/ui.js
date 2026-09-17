@@ -269,9 +269,9 @@ function mostrarHeaderLogueado(usuario) {
     if (el) el.style.display = esAdmin ? 'inline-block' : 'none';
   });
 
-  // Banner del pozo del Programa Reseñadores Premium (solo reseñadores)
+  // Retoma una postulación que haya quedado pendiente de pago Premium
+  // (por si el usuario recargó la página al volver de PayPal).
   if (typeof ResenadorPremium !== 'undefined') {
-    ResenadorPremium.actualizarBannerPozo();
     ResenadorPremium.retomarPostulacionPendienteSiHay();
   }
 }
@@ -308,9 +308,6 @@ function mostrarHeaderDeslogueado() {
 
   const navEvento = document.getElementById('nav-evento');
   if (navEvento) navEvento.style.display = 'none';
-
-  const bannerPozoPremium = document.getElementById('banner-pozo-premium');
-  if (bannerPozoPremium) bannerPozoPremium.style.display = 'none';
 }
 
 

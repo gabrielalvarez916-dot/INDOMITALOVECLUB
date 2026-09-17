@@ -1388,6 +1388,17 @@ async function cargarTickerEvento() {
   const track = document.getElementById('feed-ticker-track');
   if (!track) return;
 
+  // Para reseñadores, el ticker muestra el pozo del Programa Reseñadores
+  // Premium en vez del evento activo (reemplaza el "Nuevo evento: X").
+  if (Sesion.rol() === 'reseñador' && typeof ResenadorPremium !== 'undefined') {
+    const textoPremium = await ResenadorPremium.obtenerTextoTicker();
+    if (textoPremium) {
+      const itemHtmlPremium = `<span class="feed-ticker-item">${textoPremium}</span><span class="feed-ticker-sep">✦</span>`;
+      track.innerHTML = itemHtmlPremium.repeat(8);
+      return;
+    }
+  }
+
   const { data: evento } = await supabaseClient
     .from('eventos')
     .select('nombre, tema')
