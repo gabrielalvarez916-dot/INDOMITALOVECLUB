@@ -165,6 +165,7 @@ async function cargarCampañasAdmin() {
   }
 
   const campañas = resultado.campañas || [];
+  window._campañasAdmin = campañas;
 
   if (campañas.length === 0) {
     contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay campañas registradas.</p></div>`;
@@ -172,11 +173,14 @@ async function cargarCampañasAdmin() {
   }
 
   contenedor.innerHTML = `
-    <table class="admin-tabla">
+    <input type="text" id="admin-buscar-campana" class="input-buscar" placeholder="Buscar por mail o autor..." oninput="filtrarCampañasAdmin()" style="max-width:400px;" />
+    <table class="admin-tabla" id="tabla-campanas">
       <thead>
         <tr>
           <th>Libro</th>
-          <th>Autor</th>
+          <th>Nombre autor</th>
+          <th>Mail autor</th>
+          <th>IG autor</th>
           <th>Estado</th>
           <th>Cupos</th>
           <th>Fecha límite</th>
@@ -188,6 +192,20 @@ async function cargarCampañasAdmin() {
       </tbody>
     </table>
   `;
+}
+
+/**
+ * Filtra la tabla de campañas por mail o nombre del autor.
+ */
+function filtrarCampañasAdmin() {
+  const texto = (document.getElementById('admin-buscar-campana')?.value || '').toLowerCase();
+  const campañas = (window._campañasAdmin || []).filter(c =>
+    (c.emailAutor || '').toLowerCase().includes(texto) ||
+    (c.nombreAutor || '').toLowerCase().includes(texto)
+  );
+
+  const tbody = document.querySelector('#tabla-campanas tbody');
+  if (tbody) tbody.innerHTML = campañas.map(c => construirFilaCampañaAdmin(c)).join('');
 }
 
 /**
@@ -204,7 +222,9 @@ function construirFilaCampañaAdmin(c) {
   return `
     <tr>
       <td>${c.nombreLibro}</td>
+      <td style="font-size:12px;">${c.nombreAutor || '—'}</td>
       <td style="font-size:12px;">${c.emailAutor}</td>
+      <td style="font-size:12px;">${c.igAutor ? '@' + c.igAutor : '—'}</td>
       <td>${badgeEstado(c.estado)}</td>
       <td>${c.cuposDisponibles} / ${c.cuposTotal}</td>
       <td style="font-size:12px;">${formatearFechaAmigable(c.fechaLimite)}</td>
