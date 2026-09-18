@@ -13,7 +13,7 @@
 
 const ResenadorPremium = (() => {
   const COPY_TITULO = '🔥 Activa tu participación este mes';
-  const COPY_CUERPO = 'Para postularte a está y todas las campañas que quieras, activá tu participación como reseñador por 1 USD. Tu aporte se suma al pozo de reseñadores y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento.';
+  const COPY_CUERPO = 'Para postularte a está y todas las campañas que quieras, activá tu participación como reseñador por USD 1,50. Tu aporte se suma al pozo de reseñadores y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento.';
 
   let _idCampañaPendiente = null;
   let _cargandoPago = false;
@@ -116,7 +116,7 @@ const ResenadorPremium = (() => {
       if (footerEl) {
         footerEl.innerHTML = `
           <button type="button" class="btn-secundario" onclick="ResenadorPremium.rechazarPorAhora()">Ahora no</button>
-          <button type="button" class="btn-primario" id="btn-activar-premium" onclick="ResenadorPremium.activarParticipacion()">Sumarme por 1 USD</button>
+          <button type="button" class="btn-primario" id="btn-activar-premium" onclick="ResenadorPremium.activarParticipacion()">Sumarme por USD 1,50</button>
           <p style="font-size:12px; color:var(--gris-suave); text-align:center; width:100%; margin-top:10px;">
             ¿No tenés PayPal? <a href="#" onclick="event.preventDefault(); ResenadorPremium.avisarSinPaypal();">Avisanos</a>.
           </p>
@@ -211,7 +211,7 @@ const ResenadorPremium = (() => {
     const asunto = document.getElementById('soporte-asunto');
     const mensaje = document.getElementById('soporte-mensaje');
     if (asunto) asunto.value = 'No tengo PayPal - Reseñadores Premium';
-    if (mensaje) mensaje.value = 'Hola! Quiero sumarme al Programa Reseñadores Premium pero no tengo PayPal. ¿Hay otra forma de pagar el USD 1?';
+    if (mensaje) mensaje.value = 'Hola! Quiero sumarme al Programa Reseñadores Premium pero no tengo PayPal. ¿Hay otra forma de pagar el USD 1,50?';
     mostrarModal('modal-soporte');
   }
 
