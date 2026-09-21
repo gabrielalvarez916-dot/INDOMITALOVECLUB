@@ -214,23 +214,31 @@ const ResenadorPremium = (() => {
   }
 
   // ------------------------------------------------------------
-  // Ticker del feed: reemplaza "Nuevo evento: X" por el pozo acumulado
+  // Ticker del feed: reemplaza "Nuevo evento: X" por el estado real del
+  // pozo. Mientras no se llega al umbral del mes, muestra "34/60 pagos
+  // para activarse". Al llegar (o superar), muestra el monto acumulado.
+  // Cada pago vale USD 1 para el pozo, sin importar cuánto se cobró
+  // realmente (1,50 USD, ARS, EUR, lo que sea): así lo pidió Gaby.
   // ------------------------------------------------------------
   async function obtenerTextoTicker() {
     try {
       const [{ data: pozo, error: errorPozo }, { data: config }] = await Promise.all([
         supabaseClient.rpc('obtener_pozo_actual'),
-        supabaseClient.from('configuracion').select('valor').eq('clave', 'RESENADOR_PREMIUM_PRECIO_USD').maybeSingle()
+        supabaseClient.from('configuracion').select('valor').eq('clave', 'RESENADOR_PREMIUM_VALOR_POZO_USD').maybeSingle()
       ]);
 
       if (errorPozo || !pozo) return null;
 
-      const precioUsd = Number(config?.valor) || 1;
-      const recaudado = Number(pozo.pagos_contados || 0) * precioUsd;
-      const piso = Number(pozo.monto_piso || 0);
-      const monto = Math.max(piso, recaudado);
+      const valorPorPago = Number(config?.valor) || 1;
+      const pagos = Number(pozo.pagos_contados || 0);
+      const umbral = Number(pozo.umbral_pagos || 60);
+      const acumulado = pagos * valorPorPago;
 
-      return `🔥 Programa Reseñadores Premium — Pozo acumulado: USD ${monto.toLocaleString('es-AR')}`;
+      if (pozo.estado === 'abierto' && pagos < umbral) {
+        return `🔥 Programa Reseñadores Premium — Pozo: ${pagos}/${umbral} pagos para activarse`;
+      }
+
+      return `🔥 ¡Pozo Reseñadores Premium activado! — USD ${acumulado.toLocaleString('es-AR')} acumulados este mes`;
     } catch (e) {
       console.error('Error armando el texto del ticker de Reseñadores Premium:', e);
       return null;
