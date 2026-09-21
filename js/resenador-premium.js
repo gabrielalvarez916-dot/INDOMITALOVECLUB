@@ -10,8 +10,11 @@
 // ============================================================
 
 const ResenadorPremium = (() => {
+  // Nota: estos dos strings no se usan para renderizar el modal (el HTML
+  // vive en app.html, con el estado del pozo inyectado en vivo por
+  // _renderModal). Quedan solo como referencia rápida del copy vigente.
   const COPY_TITULO = '🔥 Activa tu participación este mes';
-  const COPY_CUERPO = 'Sumate al pozo de reseñadores este mes por USD 1,50. Tu aporte se suma al pozo y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento. Es opcional: podés postularte a las campañas igual. Además sumás: comodín de 7 días sin penalización, el doble de puntos en tu primera reseña del mes, confiabilidad Alta desde el día uno (si no tenés historial todavía) y prioridad en soporte.';
+  const COPY_CUERPO = 'Sumate al pozo de este mes por USD 1,50. Cuando se llega al umbral de aportes, el pozo se activa y se reparte entre las 10 reseñadoras con mejor cumplimiento. Si no se llega, tu aporte no se pierde: pasa a contar para el mes que viene. Es opcional: podés postularte a las campañas igual. Además sumás: comodín de 7 días, doble de puntos en tu primera reseña del mes, confiabilidad Alta desde el día uno y prioridad en soporte.';
 
   // Cada cuánto puede volver a aparecer el modal al apretar "Postularme".
   const INTERVALO_MODAL_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
@@ -101,7 +104,7 @@ const ResenadorPremium = (() => {
     if (modo === 'ninguno') return true;
 
     _idCampañaPendiente = idCampaña;
-    _renderModal();
+    await _renderModal();
     mostrarModal('modal-resenador-premium');
     return false;
   }
@@ -109,7 +112,7 @@ const ResenadorPremium = (() => {
   // ------------------------------------------------------------
   // Modal
   // ------------------------------------------------------------
-  function _renderModal() {
+  async function _renderModal() {
     const cerrarEl = document.getElementById('premium-modal-cerrar');
     const footerEl = document.getElementById('premium-modal-footer');
 
@@ -122,6 +125,26 @@ const ResenadorPremium = (() => {
           ¿No tenés PayPal? <a href="#" onclick="event.preventDefault(); ResenadorPremium.avisarSinPaypal();">Avisanos</a>.
         </p>
       `;
+    }
+
+    // Estado real del pozo (mismos datos que el ticker del feed), para no
+    // hardcodear "X de Y" en el copy: eso queda desactualizado apenas
+    // alguien más se suma o cambia el mes.
+    const pozoEl = document.getElementById('premium-modal-pozo-estado');
+    if (pozoEl) {
+      try {
+        const { data: pozo, error } = await supabaseClient.rpc('obtener_pozo_actual');
+        if (!error && pozo) {
+          const pagos = Number(pozo.pagos_contados || 0);
+          const umbral = Number(pozo.umbral_pagos || 60);
+          pozoEl.textContent = `${pagos} de ${umbral}`;
+        } else {
+          pozoEl.textContent = 'varios';
+        }
+      } catch (e) {
+        console.error('Error obteniendo estado del pozo para el modal:', e);
+        pozoEl.textContent = 'varios';
+      }
     }
   }
 
