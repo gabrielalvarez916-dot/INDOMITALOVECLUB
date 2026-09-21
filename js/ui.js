@@ -416,9 +416,7 @@ function cerrarModales() {
   if (overlay) overlay.classList.remove('activo');
 
   // Cierra todos los modales activos, excepto el del tutorial si está en curso.
-  // El de Reseñadores Premium se puede cerrar siempre (aunque sea el modo
-  // obligatorio): el usuario puede seguir mirando la plataforma libremente,
-  // el único bloqueo real está del lado del backend al intentar postularse.
+  // El de Reseñadores Premium se puede cerrar siempre: es opcional.
   document.querySelectorAll('.modal.activo').forEach(modal => {
     if (modal.id === 'modal-tutorial-mascota' && typeof _TutorialState !== 'undefined' && _TutorialState.activo) return;
     modal.classList.remove('activo');

@@ -2,18 +2,16 @@
 // resenador-premium.js — Indómita Love Club
 // Programa Reseñadores Premium: aporte mensual de USD 1 al pozo que
 // se reparte entre los 10 reseñadores con mejor cumplimiento del mes.
-// - Reseñadores NUEVOS (dados de alta desde la fecha de corte): es
-//   obligatorio para poder postularse a campañas.
-// - Reseñadores existentes: es opcional (pueden sumarse o rechazar).
-// El gating real (quién puede postularse) lo hace el backend
-// (puede_postularse_este_mes / crear_postulacion). Este módulo solo
-// se encarga de mostrar el modal correcto ANTES de intentar postular,
-// para que la experiencia sea clara en vez de un error de la RPC.
+// Es OPCIONAL para todos los reseñadores: pueden sumarse o rechazar, y
+// en ambos casos pueden postularse a campañas. El backend ya no
+// restringe la postulación por este programa. Este módulo solo muestra
+// el modal de invitación ANTES de postular, una vez por mes hasta que
+// el reseñador decide.
 // ============================================================
 
 const ResenadorPremium = (() => {
   const COPY_TITULO = '🔥 Activa tu participación este mes';
-  const COPY_CUERPO = 'Para postularte a está y todas las campañas que quieras, activá tu participación como reseñador por USD 1,50. Tu aporte se suma al pozo de reseñadores y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento.';
+  const COPY_CUERPO = 'Sumate al pozo de reseñadores este mes por USD 1,50. Tu aporte se suma al pozo y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento. Es opcional: podés postularte a las campañas igual.';
 
   let _idCampañaPendiente = null;
   let _cargandoPago = false;
@@ -29,18 +27,14 @@ const ResenadorPremium = (() => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return null;
 
-    const [{ data: esNuevo }, { data: filaMes }] = await Promise.all([
-      supabaseClient.rpc('es_resenador_nuevo_bajo_regla_premium'),
-      supabaseClient
-        .from('resenadores_premium')
-        .select('estado, pagado')
-        .eq('id_usuario', user.id)
-        .eq('mes_año', _mesActual())
-        .maybeSingle()
-    ]);
+    const { data: filaMes } = await supabaseClient
+      .from('resenadores_premium')
+      .select('estado, pagado')
+      .eq('id_usuario', user.id)
+      .eq('mes_año', _mesActual())
+      .maybeSingle();
 
     return {
-      esNuevo: !!esNuevo,
       pagado: !!filaMes?.pagado,
       estado: filaMes?.estado || null
     };
@@ -48,7 +42,7 @@ const ResenadorPremium = (() => {
 
   /**
    * Decide si hay que interceptar el click en "Postularme" con el modal.
-   * @returns {'obligatorio'|'opcional'|'ninguno'}
+   * @returns {'opcional'|'ninguno'}
    */
   async function _evaluarGating() {
     if (Sesion.rol() !== 'reseñador') return 'ninguno';
@@ -58,10 +52,8 @@ const ResenadorPremium = (() => {
 
     if (estado.pagado) return 'ninguno';
 
-    if (estado.esNuevo) return 'obligatorio';
-
-    // Reseñador existente: si ya tomó una decisión este mes (aceptó o
-    // rechazó), no lo interrumpimos de nuevo.
+    // Si ya tomó una decisión este mes (aceptó o rechazó), no lo
+    // interrumpimos de nuevo.
     if (estado.estado === 'aceptado' || estado.estado === 'rechazado') return 'ninguno';
 
     return 'opcional';
@@ -86,7 +78,7 @@ const ResenadorPremium = (() => {
     if (modo === 'ninguno') return true;
 
     _idCampañaPendiente = idCampaña;
-    _renderModal(modo);
+    _renderModal();
     mostrarModal('modal-resenador-premium');
     return false;
   }
@@ -94,34 +86,19 @@ const ResenadorPremium = (() => {
   // ------------------------------------------------------------
   // Modal
   // ------------------------------------------------------------
-  function _renderModal(modo) {
+  function _renderModal() {
     const cerrarEl = document.getElementById('premium-modal-cerrar');
     const footerEl = document.getElementById('premium-modal-footer');
-    const avisoEl = document.getElementById('premium-modal-aviso-obligatorio');
 
-    if (modo === 'obligatorio') {
-      if (cerrarEl) cerrarEl.style.display = '';
-      if (avisoEl) avisoEl.style.display = 'block';
-      if (footerEl) {
-        footerEl.innerHTML = `
-          <button type="button" class="btn-primario btn-full" id="btn-activar-premium" onclick="ResenadorPremium.activarParticipacion()">Activar participación →</button>
-          <p style="font-size:12px; color:var(--gris-suave); text-align:center; margin-top:10px;">
-            ¿No tenés PayPal? <a href="#" onclick="event.preventDefault(); ResenadorPremium.avisarSinPaypal();">Avisanos</a> y lo vemos juntos.
-          </p>
-        `;
-      }
-    } else {
-      if (cerrarEl) cerrarEl.style.display = '';
-      if (avisoEl) avisoEl.style.display = 'none';
-      if (footerEl) {
-        footerEl.innerHTML = `
-          <button type="button" class="btn-secundario" onclick="ResenadorPremium.rechazarPorAhora()">Ahora no</button>
-          <button type="button" class="btn-primario" id="btn-activar-premium" onclick="ResenadorPremium.activarParticipacion()">Sumarme por USD 1,50</button>
-          <p style="font-size:12px; color:var(--gris-suave); text-align:center; width:100%; margin-top:10px;">
-            ¿No tenés PayPal? <a href="#" onclick="event.preventDefault(); ResenadorPremium.avisarSinPaypal();">Avisanos</a>.
-          </p>
-        `;
-      }
+    if (cerrarEl) cerrarEl.style.display = '';
+    if (footerEl) {
+      footerEl.innerHTML = `
+        <button type="button" class="btn-secundario" onclick="ResenadorPremium.rechazarPorAhora()">Ahora no</button>
+        <button type="button" class="btn-primario" id="btn-activar-premium" onclick="ResenadorPremium.activarParticipacion()">Sumarme por USD 1,50</button>
+        <p style="font-size:12px; color:var(--gris-suave); text-align:center; width:100%; margin-top:10px;">
+          ¿No tenés PayPal? <a href="#" onclick="event.preventDefault(); ResenadorPremium.avisarSinPaypal();">Avisanos</a>.
+        </p>
+      `;
     }
   }
 
@@ -198,9 +175,7 @@ const ResenadorPremium = (() => {
    * Limpia el estado interno del modal (campaña pendiente). Se llama tanto
    * desde el botón ✕ propio como, de forma genérica, desde cerrarModales()
    * en ui.js — así que cubre también el click en el overlay. El usuario
-   * puede cerrar este modal libremente en cualquier momento; el único
-   * bloqueo real (para reseñadores nuevos sin pagar) lo aplica el backend
-   * cuando intentan postularse, no este modal.
+   * puede cerrar este modal libremente en cualquier momento.
    */
   function resetEstadoModal() {
     _idCampañaPendiente = null;

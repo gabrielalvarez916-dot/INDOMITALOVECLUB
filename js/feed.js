@@ -1005,9 +1005,9 @@ async function iniciarPostulacion(idCampaña) {
     return;
   }
 
-  // Programa Reseñadores Premium: si corresponde, intercepta con el modal
-  // de activación (obligatorio para nuevos, opcional para el resto) antes
-  // de dejar seguir con la postulación. Si devuelve false, ya abrió el
+  // Programa Reseñadores Premium (opcional para todos): si el reseñador
+  // todavía no decidió este mes, intercepta con el modal de invitación
+  // antes de seguir con la postulación. Si devuelve false, ya abrió el
   // modal y el flujo continúa desde ahí (rechazarPorAhora / vuelta de pago).
   if (typeof ResenadorPremium !== 'undefined') {
     const puedeContinuar = await ResenadorPremium.interceptarPostulacion(idCampaña);
