@@ -1416,10 +1416,13 @@ function construirFilaTicketAdmin(t) {
   const checkbox = t.estado !== 'cerrado'
     ? `<input type="checkbox" class="admin-ticket-checkbox" onchange="toggleSeleccionTicketAdmin('${t.idTicket}', this.checked)" />`
     : '';
+  // Reseñadoras Premium pagantes este mes van arriba de todo (ya vienen
+  // ordenadas así desde admin_listar_tickets) y se marcan para priorizarlas
+  // a simple vista en la cola.
   return `
-    <tr>
+    <tr${t.premium ? ' style="background:rgba(123,28,46,0.05);"' : ''}>
       <td style="text-align:center;">${checkbox}</td>
-      <td style="font-size:12px;">${t.email}</td>
+      <td style="font-size:12px;">${t.premium ? '<span title="Reseñadora Premium este mes" style="margin-right:4px;">⭐</span>' : ''}${t.email}</td>
       <td><span class="badge badge-nivel">${t.rol || '—'}</span></td>
       <td>${tipoBadge || t.asunto || ''} ${t.adjuntoKey ? '📎' : ''}</td>
       <td style="max-width:280px; font-size:12px;">${t.mensaje}</td>
