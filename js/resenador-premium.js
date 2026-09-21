@@ -221,12 +221,11 @@ const ResenadorPremium = (() => {
 
     cerrarModales();
 
-    const idCampaña = _idCampañaPendiente;
+    // A pedido: cerrar el modal (con "Ahora no" o la X) ya NO continúa la
+    // postulación automáticamente. El usuario tiene que volver a tocar
+    // "Postularme"; como el modal ya se marcó como mostrado, esa segunda
+    // vez el gating deja pasar directo (ver _evaluarGating / INTERVALO_MODAL_MS).
     _idCampañaPendiente = null;
-
-    if (idCampaña && typeof continuarFlujoPostulacion === 'function') {
-      await continuarFlujoPostulacion(idCampaña);
-    }
   }
 
   /**
