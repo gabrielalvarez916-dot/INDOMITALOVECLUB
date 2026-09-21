@@ -128,22 +128,34 @@ const ResenadorPremium = (() => {
     }
 
     // Estado real del pozo (mismos datos que el ticker del feed), para no
-    // hardcodear "X de Y" en el copy: eso queda desactualizado apenas
-    // alguien más se suma o cambia el mes.
+    // hardcodear un monto en el copy: eso queda desactualizado apenas
+    // alguien más se suma o cambia el mes. Mostramos plata (no "aportes")
+    // porque eso es lo que se entiende de una: cuánto hay juntado y qué
+    // falta para que se reparta.
     const pozoEl = document.getElementById('premium-modal-pozo-estado');
     if (pozoEl) {
       try {
-        const { data: pozo, error } = await supabaseClient.rpc('obtener_pozo_actual');
+        const [{ data: pozo, error }, { data: config }] = await Promise.all([
+          supabaseClient.rpc('obtener_pozo_actual'),
+          supabaseClient.from('configuracion').select('valor').eq('clave', 'RESENADOR_PREMIUM_VALOR_POZO_USD').maybeSingle()
+        ]);
+
         if (!error && pozo) {
+          const valorPorPago = Number(config?.valor) || 1;
           const pagos = Number(pozo.pagos_contados || 0);
           const umbral = Number(pozo.umbral_pagos || 60);
-          pozoEl.textContent = `${pagos} de ${umbral}`;
+          const acumulado = pagos * valorPorPago;
+          const faltan = Math.max(umbral - pagos, 0);
+
+          pozoEl.textContent = faltan > 0
+            ? `USD ${acumulado.toLocaleString('es-AR')} (faltan ${faltan} reseñadoras para repartirlo)`
+            : `USD ${acumulado.toLocaleString('es-AR')} — ¡ya se activó!`;
         } else {
-          pozoEl.textContent = 'varios';
+          pozoEl.textContent = 'varios cientos de dólares';
         }
       } catch (e) {
         console.error('Error obteniendo estado del pozo para el modal:', e);
-        pozoEl.textContent = 'varios';
+        pozoEl.textContent = 'varios cientos de dólares';
       }
     }
   }
