@@ -2,19 +2,41 @@
 // resenador-premium.js — Indómita Love Club
 // Programa Reseñadores Premium: aporte mensual de USD 1 al pozo que
 // se reparte entre los 10 reseñadores con mejor cumplimiento del mes.
-// Es OPCIONAL para todos los reseñadores: pueden sumarse o rechazar, y
-// en ambos casos pueden postularse a campañas. El backend ya no
-// restringe la postulación por este programa. Este módulo solo muestra
-// el modal de invitación ANTES de postular, una vez por mes hasta que
-// el reseñador decide.
+// Es OPCIONAL para todos los reseñadores: pueden sumarse o no, y en
+// ambos casos pueden postularse a campañas. El backend no restringe la
+// postulación por este programa. Este módulo solo muestra el modal de
+// invitación cuando el reseñador aprieta "Postularme", y como máximo
+// una vez cada 2 días (mientras no haya pagado el mes).
 // ============================================================
 
 const ResenadorPremium = (() => {
   const COPY_TITULO = '🔥 Activa tu participación este mes';
   const COPY_CUERPO = 'Sumate al pozo de reseñadores este mes por USD 1,50. Tu aporte se suma al pozo y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento. Es opcional: podés postularte a las campañas igual.';
 
+  // Cada cuánto puede volver a aparecer el modal al apretar "Postularme".
+  const INTERVALO_MODAL_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
+
   let _idCampañaPendiente = null;
   let _cargandoPago = false;
+
+  function _claveUltimaVez(idUsuario) {
+    return `premium_modal_ultima_vez_${idUsuario}`;
+  }
+
+  function _seMostroRecientemente(idUsuario) {
+    try {
+      const ultima = Number(localStorage.getItem(_claveUltimaVez(idUsuario)));
+      return Number.isFinite(ultima) && ultima > 0 && (Date.now() - ultima) < INTERVALO_MODAL_MS;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function _marcarMostrado(idUsuario) {
+    try {
+      localStorage.setItem(_claveUltimaVez(idUsuario), String(Date.now()));
+    } catch (e) {}
+  }
 
   function _mesActual() {
     return new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -35,8 +57,8 @@ const ResenadorPremium = (() => {
       .maybeSingle();
 
     return {
-      pagado: !!filaMes?.pagado,
-      estado: filaMes?.estado || null
+      idUsuario: user.id,
+      pagado: !!filaMes?.pagado
     };
   }
 
@@ -52,10 +74,11 @@ const ResenadorPremium = (() => {
 
     if (estado.pagado) return 'ninguno';
 
-    // Si ya tomó una decisión este mes (aceptó o rechazó), no lo
-    // interrumpimos de nuevo.
-    if (estado.estado === 'aceptado' || estado.estado === 'rechazado') return 'ninguno';
+    // Si el modal ya se le mostró hace menos de 2 días, no se repite:
+    // sigue con la postulación normal.
+    if (_seMostroRecientemente(estado.idUsuario)) return 'ninguno';
 
+    _marcarMostrado(estado.idUsuario);
     return 'opcional';
   }
 

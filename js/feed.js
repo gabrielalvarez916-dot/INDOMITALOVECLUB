@@ -1006,7 +1006,7 @@ async function iniciarPostulacion(idCampaña) {
   }
 
   // Programa Reseñadores Premium (opcional para todos): si el reseñador
-  // todavía no decidió este mes, intercepta con el modal de invitación
+  // no pagó el mes y hace 2 días o más que no ve el modal, lo muestra
   // antes de seguir con la postulación. Si devuelve false, ya abrió el
   // modal y el flujo continúa desde ahí (rechazarPorAhora / vuelta de pago).
   if (typeof ResenadorPremium !== 'undefined') {
