@@ -11,7 +11,7 @@
 
 const ResenadorPremium = (() => {
   const COPY_TITULO = '🔥 Activa tu participación este mes';
-  const COPY_CUERPO = 'Sumate al pozo de reseñadores este mes por USD 1,50. Tu aporte se suma al pozo y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento. Es opcional: podés postularte a las campañas igual.';
+  const COPY_CUERPO = 'Sumate al pozo de reseñadores este mes por USD 1,50. Tu aporte se suma al pozo y, al finalizar el mes, se reparte entre los diez reseñadores con mejor cumplimiento. Es opcional: podés postularte a las campañas igual. Además sumás: comodín de 7 días sin penalización, el doble de puntos en tu primera reseña del mes, confiabilidad Alta desde el día uno (si no tenés historial todavía) y prioridad en soporte.';
 
   // Cada cuánto puede volver a aparecer el modal al apretar "Postularme".
   const INTERVALO_MODAL_MS = 2 * 24 * 60 * 60 * 1000; // 2 días
