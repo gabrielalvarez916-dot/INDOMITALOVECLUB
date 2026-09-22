@@ -2051,6 +2051,56 @@ async function subirArchivoLibro(idCampana, formato, archivo) {
 }
 
 /**
+ * Genera el link de pago para comprar 1 campaña individual (fuera de
+ * suscripción) y lo abre en una pestaña nueva, sin perder lo que el autor
+ * ya cargó en el formulario de nueva campaña. El crédito queda "pagado"
+ * en campana_creditos apenas se confirma el pago (webhook) y se consume
+ * solo, del lado del servidor, la próxima vez que el autor toque
+ * "Crear campaña" para esta misma campaña.
+ */
+async function pagarCampanaIndividual() {
+  const btn = document.getElementById('nc-btn-pagar-campana');
+  const msj = document.getElementById('nc-limite-plan-pago-msj');
+  if (msj) { msj.style.display = 'none'; msj.textContent = ''; }
+
+  const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Pesos argentinos (ARS, Mercado Pago)\nCancelar = Dólares (USD, PayPal)')
+    ? 'ARS' : 'USD';
+  const proveedor = moneda === 'ARS' ? 'mercadopago' : 'paypal';
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Generando link de pago...'; }
+
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      if (msj) { msj.textContent = 'Tu sesión se cerró. Iniciá sesión de nuevo.'; msj.style.display = 'block'; }
+      return;
+    }
+
+    const { data, error } = await supabaseClient.functions.invoke('crear-pago-campana-individual', {
+      body: { proveedor },
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+
+    if (error || !data?.ok) {
+      const detalle = await _leerErrorEdgeFunction(error, data?.error || 'No se pudo generar el link de pago.');
+      if (msj) { msj.textContent = detalle; msj.style.display = 'block'; }
+      return;
+    }
+
+    window.open(data.linkPago, '_blank');
+    if (msj) {
+      msj.textContent = 'Se abrió el link de pago en otra pestaña. Cuando se acredite, volvé acá y tocá "Crear campaña" de nuevo.';
+      msj.style.display = 'block';
+    }
+  } catch (e) {
+    console.error('Error generando pago de campaña individual:', e);
+    if (msj) { msj.textContent = 'Ocurrió un error inesperado. Probá de nuevo.'; msj.style.display = 'block'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Pagar solo esta campaña'; }
+  }
+}
+
+/**
  * Envía el formulario de nueva campaña al backend.
  * Se llama desde el submit del form en el modal.
  *

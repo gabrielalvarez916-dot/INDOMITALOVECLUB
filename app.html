@@ -1093,7 +1093,11 @@
     <div id="nc-error" class="mensaje-error" style="display:none;"></div>
         <div id="nc-limite-plan" class="mensaje-limite-plan" style="display:none;">
           <p id="nc-limite-plan-texto"></p>
-          <button type="button" class="btn-primario" onclick="irAContratarPlanDesdeLimite()">Mejorar plan</button>
+          <div id="nc-limite-plan-acciones" style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn-primario" onclick="irAContratarPlanDesdeLimite()">Mejorar plan</button>
+            <button type="button" id="nc-btn-pagar-campana" class="btn-secundario" style="display:none;" onclick="pagarCampanaIndividual()">Pagar solo esta campaña</button>
+          </div>
+          <p id="nc-limite-plan-pago-msj" class="form-hint" style="display:none; margin-top:8px;"></p>
         </div>
         <div id="nc-ok" class="mensaje-ok" style="display:none;"></div>
         <div class="modal-footer">

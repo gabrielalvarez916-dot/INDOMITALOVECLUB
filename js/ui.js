@@ -638,6 +638,35 @@ function mostrarMensajeLimitePlan(mensajeOriginal) {
     elTexto.textContent = texto;
     el.style.display = 'flex';
   }
+
+  // El pago de campaña individual solo tiene sentido cuando lo que falta
+  // es el límite de campañas activas (no el de reseñadores): comprar una
+  // campaña individual no suma más cupos de reseñadores a las campañas
+  // que ya tiene.
+  const btnPagar = document.getElementById('nc-btn-pagar-campana');
+  const msjPago = document.getElementById('nc-limite-plan-pago-msj');
+  if (btnPagar) {
+    btnPagar.style.display = esLimiteCampanas ? 'inline-block' : 'none';
+    btnPagar.disabled = false;
+    btnPagar.textContent = 'Pagar solo esta campaña';
+  }
+  if (msjPago) { msjPago.style.display = 'none'; msjPago.textContent = ''; }
+
+  if (esLimiteCampanas && btnPagar) {
+    supabaseClient
+      .from('configuracion')
+      .select('clave, valor')
+      .in('clave', ['CAMPANA_PRECIO_USD', 'CAMPANA_PRECIO_ARS'])
+      .then(({ data }) => {
+        const usd = (data || []).find(c => c.clave === 'CAMPANA_PRECIO_USD')?.valor;
+        const ars = (data || []).find(c => c.clave === 'CAMPANA_PRECIO_ARS')?.valor;
+        if (usd && ars) {
+          btnPagar.textContent = `Pagar solo esta campaña (USD ${usd} / $${Number(ars).toLocaleString('es-AR')} ARS)`;
+        }
+      })
+      .catch(() => {});
+  }
+
   return true;
 }
 
