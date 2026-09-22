@@ -2433,11 +2433,14 @@ async function cargarPlanAutor(idUsuario) {
   }
 
   let planes;
-  // Precios de campaña individual / packs de crédito (solo autores, no
-  // editoriales — packs y campaña suelta no aplican a ese rol). Se cargan
-  // en paralelo con los datos de arriba para no bloquear el render.
+
+  // Precios de campaña individual / packs de crédito. Solo aplica a
+  // autores (no editoriales): editorial sigue con su propio plan de
+  // suscripción (Editorial Plus), que no cambia acá.
   let preciosCampanas = null;
-  if (!esEditorial) {
+  const tieneSuscripcionActiva = !esEditorial && (plan === 'basic' || plan === 'premium') && (estadoSuscripcion === 'activa' || estadoSuscripcion === 'pausada' || estadoSuscripcion === 'pago_fallido');
+
+  if (!esEditorial && !tieneSuscripcionActiva) {
     const { data: configCampanas } = await supabaseClient
       .from('configuracion')
       .select('clave, valor')
@@ -2454,8 +2457,10 @@ async function cargarPlanAutor(idUsuario) {
     };
   }
 
+  // ── Editorial: sigue teniendo suscripción mensual (Free / Editorial Plus).
+  // Esto NO cambia — el reemplazo de suscripciones por pago único es solo
+  // para el rol autor.
   if (esEditorial) {
-    // Los valores de editorial vienen de `configuracion` para no hardcodear precios/límites.
     const { data: config } = await supabaseClient
       .from('configuracion')
       .select('clave, valor')
@@ -2499,161 +2504,173 @@ async function cargarPlanAutor(idUsuario) {
         esPremium: true
       }
     ];
-  } else {
-    // ── Autor: Basic y Premium con las condiciones nuevas (para altas nuevas).
-    // Si el usuario ya es suscriptor de antes (congelado), su propia card de
-    // "Plan actual" muestra sus números originales en vez de los nuevos.
-    planes = [
-      {
-        id: 'free',
-        nombre: 'Free',
-        precio: '$0',
-        subprecio: 'Para empezar',
-        beneficios: ['1 campaña por mes', 'Hasta 10 reseñadores'],
-        esPremium: false
-      },
-      {
-        id: 'basic',
-        nombre: 'Basic',
-        precio: '$20.000',
-        subprecio: '$190.000/año',
-        beneficios: (plan === 'basic' && esSuscriptorCongelado)
-          ? [`${u.limite_campanas_override} campañas por mes`, `Hasta ${u.limite_resenadores_override} reseñadores`]
-          : ['3 campañas por mes', 'Hasta 30 reseñadores', '1 Impulso gratis por mes'],
-        esPremium: false
-      },
-      {
-        id: 'premium',
-        nombre: 'Premium',
-        precio: '$40.000',
-        subprecio: '$380.000/año',
-        beneficios: (plan === 'premium' && esSuscriptorCongelado)
-          ? [`${u.limite_campanas_override} campañas por mes`, `Hasta ${u.limite_resenadores_override} reseñadores`]
-          : ['5 campañas por mes', 'Hasta 70 reseñadores', '1 Complete gratis por mes'],
-        esPremium: true
-      }
-    ];
+
+    contenedor.innerHTML = `
+      <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:24px;">Elegí tu plan</h3>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        ${planes.map(p => {
+          const esActual = p.id === plan;
+          const esMenor = (p.id === 'editorial_free' && plan === 'editorial_plus');
+          return `
+            <div style="
+              background: ${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'};
+              border: ${esActual ? '2px solid var(--bordo)' : '1px solid var(--gris-borde)'};
+              border-radius: var(--radio-grande);
+              padding: 20px 22px;
+              display: grid;
+              grid-template-columns: 1fr auto auto;
+              align-items: center;
+              gap: 16px;
+              box-shadow: var(--sombra-card);
+            ">
+              <div>
+                <span style="
+                  display: inline-block;
+                  background: ${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'};
+                  color: ${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'};
+                  font-size: 11px; font-weight: 700; padding: 3px 12px;
+                  border-radius: var(--radio-pill); margin-bottom: 8px;
+                ">${p.nombre}${esActual ? ' ✓' : ''}</span>
+                <p style="font-family:var(--fuente-titulo); font-size:28px; font-weight:700; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; line-height:1.1; margin-bottom:2px;">${p.precio}<span style="font-size:14px; font-weight:400;">/mes</span></p>
+                <p style="font-size:12px; color:${p.esPremium ? 'rgba(255,255,255,0.7)' : 'var(--gris-suave)'}; margin-bottom:0;">${p.subprecio}</p>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                ${p.beneficios.map(b => `
+                  <p style="font-size:13px; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; display:flex; align-items:center; gap:6px; margin:0;">
+                    <span style="color:${p.esPremium ? 'rgba(255,255,255,0.8)' : 'var(--bordo)'};">✓</span> ${b}
+                  </p>
+                `).join('')}
+              </div>
+              <div>
+                ${esActual
+                  ? `<button class="btn-sm" disabled style="background:${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'}; color:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Plan actual</button>`
+                  : esMenor
+                  ? ''
+                  : `<button class="btn-sm" onclick="iniciarPago('${p.id}')" style="background:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; color:${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer;">Elegir ${p.nombre}</button>`
+                }
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      ${(fechaVenc && u.estado_plan !== 'pausado' && u.estado_plan !== 'pago_fallido') ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
+      ${bloqueEstadoSuscripcion}
+    `;
+    return;
   }
 
-  contenedor.innerHTML = `
-    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:24px;">Elegí tu plan</h3>
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      ${planes.map(p => {
-        const esActual = p.id === plan;
-        const esMenor = (p.id === 'free' && (plan === 'basic' || plan === 'premium')) || (p.id === 'basic' && plan === 'premium') || (p.id === 'editorial_free' && plan === 'editorial_plus');
-        return `
-          <div style="
-            background: ${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'};
-            border: ${esActual ? '2px solid var(--bordo)' : '1px solid var(--gris-borde)'};
-            border-radius: var(--radio-grande);
-            padding: 20px 22px;
-            display: grid;
-            grid-template-columns: 1fr auto auto;
-            align-items: center;
-            gap: 16px;
-            box-shadow: var(--sombra-card);
-          ">
-            <div>
-              <span style="
-                display: inline-block;
-                background: ${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'};
-                color: ${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'};
-                font-size: 11px; font-weight: 700; padding: 3px 12px;
-                border-radius: var(--radio-pill); margin-bottom: 8px;
-              ">${p.nombre}${esActual ? ' ✓' : ''}</span>
-              <p style="font-family:var(--fuente-titulo); font-size:28px; font-weight:700; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; line-height:1.1; margin-bottom:2px;">${p.precio}<span style="font-size:14px; font-weight:400;">/mes</span></p>
-              <p style="font-size:12px; color:${p.esPremium ? 'rgba(255,255,255,0.7)' : 'var(--gris-suave)'}; margin-bottom:0;">${p.subprecio}</p>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              ${p.beneficios.map(b => `
-                <p style="font-size:13px; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; display:flex; align-items:center; gap:6px; margin:0;">
-                  <span style="color:${p.esPremium ? 'rgba(255,255,255,0.8)' : 'var(--bordo)'};">✓</span> ${b}
-                </p>
-              `).join('')}
-            </div>
-            <div>
-              ${esActual
-                ? `<button class="btn-sm" disabled style="background:${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'}; color:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Plan actual</button>`
-                : esMenor
-                ? ''
-                : p.proximamente
-                ? `<button class="btn-sm" disabled style="background:rgba(255,255,255,0.15); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default; opacity:0.7;">Próximamente</button>`
-                : `<button class="btn-sm" onclick="iniciarPago('${p.id}')" style="background:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; color:${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer;">Elegir ${p.nombre}</button>`
-              }
-            </div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-    ${(fechaVenc && u.estado_plan !== 'pausado' && u.estado_plan !== 'pago_fallido') ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
-    ${bloqueEstadoSuscripcion}
-    ${(!esEditorial && plan === 'free' && preciosCampanas) ? _renderBloqueCampanasSueltas(preciosCampanas) : ''}
-  `;
+  // ── Autor: ya NO hay suscripciones mensuales para elegir acá (Free/Basic/
+  // Premium desaparecieron de esta pantalla). Lo único que se vende ahora
+  // es pago único: campaña individual o un pack de crédito (Basic=3,
+  // Premium=5 campañas). Si el autor todavía tiene una suscripción vieja
+  // activa (de antes de este cambio), se le muestra solo el estado de esa
+  // suscripción — no puede comprar packs mientras la tenga activa (el
+  // backend lo rechaza).
+  if (tieneSuscripcionActiva) {
+    const nombrePlan = plan === 'premium' ? 'Premium' : 'Basic';
+    const beneficios = esSuscriptorCongelado
+      ? [`${u.limite_campanas_override} campañas por mes`, `Hasta ${u.limite_resenadores_override} reseñadores`]
+      : (plan === 'premium'
+          ? ['5 campañas por mes', 'Hasta 70 reseñadores', '1 Complete gratis por mes']
+          : ['3 campañas por mes', 'Hasta 30 reseñadores', '1 Impulso gratis por mes']);
+
+    contenedor.innerHTML = `
+      <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:24px;">Tu plan</h3>
+      <div style="
+        background: var(--bordo);
+        border-radius: var(--radio-grande);
+        padding: 20px 22px;
+        box-shadow: var(--sombra-card);
+        max-width: 420px;
+        margin: 0 auto;
+      ">
+        <span style="display:inline-block; background:rgba(255,255,255,0.2); color:var(--blanco); font-size:11px; font-weight:700; padding:3px 12px; border-radius:var(--radio-pill); margin-bottom:8px;">${nombrePlan} ✓</span>
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+          ${beneficios.map(b => `<p style="font-size:13px; color:var(--blanco); display:flex; align-items:center; gap:6px; margin:0;"><span style="color:rgba(255,255,255,0.8);">✓</span> ${b}</p>`).join('')}
+        </div>
+      </div>
+      ${(fechaVenc && u.estado_plan !== 'pausado' && u.estado_plan !== 'pago_fallido') ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
+      ${bloqueEstadoSuscripcion}
+      <p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:12px;">Mientras tengas este plan activo, tus campañas y reseñadores se manejan por acá — no podés comprar campañas sueltas ni packs.</p>
+    `;
+    return;
+  }
+
+  contenedor.innerHTML = _renderBloqueCampanasSueltas(preciosCampanas);
 }
 
 /**
- * Bloque "Campañas sueltas" en la pantalla "Mi plan": para autores en plan
- * Free que no quieren (o no pueden todavía) suscribirse, pero necesitan
- * publicar alguna campaña extra. Muestra 3 opciones de pago único —
- * campaña individual y los dos packs de crédito — con precio en ARS y USD.
- * Cada botón llama a `comprarCampanaOPack(tipo)`, que invoca la misma
- * edge function `crear-pago-campana-individual` con el `tipo` elegido.
+ * Pantalla "Mi plan" del autor (reemplazo completo de las suscripciones
+ * Free/Basic/Premium): 3 opciones de pago único —campaña individual y los
+ * dos packs de crédito (Basic=3 campañas, Premium=5 campañas)— con precio
+ * en ARS y USD, más una explicación de qué son "Impulso" y "Complete" (los
+ * boosts de visibilidad que antes daba la suscripción y que ahora vienen
+ * de regalo con cada pack: Basic regala 1 Impulso, Premium regala 1
+ * Complete — ver `regalo_plan` en `campana_creditos` y el RPC
+ * `reclamar_regalo_pack`).
  *
- * @param {{individual:{ars,usd}, pack_basic:{ars,usd}, pack_premium:{ars,usd}}} precios
+ * @param {{individual:{ars,usd}, pack_basic:{ars,usd}, pack_premium:{ars,usd}}|null} precios
  */
 function _renderBloqueCampanasSueltas(precios) {
+  precios = precios || { individual: {}, pack_basic: {}, pack_premium: {} };
+
   const opciones = [
     {
       tipo: 'individual',
       nombre: 'Campaña individual',
-      descripcion: '1 campaña, para publicar una sola vez sin suscribirte.',
+      descripcion: '1 campaña, para publicar una sola vez. Pago único, sin regalo de Impulso ni Complete.',
       precio: precios.individual
     },
     {
       tipo: 'pack_basic',
       nombre: 'Pack Basic',
-      descripcion: '3 campañas para usar cuando quieras, sin fecha de vencimiento mensual.',
+      descripcion: '3 campañas para usar cuando quieras, sin vencimiento mensual. Incluye 1 Impulso de regalo.',
       precio: precios.pack_basic
     },
     {
       tipo: 'pack_premium',
       nombre: 'Pack Premium',
-      descripcion: '5 campañas para usar cuando quieras, sin fecha de vencimiento mensual.',
+      descripcion: '5 campañas para usar cuando quieras, sin vencimiento mensual. Incluye 1 Complete de regalo.',
       precio: precios.pack_premium
     }
   ];
 
   return `
-    <div style="margin-top:32px;">
-      <h3 style="font-family:var(--fuente-titulo); font-size:20px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:6px;">¿No querés suscribirte todavía?</h3>
-      <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:20px;">Comprá campañas sueltas, pago único, sin renovación automática.</p>
-      <div style="display:flex; flex-direction:column; gap:14px;">
-        ${opciones.map(o => `
-          <div style="
-            background: var(--blanco);
-            border: 1px solid var(--gris-borde);
-            border-radius: var(--radio-grande);
-            padding: 18px 20px;
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-            gap: 16px;
-            box-shadow: var(--sombra-card);
-          ">
-            <div>
-              <p style="font-family:var(--fuente-titulo); font-size:17px; font-weight:700; color:var(--gris-texto); margin-bottom:4px;">${o.nombre}</p>
-              <p style="font-size:12px; color:var(--gris-suave); margin-bottom:6px;">${o.descripcion}</p>
-              <p style="font-size:13px; color:var(--gris-texto); margin:0;">
-                ${o.precio.ars ? `$${Number(o.precio.ars).toLocaleString('es-AR')} ARS` : '—'}
-                ${o.precio.usd ? ` &nbsp;/&nbsp; USD ${o.precio.usd}` : ''}
-              </p>
-            </div>
-            <div>
-              <button class="btn-sm" onclick="comprarCampanaOPack('${o.tipo}')" style="background:var(--bordo); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;">Comprar</button>
-            </div>
+    <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:6px;">Comprá tus campañas</h3>
+    <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:24px;">Sin suscripción: pagás una sola vez y usás el crédito cuando quieras, no vence todos los meses.</p>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      ${opciones.map(o => `
+        <div style="
+          background: var(--blanco);
+          border: 1px solid var(--gris-borde);
+          border-radius: var(--radio-grande);
+          padding: 18px 20px;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          gap: 16px;
+          box-shadow: var(--sombra-card);
+        ">
+          <div>
+            <p style="font-family:var(--fuente-titulo); font-size:17px; font-weight:700; color:var(--gris-texto); margin-bottom:4px;">${o.nombre}</p>
+            <p style="font-size:12px; color:var(--gris-suave); margin-bottom:6px;">${o.descripcion}</p>
+            <p style="font-size:13px; color:var(--gris-texto); margin:0;">
+              ${o.precio.ars ? `$${Number(o.precio.ars).toLocaleString('es-AR')} ARS` : '—'}
+              ${o.precio.usd ? ` &nbsp;/&nbsp; USD ${o.precio.usd}` : ''}
+            </p>
           </div>
-        `).join('')}
-      </div>
+          <div>
+            <button class="btn-sm" onclick="comprarCampanaOPack('${o.tipo}')" style="background:var(--bordo); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;">Comprar</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="margin-top:26px; background:var(--rosa-claro); border-radius:var(--radio-grande); padding:18px 20px;">
+      <p style="font-family:var(--fuente-titulo); font-size:15px; font-weight:700; color:var(--bordo); margin-bottom:10px;">¿Qué son Impulso y Complete?</p>
+      <p style="font-size:13px; color:var(--gris-texto); margin-bottom:8px;">Son boosts de visibilidad para UNA campaña puntual — no afectan al resto de tus campañas.</p>
+      <p style="font-size:13px; color:var(--gris-texto); margin-bottom:8px;"><strong>Impulso:</strong> le muestra tu campaña a reseñadores con 70% o más de compatibilidad de gustos con tu libro, para conseguir postulaciones más rápido y más afines. Se activa solo apenas lo usás.</p>
+      <p style="font-size:13px; color:var(--gris-texto); margin:0;"><strong>Complete:</strong> le da a tu campaña prioridad de revisión manual del equipo (portada destacada, notificación directa a reseñadores compatibles, mayor visibilidad general). Lo activa el equipo, no es automático.</p>
     </div>
   `;
 }
