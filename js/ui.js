@@ -628,9 +628,23 @@ function mostrarMensajeLimitePlan(mensajeOriginal) {
 
   if (!esLimiteCampanas && !esLimiteResenadores) return false;
 
-  const texto = esLimiteCampanas
-    ? 'Ya usaste todas las campañas activas que permite tu plan actual. Mejorá tu plan, o pagá esta campaña individual, antes de cargar los datos.'
-    : 'Esta campaña necesita más cupos de reseñadores de los que permite tu plan actual. Mejorá tu plan para poder publicarla con estos cupos.';
+  // Editorial sigue con suscripción mensual (Editorial Plus) como siempre.
+  // Autor ya no tiene suscripciones para "mejorar": el límite de campañas
+  // se resuelve comprando campaña individual o un pack, y el límite de
+  // reseñadores sin suscripción es un tope fijo de 10 por campaña que
+  // ningún pack cambia (ver validar_limites_plan_campana en la base).
+  const esEditorial = Sesion.rol() === 'editorial';
+
+  let texto;
+  if (esLimiteCampanas) {
+    texto = esEditorial
+      ? 'Ya usaste todas las campañas activas que permite tu plan actual. Mejorá tu plan, o pagá esta campaña individual, antes de cargar los datos.'
+      : 'Ya usaste todas las campañas que tenés disponibles. Comprá una campaña individual o un pack antes de cargar los datos.';
+  } else {
+    texto = esEditorial
+      ? 'Esta campaña necesita más cupos de reseñadores de los que permite tu plan actual. Mejorá tu plan para poder publicarla con estos cupos.'
+      : 'Sin suscripción, cada campaña admite hasta 10 reseñadores como máximo. Bajá los cupos a 10 o menos para poder publicarla.';
+  }
 
   const el = document.getElementById('nc-limite-plan');
   const elTexto = document.getElementById('nc-limite-plan-texto');
@@ -642,20 +656,30 @@ function mostrarMensajeLimitePlan(mensajeOriginal) {
   const btnRevisar = document.getElementById('nc-btn-revisar-de-nuevo');
   if (btnRevisar) btnRevisar.style.display = 'none';
 
-  // El pago de campaña individual solo tiene sentido cuando lo que falta
-  // es el límite de campañas activas (no el de reseñadores): comprar una
-  // campaña individual no suma más cupos de reseñadores a las campañas
-  // que ya tiene.
+  // Botón "Mejorar plan" / "Comprar campaña o pack": para autor, el límite
+  // de reseñadores no se resuelve ni mejorando plan ni comprando nada (es
+  // un tope fijo), así que ahí no tiene sentido mostrar ningún botón de
+  // este tipo.
+  const btnMejorarPlan = document.getElementById('nc-btn-mejorar-plan');
+  if (btnMejorarPlan) {
+    const mostrarBotonPlan = esEditorial || esLimiteCampanas;
+    btnMejorarPlan.style.display = mostrarBotonPlan ? 'inline-block' : 'none';
+    btnMejorarPlan.textContent = esEditorial ? 'Mejorar plan' : 'Ver campañas y packs';
+  }
+
+  // El pago de campaña individual solo tiene sentido para autor (editorial
+  // no usa campana_creditos) y solo cuando lo que falta es el límite de
+  // campañas activas (no el de reseñadores).
   const btnPagar = document.getElementById('nc-btn-pagar-campana');
   const msjPago = document.getElementById('nc-limite-plan-pago-msj');
   if (btnPagar) {
-    btnPagar.style.display = esLimiteCampanas ? 'inline-block' : 'none';
+    btnPagar.style.display = (!esEditorial && esLimiteCampanas) ? 'inline-block' : 'none';
     btnPagar.disabled = false;
     btnPagar.textContent = 'Pagar solo esta campaña';
   }
   if (msjPago) { msjPago.style.display = 'none'; msjPago.textContent = ''; }
 
-  if (esLimiteCampanas && btnPagar) {
+  if (!esEditorial && esLimiteCampanas && btnPagar) {
     supabaseClient
       .from('configuracion')
       .select('clave, valor')
