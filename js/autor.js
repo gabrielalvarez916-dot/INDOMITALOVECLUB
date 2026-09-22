@@ -3029,6 +3029,38 @@ async function inicializarModalNuevaCampana() {
     infoFecha.textContent = `Tu campaña estará activa hasta el ${fechaCierre.toLocaleDateString('es-AR')}.`;
   }
 
+  // Tope de cupos de reseñadores: sin suscripción activa, el backend
+  // (validar_limites_plan_campana) frena en 10 reseñadores por campaña,
+  // siempre — no hay pack ni compra que lo suba. Achicamos el `max` del
+  // input para que el autor sin suscripción directamente no pueda escribir
+  // más de 10, en vez de dejarlo cargar el formulario entero y recién
+  // enterarse al enviar.
+  const inputCupos = document.getElementById('nc-cupos');
+  const hintCuposTope = document.getElementById('nc-cupos-tope-hint');
+  if (inputCupos) {
+    const { data: { user: userCupos } } = await supabaseClient.auth.getUser();
+    const { data: susActiva } = userCupos
+      ? await supabaseClient
+          .from('suscripciones')
+          .select('id')
+          .eq('id_usuario', userCupos.id)
+          .eq('estado', 'activa')
+          .maybeSingle()
+      : { data: null };
+
+    if (susActiva) {
+      inputCupos.max = '100';
+      if (hintCuposTope) hintCuposTope.style.display = 'none';
+    } else {
+      inputCupos.max = '10';
+      if (inputCupos.value && parseInt(inputCupos.value) > 10) inputCupos.value = '10';
+      if (hintCuposTope) {
+        hintCuposTope.textContent = 'Sin suscripción activa, el máximo es 10 reseñad@res por campaña.';
+        hintCuposTope.style.display = 'block';
+      }
+    }
+  }
+
   // Si tiene cupos de regalo por reconexión, avisa que se suman al límite de su plan
   const hintRegalo = document.getElementById('nc-cupos-regalo-hint');
   if (hintRegalo) {
