@@ -2596,7 +2596,16 @@ async function cargarPlanAutor(idUsuario) {
     return;
   }
 
-  contenedor.innerHTML = _renderBloqueCampanasSueltas(preciosCampanas);
+  // Cupón de campaña gratis (beca): match exacto a plan='campana', sin caer
+  // al fallback de "cualquiera de los 4" (ese fallback es solo para los
+  // planes de campaña Impulso/Select/Resistence/Complete).
+  let cuponCampanaGratis = null;
+  if (!esEditorial && !tieneSuscripcionActiva) {
+    const cuponesActivos = await _obtenerCuponesActivosAutor(idUsuario);
+    cuponCampanaGratis = cuponesActivos.find(c => c.tipo === 'gratis' && c.plan === 'campana') || null;
+  }
+
+  contenedor.innerHTML = _renderBloqueCampanasSueltas(preciosCampanas, cuponCampanaGratis);
 }
 
 /**
@@ -2610,9 +2619,21 @@ async function cargarPlanAutor(idUsuario) {
  * `reclamar_regalo_pack`).
  *
  * @param {{individual:{ars,usd}, pack_basic:{ars,usd}, pack_premium:{ars,usd}}|null} precios
+ * @param {{id:string}|null} cuponCampanaGratis Cupón de beca (campaña
+ *   individual gratis) activo del autor, si tiene uno. Nunca aplica a packs.
  */
-function _renderBloqueCampanasSueltas(precios) {
+function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis) {
   precios = precios || { individual: {}, pack_basic: {}, pack_premium: {} };
+
+  const bloqueCuponBeca = cuponCampanaGratis ? `
+    <div style="margin-bottom:18px; background:var(--rosa-claro); border:1px solid var(--bordo); border-radius:var(--radio-grande); padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div>
+        <p style="font-family:var(--fuente-titulo); font-size:15px; font-weight:700; color:var(--bordo); margin-bottom:4px;">🎟️ Tenés una campaña gratis disponible</p>
+        <p style="font-size:12px; color:var(--gris-texto); margin:0;">Es una campaña individual (nunca un pack). Se usa una sola vez.</p>
+      </div>
+      <button class="btn-sm" id="btn-canjear-cupon-campana" onclick="canjearCuponCampanaGratis('${cuponCampanaGratis.id}')" style="background:var(--bordo); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;">Usar ahora</button>
+    </div>
+  ` : '';
 
   const opciones = [
     {
@@ -2638,6 +2659,7 @@ function _renderBloqueCampanasSueltas(precios) {
   return `
     <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:6px;">Comprá tus campañas</h3>
     <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:24px;">Sin suscripción: pagás una sola vez y usás el crédito cuando quieras, no vence todos los meses.</p>
+    ${bloqueCuponBeca}
     <div style="display:flex; flex-direction:column; gap:14px;">
       ${opciones.map(o => `
         <div style="
@@ -2712,6 +2734,34 @@ async function comprarCampanaOPack(tipo) {
   } catch (e) {
     console.error('Error generando pago de campaña/pack:', e);
     mostrarToast('Ocurrió un error inesperado. Probá de nuevo.', 'error');
+  }
+}
+
+/**
+ * Canjea un cupón de campaña gratis (beca): crea el crédito de 1 campaña
+ * individual vía RPC y refresca la pantalla "Mi plan" para que aparezca
+ * disponible para usar al crear la campaña.
+ */
+async function canjearCuponCampanaGratis(idCupon) {
+  const btn = document.getElementById('btn-canjear-cupon-campana');
+  if (btn) { btn.disabled = true; btn.textContent = 'Canjeando...'; }
+
+  try {
+    const { data, error } = await supabaseClient.rpc('reclamar_cupon_campana_gratis', { p_id_cupon: idCupon });
+
+    if (error || data?.error) {
+      mostrarToast(data?.error || error?.message || 'No se pudo canjear el cupón.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Usar ahora'; }
+      return;
+    }
+
+    mostrarToast('¡Listo! Ya tenés tu campaña gratis para usar cuando quieras.', 'ok');
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) await cargarPlanAutor(user.id);
+  } catch (e) {
+    console.error('Error canjeando cupón de campaña gratis:', e);
+    mostrarToast('Ocurrió un error inesperado. Probá de nuevo.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Usar ahora'; }
   }
 }
 

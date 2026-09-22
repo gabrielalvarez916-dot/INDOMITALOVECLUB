@@ -825,7 +825,7 @@
       <div id="tab-admin-cupones" class="tab-contenido">
         <div class="admin-verificacion-manual">
           <p class="admin-verificacion-manual-titulo">Crear cupón</p>
-          <p class="admin-verificacion-manual-texto">Aplica solo a planes de campaña (Impulso, Select, Resistence, Complete) — no a suscripciones. Un solo uso: se gasta apenas el autor lo aplica en una compra.</p>
+          <p class="admin-verificacion-manual-texto">Aplica a planes de campaña (Impulso, Select, Resistence, Complete) o a una campaña individual gratis (beca) — nunca a packs ni a suscripciones. Un solo uso: se gasta apenas el autor lo aplica.</p>
           <form id="form-crear-cupon" onsubmit="crearCuponAdmin(event)">
             <div class="form-grupo">
               <label for="cupon-email">Mail del autor</label>
@@ -845,11 +845,12 @@
             <div class="form-grupo">
               <label for="cupon-plan">Plan</label>
               <select id="cupon-plan">
-                <option value="">Cualquiera de los 4</option>
+                <option value="">Cualquiera de los 4 (Impulso/Select/Resistence/Complete)</option>
                 <option value="impulso">Impulso</option>
                 <option value="select">Select</option>
                 <option value="resistence">Resistence</option>
                 <option value="complete">Complete</option>
+                <option value="campana">Campaña individual gratis (beca)</option>
               </select>
             </div>
             <div class="form-grupo">

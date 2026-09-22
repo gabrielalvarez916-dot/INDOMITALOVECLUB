@@ -347,8 +347,9 @@ function construirFilaIncumplimientoAdmin(i) {
  */
 // ────────────────────────────────────────────────────────────
 // CUPONES (tab Check → Cupones)
-// Cupones puntuales por mail de autor, solo para planes de campaña
-// (Impulso, Select, Resistence, Complete). Un solo uso.
+// Cupones puntuales por mail de autor: planes de campaña (Impulso,
+// Select, Resistence, Complete) o campaña individual gratis (beca,
+// nunca packs). Un solo uso.
 // ────────────────────────────────────────────────────────────
 
 function _toggleCampoPorcentajeCupon() {
@@ -417,7 +418,7 @@ async function cargarCuponesAdmin() {
     return;
   }
 
-  const nombrePlan = { impulso: 'Impulso', select: 'Select', resistence: 'Resistence', complete: 'Complete' };
+  const nombrePlan = { impulso: 'Impulso', select: 'Select', resistence: 'Resistence', complete: 'Complete', campana: 'Campaña gratis (beca)' };
   const badgeEstado = { activo: 'badge-pendiente', usado: 'badge-aprobada', cancelado: 'badge-rechazada' };
 
   contenedor.innerHTML = `
