@@ -954,6 +954,7 @@
     </div>
     <div class="modal-body">
   <form id="form-nueva-campana" onsubmit="crearNuevaCampana(event)">
+  <div id="nc-campos-formulario">
   <div class="form-grupo">
     <label class="form-label">¿Querés usar un libro de tu biblioteca?</label>
     <select id="nc-libro-selector" class="form-input" onchange="precargarLibroEnCampana()">
@@ -1091,11 +1092,13 @@
   </div>
 </div>
     <div id="nc-error" class="mensaje-error" style="display:none;"></div>
+  </div>
         <div id="nc-limite-plan" class="mensaje-limite-plan" style="display:none;">
           <p id="nc-limite-plan-texto"></p>
           <div id="nc-limite-plan-acciones" style="display:flex; gap:8px; flex-wrap:wrap;">
             <button type="button" class="btn-primario" onclick="irAContratarPlanDesdeLimite()">Mejorar plan</button>
             <button type="button" id="nc-btn-pagar-campana" class="btn-secundario" style="display:none;" onclick="pagarCampanaIndividual()">Pagar solo esta campaña</button>
+            <button type="button" id="nc-btn-revisar-de-nuevo" class="btn-secundario" style="display:none;" onclick="_chequearLimitePlanAlAbrir()">Ya pagué, revisar de nuevo</button>
           </div>
           <p id="nc-limite-plan-pago-msj" class="form-hint" style="display:none; margin-top:8px;"></p>
         </div>

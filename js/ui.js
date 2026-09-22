@@ -629,7 +629,7 @@ function mostrarMensajeLimitePlan(mensajeOriginal) {
   if (!esLimiteCampanas && !esLimiteResenadores) return false;
 
   const texto = esLimiteCampanas
-    ? 'Ya usaste todas las campañas activas que permite tu plan actual. Mejorá tu plan para poder publicar esta campaña.'
+    ? 'Ya usaste todas las campañas activas que permite tu plan actual. Mejorá tu plan, o pagá esta campaña individual, antes de cargar los datos.'
     : 'Esta campaña necesita más cupos de reseñadores de los que permite tu plan actual. Mejorá tu plan para poder publicarla con estos cupos.';
 
   const el = document.getElementById('nc-limite-plan');
@@ -638,6 +638,9 @@ function mostrarMensajeLimitePlan(mensajeOriginal) {
     elTexto.textContent = texto;
     el.style.display = 'flex';
   }
+
+  const btnRevisar = document.getElementById('nc-btn-revisar-de-nuevo');
+  if (btnRevisar) btnRevisar.style.display = 'none';
 
   // El pago de campaña individual solo tiene sentido cuando lo que falta
   // es el límite de campañas activas (no el de reseñadores): comprar una
