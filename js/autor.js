@@ -2433,6 +2433,26 @@ async function cargarPlanAutor(idUsuario) {
   }
 
   let planes;
+  // Precios de campaña individual / packs de crédito (solo autores, no
+  // editoriales — packs y campaña suelta no aplican a ese rol). Se cargan
+  // en paralelo con los datos de arriba para no bloquear el render.
+  let preciosCampanas = null;
+  if (!esEditorial) {
+    const { data: configCampanas } = await supabaseClient
+      .from('configuracion')
+      .select('clave, valor')
+      .in('clave', [
+        'CAMPANA_PRECIO_ARS', 'CAMPANA_PRECIO_USD',
+        'PACK_BASIC_PRECIO_ARS', 'PACK_BASIC_PRECIO_USD',
+        'PACK_PREMIUM_PRECIO_ARS', 'PACK_PREMIUM_PRECIO_USD'
+      ]);
+    const valC = (clave) => (configCampanas || []).find(c => c.clave === clave)?.valor;
+    preciosCampanas = {
+      individual: { ars: valC('CAMPANA_PRECIO_ARS'), usd: valC('CAMPANA_PRECIO_USD') },
+      pack_basic: { ars: valC('PACK_BASIC_PRECIO_ARS'), usd: valC('PACK_BASIC_PRECIO_USD') },
+      pack_premium: { ars: valC('PACK_PREMIUM_PRECIO_ARS'), usd: valC('PACK_PREMIUM_PRECIO_USD') }
+    };
+  }
 
   if (esEditorial) {
     // Los valores de editorial vienen de `configuracion` para no hardcodear precios/límites.
@@ -2567,7 +2587,115 @@ async function cargarPlanAutor(idUsuario) {
     </div>
     ${(fechaVenc && u.estado_plan !== 'pausado' && u.estado_plan !== 'pago_fallido') ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
     ${bloqueEstadoSuscripcion}
+    ${(!esEditorial && plan === 'free' && preciosCampanas) ? _renderBloqueCampanasSueltas(preciosCampanas) : ''}
   `;
+}
+
+/**
+ * Bloque "Campañas sueltas" en la pantalla "Mi plan": para autores en plan
+ * Free que no quieren (o no pueden todavía) suscribirse, pero necesitan
+ * publicar alguna campaña extra. Muestra 3 opciones de pago único —
+ * campaña individual y los dos packs de crédito — con precio en ARS y USD.
+ * Cada botón llama a `comprarCampanaOPack(tipo)`, que invoca la misma
+ * edge function `crear-pago-campana-individual` con el `tipo` elegido.
+ *
+ * @param {{individual:{ars,usd}, pack_basic:{ars,usd}, pack_premium:{ars,usd}}} precios
+ */
+function _renderBloqueCampanasSueltas(precios) {
+  const opciones = [
+    {
+      tipo: 'individual',
+      nombre: 'Campaña individual',
+      descripcion: '1 campaña, para publicar una sola vez sin suscribirte.',
+      precio: precios.individual
+    },
+    {
+      tipo: 'pack_basic',
+      nombre: 'Pack Basic',
+      descripcion: '3 campañas para usar cuando quieras, sin fecha de vencimiento mensual.',
+      precio: precios.pack_basic
+    },
+    {
+      tipo: 'pack_premium',
+      nombre: 'Pack Premium',
+      descripcion: '5 campañas para usar cuando quieras, sin fecha de vencimiento mensual.',
+      precio: precios.pack_premium
+    }
+  ];
+
+  return `
+    <div style="margin-top:32px;">
+      <h3 style="font-family:var(--fuente-titulo); font-size:20px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:6px;">¿No querés suscribirte todavía?</h3>
+      <p style="text-align:center; font-size:13px; color:var(--gris-suave); margin-bottom:20px;">Comprá campañas sueltas, pago único, sin renovación automática.</p>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        ${opciones.map(o => `
+          <div style="
+            background: var(--blanco);
+            border: 1px solid var(--gris-borde);
+            border-radius: var(--radio-grande);
+            padding: 18px 20px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--sombra-card);
+          ">
+            <div>
+              <p style="font-family:var(--fuente-titulo); font-size:17px; font-weight:700; color:var(--gris-texto); margin-bottom:4px;">${o.nombre}</p>
+              <p style="font-size:12px; color:var(--gris-suave); margin-bottom:6px;">${o.descripcion}</p>
+              <p style="font-size:13px; color:var(--gris-texto); margin:0;">
+                ${o.precio.ars ? `$${Number(o.precio.ars).toLocaleString('es-AR')} ARS` : '—'}
+                ${o.precio.usd ? ` &nbsp;/&nbsp; USD ${o.precio.usd}` : ''}
+              </p>
+            </div>
+            <div>
+              <button class="btn-sm" onclick="comprarCampanaOPack('${o.tipo}')" style="background:var(--bordo); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;">Comprar</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Genera el link de pago para comprar campaña individual o un pack de
+ * crédito (basic/premium) desde la pantalla "Mi plan", y lo abre en una
+ * pestaña nueva. Mismo patrón que `pagarCampanaIndividual()` (usada desde
+ * el modal de nueva campaña), pero recibe el tipo de compra en vez de
+ * asumir siempre "individual".
+ *
+ * @param {'individual'|'pack_basic'|'pack_premium'} tipo
+ */
+async function comprarCampanaOPack(tipo) {
+  const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Pesos argentinos (ARS, Mercado Pago)\nCancelar = Dólares (USD, PayPal)')
+    ? 'ARS' : 'USD';
+  const proveedor = moneda === 'ARS' ? 'mercadopago' : 'paypal';
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    mostrarToast('💅 Tu sesión decidió tomarse un descanso. Iniciá sesión de nuevo.', 'error');
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('crear-pago-campana-individual', {
+      body: { proveedor, tipo },
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+
+    if (error || !data?.ok) {
+      const detalle = await _leerErrorEdgeFunction(error, data?.error || 'No se pudo generar el link de pago.');
+      mostrarToast(detalle, 'error');
+      return;
+    }
+
+    window.open(data.linkPago, '_blank');
+    mostrarToast('Se abrió el link de pago en otra pestaña. Cuando se acredite, ya vas a poder usar el crédito.', 'ok');
+  } catch (e) {
+    console.error('Error generando pago de campaña/pack:', e);
+    mostrarToast('Ocurrió un error inesperado. Probá de nuevo.', 'error');
+  }
 }
 
 async function iniciarPago(plan) {
