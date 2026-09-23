@@ -649,14 +649,17 @@ async function cargarSuscripcionesAdmin() {
     return;
   }
 
-  const suscripciones = resultado.suscripciones || [];
+  // Arriba de todo solo las suscripciones activas; el resto del sistema
+  // (compras de campañas individuales y packs) va en las tablas de abajo.
+  const suscripciones = (resultado.suscripciones || []).filter(s => s.estado === 'activa');
 
-  if (suscripciones.length === 0) {
-    contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay suscripciones registradas.</p></div>`;
-    return;
-  }
+  const { data: resCompras, error: errCompras } = await supabaseClient.rpc('admin_listar_compras_campanas');
+  const compras = resCompras?.compras || [];
+  const creditos = resCompras?.creditos || [];
 
-  contenedor.innerHTML = `
+  const htmlSuscripciones = `
+    <h3 style="margin:0 0 8px; font-size:15px;">Suscripciones activas</h3>
+    ${suscripciones.length === 0 ? '<p class="form-info" style="margin-bottom:14px;">No hay suscripciones activas.</p>' : `
     <p class="form-info" style="margin-bottom:14px;">
       Las suscripciones se activan y desactivan automáticamente por webhook de Mercado Pago / PayPal. Esta tabla es solo informativa.
     </p>
@@ -675,7 +678,86 @@ async function cargarSuscripcionesAdmin() {
       <tbody>
         ${suscripciones.map(s => construirFilaSuscripcionAdmin(s)).join('')}
       </tbody>
-    </table>
+    </table>`}
+  `;
+
+  const htmlCompras = `
+    <h3 style="margin:24px 0 8px; font-size:15px;">Compras de campañas</h3>
+    ${errCompras || resCompras?.error ? '<p class="mensaje-error">Error al cargar las compras.</p>' : compras.length === 0 ? '<p class="form-info">Todavía no hay compras.</p>' : `
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Libro / campaña</th>
+          <th>Paquete</th>
+          <th>Autor</th>
+          <th>Estado</th>
+          <th>Monto</th>
+          <th>Proveedor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${compras.map(c => construirFilaCompraCampanaAdmin(c)).join('')}
+      </tbody>
+    </table>`}
+  `;
+
+  const htmlCreditos = `
+    <h3 style="margin:24px 0 4px; font-size:15px;">Créditos disponibles</h3>
+    <p class="form-info" style="margin-bottom:10px;">Campañas pagadas que cada autor todavía no usó. Bajan solas a medida que crea campañas.</p>
+    ${errCompras || resCompras?.error ? '<p class="mensaje-error">Error al cargar los créditos.</p>' : creditos.length === 0 ? '<p class="form-info">Ningún autor tiene campañas disponibles sin usar.</p>' : `
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Autor</th>
+          <th>Campañas disponibles</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${creditos.map(c => `
+          <tr>
+            <td style="font-size:12px;">${escaparHtmlSoporte(c.email)}</td>
+            <td>${escaparHtmlSoporte(c.autor || '—')}</td>
+            <td><strong>${c.disponibles}</strong></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`}
+  `;
+
+  contenedor.innerHTML = htmlSuscripciones + htmlCompras + htmlCreditos;
+}
+
+/**
+ * Construye la fila de una compra de campaña (individual o pack) para la tabla admin.
+ *
+ * @param {Object} c — datos de la compra
+ * @returns {string} HTML de la fila
+ */
+function construirFilaCompraCampanaAdmin(c) {
+  const paquete = { individual: 'Individual', basic: 'Basic', premium: 'Premium' }[c.paquete] || 'Pack';
+  const estadoBadge = {
+    aprobado: '<span class="badge badge-aprobada">Aprobado</span>',
+    pendiente: '<span class="badge badge-pendiente">Pendiente</span>',
+    cancelado: '<span class="badge badge-cancelada">Cancelado</span>'
+  }[c.estado] || c.estado;
+  const proveedor = { paypal: 'PayPal', mercadopago: 'Mercado Pago', googleplay: 'Google Play' }[c.proveedor] || '—';
+  const libros = (c.libros || []).length > 0
+    ? c.libros.map(l => escaparHtmlSoporte(l)).join('<br>')
+    : '—';
+  const monto = c.monto ? `${Number(c.monto).toLocaleString('es-AR')} ${c.moneda || ''}` : '—';
+
+  return `
+    <tr>
+      <td style="font-size:12px;">${escaparHtmlSoporte(c.email)}</td>
+      <td style="font-size:12px;">${libros}</td>
+      <td>${paquete}</td>
+      <td>${escaparHtmlSoporte(c.autor || '—')}</td>
+      <td>${estadoBadge}</td>
+      <td>${monto}</td>
+      <td style="font-size:12px;">${proveedor}</td>
+    </tr>
   `;
 }
 
