@@ -21,6 +21,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css?v=4" />
+  <script>
+    // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
+    try {
+      var _refParam = new URLSearchParams(window.location.search).get('ref');
+      if (_refParam && /^[A-Za-z0-9]{4,20}$/.test(_refParam)) {
+        localStorage.setItem('ref_codigo', JSON.stringify({ c: _refParam.toUpperCase(), t: Date.now() }));
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body>
 
@@ -286,6 +295,7 @@
         <button class="tab" id="tabbtn-postulaciones-autor" onclick="cambiarTab(this, 'tab-postulaciones')">Postulaciones</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-autor')">Historial</button>
         <button class="tab" id="tabbtn-plan" onclick="cambiarTab(this, 'tab-plan')">Mi plan</button>
+        <button class="tab" id="tabbtn-referidos" onclick="cambiarTab(this, 'tab-referidos-autor'); cargarReferidosAutor()">Referidos</button>
 <button class="tab" id="tabbtn-ranking-libros" onclick="cambiarTab(this, 'tab-ranking-libros'); if(typeof cargarRankingLibros === 'function') cargarRankingLibros(); else setTimeout(cargarRankingLibros, 100)">Ranking libros</button>
       </div>
       <div id="tab-campanas-activas" class="tab-contenido activo">
@@ -304,6 +314,9 @@
 </div>
 <div id="tab-ranking-libros" class="tab-contenido">
   <div id="ranking-libros-contenedor"></div>
+</div>
+<div id="tab-referidos-autor" class="tab-contenido">
+  <div id="autor-referidos-contenedor"></div>
 </div>
     </div>
   </section>
@@ -690,6 +703,7 @@
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-impulsos'); cargarImpulsosAdmin()">Impulsos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-pendientes'); cargarPendientesAdmin()">Pendientes</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-admin-descuentos')">Descuentos</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-referidos'); cargarReferidosAdmin()">Referidos</button>
       </div>
       <div id="tab-admin-pagos" class="tab-contenido activo">
         <div id="admin-pagos-lista"></div>
@@ -699,6 +713,9 @@
       </div>
       <div id="tab-admin-pendientes" class="tab-contenido">
         <div id="admin-pendientes-lista"></div>
+      </div>
+      <div id="tab-admin-referidos" class="tab-contenido">
+        <div id="admin-referidos-lista"></div>
       </div>
       <div id="tab-admin-descuentos" class="tab-contenido">
         <div class="admin-verificacion-manual">

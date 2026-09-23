@@ -796,6 +796,105 @@ function construirFilaSuscripcionAdmin(s) {
 
 
 // ────────────────────────────────────────────────────────────
+// REFERIDOS (tab Planes → Referidos)
+// Quién entró por el link de cada autor y si ya cumple:
+//   reseñador = entregó al menos 1 reseña
+//   autor     = creó al menos 1 campaña paga
+// ────────────────────────────────────────────────────────────
+
+async function cargarReferidosAdmin() {
+  const contenedor = document.getElementById('admin-referidos-lista');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('admin_listar_referidos');
+
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar los referidos.'}</p>`;
+    return;
+  }
+
+  const referidos = resultado.referidos || [];
+  const resumen = resultado.resumen || [];
+
+  if (referidos.length === 0) {
+    contenedor.innerHTML = '<div class="estado-vacio"><p class="estado-vacio-texto">Todavía nadie se registró desde un link de referido.</p></div>';
+    return;
+  }
+
+  const nombre = (alias, email) => `${escaparHtmlSoporte(alias || '—')}<br><span style="font-size:12px; color:#888;">${escaparHtmlSoporte(email)}</span>`;
+
+  contenedor.innerHTML = `
+    <h3 style="margin:0 0 8px; font-size:15px;">Por autor</h3>
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Autor</th>
+          <th>Entraron</th>
+          <th>Autores (cumplen / total)</th>
+          <th>Reseñad@res (cumplen / total)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${resumen.map(r => `
+          <tr>
+            <td>${nombre(r.referidorAlias, r.referidorEmail)}</td>
+            <td><strong>${r.total}</strong></td>
+            <td>${r.autoresCumplen} / ${r.autores}</td>
+            <td>${r.resenadoresCumplen} / ${r.resenadores}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <h3 style="margin:24px 0 8px; font-size:15px;">Detalle</h3>
+    <table class="admin-tabla">
+      <thead>
+        <tr>
+          <th>Entró</th>
+          <th>Rol</th>
+          <th>Por el link de</th>
+          <th>Fecha</th>
+          <th>Cumple</th>
+          <th>Avance</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${referidos.map(r => construirFilaReferidoAdmin(r, nombre)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function construirFilaReferidoAdmin(r, nombre) {
+  const esAutor = r.rol === 'autor';
+  const esResenador = r.rol === 'reseñador';
+
+  const cumple = (esAutor || esResenador)
+    ? (r.cumple ? '<span class="badge badge-aprobada">Cumple</span>' : '<span class="badge badge-pendiente">Todavía no</span>')
+    : '—';
+
+  const avance = esResenador
+    ? `${r.reseniasEntregadas} reseña${r.reseniasEntregadas === 1 ? '' : 's'} entregada${r.reseniasEntregadas === 1 ? '' : 's'}`
+    : esAutor
+    ? `${r.campanasPagas} campaña${r.campanasPagas === 1 ? '' : 's'} paga${r.campanasPagas === 1 ? '' : 's'} (${r.campanasTotales} creada${r.campanasTotales === 1 ? '' : 's'} en total)`
+    : '—';
+
+  return `
+    <tr>
+      <td>${nombre(r.referidoAlias, r.referidoEmail)}</td>
+      <td><span class="badge badge-nivel">${escaparHtmlSoporte(r.rol || '—')}</span></td>
+      <td>${nombre(r.referidorAlias, r.referidorEmail)}</td>
+      <td style="font-size:12px;">${r.fecha ? String(r.fecha).split('T')[0] : '—'}</td>
+      <td>${cumple}</td>
+      <td style="font-size:12px;">${avance}</td>
+    </tr>
+  `;
+}
+
+
+// ────────────────────────────────────────────────────────────
 // IMPULSOS
 // ────────────────────────────────────────────────────────────
 

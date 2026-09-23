@@ -3789,3 +3789,54 @@ async function cargarRankingLibros() {
     </table>
   `;
 }
+
+// ────────────────────────────────────────────────────────────
+// REFERIDOS (link personal del autor)
+// ────────────────────────────────────────────────────────────
+
+async function cargarReferidosAutor() {
+  const contenedor = document.getElementById('autor-referidos-contenedor');
+  if (!contenedor) return;
+
+  if (Sesion.rol() !== 'autor') {
+    contenedor.innerHTML = '<p class="form-info">El link de referidos es solo para autores.</p>';
+    return;
+  }
+
+  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data: resultado, error } = await supabaseClient.rpc('obtener_mi_codigo_referido');
+
+  if (error || !resultado || resultado.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'No se pudo cargar tu link. Probá de nuevo.'}</p>`;
+    return;
+  }
+
+  const link = `${window.location.origin}/?ref=${resultado.codigo}`;
+  window._linkReferidoAutor = link;
+
+  contenedor.innerHTML = `
+    <div class="plan-info">
+      <p style="font-weight:600; margin:0 0 6px;">Tu link personal</p>
+      <p class="form-info" style="margin:0 0 12px;">Compartilo con otros autores y reseñad@res. Cuando alguien se registra desde este link, queda asociado a vos.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <input type="text" id="autor-link-referido" readonly value="${link}" onclick="this.select()" style="flex:1; min-width:220px; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; box-sizing:border-box;" />
+        <button class="btn-primario btn-sm" onclick="copiarLinkReferidoAutor()">Copiar link</button>
+      </div>
+    </div>
+  `;
+}
+
+async function copiarLinkReferidoAutor() {
+  const link = window._linkReferidoAutor;
+  if (!link) return;
+  try {
+    await navigator.clipboard.writeText(link);
+  } catch (e) {
+    const input = document.getElementById('autor-link-referido');
+    if (!input) return;
+    input.select();
+    document.execCommand('copy');
+  }
+  mostrarToast('Link copiado.', 'ok');
+}

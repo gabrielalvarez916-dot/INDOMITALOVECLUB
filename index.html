@@ -26,6 +26,15 @@
   <link rel="stylesheet" href="css/landing.css" />
 
   <!-- TODO SEO: schema.org Organization -->
+  <script>
+    // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
+    try {
+      var _refParam = new URLSearchParams(window.location.search).get('ref');
+      if (_refParam && /^[A-Za-z0-9]{4,20}$/.test(_refParam)) {
+        localStorage.setItem('ref_codigo', JSON.stringify({ c: _refParam.toUpperCase(), t: Date.now() }));
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body>
 

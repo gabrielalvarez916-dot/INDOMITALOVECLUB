@@ -184,7 +184,22 @@ async function seleccionarRol(rol) {
     return;
   }
 
+  // Referidos: si entró por el link de un autor, queda registrado (si falla, no frena el registro).
+  await registrarReferidoPendiente();
+
   await completarLogin(nuevoPerfil);
+}
+
+async function registrarReferidoPendiente() {
+  try {
+    const guardado = JSON.parse(localStorage.getItem('ref_codigo') || 'null');
+    localStorage.removeItem('ref_codigo');
+    if (!guardado?.c || !guardado?.t) return;
+    if ((Date.now() - guardado.t) > 30 * 24 * 60 * 60 * 1000) return; // el link vale 30 días
+    await supabaseClient.rpc('registrar_referido', { p_codigo: guardado.c });
+  } catch (e) {
+    console.error('Error registrando referido:', e);
+  }
 }
 
 async function completarLogin(usuario) {
