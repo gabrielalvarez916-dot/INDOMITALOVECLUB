@@ -1378,6 +1378,7 @@ async function cargarTicketsAdmin() {
   contenedor.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
       <button id="admin-btn-cerrar-seleccionados" class="btn-secundario btn-sm btn-peligro" style="display:none;" onclick="cerrarTicketsSeleccionadosAdmin()">Cerrar seleccionados (0)</button>
+      <button id="admin-btn-eliminar-seleccionados" class="btn-secundario btn-sm btn-peligro" style="display:none;" onclick="eliminarTicketsAdmin(Array.from(window._ticketsSeleccionadosAdmin || []))">Eliminar seleccionados (0)</button>
       <button class="btn-secundario btn-sm" style="margin-left:auto;" onclick="abrirModalNuevoTicketAdmin()">+ Nuevo ticket</button>
     </div>
     <table class="admin-tabla">
@@ -1413,6 +1414,7 @@ function construirFilaTicketAdmin(t) {
   const botones = `
     <button class="btn-secundario btn-sm" onclick="abrirModalTicketAdmin('${t.idTicket}')">Ver / Responder</button>
     ${t.estado !== 'cerrado' ? `<button class="btn-secundario btn-sm btn-peligro" onclick="cerrarTicketAdmin('${t.idTicket}')">Cerrar</button>` : ''}
+    <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarTicketsAdmin(['${t.idTicket}'])">Eliminar</button>
   `;
   const checkbox = t.estado !== 'cerrado'
     ? `<input type="checkbox" class="admin-ticket-checkbox" onchange="toggleSeleccionTicketAdmin('${t.idTicket}', this.checked)" />`
@@ -1475,6 +1477,28 @@ function actualizarBotonCerrarSeleccionadosAdmin() {
     boton.style.display = 'inline-block';
     boton.textContent = `Cerrar seleccionados (${cantidad})`;
   }
+  const botonEliminar = document.getElementById('admin-btn-eliminar-seleccionados');
+  if (botonEliminar) {
+    botonEliminar.style.display = cantidad === 0 ? 'none' : 'inline-block';
+    botonEliminar.textContent = `Eliminar seleccionados (${cantidad})`;
+  }
+}
+
+async function eliminarTicketsAdmin(ids) {
+  if (!ids || ids.length === 0) return;
+
+  if (!confirm(`¿Eliminar ${ids.length} ticket${ids.length > 1 ? 's' : ''} de soporte? Se borra también todo su historial y no se puede deshacer.`)) return;
+
+  const { data, error } = await supabaseClient.rpc('admin_eliminar_tickets', { p_ids: ids });
+
+  if (error || !data || data.error) {
+    mostrarToast(data?.error || error?.message || 'No se pudo eliminar.', 'error');
+    return;
+  }
+
+  mostrarToast(`${data.eliminados} ticket${data.eliminados !== 1 ? 's' : ''} eliminado${data.eliminados !== 1 ? 's' : ''}.`, 'ok');
+  window._ticketsSeleccionadosAdmin = new Set();
+  await cargarTicketsAdmin();
 }
 
 async function cerrarTicketsSeleccionadosAdmin() {
