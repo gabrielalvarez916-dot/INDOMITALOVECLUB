@@ -939,7 +939,10 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
         }
         if (typeof mostrarToast === 'function') mostrarToast(msj, 'ok');
       }
-    } else if (moneda === 'ARS' && montoAPagar > 0) {
+    } else if ((moneda === 'ARS' || moneda === 'USD') && montoAPagar > 0) {
+      // FIX: antes esto solo corría para moneda === 'ARS'. Los impulsos en
+      // USD (PayPal) nunca llamaban a crear-link-campana y quedaban
+      // "pendiente" para siempre, sin link de pago ni mail.
       const { error: errLink } = await supabaseClient.functions.invoke('crear-link-campana', {
         body: { id_impulso: impulsoCreado.id }
       });
@@ -954,7 +957,10 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
         }
         if (typeof mostrarToast === 'function') mostrarToast(msj, 'advertencia');
       } else {
-        const msj = `¡Listo! Te enviamos un mail con el link de pago de $${montoAPagar.toLocaleString('es-AR')} ARS. Una vez que se acredite el pago, activamos tu plan ${nombrePlan}.`;
+        const montoTexto = moneda === 'ARS'
+          ? `$${montoAPagar.toLocaleString('es-AR')} ARS`
+          : `USD ${montoAPagar.toLocaleString('es-AR')}`;
+        const msj = `¡Listo! Te enviamos un mail con el link de pago de ${montoTexto}. Una vez que se acredite el pago, activamos tu plan ${nombrePlan}.`;
         if (ok) {
           ok.textContent = msj;
           ok.style.display = 'block';
