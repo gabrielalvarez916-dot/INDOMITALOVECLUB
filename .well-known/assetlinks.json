@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.indomitaloveclub.app",
+      "sha256_cert_fingerprints": [
+        "B2:D8:1A:B8:A8:FA:25:C3:17:69:CC:23:8F:A3:83:02:49:92:A4:1D:41:97:B2:5D:AE:32:8D:FE:02:A5:39:35"
+      ]
+    }
+  }
+]
