@@ -916,6 +916,7 @@ async function cargarImpulsosAdmin() {
   }
 
   const impulsos = resultado.impulsos || [];
+  window._impulsosAdmin = impulsos;
 
   if (impulsos.length === 0) {
     contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay solicitudes de impulso.</p></div>`;
@@ -928,7 +929,8 @@ async function cargarImpulsosAdmin() {
       (Mercado Pago / PayPal) y, cuando confirme el pago, tocá "Activar impulso": eso manda las notificaciones
       a los reseñadores de alta coincidencia y mete la campaña en el slider por los días configurados.
     </p>
-    <table class="admin-tabla">
+    <input type="text" id="admin-buscar-impulso" class="input-buscar" placeholder="Buscar por nombre o mail del autor..." oninput="filtrarImpulsosAdmin()" style="max-width:400px;" />
+    <table class="admin-tabla" id="tabla-impulsos">
       <thead>
         <tr>
           <th>Libro</th>
@@ -948,6 +950,20 @@ async function cargarImpulsosAdmin() {
       </tbody>
     </table>
   `;
+}
+
+/**
+ * Filtra la tabla de impulsos por nombre o mail del autor.
+ */
+function filtrarImpulsosAdmin() {
+  const texto = (document.getElementById('admin-buscar-impulso')?.value || '').toLowerCase();
+  const impulsos = (window._impulsosAdmin || []).filter(i =>
+    (i.emailAutor || '').toLowerCase().includes(texto) ||
+    (i.aliasAutor || '').toLowerCase().includes(texto)
+  );
+
+  const tbody = document.querySelector('#tabla-impulsos tbody');
+  if (tbody) tbody.innerHTML = impulsos.map(i => construirFilaImpulsoAdmin(i)).join('');
 }
 
 /**
