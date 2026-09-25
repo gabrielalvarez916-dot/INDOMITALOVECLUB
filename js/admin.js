@@ -1019,7 +1019,7 @@ function construirFilaImpulsoAdmin(i) {
       <td style="font-size:12px;">${i.fechaSolicitud ? String(i.fechaSolicitud).split('T')[0] : '—'}</td>
       <td style="text-align:center;">
         <input type="checkbox" style="width:18px; height:18px; cursor:pointer;"
-          ${mensajeImpulsoEnviado(i.id) ? 'checked' : ''}
+          ${i.fechaLinkEnviado ? 'checked' : ''}
           onchange="marcarMensajeImpulsoAdmin('${i.id}', this.checked)" />
       </td>
       <td id="impulso-acciones-${i.id}" style="display:flex; gap:6px; flex-wrap:wrap;">${botones}</td>
@@ -1029,32 +1029,28 @@ function construirFilaImpulsoAdmin(i) {
 
 /**
  * Marca (o desmarca) que ya le mandaste el mensaje con el link de pago a un
- * impulso pendiente. Es solo una ayuda visual para vos, se guarda en este
- * navegador (localStorage), no en la base de datos: no afecta el estado
- * real del impulso ni ningún flujo automático.
+ * impulso pendiente. Queda guardado en Supabase (columna fecha_link_enviado
+ * de impulsos_campana), así que se ve igual desde cualquier compu o celu
+ * donde entres al admin. No afecta el estado real del impulso ni ningún
+ * flujo automático.
  *
  * @param {string} idImpulso
  * @param {boolean} enviado
  */
-function marcarMensajeImpulsoAdmin(idImpulso, enviado) {
-  const clave = 'impulsosMensajeEnviado';
-  const guardado = JSON.parse(localStorage.getItem(clave) || '{}');
-  if (enviado) {
-    guardado[idImpulso] = true;
-  } else {
-    delete guardado[idImpulso];
-  }
-  localStorage.setItem(clave, JSON.stringify(guardado));
-}
+async function marcarMensajeImpulsoAdmin(idImpulso, enviado) {
+  const { data: resultado, error } = await supabaseClient.rpc('admin_marcar_link_enviado_impulso', {
+    p_id_impulso: idImpulso,
+    p_marcado: enviado
+  });
 
-/**
- * Chequea si a un impulso ya le marcaste el mensaje enviado (ver arriba).
- * @param {string} idImpulso
- * @returns {boolean}
- */
-function mensajeImpulsoEnviado(idImpulso) {
-  const guardado = JSON.parse(localStorage.getItem('impulsosMensajeEnviado') || '{}');
-  return !!guardado[idImpulso];
+  if (error || !resultado || resultado.error) {
+    mostrarToast(resultado?.error || 'No se pudo guardar la marca.', 'error');
+    await cargarImpulsosAdmin();
+    return;
+  }
+
+  const impulso = (window._impulsosAdmin || []).find(i => i.id === idImpulso);
+  if (impulso) impulso.fechaLinkEnviado = enviado ? new Date().toISOString() : null;
 }
 
 /**
