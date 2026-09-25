@@ -981,13 +981,19 @@ function construirFilaImpulsoAdmin(i) {
 
   const simbolo = i.moneda === 'ARS' ? '$' : 'USD ';
 
+  const linkPagoBtn = (i.estado === 'pendiente' && Number(i.montoAPagar) > 0)
+    ? `<button class="btn-secundario btn-sm" onclick="copiarLinkPagoImpulso('${i.id}')">🔗 Link de pago</button>`
+    : '';
+
   const botones = i.estado === 'pendiente' ? (
     i.plan === 'complete'
       ? `
+        ${linkPagoBtn}
         <button class="btn-primario btn-sm" onclick="mostrarOpcionesPrioridadComplete('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Aprobar</button>
         <button class="btn-secundario btn-sm btn-peligro" onclick="rechazarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Rechazar</button>
       `
       : `
+        ${linkPagoBtn}
         <button class="btn-primario btn-sm" onclick="activarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Activar impulso</button>
         <button class="btn-secundario btn-sm btn-peligro" onclick="rechazarImpulsoAdmin('${i.id}', '${escaparHtmlSoporte(i.nombreLibro)}')">Rechazar</button>
       `
@@ -1013,6 +1019,26 @@ function construirFilaImpulsoAdmin(i) {
       <td id="impulso-acciones-${i.id}" style="display:flex; gap:6px; flex-wrap:wrap;">${botones}</td>
     </tr>
   `;
+}
+
+/**
+ * Copia al portapapeles el link de pago "puente" de un impulso pendiente
+ * (ir-a-pago-impulso): NO genera el pago ahora, sino que arma la URL que,
+ * cuando el autor la toque (hoy, mañana, la semana que viene), recién ahí
+ * crea la preferencia de Mercado Pago o la orden de PayPal y lo manda a
+ * pagar. Por eso sirve para reenviar por WhatsApp/mail a mano sin miedo a
+ * que se venza. No modifica el impulso ni el flujo automático existente.
+ *
+ * @param {string} idImpulso
+ */
+async function copiarLinkPagoImpulso(idImpulso) {
+  const link = `${SUPABASE_URL}/functions/v1/ir-a-pago-impulso?id=${idImpulso}`;
+  try {
+    await navigator.clipboard.writeText(link);
+    mostrarToast('Link de pago copiado. Pegalo donde quieras enviarlo.', 'ok');
+  } catch (e) {
+    prompt('Copiá el link de pago:', link);
+  }
 }
 
 /**
