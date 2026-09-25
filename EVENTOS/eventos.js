@@ -86,7 +86,8 @@ if (usuario.rol !== 'autor' && usuario.rol !== 'reseñador' && usuario.rol !== '
     });
 
 if (error || !resultado || !resultado.activo) {
-      _ocultarBotonNavEvento();
+      _EventosState.eventoActivo = null;
+      _mostrarBotonNavEvento(null); // sigue visible: lleva al placeholder de "no hay evento"
       _actualizarWidgetFlotanteEvento();
       _detenerTimerSecretoEvento();
       _detenerTimerCountdownEvento();
@@ -160,7 +161,7 @@ function _mostrarBotonNavEvento(evento) {
   const btn = document.getElementById('nav-evento'); // sigue convención de nav-panel/nav-perfil/nav-admin
   if (!btn) return;
   btn.style.display = 'inline-block';
-  btn.textContent = '💋 Evento';
+  btn.textContent = evento ? `${evento.emoji || '💋'} Evento` : '🌱 Evento';
   btn.onclick = () => mostrarSeccion('evento'); // requiere case 'evento' en mostrarSeccion() (ui.js)
 }
 
@@ -274,6 +275,7 @@ async function _refrescarProgresoEventoGlobal() {
     _EventosState.eventoActivo = null;
     _EventosState.progreso = null;
     _EventosState.progresoComunitario = null;
+    _mostrarBotonNavEvento(null); // el nav sigue visible, ahora en modo "no hay evento"
     _actualizarWidgetFlotanteEvento();
     _restablecerColorTemaEvento();
     return { resultado, recienCompletado: false };
