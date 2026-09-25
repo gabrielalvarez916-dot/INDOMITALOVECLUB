@@ -324,7 +324,13 @@ async function renderPaginaEvento(datosFrescos) {
   if (!contenedor) return;
 
   if (!_EventosState.eventoActivo) {
-    contenedor.innerHTML = `<p class="evento-vacio">No hay ningún evento activo en este momento.</p>`;
+    contenedor.innerHTML = `
+      <div class="estado-vacio">
+        <div class="estado-vacio-icono">🌱</div>
+        <p class="estado-vacio-texto">Muy pronto, un nuevo evento</p>
+        <p class="estado-vacio-sub">Todavía no hay ningún evento activo. Volvé a pasar por acá, ¡se viene algo lindo!</p>
+      </div>
+    `;
     return;
   }
 

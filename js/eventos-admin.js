@@ -735,6 +735,7 @@ function _construirCardEventoAdmin(e) {
         <div class="lista-item-acciones">
           <button class="btn-secundario btn-sm" onclick="editarEventoAdmin('${e.id}')">Editar</button>
           <button class="btn-secundario btn-sm" onclick="activarEventoAdmin('${e.id}')" ${e.activo ? 'disabled' : ''}>Activar</button>
+          <button class="btn-secundario btn-sm btn-peligro" onclick="desactivarEventoAdmin('${e.id}')" ${e.activo ? '' : 'disabled'}>Desactivar</button>
           <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarEventoAdmin('${e.id}')" ${e.activo ? 'disabled title="Desactivalo primero"' : ''}>Eliminar</button>
         </div>
       </div>
@@ -784,6 +785,27 @@ async function activarEventoAdmin(idEvento) {
   }
 
   mostrarToast('Evento activado.', 'ok');
+  await refrescarListaEventos();
+}
+
+/**
+ * Desactiva un evento (no activa ningún otro en su lugar; queda
+ * mostrando el placeholder de "no hay evento activo" hasta que se
+ * active uno nuevo).
+ *
+ * @param {string} idEvento
+ */
+async function desactivarEventoAdmin(idEvento) {
+  if (!confirm('¿Desactivar este evento? Mientras no actives otro, los usuarios verán el mensaje de "no hay evento activo".')) return;
+
+  const { error } = await supabaseClient.rpc('admin_desactivar_evento', { p_id_evento: idEvento });
+
+  if (error) {
+    mostrarToast(error.message, 'error');
+    return;
+  }
+
+  mostrarToast('Evento desactivado.', 'ok');
   await refrescarListaEventos();
 }
 
