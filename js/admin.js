@@ -1019,7 +1019,7 @@ function construirFilaImpulsoAdmin(i) {
       <td style="font-size:12px;">${i.fechaSolicitud ? String(i.fechaSolicitud).split('T')[0] : '—'}</td>
       <td style="text-align:center;">
         <input type="checkbox" style="width:18px; height:18px; cursor:pointer;"
-          ${i.fechaLinkEnviado ? 'checked' : ''}
+          ${i.mensajeIgEnviado ? 'checked' : ''}
           onchange="marcarMensajeImpulsoAdmin('${i.id}', this.checked)" />
       </td>
       <td id="impulso-acciones-${i.id}" style="display:flex; gap:6px; flex-wrap:wrap;">${botones}</td>
@@ -1028,17 +1028,17 @@ function construirFilaImpulsoAdmin(i) {
 }
 
 /**
- * Marca (o desmarca) que ya le mandaste el mensaje con el link de pago a un
- * impulso pendiente. Queda guardado en Supabase (columna fecha_link_enviado
- * de impulsos_campana), así que se ve igual desde cualquier compu o celu
- * donde entres al admin. No afecta el estado real del impulso ni ningún
- * flujo automático.
+ * Marca (o desmarca) a mano que ya le mandaste el mensaje de Instagram con
+ * el link de pago a un impulso pendiente. Columna propia y separada
+ * (mensaje_ig_enviado), no se completa sola con nada del sistema — la
+ * marcás vos cuando lo mandás manualmente. Queda guardado en Supabase, así
+ * que se ve igual desde cualquier compu o celu donde entres al admin.
  *
  * @param {string} idImpulso
  * @param {boolean} enviado
  */
 async function marcarMensajeImpulsoAdmin(idImpulso, enviado) {
-  const { data: resultado, error } = await supabaseClient.rpc('admin_marcar_link_enviado_impulso', {
+  const { data: resultado, error } = await supabaseClient.rpc('admin_marcar_mensaje_ig_impulso', {
     p_id_impulso: idImpulso,
     p_marcado: enviado
   });
@@ -1050,7 +1050,7 @@ async function marcarMensajeImpulsoAdmin(idImpulso, enviado) {
   }
 
   const impulso = (window._impulsosAdmin || []).find(i => i.id === idImpulso);
-  if (impulso) impulso.fechaLinkEnviado = enviado ? new Date().toISOString() : null;
+  if (impulso) impulso.mensajeIgEnviado = enviado;
 }
 
 /**
