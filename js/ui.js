@@ -119,6 +119,8 @@ function mostrarSeccion(nombre) {
     'admin-estadisticas',
     'admin-visuales',
     'admin-check',
+    'admin-vendedores',
+    'panel-vendedor',
     'biblioteca-resenador',
     'biblioteca-autor',
     'evento'
@@ -192,6 +194,12 @@ function mostrarSeccion(nombre) {
     case 'admin-check':
       if (typeof cargarVerificacionesAdmin === 'function') cargarVerificacionesAdmin();
       break;
+    case 'admin-vendedores':
+      if (typeof cargarVendedoresAdmin === 'function') cargarVendedoresAdmin();
+      break;
+    case 'panel-vendedor':
+      if (typeof cargarPanelVendedor === 'function') cargarPanelVendedor();
+      break;
   case 'biblioteca-resenador':
       if (typeof cargarBibliotecaSeccion === 'function') cargarBibliotecaSeccion();
       break;
@@ -214,6 +222,7 @@ function mostrarPanelRol() {
   else if (rol === 'reseñador') mostrarSeccion('panel-resenador');
   else if (rol === 'editorial') mostrarSeccion('panel-autor');
   else if (rol === 'admin') mostrarSeccion('admin-panel');
+  else if (rol === 'vendedor') mostrarSeccion('panel-vendedor');
   else mostrarSeccion('login');
 }
 
@@ -248,7 +257,7 @@ function mostrarHeaderLogueado(usuario) {
 
   // Muestra botón Mi perfil (el admin no tiene perfil, así que no se le muestra)
   const navPerfil = document.getElementById('nav-perfil');
-  if (navPerfil) navPerfil.style.display = usuario.rol === 'admin' ? 'none' : 'inline-block';
+  if (navPerfil) navPerfil.style.display = (usuario.rol === 'admin' || usuario.rol === 'vendedor') ? 'none' : 'inline-block';
 
    // Muestra botón FAQ solo si es autor
   const navFaqAutor = document.getElementById('nav-faq-autor');
@@ -264,7 +273,7 @@ function mostrarHeaderLogueado(usuario) {
 
   // Muestra los links de admin (Planes, Soporte, Estadísticas, Visuales, Check) solo si es admin
   const esAdmin = usuario.rol === 'admin';
-  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check'].forEach(id => {
+  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = esAdmin ? 'inline-block' : 'none';
   });
@@ -301,7 +310,7 @@ function mostrarHeaderDeslogueado() {
   const navGuiaResenador = document.getElementById('nav-guia-resenador');
   if (navGuiaResenador) navGuiaResenador.style.display = 'none';
 
-  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check'].forEach(id => {
+  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });

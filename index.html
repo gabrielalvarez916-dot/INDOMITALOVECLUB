@@ -34,6 +34,13 @@
         localStorage.setItem('ref_codigo', JSON.stringify({ c: _refParam.toUpperCase(), t: Date.now() }));
       }
     } catch (e) {}
+    // Vendedores: si entró con ?v=CODIGO lo guardamos para asignarlo cuando se registre.
+    try {
+      var _vParam = new URLSearchParams(window.location.search).get('v');
+      if (_vParam && /^[A-Za-z0-9]{4,20}$/.test(_vParam)) {
+        localStorage.setItem('vend_codigo', JSON.stringify({ c: _vParam.toUpperCase(), t: Date.now() }));
+      }
+    } catch (e) {}
   </script>
 </head>
 <body>

@@ -158,5 +158,6 @@ function mostrarPanelRol() {
   else if (rol === 'reseñador') mostrarSeccion('panel-resenador');
   else if (rol === 'editorial') mostrarSeccion('panel-autor');
   else if (rol === 'admin') mostrarSeccion('admin-panel');
+  else if (rol === 'vendedor') mostrarSeccion('panel-vendedor');
   else mostrarSeccion('login');
 }

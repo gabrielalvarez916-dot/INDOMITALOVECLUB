@@ -187,6 +187,11 @@ async function seleccionarRol(rol) {
   // Referidos: si entró por el link de un autor, queda registrado (si falla, no frena el registro).
   await registrarReferidoPendiente();
 
+  // Vendedores: código escrito a mano o guardado del link ?v=CODIGO (solo autores y editoriales).
+  if (rol === 'autor' || rol === 'editorial') {
+    await registrarCodigoVendedorPendiente();
+  }
+
   await completarLogin(nuevoPerfil);
 }
 
@@ -199,6 +204,30 @@ async function registrarReferidoPendiente() {
     await supabaseClient.rpc('registrar_referido', { p_codigo: guardado.c });
   } catch (e) {
     console.error('Error registrando referido:', e);
+  }
+}
+
+async function registrarCodigoVendedorPendiente() {
+  try {
+    const escrito = (document.getElementById('paso2-codigo-vendedor')?.value || '').trim().toUpperCase();
+    let codigo = escrito;
+    if (!codigo) {
+      const guardado = JSON.parse(localStorage.getItem('vend_codigo') || 'null');
+      if (guardado?.c && guardado?.t && (Date.now() - guardado.t) <= 30 * 24 * 60 * 60 * 1000) {
+        codigo = guardado.c;
+      }
+    }
+    localStorage.removeItem('vend_codigo');
+    if (!codigo) return;
+
+    const { data, error } = await supabaseClient.rpc('registrar_codigo_vendedor', { p_codigo: codigo });
+    if (error) throw error;
+    // Si lo escribió a mano y no existe, se le avisa; el registro sigue igual (queda por rotación).
+    if (escrito && data === 'codigo_invalido') {
+      mostrarToast('El código de vendedor no es válido. Te registramos igual.', 'advertencia');
+    }
+  } catch (e) {
+    console.error('Error registrando código de vendedor:', e);
   }
 }
 
@@ -251,7 +280,7 @@ async function completarLogin(usuario) {
 // ────────────────────────────────────────────────────────────
 
 function _continuarOnboarding(usuario) {
-  if (!usuario || usuario.rol === 'admin') return;
+  if (!usuario || usuario.rol === 'admin' || usuario.rol === 'vendedor') return;
   _pasoTutorialOnboarding(usuario);
 }
 
@@ -376,6 +405,17 @@ function mostrarPasoEleccionRol() {
   const inputApellido = document.getElementById('paso2-apellido');
   if (inputNombre) inputNombre.value = _nombreGooglePendiente || '';
   if (inputApellido) inputApellido.value = _apellidoGooglePendiente || '';
+
+  // Si vino por un link de vendedor (?v=CODIGO), precarga el código.
+  const inputCodigo = document.getElementById('paso2-codigo-vendedor');
+  if (inputCodigo && !inputCodigo.value) {
+    try {
+      const guardado = JSON.parse(localStorage.getItem('vend_codigo') || 'null');
+      if (guardado?.c && guardado?.t && (Date.now() - guardado.t) <= 30 * 24 * 60 * 60 * 1000) {
+        inputCodigo.value = guardado.c;
+      }
+    } catch (e) {}
+  }
 }
 
 function mostrarErrorLogin(mensaje) {
@@ -434,6 +474,9 @@ function redirigirSegunRol(usuario) {
       break;
     case 'admin':
       mostrarSeccion('admin-panel');
+      break;
+    case 'vendedor':
+      mostrarSeccion('panel-vendedor');
       break;
     default:
       mostrarSeccion('feed');

@@ -6399,3 +6399,97 @@ img { max-width: 100%; display: block; }
   0%, 100% { box-shadow: 0 0 0 0 rgba(139, 26, 43, 0.45); }
   50% { box-shadow: 0 0 0 6px rgba(139, 26, 43, 0); }
 }
+
+/* ── Programa de vendedores ───────────────────────────────── */
+.vend-subtitulo {
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--bordo);
+  margin: 28px 0 14px;
+}
+.vend-aviso {
+  background: #FFF8E1;
+  color: #8A5A00;
+  border: 1px solid #F5DE9A;
+  border-radius: var(--radio);
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+.vend-progreso-caja { margin: -6px 0 24px; }
+.vend-progreso-barra {
+  height: 12px;
+  background: var(--crema);
+  border-radius: var(--radio-pill);
+  overflow: hidden;
+}
+.vend-progreso-relleno {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bordo-claro), var(--bordo));
+  border-radius: var(--radio-pill);
+  transition: width .4s ease;
+}
+.vend-progreso-texto { font-size: 13px; color: var(--gris-medio); margin: 8px 0 0; }
+.vend-productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.vend-productos-bloque {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-grande);
+  padding: 16px;
+  box-shadow: var(--sombra-card);
+}
+.vend-productos-titulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--gris-suave);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+.vend-productos-fila { display: flex; gap: 10px; flex-wrap: wrap; }
+.vend-producto {
+  flex: 1;
+  min-width: 70px;
+  background: var(--crema-suave);
+  border-radius: var(--radio);
+  padding: 10px 6px;
+  text-align: center;
+}
+.vend-producto-num {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--bordo);
+  line-height: 1.1;
+}
+.vend-producto-nombre { font-size: 12px; color: var(--gris-medio); }
+.vend-link-caja { padding: 16px; }
+.vend-copiar-fila {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.vend-copiar-label { width: 56px; font-size: 12px; font-weight: 700; color: var(--gris-medio); text-transform: uppercase; }
+.vend-copiar-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 10px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 8px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.vend-tabla-scroll { overflow-x: auto; }
+.vend-mini { font-size: 11px; color: var(--gris-suave); }
+.vend-historial { margin-top: 16px; }
+.vend-historial summary { cursor: pointer; font-weight: 700; color: var(--bordo); margin-bottom: 10px; }

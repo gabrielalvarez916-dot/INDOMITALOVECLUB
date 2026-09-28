@@ -29,6 +29,7 @@ function _esCuentaNueva(usuario) {
 }
 
 function _pasosWizardSegunRol(rol) {
+  if (rol === 'vendedor') return []; // los vendedores no completan perfil
   return rol === 'reseñador' ? ['datos', 'generos', 'links'] : ['datos', 'links'];
 }
 

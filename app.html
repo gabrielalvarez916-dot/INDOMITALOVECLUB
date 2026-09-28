@@ -20,13 +20,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=4" />
+  <link rel="stylesheet" href="css/styles.css?v=5" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
       var _refParam = new URLSearchParams(window.location.search).get('ref');
       if (_refParam && /^[A-Za-z0-9]{4,20}$/.test(_refParam)) {
         localStorage.setItem('ref_codigo', JSON.stringify({ c: _refParam.toUpperCase(), t: Date.now() }));
+      }
+    } catch (e) {}
+    // Vendedores: si entró con ?v=CODIGO lo guardamos para asignarlo cuando se registre.
+    try {
+      var _vParam = new URLSearchParams(window.location.search).get('v');
+      if (_vParam && /^[A-Za-z0-9]{4,20}$/.test(_vParam)) {
+        localStorage.setItem('vend_codigo', JSON.stringify({ c: _vParam.toUpperCase(), t: Date.now() }));
       }
     } catch (e) {}
   </script>
@@ -49,6 +56,7 @@
         <a href="#" class="nav-link" id="nav-admin-estadisticas" style="display:none;" onclick="mostrarSeccion('admin-estadisticas')">Estadísticas</a>
         <a href="#" class="nav-link" id="nav-admin-visuales" style="display:none;" onclick="mostrarSeccion('admin-visuales')">Visuales</a>
         <a href="#" class="nav-link" id="nav-admin-check" style="display:none;" onclick="mostrarSeccion('admin-check')">Check</a>
+        <a href="#" class="nav-link" id="nav-admin-vendedores" style="display:none;" onclick="mostrarSeccion('admin-vendedores')">Vendedores</a>
         <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
         <a href="#" class="nav-link" id="nav-guia-resenador" style="display:none;" onclick="mostrarSeccion('guia-resenador')">Guía</a>
        <a href="#" class="nav-link" id="nav-faq-autor" style="display:none;" onclick="mostrarSeccion('faq-autor')">Dudas</a>
@@ -155,6 +163,10 @@
               <label class="form-label">Apellido *</label>
               <input type="text" id="paso2-apellido" class="form-input" required />
             </div>
+          </div>
+          <div class="form-grupo" style="margin-bottom:16px;">
+            <label class="form-label">Código de vendedor (opcional)</label>
+            <input type="text" id="paso2-codigo-vendedor" class="form-input" maxlength="20" placeholder="Solo si alguien te recomendó Indómita" autocomplete="off" style="text-transform:uppercase;" />
           </div>
           <div class="rol-opciones">
             <button class="rol-opcion" onclick="seleccionarRol('autor')">
@@ -744,6 +756,33 @@
           </form>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: PANEL DEL VENDEDOR -->
+  <section id="seccion-panel-vendedor" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Mi panel de vendedor</h2>
+      <div id="vendedor-contenido"></div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ADMIN · VENDEDORES -->
+  <section id="seccion-admin-vendedores" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Vendedores</h2>
+      <div class="tabs">
+        <button class="tab activo" onclick="cambiarTab(this, 'tab-admin-vend-lista'); cargarVendedoresListaAdmin()">Vendedores</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-vend-ventas'); cargarVentasVendedoresAdmin()">Ventas</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-vend-liquidaciones'); cargarLiquidacionesVendedoresAdmin()">Liquidaciones</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-vend-clientes'); cargarClientesVendedoresAdmin()">Clientes</button>
+        <button class="tab" onclick="cambiarTab(this, 'tab-admin-vend-intentos'); cargarIntentosCodigoAdmin()">Intentos de código</button>
+      </div>
+      <div id="tab-admin-vend-lista" class="tab-contenido activo"><div id="admin-vendedores-lista"></div></div>
+      <div id="tab-admin-vend-ventas" class="tab-contenido"><div id="admin-vendedores-ventas"></div></div>
+      <div id="tab-admin-vend-liquidaciones" class="tab-contenido"><div id="admin-vendedores-liquidaciones"></div></div>
+      <div id="tab-admin-vend-clientes" class="tab-contenido"><div id="admin-vendedores-clientes"></div></div>
+      <div id="tab-admin-vend-intentos" class="tab-contenido"><div id="admin-vendedores-intentos"></div></div>
     </div>
   </section>
 
@@ -2213,10 +2252,10 @@
 <script src="js/config.js?v=2"></script>
 <script src="js/tropes.js"></script>
 <script src="js/wizard-onboarding.js"></script>
-<script src="js/ui.js?v=8"></script>
+<script src="js/ui.js?v=9"></script>
 <script src="js/calendario.js"></script>
 <script src="js/admin-impersonar.js"></script>
-<script src="js/auth.js?v=2"></script>
+<script src="js/auth.js?v=3"></script>
 <script src="EVENTOS/eventos.js"></script>
 <script src="EVENTOS/eventos-juegos.js"></script>
 <script src="js/notificaciones.js"></script>
@@ -2227,6 +2266,8 @@
 <script src="js/colaboraciones-fisicas.js"></script>
 <script src="js/resenador.js?v=4"></script>
 <script src="js/admin.js?v=4"></script>
+<script src="js/vendedor.js"></script>
+<script src="js/admin-vendedores.js"></script>
 <script src="js/perfil.js?v=2"></script>
 <script src="js/verificacion-seguidores.js"></script>
 <script src="js/offline-libros.js"></script>
