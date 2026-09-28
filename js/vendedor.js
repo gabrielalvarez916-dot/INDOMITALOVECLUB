@@ -179,13 +179,38 @@ async function copiarVendedor(tipo) {
   mostrarToast(tipo === 'link' ? 'Link copiado.' : 'Código copiado.', 'ok');
 }
 
+// Arma el link de una red social a partir de lo que cargó el autor
+// (puede ser una URL completa, un @usuario o solo el usuario).
+function _vendLinkRed(valor, base) {
+  const v = String(valor || '').trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^(www\.|[a-z0-9-]+\.[a-z]{2,}\/)/i.test(v)) return 'https://' + v;
+  if (!base) return null;
+  return base + v.replace(/^@/, '');
+}
+
+// Redes y datos de contacto del autor (solo clientes activos).
+function _vendRedes(c) {
+  const redes = [
+    ['Instagram', _vendLinkRed(c.instagram, 'https://www.instagram.com/')],
+    ['TikTok', _vendLinkRed(c.tiktok, 'https://www.tiktok.com/@')],
+    ['YouTube', _vendLinkRed(c.youtube, 'https://www.youtube.com/@')],
+    ['Goodreads', _vendLinkRed(c.goodreads, null)],
+    ['Web', _vendLinkRed(c.sitio_web, null)]
+  ].filter(r => r[1]);
+  if (!redes.length) return '';
+  const links = redes.map(r => `<a href="${_vendEsc(r[1])}" target="_blank" rel="noopener noreferrer">${r[0]}</a>`).join(' · ');
+  return `<br><span class="vend-mini">${links}</span>`;
+}
+
 function _vendHtmlClientes(clientes) {
   const activos = clientes.filter(c => c.estado === 'activo');
   const inactivos = clientes.filter(c => c.estado !== 'activo');
 
   const fila = (c) => `
     <tr>
-      <td>${_vendEsc(c.autor || c.alias || '—')}${c.email ? `<br><span class="vend-mini">${_vendEsc(c.email)}</span>` : ''}</td>
+      <td>${_vendEsc(c.autor || c.alias || '—')}${c.email ? `<br><span class="vend-mini">${_vendEsc(c.email)}</span>` : ''}${_vendRedes(c)}</td>
       <td>${_vendEsc(c.libros || '—')}</td>
       <td>${_vendFecha(c.fecha_asignacion)}</td>
       <td>${c.estado === 'activo' ? _vendFecha(c.fecha_vencimiento) : `Traspasado el ${_vendFecha(c.fecha_traspaso)}`}</td>
