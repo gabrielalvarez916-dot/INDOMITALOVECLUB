@@ -266,3 +266,6 @@ const FestivalGeneros = (() => {
 
   return { aplica, barrasHtml, alEntrar, _svgRueda, ORDEN, GENEROS };
 })();
+
+// Un "const" de nivel superior NO queda en window; eventos.js lo busca como window.FestivalGeneros.
+window.FestivalGeneros = FestivalGeneros;
