@@ -214,12 +214,54 @@ function _vendCeldaInstagram(c) {
 // Etiqueta: Activo (tiene o tuvo campaña) / Nuevo (nunca creó una).
 function _vendEtiqueta(c) {
   if (c.estado !== 'activo') return '<span class="badge badge-cancelada">Inactivo</span>';
-  return c.tiene_campana
+  const base = c.tiene_campana
     ? '<span class="badge badge-aprobada">Activo</span>'
     : '<span class="badge badge-pendiente">Nuevo</span>';
+  return base + _vendImpulsosActivos(c);
+}
+
+// Impulsos que el cliente tiene vigentes ahora (para saber qué ofrecer y qué no).
+function _vendImpulsosActivos(c) {
+  const claves = Array.isArray(c.impulsos_activos) ? c.impulsos_activos : [];
+  if (c.estado !== 'activo') return '';
+  if (!claves.length) return '<br><span class="vend-mini">Sin impulso activo</span>';
+  const nombres = claves.map(k => {
+    const it = _VEND_IMPULSOS.find(x => x.clave === k);
+    return it ? it.nombre : k;
+  });
+  return '<br>' + nombres.map(n => `<span class="badge badge-aprobada" style="margin-top:4px;">${_vendEsc(n)}</span>`).join(' ');
+}
+
+let _vendClientesCache = [];
+
+// Texto sobre el que busca el buscador (nombre, alias, mail, redes, libros, etiqueta, impulsos).
+function _vendTextoBusqueda(c) {
+  const etiqueta = c.estado !== 'activo' ? 'inactivo' : (c.tiene_campana ? 'activo' : 'nuevo');
+  return [c.autor, c.alias, c.email, c.instagram, c.tiktok, c.youtube, c.goodreads, c.sitio_web, c.libros, etiqueta,
+    (c.impulsos_activos || []).join(' ')]
+    .filter(Boolean).join(' ').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function _vendFiltrarClientes(q) {
+  const cont = document.getElementById('vend-clientes-listado');
+  if (!cont) return;
+  const t = String(q || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^@/, '');
+  const lista = t ? _vendClientesCache.filter(c => _vendTextoBusqueda(c).includes(t)) : _vendClientesCache;
+  cont.innerHTML = _vendHtmlListadoClientes(lista, !!t);
 }
 
 function _vendHtmlClientes(clientes) {
+  _vendClientesCache = clientes;
+  return `
+    <h3 class="vend-subtitulo">Mis clientes</h3>
+    <input type="search" id="vend-buscador-clientes" class="vend-copiar-input" style="width:100%;max-width:420px;margin-bottom:12px;"
+      placeholder="Buscar por nombre, mail, Instagram, libro, Nuevo, Activo, Select…" oninput="_vendFiltrarClientes(this.value)" />
+    <div id="vend-clientes-listado">${_vendHtmlListadoClientes(clientes, false)}</div>
+  `;
+}
+
+function _vendHtmlListadoClientes(clientes, buscando) {
   const activos = clientes.filter(c => c.estado === 'activo');
   const inactivos = clientes.filter(c => c.estado !== 'activo');
 
@@ -245,12 +287,14 @@ function _vendHtmlClientes(clientes) {
     </div>`;
 
   return `
-    <h3 class="vend-subtitulo">Mis clientes</h3>
-    ${activos.length ? tabla(activos) : `
+    ${activos.length ? tabla(activos) : (buscando ? `
+      <div class="estado-vacio">
+        <p class="estado-vacio-texto">No encontramos clientes con esa búsqueda.</p>
+      </div>` : `
       <div class="estado-vacio">
         <p class="estado-vacio-texto">Todavía no tenés clientes asignados.</p>
         <p class="estado-vacio-sub">Compartí tu link o tu código para empezar.</p>
-      </div>`}
+      </div>`)}
     ${inactivos.length ? `
       <details class="vend-historial">
         <summary>Historial de traspasados (${inactivos.length})</summary>
