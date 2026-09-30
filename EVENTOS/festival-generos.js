@@ -87,6 +87,15 @@ const FestivalGeneros = (() => {
       .fest-resultado h2{margin:6px 0 4px}
       .fest-resultado p{margin:0 0 12px;opacity:.9;font-size:.92rem}
       .fest-omitir{margin-top:14px;background:none;border:none;color:#fff;opacity:.6;text-decoration:underline;cursor:pointer;font-size:.85rem}
+      .fest-premios{margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08)}
+      .fest-premios-titulo{margin:0 0 2px;font-weight:800;font-size:1rem;text-align:center}
+      .fest-premios-sub{margin:0 0 10px;font-size:.8rem;opacity:.75;text-align:center}
+      .fest-premios-grupo{margin:8px 0;padding:10px 12px;border-radius:12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25)}
+      .fest-premios-grupo.fest-premios-propio{border:2px solid #8b5cf6;background:rgba(139,92,246,.14)}
+      .fest-premios-grupo h4{margin:0 0 6px;font-size:.92rem}
+      .fest-premios-grupo ul{list-style:none;margin:0;padding:0}
+      .fest-premios-grupo li{display:flex;gap:8px;align-items:flex-start;font-size:.88rem;padding:3px 0}
+      .fest-premios-grupo li span:first-child{flex-shrink:0}
       @keyframes fest-pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
     `;
     document.head.appendChild(st);
@@ -115,6 +124,37 @@ const FestivalGeneros = (() => {
     }).join('');
   }
 
+  const PREMIOS = {
+    'reseñador': { titulo: '📚 Reseñadores', items: [
+      ['🥇', '1.º puesto: un comodín para evitar penalizaciones'],
+      ['🥈', '2.º puesto: 25 puntos más de regalo'],
+      ['🥉', '3.º puesto: 10 puntos más de regalo']
+    ]},
+    autor: { titulo: '✍️ Autores', items: [
+      ['🥇', '1.º puesto: un Informe de Lectura Beta'],
+      ['🥈', '2.º puesto: 5 campañas de regalo'],
+      ['🥉', '3.º puesto: un impulso de regalo']
+    ]}
+  };
+
+  function _htmlPremios(rolPropio) {
+    const grupo = (clave) => {
+      const g = PREMIOS[clave];
+      return `
+        <div class="fest-premios-grupo${clave === rolPropio ? ' fest-premios-propio' : ''}">
+          <h4>${g.titulo}${clave === rolPropio ? ' · tu categoría' : ''}</h4>
+          <ul>${g.items.map(i => `<li><span>${i[0]}</span><span>${i[1]}</span></li>`).join('')}</ul>
+        </div>`;
+    };
+    return `
+      <div class="fest-premios">
+        <p class="fest-premios-titulo">🏆 Premios del festival</p>
+        <p class="fest-premios-sub">Para los 3 reseñadores y los 3 autores que más puntos sumen</p>
+        ${grupo('reseñador')}
+        ${grupo('autor')}
+      </div>`;
+  }
+
   // La llama renderPaginaEvento() antes de armar la página.
   async function barrasHtml() {
     _css();
@@ -140,6 +180,7 @@ const FestivalGeneros = (() => {
         <p class="evento-progreso-comunitario-titulo">${titulo}</p>
         <div id="fest-barras">${_htmlBarras(est)}</div>
         <p class="evento-progreso-comunitario-sub">${sub}</p>
+        ${_htmlPremios(est.rol)}
       </div>`;
   }
 
