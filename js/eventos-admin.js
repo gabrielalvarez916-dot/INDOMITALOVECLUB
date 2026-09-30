@@ -887,6 +887,11 @@ function _construirBotonesFestival(e) {
     html += `<div class="lista-item-acciones"><button class="btn-primario btn-sm" onclick="festivalCerrarFinal()">Cerrar final y definir campeón</button></div>`;
   } else if (esR2 && estado === 'finalizado' && r.campeon) {
     html += `<p class="lista-item-meta" style="margin:0;">🏆 Campeón: <strong>${_festivalNombreGenero(r.campeon)}</strong></p>`;
+    const premios = Array.isArray(r.premios) ? r.premios : [];
+    if (premios.length) {
+      html += `<p class="lista-item-meta" style="margin:8px 0 2px;"><strong>Premios:</strong></p>` +
+        premios.map(pr => `<p class="lista-item-meta" style="margin:0;">${pr.rol === 'autor' ? '✍️' : '📚'} ${pr.puesto}.º — ${pr.alias || pr.email} (${pr.puntos} pts): ${pr.premio}${pr.entrega === 'manual' ? ' <strong>⚠️ entregar a mano</strong>' : ' ✅'}</p>`).join('');
+    }
   }
   return html;
 }
@@ -935,11 +940,11 @@ async function festivalCerrarDuelos() {
 async function festivalCerrarFinal() {
   const antes = await _festivalResumenFresco();
   const puntajes = antes ? '\n\nPuntaje actual (antes del barrido final):\n' + _festivalTextoPuntajes(antes, 2) : '';
-  if (!confirm('¿Cerrar la final y definir el campeón?\n\nSe recalculan los puntos de todos los miembros y se define el campeón.' + puntajes)) return;
+  if (!confirm('¿Cerrar la final y definir el campeón?\n\nSe recalculan los puntos de todos los miembros, se define el campeón y se entregan los premios automáticamente (comodín, puntos, campaña e impulso). El Informe de Lectura Beta queda marcado para entregar a mano.' + puntajes)) return;
 
   const { data, error } = await supabaseClient.rpc('festival_cerrar_ronda2', { p_edicion: _FESTIVAL_EDICION_ID });
   if (error) { mostrarToast(error.message, 'error'); return; }
 
-  mostrarToast('🏆 Campeón: ' + _festivalNombreGenero(data), 'ok');
+  mostrarToast('🏆 Campeón: ' + _festivalNombreGenero(data) + '. Premios entregados.', 'ok');
   await refrescarListaEventos();
 }

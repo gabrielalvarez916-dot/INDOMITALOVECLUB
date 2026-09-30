@@ -132,26 +132,22 @@ const FestivalGeneros = (() => {
     ]},
     autor: { titulo: '✍️ Autores', items: [
       ['🥇', '1.º puesto: un Informe de Lectura Beta'],
-      ['🥈', '2.º puesto: 5 campañas de regalo'],
+      ['🥈', '2.º puesto: una campaña de regalo'],
       ['🥉', '3.º puesto: un impulso de regalo']
     ]}
   };
 
   function _htmlPremios(rolPropio) {
-    const grupo = (clave) => {
-      const g = PREMIOS[clave];
-      return `
-        <div class="fest-premios-grupo${clave === rolPropio ? ' fest-premios-propio' : ''}">
-          <h4>${g.titulo}${clave === rolPropio ? ' · tu categoría' : ''}</h4>
-          <ul>${g.items.map(i => `<li><span>${i[0]}</span><span>${i[1]}</span></li>`).join('')}</ul>
-        </div>`;
-    };
+    const g = PREMIOS[rolPropio];
+    if (!g) return '';   // editorial u otros roles: sin premios
+    const quienes = rolPropio === 'autor' ? 'los 3 autores' : 'los 3 reseñadores';
     return `
       <div class="fest-premios">
         <p class="fest-premios-titulo">🏆 Premios del festival</p>
-        <p class="fest-premios-sub">Para los 3 reseñadores y los 3 autores que más puntos sumen</p>
-        ${grupo('reseñador')}
-        ${grupo('autor')}
+        <p class="fest-premios-sub">Para ${quienes} que más puntos sumen</p>
+        <div class="fest-premios-grupo fest-premios-propio">
+          <ul>${g.items.map(i => `<li><span>${i[0]}</span><span>${i[1]}</span></li>`).join('')}</ul>
+        </div>
       </div>`;
   }
 

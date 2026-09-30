@@ -291,6 +291,12 @@ const VARIANTES = {
       (d) => `Completaste "${d.nombreReto || ''}". Ahora queremos ver si podés con el siguiente.`,
     ],
   },
+  festival_premio: {
+    emoji: '🏆',
+    textos: [
+      (d) => `¡Puesto ${d.puesto || ''} en el Festival de Géneros! Tu premio: ${d.premio || ''}.${d.manual ? ' Te lo entregamos personalmente.' : ''}`,
+    ],
+  },
   evento_completado: {
     emoji: '🎉',
     textos: [
@@ -660,7 +666,7 @@ function _navegarPorNotificacion(notif) {
   }
 
   // Retos y eventos completados: sección Evento propia.
-  if (notif.tipo === 'evento_reto_completado' || notif.tipo === 'evento_completado') {
+  if (notif.tipo === 'evento_reto_completado' || notif.tipo === 'evento_completado' || notif.tipo === 'festival_premio') {
     if (typeof mostrarSeccion === 'function') mostrarSeccion('evento');
     return;
   }
