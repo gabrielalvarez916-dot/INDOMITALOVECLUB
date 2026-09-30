@@ -705,6 +705,17 @@ async function refrescarListaEventos() {
 
   _eventosAdmin = resultado.eventos || [];
 
+  // Festival de Géneros (temporal): leer en qué estado está la edición para mostrar el botón que corresponde
+  _festivalResumenAdmin = null;
+  if (_eventosAdmin.some(ev => _esEventoFestival(ev.id))) {
+    try {
+      const { data: resumen } = await supabaseClient.rpc('festival_admin_resumen', { p_edicion: _FESTIVAL_EDICION_ID });
+      _festivalResumenAdmin = resumen || null;
+    } catch (err) {
+      console.error('Error al leer el resumen del festival:', err);
+    }
+  }
+
   if (_eventosAdmin.length === 0) {
     contenedor.innerHTML = `
       <div class="estado-vacio">
@@ -738,6 +749,7 @@ function _construirCardEventoAdmin(e) {
           <button class="btn-secundario btn-sm btn-peligro" onclick="desactivarEventoAdmin('${e.id}')" ${e.activo ? '' : 'disabled'}>Desactivar</button>
           <button class="btn-secundario btn-sm btn-peligro" onclick="eliminarEventoAdmin('${e.id}')" ${e.activo ? 'disabled title="Desactivalo primero"' : ''}>Eliminar</button>
         </div>
+        ${_construirBotonesFestival(e)}
       </div>
     </div>
   `;
@@ -825,5 +837,109 @@ async function eliminarEventoAdmin(idEvento) {
   }
 
   mostrarToast('Evento eliminado.', 'ok');
+  await refrescarListaEventos();
+}
+
+
+// ────────────────────────────────────────────────────────────
+// FESTIVAL DE GÉNEROS (temporal) — botones de control
+// Se muestran solo en las tarjetas de FestivalGeneros_R1 / _R2.
+// La lógica vive en la base (festival_repartir_equipos, festival_lanzar,
+// festival_cerrar_ronda1, festival_cerrar_ronda2). Cada cierre hace
+// primero un barrido de puntos de todos los miembros.
+// Al terminar el festival se puede borrar todo este bloque.
+// ────────────────────────────────────────────────────────────
+
+const _FESTIVAL_EDICION_ID = 'festival-generos-2026';
+let _festivalResumenAdmin = null;
+
+const _FESTIVAL_NOMBRES = {
+  romance: '🌹 Romance', fantasia: '🐉 Fantasía', ciencia_ficcion: '🪐 Ciencia ficción',
+  no_ficcion: '📖 No ficción', thriller: '🔍 Thriller', terror: '💀 Terror'
+};
+
+function _esEventoFestival(idEvento) {
+  return typeof idEvento === 'string' && idEvento.indexOf('FestivalGeneros') === 0;
+}
+
+function _festivalNombreGenero(g) {
+  return _FESTIVAL_NOMBRES[g] || g;
+}
+
+function _construirBotonesFestival(e) {
+  if (!_esEventoFestival(e.id)) return '';
+  const r = _festivalResumenAdmin;
+  if (!r) {
+    return '<p class="lista-item-meta" style="margin-top:10px;">Festival de Géneros: no se pudo leer el estado de la edición.</p>';
+  }
+
+  const esR1 = e.id.endsWith('_R1');
+  const esR2 = e.id.endsWith('_R2');
+  const estado = r.estado;
+  const etiquetas = { preparacion: 'En preparación', ronda1: 'Duelos en curso', ronda2: 'Final en curso', finalizado: 'Finalizado' };
+  let html = `<p class="lista-item-meta" style="margin-top:10px;"><strong>Festival:</strong> ${etiquetas[estado] || estado}</p>`;
+
+  if (esR1 && estado === 'preparacion') {
+    html += `<div class="lista-item-acciones"><button class="btn-primario btn-sm" onclick="festivalRepartirYLanzar()">Repartir equipos y lanzar</button></div>`;
+  } else if (esR1 && estado === 'ronda1') {
+    html += `<div class="lista-item-acciones"><button class="btn-primario btn-sm" onclick="festivalCerrarDuelos()">Cerrar duelos</button></div>`;
+  } else if (esR2 && estado === 'ronda2') {
+    html += `<div class="lista-item-acciones"><button class="btn-primario btn-sm" onclick="festivalCerrarFinal()">Cerrar final y definir campeón</button></div>`;
+  } else if (esR2 && estado === 'finalizado' && r.campeon) {
+    html += `<p class="lista-item-meta" style="margin:0;">🏆 Campeón: <strong>${_festivalNombreGenero(r.campeon)}</strong></p>`;
+  }
+  return html;
+}
+
+// Texto con el puntaje actual de cada género (para mostrar en la confirmación)
+function _festivalTextoPuntajes(resumen, ronda) {
+  const campo = ronda === 1 ? 'puntosRonda1' : 'puntosRonda2';
+  return (resumen?.generos || [])
+    .filter(g => ronda === 1 || (resumen.ganadoresRonda1 || []).includes(g.genero))
+    .map(g => `${_festivalNombreGenero(g.genero)}: ${g[campo]} pts`)
+    .join('\n');
+}
+
+async function _festivalResumenFresco() {
+  const { data, error } = await supabaseClient.rpc('festival_admin_resumen', { p_edicion: _FESTIVAL_EDICION_ID });
+  if (error) { mostrarToast(error.message, 'error'); return null; }
+  return data;
+}
+
+async function festivalRepartirYLanzar() {
+  if (!confirm('¿Repartir los equipos y lanzar el Festival de Géneros?\n\nSe reparten todas las cuentas activas entre los 6 géneros y se activa el evento de los duelos.')) return;
+
+  const rep = await supabaseClient.rpc('festival_repartir_equipos', { p_edicion: _FESTIVAL_EDICION_ID });
+  if (rep.error) { mostrarToast(rep.error.message, 'error'); return; }
+
+  const lan = await supabaseClient.rpc('festival_lanzar', { p_edicion: _FESTIVAL_EDICION_ID });
+  if (lan.error) { mostrarToast(lan.error.message, 'error'); await refrescarListaEventos(); return; }
+
+  mostrarToast('Festival lanzado. Duelos en curso.', 'ok');
+  await refrescarListaEventos();
+}
+
+async function festivalCerrarDuelos() {
+  const antes = await _festivalResumenFresco();
+  const puntajes = antes ? '\n\nPuntaje actual (antes del barrido final):\n' + _festivalTextoPuntajes(antes, 1) : '';
+  if (!confirm('¿Cerrar los duelos?\n\nSe recalculan los puntos de todos los miembros, se definen los 3 ganadores y se activa la final.' + puntajes)) return;
+
+  const { data, error } = await supabaseClient.rpc('festival_cerrar_ronda1', { p_edicion: _FESTIVAL_EDICION_ID });
+  if (error) { mostrarToast(error.message, 'error'); return; }
+
+  const nombres = (Array.isArray(data) ? data : []).map(_festivalNombreGenero).join(', ');
+  mostrarToast('Duelos cerrados. Pasan a la final: ' + nombres, 'ok');
+  await refrescarListaEventos();
+}
+
+async function festivalCerrarFinal() {
+  const antes = await _festivalResumenFresco();
+  const puntajes = antes ? '\n\nPuntaje actual (antes del barrido final):\n' + _festivalTextoPuntajes(antes, 2) : '';
+  if (!confirm('¿Cerrar la final y definir el campeón?\n\nSe recalculan los puntos de todos los miembros y se define el campeón.' + puntajes)) return;
+
+  const { data, error } = await supabaseClient.rpc('festival_cerrar_ronda2', { p_edicion: _FESTIVAL_EDICION_ID });
+  if (error) { mostrarToast(error.message, 'error'); return; }
+
+  mostrarToast('🏆 Campeón: ' + _festivalNombreGenero(data), 'ok');
   await refrescarListaEventos();
 }
