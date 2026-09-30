@@ -189,7 +189,7 @@ function _mostrarModalInicioEvento(evento) {
   }
 
   contenedor.innerHTML = `
-    <img src="${evento.imagenes.iconoBeso}" alt="" class="evento-modal-decoracion" />
+    ${evento.imagenes?.iconoBeso ? `<img src="${evento.imagenes.iconoBeso}" alt="" class="evento-modal-decoracion" />` : ''}
     <h2 class="evento-modal-titulo">${evento.nombre}</h2>
     <p class="evento-modal-texto">${_escaparHtml(evento.textoModal).replace(/\n/g, '<br>')}</p>
   `;
@@ -230,6 +230,7 @@ function _iniciarAnimacionBesosCayendo(evento) {
   _detenerAnimacionBesosCayendo();
 
   _intervaloBesosCayendo = setInterval(() => {
+    if (!evento.imagenes?.iconoBeso) return;
     const beso = document.createElement('img');
     beso.src = evento.imagenes.iconoBeso;
     beso.className = 'evento-beso-cayendo';
@@ -353,6 +354,17 @@ async function renderPaginaEvento(datosFrescos) {
 
   const evento = _EventosState.eventoActivo;
   const progreso = _EventosState.progreso;
+
+  // FESTIVAL DE GÉNEROS (temporal): layout propio solo para este evento.
+  // Borrar este bloque (y EVENTOS/festival-generos.js) al terminar el festival.
+  if (window.FestivalGeneros && FestivalGeneros.aplica(evento)) {
+    await FestivalGeneros.renderizar(contenedor, evento, progreso, {
+      retosHtml: _renderMapaOListaRetos(evento, progreso),
+      tiempoHtml: _renderTiempoRestanteEvento()
+    });
+    _actualizarWidgetFlotanteEvento();
+    return;
+  }
 
   const tieneMapaVisual = !!(evento.tema?.mapa?.fondo && Array.isArray(evento.tema?.mapa?.nodos) && evento.tema.mapa.nodos.length > 0);
   const bloqueInsignia = `
@@ -754,7 +766,7 @@ function _mostrarAnimacionEventoCompletado(evento, progreso) {
   }
 
   contenedor.innerHTML = `
-    <img src="${evento.imagenes.insigniaColor}" alt="Insignia" class="evento-insignia-grande" />
+    ${evento.imagenes?.insigniaColor ? `<img src="${evento.imagenes.insigniaColor}" alt="Insignia" class="evento-insignia-grande" />` : ''}
     <h2>¡Completaste ${evento.nombre}!</h2>
     <p>Ganaste la insignia exclusiva y +${progreso.puntosAcumulados} puntos.</p>
     <button id="btn-cerrar-evento-completado" class="btn btn-primario">¡Genial!</button>
