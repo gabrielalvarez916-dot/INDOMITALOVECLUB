@@ -193,7 +193,6 @@ function _vendLinkRed(valor, base) {
 // Redes y datos de contacto del autor (solo clientes activos).
 function _vendRedes(c) {
   const redes = [
-    ['Instagram', _vendLinkRed(c.instagram, 'https://www.instagram.com/')],
     ['TikTok', _vendLinkRed(c.tiktok, 'https://www.tiktok.com/@')],
     ['YouTube', _vendLinkRed(c.youtube, 'https://www.youtube.com/@')],
     ['Goodreads', _vendLinkRed(c.goodreads, null)],
@@ -204,6 +203,22 @@ function _vendRedes(c) {
   return `<br><span class="vend-mini">${links}</span>`;
 }
 
+// Columna Instagram: link bien visible al perfil del autor.
+function _vendCeldaInstagram(c) {
+  const url = _vendLinkRed(c.instagram, 'https://www.instagram.com/');
+  if (!url) return '<span class="vend-mini">—</span>';
+  const usuario = String(c.instagram).trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '').replace(/\?.*$/, '');
+  return `<a href="${_vendEsc(url)}" target="_blank" rel="noopener noreferrer" style="font-weight:600;">@${_vendEsc(usuario || 'instagram')}</a>`;
+}
+
+// Etiqueta: Activo (tiene o tuvo campaña) / Nuevo (nunca creó una).
+function _vendEtiqueta(c) {
+  if (c.estado !== 'activo') return '<span class="badge badge-cancelada">Inactivo</span>';
+  return c.tiene_campana
+    ? '<span class="badge badge-aprobada">Activo</span>'
+    : '<span class="badge badge-pendiente">Nuevo</span>';
+}
+
 function _vendHtmlClientes(clientes) {
   const activos = clientes.filter(c => c.estado === 'activo');
   const inactivos = clientes.filter(c => c.estado !== 'activo');
@@ -211,18 +226,19 @@ function _vendHtmlClientes(clientes) {
   const fila = (c) => `
     <tr>
       <td>${_vendEsc(c.autor || c.alias || '—')}${c.email ? `<br><span class="vend-mini">${_vendEsc(c.email)}</span>` : ''}${_vendRedes(c)}</td>
+      <td>${c.estado === 'activo' ? _vendCeldaInstagram(c) : '<span class="vend-mini">—</span>'}</td>
       <td>${_vendEsc(c.libros || '—')}</td>
       <td>${_vendFecha(c.fecha_asignacion)}</td>
       <td>${c.estado === 'activo' ? _vendFecha(c.fecha_vencimiento) : `Traspasado el ${_vendFecha(c.fecha_traspaso)}`}</td>
       <td>${c.compras || 0}${c.compras ? `<br><span class="vend-mini">${_vendEsc(_vendMontos(c.montos))}</span>` : ''}</td>
-      <td><span class="badge ${c.estado === 'activo' ? 'badge-aprobada' : 'badge-cancelada'}">${c.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
+      <td>${_vendEtiqueta(c)}</td>
     </tr>`;
 
   const tabla = (lista) => `
     <div class="vend-tabla-scroll">
       <table class="admin-tabla">
         <thead><tr>
-          <th>Autor</th><th>Libro</th><th>Asignación</th><th>Vencimiento</th><th>Total comprado</th><th>Estado</th>
+          <th>Autor</th><th>Instagram</th><th>Libro</th><th>Asignación</th><th>Vencimiento</th><th>Total comprado</th><th>Estado</th>
         </tr></thead>
         <tbody>${lista.map(fila).join('')}</tbody>
       </table>
