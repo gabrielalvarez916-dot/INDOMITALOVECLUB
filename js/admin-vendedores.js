@@ -371,6 +371,7 @@ async function cargarClientesVendedoresAdmin() {
 
   const lista = historial || [];
   const clientes = await _adminVendNombresClientes(lista.map(h => h.id_cliente));
+  _adminVendHistorialInicial = { lista, clientes };
   const habilitados = _adminVendLista.filter(v => v.estado === 'habilitado');
   const nombreVend = (id) => id
     ? _vendEsc(_adminVendMapa[id]?.codigo || String(id).slice(0, 8))
@@ -397,24 +398,110 @@ async function cargarClientesVendedoresAdmin() {
       </form>
     </div>
 
-    <h3 class="vend-subtitulo">Historial de asignaciones (últimas ${lista.length})</h3>
-    ${lista.length ? `
-      <div class="vend-tabla-scroll">
-        <table class="admin-tabla">
-          <thead><tr><th>Fecha</th><th>Cliente</th><th>De</th><th>A</th><th>Motivo</th></tr></thead>
-          <tbody>
-            ${lista.map(h => `
-              <tr>
-                <td>${_vendFecha(h.creado_en)}</td>
-                <td>${_adminVendCelda(clientes, h.id_cliente)}</td>
-                <td>${nombreVend(h.id_vendedor_anterior)}</td>
-                <td>${nombreVend(h.id_vendedor_nuevo)}</td>
-                <td>${_vendEsc(h.motivo || '—')}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>` : '<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay asignaciones.</p></div>'}
+    <h3 class="vend-subtitulo">Historial de asignaciones</h3>
+    <input type="search" id="vend-buscador-historial" class="vend-copiar-input" style="width:100%;max-width:420px;margin-bottom:12px;"
+      placeholder="Buscar por nombre, mail o alias del cliente, o por código de vendedor…" oninput="buscarHistorialClientesAdmin(this.value)" />
+    <div id="vend-historial-listado">${_adminVendHtmlHistorial(lista, clientes, nombreVend, `Últimas ${lista.length} asignaciones`)}</div>
   `;
+}
+
+
+// ── Buscador del historial de asignaciones (pestaña Clientes) ──
+let _adminVendHistorialInicial = { lista: [], clientes: {} };
+let _adminVendBusquedaToken = 0;
+let _adminVendBusquedaTimer = null;
+
+function _adminVendNombreVendedor(id) {
+  return id ? _vendEsc(_adminVendMapa[id]?.codigo || String(id).slice(0, 8)) : '—';
+}
+
+function _adminVendHtmlHistorial(lista, clientes, nombreVend, titulo) {
+  if (!lista.length) {
+    return '<div class="estado-vacio"><p class="estado-vacio-texto">No encontramos asignaciones con esa búsqueda.</p></div>';
+  }
+  return `
+    <p class="form-info" style="margin:0 0 8px;">${titulo}</p>
+    <div class="vend-tabla-scroll">
+      <table class="admin-tabla">
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>De</th><th>A</th><th>Motivo</th></tr></thead>
+        <tbody>
+          ${lista.map(h => `
+            <tr>
+              <td>${_vendFecha(h.creado_en)}</td>
+              <td>${_adminVendCelda(clientes, h.id_cliente)}</td>
+              <td>${nombreVend(h.id_vendedor_anterior)}</td>
+              <td>${nombreVend(h.id_vendedor_nuevo)}</td>
+              <td>${_vendEsc(h.motivo || '—')}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// Con 400 ms de espera para no consultar en cada letra.
+function buscarHistorialClientesAdmin(valor) {
+  clearTimeout(_adminVendBusquedaTimer);
+  _adminVendBusquedaTimer = setTimeout(() => _adminVendEjecutarBusqueda(valor), 400);
+}
+
+async function _adminVendEjecutarBusqueda(valor) {
+  const cont = document.getElementById('vend-historial-listado');
+  if (!cont) return;
+  const token = ++_adminVendBusquedaToken;
+
+  // Se sacan los caracteres que rompen el filtro de la base
+  const t = String(valor || '').trim().replace(/[,()%*\\]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  if (t.length < 2) {
+    const { lista, clientes } = _adminVendHistorialInicial;
+    cont.innerHTML = _adminVendHtmlHistorial(lista, clientes, _adminVendNombreVendedor, `Últimas ${lista.length} asignaciones`);
+    return;
+  }
+
+  cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const tl = t.toLowerCase();
+  const idsVendedores = (_adminVendLista || [])
+    .filter(v => [v.codigo, v.nombre, v.email].some(x => String(x || '').toLowerCase().includes(tl)))
+    .map(v => v.id);
+
+  const { data: usuarios } = await supabaseClient
+    .from('usuarios')
+    .select('id')
+    .or(`email.ilike.%${t}%,alias.ilike.%${t}%,nombre.ilike.%${t}%,apellido.ilike.%${t}%`)
+    .limit(100);
+  if (token !== _adminVendBusquedaToken) return;
+  const idsClientes = (usuarios || []).map(u => u.id);
+
+  const filtros = [];
+  if (idsClientes.length) filtros.push(`id_cliente.in.(${idsClientes.join(',')})`);
+  if (idsVendedores.length) {
+    filtros.push(`id_vendedor_anterior.in.(${idsVendedores.join(',')})`);
+    filtros.push(`id_vendedor_nuevo.in.(${idsVendedores.join(',')})`);
+  }
+  if (!filtros.length) {
+    cont.innerHTML = _adminVendHtmlHistorial([], {}, _adminVendNombreVendedor, '');
+    return;
+  }
+
+  const { data: historial, error } = await supabaseClient
+    .from('vendedor_clientes_historial')
+    .select('id, id_cliente, id_vendedor_anterior, id_vendedor_nuevo, motivo, creado_en')
+    .or(filtros.join(','))
+    .order('creado_en', { ascending: false })
+    .limit(200);
+  if (token !== _adminVendBusquedaToken) return;
+  if (error) {
+    console.error('Error buscando en el historial de asignaciones:', error);
+    cont.innerHTML = '<p class="mensaje-error">No se pudo hacer la búsqueda.</p>';
+    return;
+  }
+
+  const lista = historial || [];
+  const clientes = await _adminVendNombresClientes(lista.map(h => h.id_cliente));
+  if (token !== _adminVendBusquedaToken) return;
+  cont.innerHTML = _adminVendHtmlHistorial(lista, clientes, _adminVendNombreVendedor,
+    `${lista.length} resultado${lista.length === 1 ? '' : 's'}${lista.length === 200 ? ' (se muestran los 200 más recientes)' : ''}`);
 }
 
 async function reasignarClienteAdmin(e) {
