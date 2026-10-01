@@ -6493,3 +6493,30 @@ img { max-width: 100%; display: block; }
 .vend-mini { font-size: 11px; color: var(--gris-suave); }
 .vend-historial { margin-top: 16px; }
 .vend-historial summary { cursor: pointer; font-weight: 700; color: var(--bordo); margin-bottom: 10px; }
+
+
+/* ── Panel vendedor: seguimiento de contacto y cabecera de clientes ── */
+.vend-clientes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.vend-seg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 190px;
+}
+.vend-seg-select {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--borde, #ddd);
+  background: var(--fondo-input, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+}
