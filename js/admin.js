@@ -683,6 +683,7 @@ async function cargarSuscripcionesAdmin() {
 
   const htmlCompras = `
     <h3 style="margin:24px 0 8px; font-size:15px;">Compras de campañas</h3>
+    ${compras.some(c => c.estado === 'pendiente') ? `<button class="btn-secundario btn-sm btn-peligro" style="margin-bottom:10px;" onclick="eliminarComprasPendientesAdmin(${JSON.stringify(compras.filter(c => c.estado === 'pendiente').map(c => c.idCompra)).replace(/"/g, '&quot;')})">Eliminar todas las pendientes (${compras.filter(c => c.estado === 'pendiente').length})</button>` : ''}
     ${errCompras || resCompras?.error ? '<p class="mensaje-error">Error al cargar las compras.</p>' : compras.length === 0 ? '<p class="form-info">Todavía no hay compras.</p>' : `
     <table class="admin-tabla">
       <thead>
@@ -694,6 +695,7 @@ async function cargarSuscripcionesAdmin() {
           <th>Estado</th>
           <th>Monto</th>
           <th>Proveedor</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -757,8 +759,31 @@ function construirFilaCompraCampanaAdmin(c) {
       <td>${estadoBadge}</td>
       <td>${monto}</td>
       <td style="font-size:12px;">${proveedor}</td>
+      <td>${c.estado === 'pendiente' ? `<button class="btn-secundario btn-sm btn-peligro" onclick="eliminarComprasPendientesAdmin(['${c.idCompra}'])">Eliminar</button>` : ''}</td>
     </tr>
   `;
+}
+
+/**
+ * Elimina compras de campañas que siguen pendientes (nunca pagadas).
+ * Las aprobadas o rechazadas no se pueden borrar desde acá.
+ *
+ * @param {string[]} ids — ids de las compras a eliminar
+ */
+async function eliminarComprasPendientesAdmin(ids) {
+  if (!ids || ids.length === 0) return;
+  const texto = ids.length === 1
+    ? '¿Eliminar esta compra pendiente? No se puede deshacer.'
+    : `¿Eliminar ${ids.length} compras pendientes? No se puede deshacer.`;
+  if (!confirm(texto)) return;
+
+  const { data, error } = await supabaseClient.rpc('admin_eliminar_compras_pendientes', { p_ids: ids });
+  if (error || !data || data.error) {
+    mostrarToast(data?.error || error?.message || 'No se pudo eliminar.', 'error');
+    return;
+  }
+  mostrarToast(data.eliminadas === 1 ? 'Compra eliminada.' : `${data.eliminadas} compras eliminadas.`, 'ok');
+  await cargarSuscripcionesAdmin();
 }
 
 /**
