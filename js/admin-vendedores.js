@@ -77,6 +77,7 @@ async function cargarVendedoresListaAdmin() {
                 <td>${_vendFecha(v.creado_en)}</td>
                 <td><span class="badge ${v.estado === 'habilitado' ? 'badge-aprobada' : 'badge-cancelada'}">${v.estado === 'habilitado' ? 'Habilitado' : 'Suspendido'}</span></td>
                 <td>
+                  <button class="btn-secundario btn-sm" onclick="editarPaypalVendedorAdmin('${v.id}')">Editar PayPal</button>
                   <button class="btn-secundario btn-sm" onclick="suspenderVendedorAdmin('${v.id}', ${v.estado === 'habilitado'})">
                     ${v.estado === 'habilitado' ? 'Suspender' : 'Habilitar'}
                   </button>
@@ -139,6 +140,21 @@ async function crearVendedorAdmin(e) {
   mostrarToast(data?.estado === 'activo'
     ? `Vendedor activado. Código: ${data.codigo}`
     : `Vendedor pendiente. Se activa cuando ingrese con ese mail. Código: ${data?.codigo}`, 'ok');
+  await cargarVendedoresListaAdmin();
+}
+
+async function editarPaypalVendedorAdmin(id) {
+  const v = _adminVendMapa[id];
+  const nombre = v?.nombre || v?.email || 'este vendedor';
+  const valor = prompt(`Mail de PayPal de ${nombre}.\nDejalo vacío para borrarlo.`, v?.email_paypal || '');
+  if (valor === null) return;   // canceló
+
+  const { data, error } = await supabaseClient.rpc('admin_editar_paypal_vendedor', { p_id: id, p_email_paypal: valor });
+  if (error || !data || data.error) {
+    mostrarToast(data?.error || error?.message || 'No se pudo guardar el mail de PayPal.', 'error');
+    return;
+  }
+  mostrarToast(data.email_paypal ? 'Mail de PayPal guardado.' : 'Mail de PayPal borrado.', 'ok');
   await cargarVendedoresListaAdmin();
 }
 
