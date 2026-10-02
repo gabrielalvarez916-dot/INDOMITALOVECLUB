@@ -422,6 +422,7 @@ function mostrarErrorLogin(mensaje) {
   _toggleElemento('login-cargando', false);
   _toggleElemento('login-paso1', true);
   _toggleElemento('login-paso2', false);
+  _toggleElemento('login-vendedor', false);
   _mostrarMensajeError('login-error', mensaje);
   _toggleElemento('login-error', true);
 }
@@ -429,6 +430,7 @@ function mostrarErrorLogin(mensaje) {
 function resetearLogin() {
   _toggleElemento('login-paso1', true);
   _toggleElemento('login-paso2', false);
+  _toggleElemento('login-vendedor', false);
   _toggleElemento('login-cargando', false);
   _ocultarMensajes('login-error');
   _tokenGooglePendiente = null;
@@ -436,6 +438,132 @@ function resetearLogin() {
   _nombreGooglePendiente = null;
   _apellidoGooglePendiente = null;
 }
+
+
+// ────────────────────────────────────────────────────────────
+// INGRESO SOLO PARA VENDEDORES (mail + contraseña)
+// Para vendedores que no pueden usar Google (ej: cuentas Yahoo).
+// Solo funciona si el admin ya cargó el mail como vendedor
+// (vendedores_pendientes) o si el usuario ya es vendedor.
+// ────────────────────────────────────────────────────────────
+
+let _vendModoCrear = false;
+
+function mostrarLoginVendedor() {
+  _ocultarMensajes('login-error');
+  _toggleElemento('login-paso1', false);
+  _toggleElemento('login-paso2', false);
+  _toggleElemento('login-vendedor', true);
+}
+
+function alternarCrearCuentaVendedor() {
+  _vendModoCrear = !_vendModoCrear;
+  _toggleElemento('vend-login-extra', _vendModoCrear);
+  const btn = document.getElementById('vend-login-btn');
+  const tog = document.getElementById('vend-login-toggle');
+  const pass = document.getElementById('vend-login-pass');
+  if (btn) btn.textContent = _vendModoCrear ? 'Crear mi cuenta' : 'Ingresar';
+  if (tog) tog.textContent = _vendModoCrear ? 'Ya tengo cuenta: ingresar' : 'Es mi primera vez: crear mi cuenta';
+  if (pass) pass.setAttribute('autocomplete', _vendModoCrear ? 'new-password' : 'current-password');
+  _ocultarMensajes('login-error');
+}
+
+function _errorVendedor(msg) {
+  _toggleElemento('login-cargando', false);
+  _toggleElemento('login-vendedor', true);
+  _mostrarMensajeError('login-error', msg);
+  _toggleElemento('login-error', true);
+}
+
+async function enviarLoginVendedor() {
+  const email = (document.getElementById('vend-login-email')?.value || '').trim().toLowerCase();
+  const pass = document.getElementById('vend-login-pass')?.value || '';
+  const nombre = (document.getElementById('vend-login-nombre')?.value || '').trim();
+  const apellido = (document.getElementById('vend-login-apellido')?.value || '').trim();
+
+  _ocultarMensajes('login-error');
+  if (!email || !pass) { _errorVendedor('Completá el mail y la contraseña.'); return; }
+  if (_vendModoCrear) {
+    if (pass.length < 8) { _errorVendedor('La contraseña tiene que tener al menos 8 caracteres.'); return; }
+    if (!nombre || !apellido) { _errorVendedor('Nombre y apellido son obligatorios.'); return; }
+  }
+
+  _toggleElemento('login-vendedor', false);
+  _toggleElemento('login-cargando', true);
+
+  let sesion = null;
+
+  if (_vendModoCrear) {
+    const { data, error } = await supabaseClient.auth.signUp({
+      email, password: pass,
+      options: { data: { nombre, apellido }, emailRedirectTo: window.location.origin + window.location.pathname }
+    });
+    if (error) { _errorVendedor('No se pudo crear la cuenta: ' + error.message); return; }
+    sesion = data?.session || null;
+    if (!sesion) {
+      _toggleElemento('login-cargando', false);
+      _toggleElemento('login-vendedor', true);
+      mostrarToast('Te mandamos un mail para confirmar tu cuenta. Confirmalo y después ingresá con tu contraseña.', 'ok');
+      alternarCrearCuentaVendedor();
+      return;
+    }
+  } else {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      const msg = /confirm/i.test(error.message)
+        ? 'Tenés que confirmar tu mail primero. Revisá tu bandeja (y el spam).'
+        : 'Mail o contraseña incorrectos.';
+      _errorVendedor(msg);
+      return;
+    }
+    sesion = data.session;
+  }
+
+  // Activa la cuenta como vendedor (solo si el admin ya habilitó ese mail)
+  const { error: errAct } = await supabaseClient.rpc('vendedor_activar_cuenta', {
+    p_nombre: nombre || null, p_apellido: apellido || null
+  });
+  if (errAct) {
+    await supabaseClient.auth.signOut();
+    _errorVendedor(/habilitado/i.test(errAct.message)
+      ? 'Este mail no está habilitado como vendedor. Pedile a Indómita que lo habilite.'
+      : 'No se pudo activar tu cuenta: ' + errAct.message);
+    return;
+  }
+
+  const { data: perfil, error: errPerfil } = await supabaseClient
+    .from('usuarios').select('*').eq('id', sesion.user.id).maybeSingle();
+  if (errPerfil || !perfil || perfil.rol !== 'vendedor') {
+    await supabaseClient.auth.signOut();
+    _errorVendedor('No se pudo cargar tu perfil de vendedor.');
+    return;
+  }
+
+  await completarLogin(perfil);
+}
+
+async function olvideContrasenaVendedor() {
+  const email = (document.getElementById('vend-login-email')?.value || '').trim().toLowerCase();
+  if (!email) { _errorVendedor('Escribí tu mail arriba y volvé a tocar "Olvidé mi contraseña".'); return; }
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  if (error) { _errorVendedor('No se pudo enviar el mail: ' + error.message); return; }
+  mostrarToast('Si el mail existe, te mandamos un link para cambiar la contraseña.', 'ok');
+}
+
+
+// Si el vendedor llega desde el link de "Olvidé mi contraseña", le pedimos la nueva.
+supabaseClient.auth.onAuthStateChange(async (evento) => {
+  if (evento !== 'PASSWORD_RECOVERY') return;
+  const nueva = window.prompt('Elegí tu nueva contraseña (mínimo 8 caracteres):');
+  if (!nueva || nueva.length < 8) {
+    mostrarToast('La contraseña no se cambió. Pedí el link de nuevo.', 'advertencia');
+    return;
+  }
+  const { error } = await supabaseClient.auth.updateUser({ password: nueva });
+  mostrarToast(error ? 'No se pudo cambiar la contraseña: ' + error.message : 'Contraseña actualizada.', error ? 'advertencia' : 'ok');
+});
 
 function decodificarJWT(token) {
   try {

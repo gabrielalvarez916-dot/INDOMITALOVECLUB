@@ -149,6 +149,36 @@
           </button>
           <div id="google-btn-container" style="display:none;"></div>
           <p class="login-info">Al ingresar aceptás los <a href="/terminos" target="_blank" rel="noopener">términos de uso</a> y la <a href="/privacidad" target="_blank" rel="noopener">política de privacidad</a> de la plataforma.</p>
+          <p class="login-info" style="margin-top:12px;"><a href="#" onclick="mostrarLoginVendedor(); return false;">Soy vendedor/a: ingresar con mail y contraseña</a></p>
+        </div>
+
+        <!-- Ingreso solo para vendedores (mail + contraseña) -->
+        <div id="login-vendedor" style="display:none;">
+          <p class="login-pregunta">Ingreso para vendedores</p>
+          <div class="form-grupo" style="margin-bottom:12px;">
+            <label class="form-label">Mail</label>
+            <input type="email" id="vend-login-email" class="form-input" autocomplete="email" />
+          </div>
+          <div class="form-grupo" style="margin-bottom:12px;">
+            <label class="form-label">Contraseña</label>
+            <input type="password" id="vend-login-pass" class="form-input" autocomplete="current-password" />
+          </div>
+          <div id="vend-login-extra" style="display:none;">
+            <div class="form-fila" style="margin-bottom:12px;">
+              <div class="form-grupo">
+                <label class="form-label">Nombre *</label>
+                <input type="text" id="vend-login-nombre" class="form-input" />
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Apellido *</label>
+                <input type="text" id="vend-login-apellido" class="form-input" />
+              </div>
+            </div>
+          </div>
+          <button class="btn-google-nuevo" id="vend-login-btn" onclick="enviarLoginVendedor()">Ingresar</button>
+          <p class="login-info" style="margin-top:12px;"><a href="#" id="vend-login-toggle" onclick="alternarCrearCuentaVendedor(); return false;">Es mi primera vez: crear mi cuenta</a></p>
+          <p class="login-info"><a href="#" onclick="olvideContrasenaVendedor(); return false;">Olvidé mi contraseña</a></p>
+          <p class="login-info"><a href="#" onclick="resetearLogin(); return false;">← Volver</a></p>
         </div>
 
         <!-- Paso 2: selección de rol -->
