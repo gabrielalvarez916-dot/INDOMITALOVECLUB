@@ -225,6 +225,7 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif, sufijo = '') {
     const gamifCont = document.getElementById('pp-autor-gamificacion' + sufijo);
     if (gamifCont) {
       gamifCont.innerHTML = _renderGamificacionAutor(gamif);
+      if (typeof decorarAyudas === 'function') decorarAyudas(gamifCont);
       gamifCont.parentElement.style.display = '';
     }
   }
@@ -314,6 +315,7 @@ function _pintarPerfilEditorial(perfil, libros, campañas, gamif, sufijo = '') {
     const gamifInner = document.getElementById('pp-editorial-gamificacion' + sufijo);
     if (gamifCont && gamifInner) {
       gamifInner.innerHTML = _renderGamificacionAutor(gamif);
+      if (typeof decorarAyudas === 'function') decorarAyudas(gamifInner);
       gamifCont.style.display = '';
     }
   }
@@ -564,7 +566,7 @@ function _renderGamificacionAutor(gamif) {
     </div>
 
     <div class="pp-bloque">
-      <p class="pp-bloque-titulo">Insignias</p>
+      <p class="pp-bloque-titulo" data-ayuda="perf_insignias">Insignias</p>
       ${insigniasHtml}
     </div>
   `;

@@ -246,6 +246,27 @@ const AYUDAS_PERFIL = {
     largo: 'Es el perfil público desde el que dejás tus reseñas en Amazon. Si no tenés uno, dejalo vacío y cargá otro link.'
 },
 
+  /* ── Perfil: insignias, géneros y tropes ── */
+  perf_insignias: {
+    corto: 'Los logros que vas desbloqueando en Indómita.',
+    titulo: '¿Qué tipos de insignias hay?',
+    largo: '<ul>' +
+      '<li><strong>Hitos:</strong> se ganan al llegar a ciertas cantidades, por ejemplo de reseñas entregadas o de campañas.</li>' +
+      '<li><strong>Nivel:</strong> muestran en qué etapa de tu recorrido estás en la plataforma.</li>' +
+      '<li><strong>Ranking:</strong> premian tu desempeño en los rankings.</li>' +
+      '<li><strong>Especiales:</strong> son las que se consiguen en eventos y juegos puntuales.</li></ul>'
+  },
+  perf_generos: {
+    corto: 'Cargalos: ayudan a encontrar libros afines a tus gustos.',
+    titulo: '¿Por qué importa cargar mis géneros?',
+    largo: 'La plataforma usa tus géneros para mostrarte campañas y libros que van con vos. Si no los cargás, tiene mucho menos para recomendarte. Podés cambiarlos cuando quieras desde Editar perfil.'
+  },
+  perf_tropes: {
+    corto: 'Cargalos: ayudan a encontrar libros afines a tus gustos.',
+    titulo: '¿Por qué importa cargar mis tropes?',
+    largo: 'Los tropes son lo que más pesa para calcular qué campañas coinciden con vos. Cuantos más acertados cargues, mejores matches y libros más afines te aparecen. Podés cambiarlos cuando quieras desde Editar perfil.'
+  },
+
   /* ── Editar perfil (autor y reseñador) ── */
   edit_encabezado: {
     texto: 'Así te ve la comunidad en Indómita. Mantenelo al día: es lo primero que miran los autores y las reseñadoras cuando entran a tu perfil. 💛'
@@ -734,3 +755,10 @@ function prepararPlataformasResena(plataformasPedidas) {
     }
   }
 }
+
+/* Perfil: las secciones estáticas (reseñador propio y público) se decoran una vez al cargar la página. */
+(function decorarAyudasPerfilEstatico() {
+  const correr = () => ['pp-bloque-reseñador-propio', 'pp-bloque-reseñador'].forEach(id => decorarAyudas(id));
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', correr);
+  else correr();
+})();
