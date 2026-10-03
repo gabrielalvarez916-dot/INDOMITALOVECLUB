@@ -1769,25 +1769,26 @@
       <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
     </div>
     <div class="modal-body">
+      <div class="ayuda-encabezado"><p class="ayuda-encabezado-texto">Cargá tu libro una sola vez y listo: cuando crees una campaña, vas a poder elegirlo y se completan los datos solos. Solo el título y el género son obligatorios, lo demás lo podés completar al crear la campaña. 💛</p></div>
       <form id="form-nuevo-libro" onsubmit="agregarLibro(event)">
         <div class="form-grupo">
-          <label class="form-label">Título *</label>
+          <label class="form-label" data-ayuda="lib_titulo">Título *</label>
           <input type="text" id="libro-titulo" class="form-input" required />
         </div>
         <div class="form-grupo">
-          <label class="form-label">Sinopsis breve</label>
+          <label class="form-label" data-ayuda="lib_sinopsis">Sinopsis breve</label>
           <textarea id="libro-sinopsis" class="form-textarea" rows="3"></textarea>
         </div>
          <div class="form-grupo">
-          <label class="form-label">Género y tropes</label>
+          <label class="form-label" data-ayuda="lib_generoTropes">Género * y tropes</label>
           <div id="libro-tropes-contenedor"></div>
         </div>
         <div class="form-grupo">
-          <label class="form-label">Portada</label>
+          <label class="form-label" data-ayuda="lib_portada">Portada</label>
           <input type="file" id="libro-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
         </div>
         <div class="form-grupo">
-          <label class="form-label">Link Amazon</label>
+          <label class="form-label" data-ayuda="lib_amazon">Link Amazon</label>
           <input type="url" id="libro-amazon" class="form-input" placeholder="https://amazon.com/..." />
         </div>
         <div id="libro-error" class="mensaje-error" style="display:none;"></div>
@@ -2314,7 +2315,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=4"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=4"></script>
+<script src="js/ayudas.js?v=5"></script>
 <script src="js/resenador.js?v=5"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/vendedor.js"></script>

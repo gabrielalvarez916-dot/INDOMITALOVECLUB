@@ -408,6 +408,7 @@ function mostrarModal(idModal) {
     if (typeof renderizarSelectorTropes === 'function') {
       renderizarSelectorTropes('libro-tropes-contenedor', 'libro');
     }
+    if (typeof decorarAyudas === 'function') decorarAyudas('modal-nuevo-libro');
   }
  if (idModal === 'modal-nueva-campana') {
     if (typeof inicializarModalNuevaCampana === 'function') {

@@ -291,6 +291,44 @@ const AYUDAS_PERFIL = {
 };
 
 /* ════════════════════════════════════════════════════════════
+   Agregar libro a la biblioteca (modal-nuevo-libro)
+   Mismos textos en mobile: src/lib/ayudasLibro.js
+   ════════════════════════════════════════════════════════════ */
+
+const AYUDAS_LIBRO = {
+  lib_encabezado: {
+    texto: 'Cargá tu libro una sola vez y listo: cuando crees una campaña, vas a poder elegirlo y se completan los datos solos. Solo el título y el género son obligatorios, lo demás lo podés completar al crear la campaña. 💛'
+  },
+  lib_titulo: {
+    corto: 'Obligatorio. Escribilo tal cual figura en tu libro.',
+    titulo: '¿Cómo lo escribo?',
+    largo: 'Es el título que van a ver las reseñadoras. Revisá bien cómo lo escribís antes de guardar.'
+  },
+  lib_sinopsis: {
+    corto: 'Opcional. Es la contratapa de tu libro.',
+    titulo: '¿Qué pongo?',
+    largo: 'Contá de qué trata sin spoilear el final. Es lo que van a leer las reseñadoras antes de postularse cuando uses este libro en una campaña. Podés dejarla vacía y completarla al crear la campaña.'
+  },
+  lib_generoTropes: {
+    corto: 'Elegí el género (obligatorio) y sumá los tropes que tenga tu libro.',
+    titulo: '¿Cómo elijo género y tropes?',
+    largo: '1. Elegí el <strong>género</strong>. Según cuál sea, vas a poder elegir uno o más <strong>subgéneros</strong>.<br>' +
+      '2. Buscá y sumá los <strong>tropes</strong> de tu libro. Acá son opcionales, pero para crear una campaña vas a necesitar al menos uno.<br><br>' +
+      'Los tropes sirven para que la plataforma te recomiende a las reseñadoras a las que les gusta ese tipo de historias. Elegí los que realmente tiene tu libro. Si falta alguno, podés proponerlo y el equipo lo revisa.'
+  },
+  lib_portada: {
+    corto: 'Opcional. Imagen JPG, PNG o WebP.',
+    titulo: '¿Qué portada subo?',
+    largo: 'Es la imagen que van a ver las reseñadoras. Usá la portada final de tu libro, de frente y sin bordes. Si todavía no tenés una, podés agregarla al crear la campaña.'
+  },
+  lib_amazon: {
+    corto: 'Opcional. Pegá el link a la página del libro.',
+    titulo: '¿Qué link va acá?',
+    largo: 'Es la dirección de la página de tu libro en Amazon, no tu perfil de autor. Si todavía no está publicado, dejalo vacío.'
+  }
+};
+
+/* ════════════════════════════════════════════════════════════
    Motor: decora cualquier elemento con data-ayuda="clave"
    - agrega la línea corta debajo de la etiqueta
    - agrega el botón "?" que abre/cierra un panel con el texto largo
@@ -318,7 +356,7 @@ function decorarAyudas(contenedor) {
 
   raiz.querySelectorAll('[data-ayuda]').forEach(etiqueta => {
     if (etiqueta.dataset.ayudaLista) return;
-    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda] || AYUDAS_PERFIL[etiqueta.dataset.ayuda];
+    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda] || AYUDAS_PERFIL[etiqueta.dataset.ayuda] || AYUDAS_LIBRO[etiqueta.dataset.ayuda];
     if (!def) return;
     etiqueta.dataset.ayudaLista = '1';
 
