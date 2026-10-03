@@ -2005,7 +2005,10 @@
   </div>
   <div class="modal-body">
 
+    <div class="ayuda-encabezado"><p class="ayuda-encabezado-texto">Así te ve la comunidad en Indómita. Mantenelo al día: es lo primero que miran los autores y las reseñadoras cuando entran a tu perfil. 💛</p></div>
+
     <div class="perfil-foto-container">
+      <label class="form-label" data-ayuda="edit_foto">Foto de perfil</label>
       <img id="perfil-foto" src="/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK" alt="Avatar de perfil" class="perfil-foto" />
       <div class="perfil-foto-acciones" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
         <button class="btn-secundario btn-sm" onclick="abrirSelectorAvatar()">Elegir avatar</button>
@@ -2018,17 +2021,17 @@
     <form id="form-perfil" class="form" onsubmit="guardarPerfil(event)">
 
       <div class="form-grupo">
-        <label class="form-label">Alias público</label>
+        <label class="form-label" data-ayuda="edit_alias">Alias público</label>
         <input type="text" id="perfil-alias" class="form-input" placeholder="Tu nombre en la comunidad" />
       </div>
 
       <div class="form-fila">
         <div class="form-grupo">
-          <label class="form-label">País</label>
+          <label class="form-label" data-ayuda="wiz_pais">País</label>
           <input type="text" id="perfil-pais" class="form-input" placeholder="Argentina" />
         </div>
         <div class="form-grupo">
-          <label class="form-label">Ciudad</label>
+          <label class="form-label" data-ayuda="wiz_ciudad">Ciudad</label>
           <input type="text" id="perfil-ciudad" class="form-input" placeholder="Buenos Aires" />
         </div>
       </div>
@@ -2043,13 +2046,13 @@
         <textarea id="perfil-descripcion" class="form-textarea" placeholder="Contanos quién sos como lect@r..." rows="3"></textarea>
       </div>
 <div class="form-grupo" id="grupo-generos-resenador" style="display:none;">
-        <label class="form-label">Géneros favoritos</label>
+        <label class="form-label" data-ayuda="wiz_generos">Géneros favoritos</label>
         <div id="perfil-generos-checkboxes" class="tropes-checkboxes"></div>
         <div id="perfil-subgeneros-contenedor"></div>
       </div>
 
       <div class="form-grupo" id="grupo-tropes-perfil" style="display:none;">
-        <label class="form-label">Tropes favoritos</label>
+        <label class="form-label" data-ayuda="wiz_tropes">Tropes favoritos</label>
         <div id="perfil-tropes-contenedor"></div>
       </div>
 
@@ -2059,13 +2062,14 @@
       </div>
       
       <div class="form-separador">Redes sociales</div>
+      <p class="ayuda-corta">Todas son opcionales, sumá las que uses.</p>
 
       <div class="form-grupo">
-        <label class="form-label">Instagram</label>
+        <label class="form-label" data-ayuda="wiz_instagram">Instagram</label>
         <input type="url" id="perfil-instagram" class="form-input" placeholder="https://instagram.com/tu_usuario" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">TikTok</label>
+        <label class="form-label" data-ayuda="wiz_tiktok">TikTok</label>
         <input type="url" id="perfil-tiktok" class="form-input" placeholder="https://tiktok.com/@tu_usuario" />
       </div>
       <div class="form-grupo">
@@ -2073,19 +2077,19 @@
         <input type="url" id="perfil-amazon" class="form-input" placeholder="https://amazon.com/profile/..." />
       </div>
       <div class="form-grupo">
-        <label class="form-label">Goodreads</label>
+        <label class="form-label" data-ayuda="edit_goodreads">Goodreads</label>
         <input type="url" id="perfil-goodreads" class="form-input" placeholder="https://goodreads.com/tu_usuario" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">StoryGraph</label>
+        <label class="form-label" data-ayuda="edit_storygraph">StoryGraph</label>
         <input type="url" id="perfil-storygraph" class="form-input" placeholder="https://app.thestorygraph.com/profile/tu_usuario" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">YouTube</label>
+        <label class="form-label" data-ayuda="edit_youtube">YouTube</label>
         <input type="url" id="perfil-youtube" class="form-input" placeholder="https://youtube.com/@tu_canal" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">Blog / otro</label>
+        <label class="form-label" data-ayuda="edit_blog">Blog / otro</label>
         <input type="url" id="perfil-blog" class="form-input" placeholder="https://tublog.com" />
       </div>
 
@@ -2310,7 +2314,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=4"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=3"></script>
+<script src="js/ayudas.js?v=4"></script>
 <script src="js/resenador.js?v=5"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/vendedor.js"></script>

@@ -75,6 +75,7 @@ async function cargarFormularioEdicionPerfil() {
   ocultarMensajes('perfil-error', 'perfil-ok');
 
   ajustarFormularioPorRol(rol);
+  if (typeof decorarAyudasEditarPerfil === 'function') decorarAyudasEditarPerfil(rol);
 
   const { data: perfilRaw, error } = await supabaseClient
     .from('usuarios')
@@ -169,7 +170,12 @@ function ajustarFormularioPorRol(rol) {
   if (labelGeneros) labelGeneros.textContent = esEditorial ? 'Géneros que trabajamos' : 'Géneros favoritos';
 
  const labelDescripcion = document.getElementById('label-descripcion');
-  if (labelDescripcion) labelDescripcion.textContent = esEditorial ? 'Presentación' : 'Descripción lectora';
+  if (labelDescripcion) {
+    // Se cambia solo el texto (nodo de texto), así no se pierde el botón "?" de ayudas.js
+    const textoDescripcion = esEditorial ? 'Presentación' : 'Descripción lectora';
+    if (labelDescripcion.firstChild && labelDescripcion.firstChild.nodeType === 3) labelDescripcion.firstChild.nodeValue = textoDescripcion;
+    else labelDescripcion.textContent = textoDescripcion;
+  }
 
   const campoDescripcion = document.getElementById('perfil-descripcion');
   if (campoDescripcion) {

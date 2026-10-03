@@ -244,6 +244,49 @@ const AYUDAS_PERFIL = {
     corto: 'Link a tu perfil de reseñadora.',
     titulo: 'Tu perfil de Amazon',
     largo: 'Es el perfil público desde el que dejás tus reseñas en Amazon. Si no tenés uno, dejalo vacío y cargá otro link.'
+},
+
+  /* ── Editar perfil (autor y reseñador) ── */
+  edit_encabezado: {
+    texto: 'Así te ve la comunidad en Indómita. Mantenelo al día: es lo primero que miran los autores y las reseñadoras cuando entran a tu perfil. 💛'
+  },
+  edit_foto: {
+    corto: 'Elegí un avatar o subí tu propia foto.',
+    titulo: '¿Avatar o foto?',
+    largo: 'Podés usar uno de los avatares de Indómita o subir tu foto (JPG, PNG o WebP). Si elegís un avatar, se reemplaza la foto que tenías subida.'
+  },
+  edit_alias: {
+    corto: 'Tu nombre público en Indómita. Es obligatorio.',
+    titulo: '¿Qué pasa si lo cambio?',
+    largo: 'Es el nombre que se muestra en tu perfil, en tus reseñas y en tus campañas. Podés cambiarlo cuando quieras.'
+  },
+  edit_redes_intro: {
+    texto: 'Todas son opcionales, sumá las que uses.'
+  },
+  edit_goodreads: {
+    corto: 'Link a tu perfil de lector@.',
+    titulo: 'Tu perfil de Goodreads',
+    largo: 'Es tu perfil público de Goodreads. Si no tenés cuenta, dejalo vacío.'
+  },
+  edit_storygraph: {
+    corto: 'Link a tu perfil de StoryGraph.',
+    titulo: 'Tu perfil de StoryGraph',
+    largo: 'Es tu perfil público en The StoryGraph. Si no usás esa app, dejalo vacío.'
+  },
+  edit_youtube: {
+    corto: 'Link a tu canal.',
+    titulo: 'Tu canal de YouTube',
+    largo: 'Pegá el link de tu canal, tipo https://youtube.com/@tu_canal. Si no tenés, dejalo vacío.'
+  },
+  edit_blog: {
+    corto: 'Tu blog, Substack o cualquier otro link.',
+    titulo: 'Blog / otro',
+    largo: 'Sirve para cualquier otra página donde compartas lectura o escritura.'
+  },
+  edit_descripcion: {
+    corto: 'Contá quién sos como lector@. Aparece en tu perfil como "Sobre mí".',
+    titulo: '¿Qué pongo acá?',
+    largo: 'Es lo que leen los autores cuando te postulás a su campaña. Contá qué te gusta leer, si preferís romance oscuro o más suave, qué no leés, cómo hacés tus reseñas. Unas pocas líneas alcanzan.'
   }
 };
 
@@ -255,6 +298,18 @@ const AYUDAS_PERFIL = {
 
 function _ayudaEscapar(texto) {
   return String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Editar perfil: decora el modal según el rol (se llama cada vez que se abre). */
+function decorarAyudasEditarPerfil(rol) {
+  const raiz = document.getElementById('modal-editar-perfil');
+  if (!raiz || (rol !== 'autor' && rol !== 'reseñador')) return;
+  const etiquetaDe = id => raiz.querySelector('#' + id)?.closest('.form-grupo')?.querySelector('.form-label');
+  const amazon = etiquetaDe('perfil-amazon');
+  if (amazon && !amazon.dataset.ayuda) amazon.dataset.ayuda = rol === 'reseñador' ? 'wiz_amazon_resenador' : 'wiz_amazon_autor';
+  const desc = etiquetaDe('perfil-descripcion');
+  if (desc && rol === 'reseñador' && !desc.dataset.ayuda) desc.dataset.ayuda = 'edit_descripcion';
+  decorarAyudas(raiz);
 }
 
 function decorarAyudas(contenedor) {
