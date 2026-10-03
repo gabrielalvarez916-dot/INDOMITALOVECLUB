@@ -267,6 +267,12 @@ const AYUDAS_PERFIL = {
     largo: 'Los tropes son lo que más pesa para calcular qué campañas coinciden con vos. Cuantos más acertados cargues, mejores matches y libros más afines te aparecen. Podés cambiarlos cuando quieras desde Editar perfil.'
   },
 
+  perf_verif_seguidores: {
+    corto: 'Es el ✔ azul que ven los autores al lado de tu nombre.',
+    titulo: '¿Cómo funciona la verificación?',
+    largo: '<p><strong>Qué es</strong></p><p>El ✔ azul significa que verificamos que tenés más de 1.500 seguidores en Instagram o TikTok. Los autores lo ven al lado de tu nombre en las postulaciones, en tu perfil y en los rankings.</p><p><strong>Para qué sirve</strong></p><p>Con la verificación entrás a Reseñadoras Select: acceso priorizado, links de afiliados de Amazon y campañas exclusivas. Además, si todavía no tenés reseñas entregadas, tu confiabilidad arranca en amarillo en vez de gris.</p><p><strong>Qué tenés que mostrar</strong></p><ul><li>Cargá cuántos seguidores tenés hoy en Instagram, en TikTok o en las dos. Con una red alcanza.</li><li>Poné el número real: lo revisamos a mano mirando los links de tus redes, así que tenelos cargados en tu perfil y con la cuenta pública.</li><li>No hace falta subir capturas ni ningún archivo.</li></ul><p><strong>Cuánto tarda</strong></p><p>La revisión es manual. Normalmente se resuelve en menos de un día y casi siempre dentro de las 48 horas. Mientras tanto ves "en revisión" y no podés enviar otra solicitud.</p><p>Si no la aprobamos, te aparece el aviso y podés corregir los números y volver a enviar.</p>'
+  },
+
   /* ── Editar perfil (autor y reseñador) ── */
   edit_encabezado: {
     texto: 'Así te ve la comunidad en Indómita. Mantenelo al día: es lo primero que miran los autores y las reseñadoras cuando entran a tu perfil. 💛'
