@@ -113,6 +113,8 @@ async function cargarFeed() {
   if (soloParaVosWrapper) soloParaVosWrapper.style.display = 'none';
   cargarBannerPublicitario();
   cargarTickerEvento();
+  const btnPremiumFeed = document.getElementById('premium-boton-feed');
+  if (btnPremiumFeed) btnPremiumFeed.style.display = Sesion.rol() === 'reseñador' ? '' : 'none';
   poblarFiltroGenero();
   _cargarFavoritosDelUsuario();
 

@@ -120,7 +120,8 @@ const ResenadorPremium = (() => {
     if (footerEl) {
       footerEl.innerHTML = `
         <button type="button" class="btn-secundario" onclick="ResenadorPremium.rechazarPorAhora()">Ahora no</button>
-        <button type="button" class="btn-primario" id="btn-activar-premium" onclick="ResenadorPremium.activarParticipacion()">Sumarme por USD 1,50</button>
+        <button type="button" class="btn-primario" id="btn-activar-premium" onclick="ResenadorPremium.activarParticipacion('paypal')">Sumarme por USD 1,50 (PayPal)</button>
+        <button type="button" class="btn-primario" id="btn-activar-premium-mp" onclick="ResenadorPremium.activarParticipacion('mercadopago')">Sumarme con Mercado Pago</button>
         <p style="font-size:12px; color:var(--gris-suave); text-align:center; width:100%; margin-top:10px;">
           ¿No tenés PayPal? <a href="#" onclick="event.preventDefault(); ResenadorPremium.avisarSinPaypal();">Avisanos</a>.
         </p>
@@ -160,13 +161,13 @@ const ResenadorPremium = (() => {
     }
   }
 
-  async function activarParticipacion() {
+  async function activarParticipacion(proveedor = 'paypal') {
     if (_cargandoPago) return;
     _cargandoPago = true;
 
-    const boton = document.getElementById('btn-activar-premium');
+    const boton = document.getElementById(proveedor === 'mercadopago' ? 'btn-activar-premium-mp' : 'btn-activar-premium');
     const textoOriginal = boton?.textContent;
-    if (boton) { boton.disabled = true; boton.textContent = 'Redirigiendo a PayPal...'; }
+    if (boton) { boton.disabled = true; boton.textContent = proveedor === 'mercadopago' ? 'Redirigiendo a Mercado Pago...' : 'Redirigiendo a PayPal...'; }
 
     const errorEl = document.getElementById('premium-modal-error');
     if (errorEl) errorEl.style.display = 'none';
@@ -179,7 +180,7 @@ const ResenadorPremium = (() => {
       }
 
       const { data, error } = await supabaseClient.functions.invoke('crear-pago-resenador-premium', {
-        body: { proveedor: 'paypal' },
+        body: { proveedor },
         headers: { Authorization: `Bearer ${session.access_token}` }
       });
 
@@ -209,6 +210,27 @@ const ResenadorPremium = (() => {
     } finally {
       _cargandoPago = false;
       if (boton) { boton.disabled = false; boton.textContent = textoOriginal; }
+    }
+  }
+
+  /**
+   * Abre el modal desde el botón del feed (sin pasar por "Postularme").
+   * Si ya pagó este mes, avisa en vez de abrir el modal para no cobrar dos veces.
+   */
+  async function abrirDesdeBoton() {
+    try {
+      if (Sesion.rol() !== 'reseñador') return;
+      const estado = await _obtenerEstado();
+      if (!estado) return;
+      if (estado.pagado) {
+        mostrarToast('✨ Ya sos reseñador premium este mes.', 'ok');
+        return;
+      }
+      _idCampañaPendiente = null;
+      await _renderModal();
+      mostrarModal('modal-resenador-premium');
+    } catch (e) {
+      console.error('Error abriendo el modal de Reseñadores Premium:', e);
     }
   }
 
@@ -299,6 +321,7 @@ const ResenadorPremium = (() => {
 
   return {
     interceptarPostulacion,
+    abrirDesdeBoton,
     activarParticipacion,
     rechazarPorAhora,
     resetEstadoModal,
