@@ -520,6 +520,15 @@ function abrirCargarResena(idCampaña) {
     document.getElementById('resena-rating-' + cat).value = '';
   });
 
+  // Ayudas (textos cortos y "?") y plataformas pedidas por el autor
+  if (typeof decorarAyudas === 'function') {
+    decorarAyudas('modal-cargar-resena');
+    cerrarPanelesAyuda('modal-cargar-resena');
+  }
+  if (typeof prepararPlataformasResena === 'function') {
+    prepararPlataformasResena(item.campaña.plataformasResena);
+  }
+
   _mostrarPasoResena(1);
   mostrarModal('modal-cargar-resena');
 }
@@ -542,6 +551,7 @@ function _mostrarPasoResena(numero) {
   document.getElementById('resena-paso1').style.display = numero === 1 ? '' : 'none';
   document.getElementById('resena-paso2').style.display = numero === 2 ? '' : 'none';
   document.getElementById('resena-paso-indicador').textContent = `Paso ${numero}/2`;
+  if (typeof actualizarEncabezadoResena === 'function') actualizarEncabezadoResena(numero);
 }
 
 /**
@@ -551,7 +561,7 @@ function irAPasoResena2() {
   ocultarMensajes('paso1-error');
   const frase1 = document.getElementById('resena-frase-1')?.value?.trim();
   if (!frase1) {
-    mostrarMensajeError('paso1-error', 'La primera frase favorita es obligatoria.');
+    mostrarMensajeError('paso1-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinFrase : 'La primera frase favorita es obligatoria.'));
     return;
   }
   _mostrarPasoResena(2);
@@ -652,7 +662,7 @@ async function enviarResena(event) {
 
   const frase1 = document.getElementById('resena-frase-1')?.value?.trim();
   if (!frase1) {
-    mostrarMensajeError('resena-error', 'La primera frase favorita es obligatoria.');
+    mostrarMensajeError('resena-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinFrase : 'La primera frase favorita es obligatoria.'));
     _mostrarPasoResena(1);
     return;
   }
@@ -702,7 +712,7 @@ async function enviarResena(event) {
   }
 
   if (!datos.puntuacionLibro) {
-    mostrarMensajeError('resena-error', 'Tenés que calificar el libro con estrellas antes de entregar la reseña.');
+    mostrarMensajeError('resena-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinEstrellas : 'Tenés que calificar el libro con estrellas antes de entregar la reseña.'));
     _mostrarPasoResena(1);
     return;
   }

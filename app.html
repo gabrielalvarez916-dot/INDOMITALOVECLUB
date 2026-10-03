@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=5" />
+  <link rel="stylesheet" href="css/styles.css?v=6" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
@@ -1225,6 +1225,10 @@
     </div>
     <div class="modal-body">
       <p class="resena-paso-indicador" id="resena-paso-indicador">Paso 1/2</p>
+      <div class="ayuda-encabezado">
+        <p class="ayuda-encabezado-titulo" id="resena-encabezado-titulo">Tu reseña interna</p>
+        <p class="ayuda-encabezado-texto" id="resena-encabezado-texto">Contale a la plataforma qué te pareció el libro. Esto lo ve el autor dentro de Indómita, todavía no se publica en ningún lado. Te lleva un par de minutos. 💛</p>
+      </div>
 
       <form id="form-cargar-resena" onsubmit="enviarResena(event)">
         <input type="hidden" id="resena-id-campana" />
@@ -1247,7 +1251,7 @@
           </div>
 
           <div class="form-grupo">
-            <label class="form-label">¿Cuántas estrellas le das al libro?</label>
+            <label class="form-label" data-ayuda="estrellas">¿Cuántas estrellas le das al libro? *</label>
             <div class="estrellas-container" id="resena-estrellas-container">
               <button type="button" class="estrella" data-valor="1" onclick="seleccionarEstrellaLibro(1)">★</button>
               <button type="button" class="estrella" data-valor="2" onclick="seleccionarEstrellaLibro(2)">★</button>
@@ -1260,7 +1264,7 @@
           </div>
 
           <div class="form-grupo">
-            <label class="form-label">Moods</label>
+            <label class="form-label" data-ayuda="moods">Moods</label>
             <div class="mood-chips-container">
               <label class="mood-chip">
                 <input type="checkbox" name="resena-mood" value="divertido" onchange="this.closest('.mood-chip').classList.toggle('activo', this.checked)" />
@@ -1298,20 +1302,20 @@
           </div>
 
           <div class="form-grupo frase-favorita-grupo">
-            <label class="form-label">Frase favorita *</label>
+            <label class="form-label" data-ayuda="frase1">Frase favorita *</label>
             <input type="text" id="resena-frase-1" class="form-input" placeholder="La frase que más te marcó..." />
           </div>
           <div class="form-grupo frase-favorita-grupo">
-            <label class="form-label">Frase favorita 2 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <label class="form-label" data-ayuda="frase2">Frase favorita 2 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
             <input type="text" id="resena-frase-2" class="form-input" />
           </div>
           <div class="form-grupo frase-favorita-grupo">
-            <label class="form-label">Frase favorita 3 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
+            <label class="form-label" data-ayuda="frase3">Frase favorita 3 <span style="color:var(--gris-suave); font-weight:400;">(opcional)</span></label>
             <input type="text" id="resena-frase-3" class="form-input" />
           </div>
 
           <div class="form-grupo" style="margin-top:8px;">
-            <label class="form-label" style="margin-bottom:6px; display:block;">Extra ratings <span style="color:var(--gris-suave); font-weight:400;">(no afectan el ranking)</span></label>
+            <label class="form-label" data-ayuda="extra" style="margin-bottom:6px; display:block;">Extra ratings <span style="color:var(--gris-suave); font-weight:400;">(no afectan el ranking)</span></label>
 
             <div class="rating-decorativo-fila">
               <span class="rating-decorativo-label">Romance</span>
@@ -1408,37 +1412,45 @@
 
         <!-- ══════════ PASO 2/2 — RESEÑA PÚBLICA ══════════ -->
         <div id="resena-paso2" style="display:none;">
-          <p class="form-info">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
-          <div class="form-grupo">
-            <label class="form-label">Instagram</label>
+          <p class="form-info" id="resena-aviso-plataformas">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
+          <p class="form-info"><span class="form-label" data-ayuda="linkGeneral" style="display:inline;">¿Qué link tengo que pegar?</span></p>
+          <div id="resena-plataformas-principal"></div>
+          <details id="resena-otras-desplegable" class="resena-otras" style="display:none;">
+            <summary>Otras plataformas (opcional)</summary>
+            <div id="resena-plataformas-otras"></div>
+          </details>
+          <div id="resena-plataformas-origen" style="display:none;">
+          <div class="form-grupo" data-plataforma="Instagram">
+            <label class="form-label" data-ayuda="Instagram">Instagram</label>
             <input type="text" id="resena-instagram" class="form-input" placeholder="https://instagram.com/p/..." />
           </div>
-          <div class="form-grupo">
-            <label class="form-label">TikTok</label>
+          <div class="form-grupo" data-plataforma="TikTok">
+            <label class="form-label" data-ayuda="TikTok">TikTok</label>
             <input type="text" id="resena-tiktok" class="form-input" placeholder="https://tiktok.com/@..." />
           </div>
-          <div class="form-grupo">
-            <label class="form-label">Amazon</label>
+          <div class="form-grupo" data-plataforma="Amazon">
+            <label class="form-label" data-ayuda="Amazon">Amazon</label>
             <input type="text" id="resena-amazon" class="form-input" placeholder="https://amazon.com/review/..." />
           </div>
-          <div class="form-grupo">
-            <label class="form-label">Goodreads</label>
+          <div class="form-grupo" data-plataforma="Goodreads">
+            <label class="form-label" data-ayuda="Goodreads">Goodreads</label>
             <input type="text" id="resena-goodreads" class="form-input" placeholder="https://goodreads.com/review/..." />
           </div>
-          <div class="form-grupo">
-            <label class="form-label">StoryGraph</label>
+          <div class="form-grupo" data-plataforma="StoryGraph">
+            <label class="form-label" data-ayuda="StoryGraph">StoryGraph</label>
             <input type="text" id="resena-storygraph" class="form-input" placeholder="https://app.thestorygraph.com/reviews/..." />
           </div>
-          <div class="form-grupo">
-            <label class="form-label">YouTube</label>
+          <div class="form-grupo" data-plataforma="YouTube">
+            <label class="form-label" data-ayuda="YouTube">YouTube</label>
             <input type="text" id="resena-youtube" class="form-input" placeholder="https://youtube.com/watch?v=..." />
           </div>
-          <div class="form-grupo">
-            <label class="form-label">Blog / otro</label>
+          <div class="form-grupo" data-plataforma="Blog">
+            <label class="form-label" data-ayuda="Blog">Blog / otro</label>
             <input type="text" id="resena-blog" class="form-input" placeholder="https://..." />
           </div>
+          </div>
           <div class="form-grupo">
-            <label class="form-label">Comentarios (opcional)</label>
+            <label class="form-label" data-ayuda="comentarios">Comentarios (opcional)</label>
             <textarea id="resena-comentarios" class="form-textarea" rows="3" placeholder="Algo que quieras comentarle al autor..."></textarea>
           </div>
 
@@ -2295,7 +2307,8 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=3"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/resenador.js?v=4"></script>
+<script src="js/ayudas.js?v=1"></script>
+<script src="js/resenador.js?v=5"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/vendedor.js"></script>
 <script src="js/admin-vendedores.js"></script>
