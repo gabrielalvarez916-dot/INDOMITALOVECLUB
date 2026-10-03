@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=6" />
+  <link rel="stylesheet" href="css/styles.css?v=7" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
@@ -1800,6 +1800,27 @@
     </div>
   </div>
 
+  <!-- Modal: cómo funciona postularse (botón "?" junto a Postularme) -->
+  <div id="modal-ayuda-postulacion" class="modal modal--anidado">
+    <div class="modal-header">
+      <h3 class="modal-titulo">¿Cómo funciona postularte?</h3>
+      <button class="modal-cerrar" onclick="cerrarAyudaPostulacion()">✕</button>
+    </div>
+    <div class="modal-body ayuda-postulacion-cuerpo">
+      <ol class="ayuda-postulacion-pasos">
+        <li>Tocás <strong>Postularme</strong> y tu pedido le llega al autor: queda "pendiente".</li>
+        <li>El autor mira tu perfil y decide si te acepta. Te avisamos por notificación.</li>
+        <li>Si te aceptan, tenés <strong>30 días</strong> para leer el libro y entregar tu reseña desde <em>Mis postulaciones</em>.</li>
+      </ol>
+      <p><strong>Para postularte necesitás:</strong> país y ciudad en tu perfil, y al menos una de las plataformas que pide la campaña cargada en tu perfil.</p>
+      <p><strong>¿Cuántas a la vez?</strong> Empezás con hasta 2 campañas activas y sumás una más por cada reseña que entregues, hasta 10.</p>
+      <p><strong>¿No podés terminar el libro?</strong> Abandonalo desde <em>Mis postulaciones</em> y el cupo vuelve a la campaña. Si te pasás del plazo varias veces, tus postulaciones pueden limitarse por un tiempo.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-primario" onclick="cerrarAyudaPostulacion()">Entendido</button>
+    </div>
+  </div>
+
   <!-- Modal: completar perfil -->
   <div id="modal-completar-perfil" class="modal">
     <div class="modal-header">
@@ -2315,7 +2336,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=4"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=5"></script>
+<script src="js/ayudas.js?v=6"></script>
 <script src="js/resenador.js?v=5"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/vendedor.js"></script>

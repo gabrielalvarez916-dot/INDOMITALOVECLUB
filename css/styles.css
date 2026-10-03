@@ -6606,3 +6606,13 @@ img { max-width: 100%; display: block; }
   color: var(--bordo);
   padding: 8px 0;
 }
+
+
+/* ── "?" junto a Postularme ── */
+.postular-con-ayuda { display: inline-flex; align-items: center; gap: 8px; }
+.postular-con-ayuda--ancho { display: flex; width: 100%; }
+.postular-con-ayuda--ancho > button:first-child { flex: 1; width: auto !important; }
+.ayuda-btn--postular { margin-left: 0; flex-shrink: 0; }
+.ayuda-postulacion-pasos { margin: 0 0 14px 18px; padding: 0; line-height: 1.55; font-size: 14px; color: var(--gris-texto); }
+.ayuda-postulacion-pasos li { margin-bottom: 6px; }
+.ayuda-postulacion-cuerpo p { font-size: 14px; line-height: 1.55; color: var(--gris-texto); margin: 0 0 12px; }

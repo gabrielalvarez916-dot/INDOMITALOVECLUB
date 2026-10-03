@@ -394,7 +394,7 @@ function botonSoloParaVosHtml(c) {
     return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Postularme</button>`;
   }
   if (c.cuposDisponibles > 0) {
-    return `<button class="btn-primario btn-sm" style="width:100%;" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`;
+    return conAyudaPostulacion(`<button class="btn-primario btn-sm" style="width:100%;" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`, true);
   }
   return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Sin cupos</button>`;
 }
@@ -616,7 +616,7 @@ let botonHtml = '';
     `;
   } else if (rol === 'reseñador') {
     if (c.cuposDisponibles > 0) {
-      botonHtml = `<button class="btn-primario btn-sm" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`;
+      botonHtml = conAyudaPostulacion(`<button class="btn-primario btn-sm" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme</button>`);
     } else {
       botonHtml = `<button class="btn-secundario btn-sm" disabled style="opacity:0.5; cursor:not-allowed;">Sin cupos</button>`;
     }
@@ -982,7 +982,7 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
         </div>
       `;
     } else if (rol === 'reseñador' && c.cuposDisponibles > 0) {
-      footer.innerHTML = `<button class="btn-primario" onclick="cerrarModales(); iniciarPostulacion('${c.id}')">Postularme a esta campaña</button>`;
+      footer.innerHTML = conAyudaPostulacion(`<button class="btn-primario" onclick="cerrarModales(); iniciarPostulacion('${c.id}')">Postularme a esta campaña</button>`);
     } else if (!rol) {
       footer.innerHTML = `<button class="btn-primario" onclick="cerrarModales(); mostrarSeccion('login')">Ingresá para postularte</button>`;
     }
@@ -1219,7 +1219,7 @@ const Slider = (() => {
         <p style="font-size:11px; color:var(--bordo); margin-top:4px;">Este autor aún no ha cargado el libro correctamente.</p>
       `;
     } else if (rol === 'reseñador' && c.cuposDisponibles > 0) {
-      botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme →</button>`;
+      botonHtml = conAyudaPostulacion(`<button class="btn-postular" onclick="event.stopPropagation(); iniciarPostulacion('${c.id}')">Postularme →</button>`);
     } else if (!rol) {
       botonHtml = `<button class="btn-postular" onclick="event.stopPropagation(); mostrarSeccion('login')">Ingresá para postularte →</button>`;
     }

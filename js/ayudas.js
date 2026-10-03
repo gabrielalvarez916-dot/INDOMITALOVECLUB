@@ -329,6 +329,37 @@ const AYUDAS_LIBRO = {
 };
 
 /* ════════════════════════════════════════════════════════════
+   Botón "?" junto a "Postularme" (reseñadores)
+   El contenido vive en #modal-ayuda-postulacion (app.html).
+   Mismos textos en mobile: src/lib/ayudasPostulacion.js
+   ════════════════════════════════════════════════════════════ */
+
+/** HTML del botón "?" (se usa dentro de onclick de cards, por eso frena el click de la card). */
+function ayudaPostulacionBtnHtml() {
+  return '<button type="button" class="ayuda-btn ayuda-btn--postular" aria-label="¿Cómo funciona postularte?" ' +
+         'onclick="event.stopPropagation(); abrirAyudaPostulacion()">?</button>';
+}
+
+/** Envuelve un botón "Postularme" con el "?" al lado. ancho=true lo estira al 100% (cards "Solo para vos"). */
+function conAyudaPostulacion(botonHtml, ancho) {
+  return '<span class="postular-con-ayuda' + (ancho ? ' postular-con-ayuda--ancho' : '') + '">' +
+         botonHtml + ayudaPostulacionBtnHtml() + '</span>';
+}
+
+function abrirAyudaPostulacion() {
+  if (typeof mostrarModal === 'function') mostrarModal('modal-ayuda-postulacion');
+}
+
+/** Cierra solo este modal (si hay otro abajo, como el detalle de la campaña, sigue abierto). */
+function cerrarAyudaPostulacion() {
+  const m = document.getElementById('modal-ayuda-postulacion');
+  if (m) m.classList.remove('activo');
+  if (!document.querySelector('.modal.activo')) {
+    if (typeof cerrarModales === 'function') cerrarModales();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
    Motor: decora cualquier elemento con data-ayuda="clave"
    - agrega la línea corta debajo de la etiqueta
    - agrega el botón "?" que abre/cierra un panel con el texto largo
