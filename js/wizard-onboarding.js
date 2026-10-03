@@ -332,7 +332,7 @@ async function _wizRenderPasoActual() {
     <div style="background:#fff; border-radius:12px; padding:28px; max-width:460px; width:100%; max-height:90vh; overflow-y:auto;">
       ${_wizProgresoHtml()}
       <h2 style="margin-bottom:8px;">${_WIZ_TITULOS[paso]}</h2>
-      <p style="font-size:13px; color:#777; margin-bottom:16px;">Necesitamos esto antes de que entres a la plataforma.</p>
+      <div class="ayuda-encabezado"><p class="ayuda-encabezado-texto">${typeof AYUDAS_PERFIL !== 'undefined' ? AYUDAS_PERFIL.wiz_encabezado.texto : 'Necesitamos esto antes de que entres a la plataforma.'}</p></div>
       <form id="form-wizard-paso">
         <div id="wizard-paso-contenido"></div>
         <div id="wizard-paso-error" class="mensaje-error" style="display:none;"></div>
@@ -348,49 +348,50 @@ async function _wizRenderPasoActual() {
   if (paso === 'datos') {
     contenido.innerHTML = `
       <div class="form-grupo">
-        <label class="form-label">Alias</label>
+        <label class="form-label" data-ayuda="wiz_alias">Alias</label>
         <input type="text" id="wiz-alias" class="form-input" value="${_wizUsuarioActual.alias || ''}" required />
       </div>
       <div class="form-grupo">
-        <label class="form-label">País</label>
+        <label class="form-label" data-ayuda="wiz_pais">País</label>
         <input type="text" id="wiz-pais" class="form-input" value="${_wizUsuarioActual.pais || ''}" required />
       </div>
       <div class="form-grupo">
-        <label class="form-label">Ciudad</label>
+        <label class="form-label" data-ayuda="wiz_ciudad">Ciudad</label>
         <input type="text" id="wiz-ciudad" class="form-input" value="${_wizUsuarioActual.ciudad || ''}" required />
       </div>
     `;
   } else if (paso === 'generos') {
     contenido.innerHTML = `
       <div class="form-grupo">
-        <label class="form-label">Géneros favoritos</label>
+        <label class="form-label" data-ayuda="wiz_generos">Géneros favoritos</label>
         <div id="wiz-generos-checkboxes" class="tropes-checkboxes"></div>
       </div>
       <div id="wiz-subgeneros-contenedor"></div>
       <div class="form-grupo" style="margin-top:10px;">
-        <label class="form-label">Tropes favoritos</label>
+        <label class="form-label" data-ayuda="wiz_tropes">Tropes favoritos</label>
         <div id="wiz-tropes-contenedor"></div>
       </div>
     `;
     await _wizCargarPasoGeneros(_wizUsuarioActual);
   } else if (paso === 'links') {
     contenido.innerHTML = `
-      <p style="font-size:12px; color:#999; margin-bottom:10px;">No hace falta cargar los tres, con uno alcanza.</p>
+      <p class="ayuda-corta" style="margin-bottom:10px;">${typeof AYUDAS_PERFIL !== 'undefined' ? AYUDAS_PERFIL.wiz_links_intro.texto : 'No hace falta cargar los tres, con uno alcanza.'}</p>
       <div class="form-grupo">
-        <label class="form-label">Instagram</label>
-        <input type="text" id="wiz-instagram" class="form-input" value="${_wizUsuarioActual.instagram || ''}" />
+        <label class="form-label" data-ayuda="wiz_instagram">Instagram</label>
+        <input type="text" id="wiz-instagram" class="form-input" placeholder="https://instagram.com/tuusuario" value="${_wizUsuarioActual.instagram || ''}" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">TikTok</label>
-        <input type="text" id="wiz-tiktok" class="form-input" value="${_wizUsuarioActual.tiktok || ''}" />
+        <label class="form-label" data-ayuda="wiz_tiktok">TikTok</label>
+        <input type="text" id="wiz-tiktok" class="form-input" placeholder="https://tiktok.com/@tuusuario" value="${_wizUsuarioActual.tiktok || ''}" />
       </div>
       <div class="form-grupo">
-        <label class="form-label">Amazon</label>
-        <input type="text" id="wiz-amazon" class="form-input" value="${_wizUsuarioActual.amazon || ''}" />
+        <label class="form-label" data-ayuda="${_wizUsuarioActual.rol === 'reseñador' ? 'wiz_amazon_resenador' : 'wiz_amazon_autor'}">Amazon</label>
+        <input type="text" id="wiz-amazon" class="form-input" placeholder="https://amazon.com/..." value="${_wizUsuarioActual.amazon || ''}" />
       </div>
     `;
   }
 
+  if (typeof decorarAyudas === 'function') decorarAyudas(overlay);
   document.getElementById('form-wizard-paso').onsubmit = (e) => _wizGuardarPasoActual(e);
   const btnAtras = document.getElementById('wizard-btn-atras');
   if (btnAtras) btnAtras.onclick = () => _wizIrAPasoAnterior();

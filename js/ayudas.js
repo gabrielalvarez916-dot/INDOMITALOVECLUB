@@ -183,6 +183,71 @@ const ERRORES_RESENA = {
 };
 
 /* ════════════════════════════════════════════════════════════
+   Wizard de bienvenida (js/wizard-onboarding.js)
+   Mismos textos en mobile: src/lib/ayudasPerfil.js
+   ════════════════════════════════════════════════════════════ */
+
+const _AYUDA_LINKS_TITULO = '¿Para qué piden los links?';
+const _AYUDA_LINKS_LARGO =
+  'Se muestran en tu perfil y sirven para que autores y reseñadoras vean dónde compartís lectura. ' +
+  'Con un solo link alcanza; después podés sumar los otros desde tu perfil.<br><br>' +
+  'Copiá la dirección desde tu perfil de la red y pegala acá.';
+
+const AYUDAS_PERFIL = {
+  wiz_encabezado: {
+    texto: 'Son 2 o 3 pasos cortitos y solo se hacen una vez. Con estos datos la plataforma te muestra a las personas y libros que mejor van con vos. 💛'
+  },
+  wiz_alias: {
+    corto: 'Es el nombre con el que te van a ver en Indómita.',
+    titulo: '¿Qué alias pongo?',
+    largo: 'Es tu nombre público: aparece en tu perfil, en tus reseñas y en tus campañas. Podés usar tu nombre real, tu nombre de autor o tu usuario de Instagram, lo que te represente. Después se puede cambiar desde tu perfil.'
+  },
+  wiz_pais: {
+    corto: 'Dónde vivís hoy.',
+    titulo: '¿Para qué piden el país y la ciudad?',
+    largo: 'Aparecen en tu perfil para que la comunidad sepa desde dónde leés o escribís. No pedimos ni mostramos tu dirección, solo país y ciudad.'
+  },
+  wiz_ciudad: {
+    corto: 'Alcanza con la ciudad, no hace falta la dirección.',
+    titulo: '¿Para qué piden el país y la ciudad?',
+    largo: 'Aparecen en tu perfil para que la comunidad sepa desde dónde leés o escribís. No pedimos ni mostramos tu dirección, solo país y ciudad.'
+  },
+  wiz_generos: {
+    corto: 'Marcá los que más leés. Podés elegir varios.',
+    titulo: '¿Cómo elijo?',
+    largo: 'Elegí los géneros que realmente disfrutás, no todos. Según cuál marques, vas a poder elegir también subgéneros.'
+  },
+  wiz_tropes: {
+    corto: 'Buscá y sumá los que te encanten. Necesitás al menos uno.',
+    titulo: '¿Qué son los tropes?',
+    largo: 'Son los "ingredientes" de una historia: enemies to lovers, slow burn, amor prohibido. La plataforma usa tus tropes para calcular qué campañas coinciden con vos. Cuantos más acertados elijas, mejores matches.'
+  },
+  wiz_links_intro: {
+    texto: 'Con <strong>un</strong> link alcanza. Cargá el que más uses, después podés sumar los otros.'
+  },
+  wiz_instagram: {
+    corto: 'Pegá el link de tu perfil.',
+    titulo: _AYUDA_LINKS_TITULO,
+    largo: _AYUDA_LINKS_LARGO + ' Por ejemplo: https://instagram.com/tuusuario'
+  },
+  wiz_tiktok: {
+    corto: 'Pegá el link de tu perfil.',
+    titulo: _AYUDA_LINKS_TITULO,
+    largo: _AYUDA_LINKS_LARGO + ' Por ejemplo: https://tiktok.com/@tuusuario'
+  },
+  wiz_amazon_autor: {
+    corto: 'Link a tu página de autor.',
+    titulo: 'Tu página de autor de Amazon',
+    largo: 'Es la página donde Amazon junta todos tus libros. Si todavía no tenés una, podés dejar este campo vacío y cargar otro link.'
+  },
+  wiz_amazon_resenador: {
+    corto: 'Link a tu perfil de reseñadora.',
+    titulo: 'Tu perfil de Amazon',
+    largo: 'Es el perfil público desde el que dejás tus reseñas en Amazon. Si no tenés uno, dejalo vacío y cargá otro link.'
+  }
+};
+
+/* ════════════════════════════════════════════════════════════
    Motor: decora cualquier elemento con data-ayuda="clave"
    - agrega la línea corta debajo de la etiqueta
    - agrega el botón "?" que abre/cierra un panel con el texto largo
@@ -198,7 +263,7 @@ function decorarAyudas(contenedor) {
 
   raiz.querySelectorAll('[data-ayuda]').forEach(etiqueta => {
     if (etiqueta.dataset.ayudaLista) return;
-    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda];
+    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda] || AYUDAS_PERFIL[etiqueta.dataset.ayuda];
     if (!def) return;
     etiqueta.dataset.ayudaLista = '1';
 
