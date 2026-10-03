@@ -478,6 +478,11 @@ const AYUDAS_PANEL_AUTOR = {
       '<li>Si una reseñadora abandona el libro, acá ves el motivo que dejó.</li>' +
       '<li>Una vez aprobadas, podés seguir su lectura desde <strong>Seguimiento de reseñadores</strong>.</li></ul>'
   },
+  panel_a_post_guia: {
+    corto: 'Cómo leer la coincidencia y la confiabilidad de cada postulada.',
+    titulo: '¿Cómo leo la coincidencia y la confiabilidad?',
+    largo: '<p><strong>Coincidencia (el %)</strong></p><p>Mide qué tan bien encaja la reseñadora con tu libro, de 0 a 100%. Pesan sobre todo sus subgéneros, cómo se comportó con libros parecidos (si la aprobaron y si entregó), su historial con vos como autor, sus tropes y su género. Con más reseñas en la plataforma, el cálculo se afina.</p><ul><li>🔥 <strong>Más de 90%:</strong> match peligrosamente perfecto.</li><li>✨ <strong>Más de 70%:</strong> hay química real.</li><li>👍 <strong>Más de 50%:</strong> interesante, puede funcionar.</li><li>👎 <strong>50% o menos:</strong> no parece haber química.</li></ul><p>Si la reseñadora todavía no cargó géneros, subgéneros o tropes, esos puntos cuentan como neutros. Por eso conviene mirar el % junto con la confiabilidad.</p><p><strong>Confiabilidad (el color)</strong></p><p>Mide qué tanto cumple lo que se compromete, de 0 a 100 puntos: hasta 70 por el porcentaje de reseñas que entregó sobre las que le tocaban, hasta 20 por su experiencia (cantidad de reseñas entregadas) y hasta 10 por su rapidez para entregar.</p><ul><li>🟢 <strong>Muy alta:</strong> 85 puntos o más.</li><li>🔵 <strong>Alta:</strong> de 70 a 84.</li><li>🟡 <strong>Media:</strong> de 50 a 69.</li><li>🔴 <strong>Baja:</strong> menos de 50.</li><li>⚪ <strong>Sin historial:</strong> todavía no tuvo ninguna entrega que evaluar. Una reseñadora nueva con seguidores verificados arranca en amarillo; una Premium del mes, en azul.</li></ul><p>Aunque el puntaje sea alto, si entrega menos del 80% de lo que le toca no puede ser verde, con menos del 70% no pasa de amarillo, y con menos del 50% queda en rojo.</p>'
+  },
   panel_a_historial: {
     corto: 'Tus campañas que ya terminaron o se cancelaron.',
     titulo: '¿Qué puedo hacer acá?',
