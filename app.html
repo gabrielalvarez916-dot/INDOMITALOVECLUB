@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=8" />
+  <link rel="stylesheet" href="css/styles.css?v=9" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
@@ -329,7 +329,10 @@
     <div class="seccion-inner">
       <div class="panel-header">
         <h2 class="panel-titulo">Mi panel</h2>
-        <button class="btn-primario" id="btn-nueva-campana" onclick="abrirModalNuevaCampana()">+ Nueva campaña</button>
+        <div class="boton-con-ayuda boton-con-ayuda--header">
+          <button class="btn-primario" id="btn-nueva-campana" onclick="abrirModalNuevaCampana()">+ Nueva campaña</button>
+          <button type="button" class="ayuda-btn ayuda-btn--lado" aria-label="¿Cómo creo una campaña?" onclick="abrirAyudaBotonAutor('nueva_campana')">?</button>
+        </div>
       </div>
       <div class="stats-grid" id="autor-stats"></div>
       <div class="tabs">
@@ -341,23 +344,29 @@
 <button class="tab" id="tabbtn-ranking-libros" onclick="cambiarTab(this, 'tab-ranking-libros'); if(typeof cargarRankingLibros === 'function') cargarRankingLibros(); else setTimeout(cargarRankingLibros, 100)">Ranking libros</button>
       </div>
       <div id="tab-campanas-activas" class="tab-contenido activo">
+        <p class="ayuda-pestana" data-ayuda="panel_a_campanas">📚 Campañas activas</p>
         <div id="autor-credito-mensual-banner"></div>
         <div id="autor-creditos-banner"></div>
         <div id="autor-campanas-lista" class="campanas-lista"></div>
       </div>
       <div id="tab-postulaciones" class="tab-contenido">
+        <p class="ayuda-pestana" data-ayuda="panel_a_postulaciones">📬 Postulaciones</p>
         <div id="autor-postulaciones-lista" class="postulaciones-lista"></div>
       </div>
       <div id="tab-historial-autor" class="tab-contenido">
+        <p class="ayuda-pestana" data-ayuda="panel_a_historial">🗂️ Historial</p>
         <div id="autor-historial-lista" class="campanas-lista"></div>
       </div>
      <div id="tab-plan" class="tab-contenido">
+  <p class="ayuda-pestana" data-ayuda="panel_a_plan">💳 Mi plan</p>
   <div id="autor-plan-info" class="plan-info"></div>
 </div>
 <div id="tab-ranking-libros" class="tab-contenido">
+  <p class="ayuda-pestana" data-ayuda="panel_a_ranking_libros">📊 Ranking de libros</p>
   <div id="ranking-libros-contenedor"></div>
 </div>
 <div id="tab-referidos-autor" class="tab-contenido">
+  <p class="ayuda-pestana" data-ayuda="panel_a_referidos">🎁 Referidos</p>
   <div id="autor-referidos-contenedor"></div>
 </div>
     </div>
@@ -1808,6 +1817,18 @@
     </div>
   </div>
 
+  <!-- Modal: ayuda de los botones del panel del autor (botón "?" al lado de cada acción) -->
+  <div id="modal-ayuda-boton" class="modal modal--anidado">
+    <div class="modal-header">
+      <h3 class="modal-titulo" id="modal-ayuda-boton-titulo">Ayuda</h3>
+      <button class="modal-cerrar" onclick="cerrarAyudaBotonAutor()">✕</button>
+    </div>
+    <div class="modal-body ayuda-postulacion-cuerpo ayuda-panel-texto" id="modal-ayuda-boton-cuerpo"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn-primario" onclick="cerrarAyudaBotonAutor()">Entendido</button>
+    </div>
+  </div>
+
   <!-- Modal: para qué sirve anunciar avances (botón "?" en ARCs activos) -->
   <div id="modal-ayuda-avances" class="modal modal--anidado">
     <div class="modal-header">
@@ -2358,9 +2379,9 @@
 <script src="js/resenador-premium.js?v=1"></script>
 <script src="js/feed.js?v=5"></script>
 <script src="js/buscador-perfiles.js"></script>
-<script src="js/autor.js?v=4"></script>
+<script src="js/autor.js?v=5"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=7"></script>
+<script src="js/ayudas.js?v=8"></script>
 <script src="js/resenador.js?v=5"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/vendedor.js"></script>

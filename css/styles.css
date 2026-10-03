@@ -6625,3 +6625,10 @@ img { max-width: 100%; display: block; }
 .ayuda-btn--lado { margin-left: 0; flex-shrink: 0; }
 .arc-avance-fila { display: flex; align-items: center; gap: 8px; }
 .arc-avance-fila > button:first-child { flex: 1; }
+
+/* ── "?" al lado de los botones del panel del autor ── */
+.boton-con-ayuda { display: flex; align-items: center; gap: 8px; }
+.boton-con-ayuda > button:first-child { flex: 1; width: auto !important; }
+.boton-con-ayuda--header { display: inline-flex; }
+.boton-con-ayuda--header > button:first-child { flex: none; }
+.ayuda-panel-texto ul { margin: 0 0 8px 18px; padding: 0; }

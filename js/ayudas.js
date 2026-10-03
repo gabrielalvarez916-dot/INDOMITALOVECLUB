@@ -427,6 +427,172 @@ const AYUDAS_PANEL = {
   }
 };
 
+
+/* ════════════════════════════════════════════════════════════
+   Panel del autor: explicación debajo de cada pestaña
+   ════════════════════════════════════════════════════════════ */
+
+const AYUDAS_PANEL_AUTOR = {
+  panel_a_campanas: {
+    corto: 'Tus campañas publicadas. Desde cada card manejás todo lo de ese libro.',
+    titulo: '¿Qué puedo hacer acá?',
+    largo: '<ul>' +
+      '<li>Cada campaña dura <strong>30 días</strong> desde que la creás. Al vencer pasa sola a Historial.</li>' +
+      '<li>En la card ves cuántos cupos se ocuparon, cuántas postulaciones esperan tu respuesta (⏳) y cuántas reseñas ya recibiste (📝).</li>' +
+      '<li><strong>Ver postulaciones:</strong> para aprobar o rechazar a quienes se postularon.</li>' +
+      '<li><strong>Seguimiento de reseñadores:</strong> para ver cómo avanza la lectura de cada aprobada.</li>' +
+      '<li><strong>Ver reseñas:</strong> las reseñas que ya te entregaron.</li>' +
+      '<li><strong>Impulsar campaña:</strong> planes pagos para conseguir más visibilidad y reseñadoras afines.</li>' +
+      '<li><strong>Compartir</strong> y <strong>Editar campaña</strong>.</li>' +
+      '<li><strong>Cancelar campaña:</strong> solo se puede en los primeros 5 días.</li>' +
+      '<li>Tocá el <strong>?</strong> al lado de cada botón para ver el detalle.</li></ul>'
+  },
+  panel_a_postulaciones: {
+    corto: 'Acá solo ves las postulaciones cuando entrás desde el botón "Ver postulaciones" de una campaña.',
+    titulo: '¿Cómo veo las postulaciones?',
+    largo: '<ul>' +
+      '<li>Las postulaciones se ven <strong>de a una campaña por vez</strong>. Para verlas, andá a <strong>Campañas activas</strong> y tocá <strong>Ver postulaciones</strong> en la campaña que quieras. Si entrás directo a esta pestaña, no vas a ver nada.</li>' +
+      '<li>Cada postulación muestra el <strong>match</strong> de tropes con tu libro, su <strong>confiabilidad</strong> (qué tanto entrega lo que se compromete, según sus reseñas entregadas, su experiencia y su rapidez), su posición en el ranking del mes, sus redes y cómo se describe como lectora.</li>' +
+      '<li>Las pendientes se <strong>aprueban</strong> o <strong>rechazan</strong>. Al aprobar, ves la fecha límite que tiene para entregar.</li>' +
+      '<li>Si una reseñadora abandona el libro, acá ves el motivo que dejó.</li>' +
+      '<li>Una vez aprobadas, podés seguir su lectura desde <strong>Seguimiento de reseñadores</strong>.</li></ul>'
+  },
+  panel_a_historial: {
+    corto: 'Tus campañas que ya terminaron o se cancelaron.',
+    titulo: '¿Qué puedo hacer acá?',
+    largo: '<ul>' +
+      '<li><strong>Finalizada ✓:</strong> la campaña llegó a su fecha límite. <strong>Cancelada ✕:</strong> la cancelaste vos.</li>' +
+      '<li><strong>Ver reseñas</strong> te deja volver a leer cada reseña entregada, calificarla y agradecerla.</li>' +
+      '<li><strong>Renovar campaña 🔁</strong> aparece en la última campaña finalizada de cada libro: crea una campaña nueva con los mismos datos y cuenta como una campaña más de tu plan.</li></ul>'
+  },
+  panel_a_plan: {
+    corto: 'Cómo conseguir campañas: pagás una vez y las usás cuando quieras.',
+    titulo: '¿Cómo funcionan las campañas y los packs?',
+    largo: '<ul>' +
+      '<li>Si sos editorial, acá elegís entre el plan <strong>Free</strong> y <strong>Editorial Plus</strong> (suscripción mensual). Lo de abajo aplica a autores.</li>' +
+      '<li>Tu <strong>primera campaña es gratis</strong> (una sola vez). Para las siguientes necesitás una campaña individual o un pack.</li>' +
+      '<li><strong>Campaña individual:</strong> 1 campaña. <strong>Pack Basic:</strong> 3 campañas, con 1 Impulso de regalo. <strong>Pack Premium:</strong> 5 campañas, con 1 Complete de regalo.</li>' +
+      '<li>Es <strong>pago único</strong>, sin suscripción: las campañas del pack no vencen todos los meses.</li>' +
+      '<li>Cada campaña puede tener hasta <strong>10 reseñadoras</strong>.</li>' +
+      '<li><strong>Impulso</strong> y <strong>Complete</strong> son boosts de visibilidad para una campaña puntual. También podés comprar otros desde Impulsar campaña.</li>' +
+      '<li>Si tenés un <strong>cupón de campaña gratis</strong>, aparece arriba para usarlo una sola vez.</li>' +
+      '<li>Si sos suscriptor de antes, acá ves tu plan y su próximo pago. Mientras esté activo, no se pueden comprar campañas sueltas ni packs.</li></ul>'
+  },
+  panel_a_referidos: {
+    corto: 'Tu link personal para invitar a otros autores y reseñadoras.',
+    titulo: '¿Cómo funcionan los referidos?',
+    largo: '<ul>' +
+      '<li>Compartí tu link: cuando alguien crea su cuenta entrando desde ahí, queda asociado a vos. Solo vale para cuentas nuevas.</li>' +
+      '<li>Una persona <strong>cumple</strong> cuando, si es reseñadora, entregó al menos <strong>1 reseña</strong>, y si es autora, creó al menos <strong>1 campaña paga</strong>.</li>' +
+      '</ul>'
+  },
+  panel_a_ranking_libros: {
+    corto: 'Cómo les va a tus libros según las estrellas que les ponen quienes los reseñan.',
+    titulo: '¿Qué significa cada columna?',
+    largo: '<ul>' +
+      '<li>Solo aparecen los libros de tu biblioteca que ya recibieron reseñas.</li>' +
+      '<li><strong>Promedio:</strong> el promedio de estrellas (de 1 a 5) que las reseñadoras le pusieron al libro, sumando todas sus campañas. No se reinicia cada mes. Las campañas canceladas no cuentan.</li>' +
+      '<li><strong>Reseñas:</strong> cuántas puntuaciones recibió.</li>' +
+      '<li><strong>Sello:</strong> se calcula con el promedio de estrellas de cada campaña. <strong>Exitosa</strong> desde 3,0 · <strong>Muy exitosa</strong> desde 3,5 · <strong>Destacada</strong> desde 4,0 · <strong>Legendaria</strong> desde 4,5. Por debajo de 3,0 no hay sello.</li>' +
+      '<li>Con 3,5 o más, tu libro puede entrar a los rankings públicos de la plataforma (Recomendados y Top).</li></ul>'
+  }
+};
+
+/* ════════════════════════════════════════════════════════════
+   Botones "?" del panel del autor (se abren en una ventanita)
+   El contenido vive en #modal-ayuda-boton (app.html).
+   ════════════════════════════════════════════════════════════ */
+
+const AYUDAS_BOTONES_AUTOR = {
+  seguimiento: {
+    titulo: '¿Para qué sirve el seguimiento?',
+    largo:
+      '<p>Te muestra a cada reseñadora aprobada con su estado de lectura (<strong>No empezado, Leyendo, Por la mitad, Finalizado</strong>…), su fecha límite y cuándo fue su última actividad.</p>' +
+      '<p>Si lee dentro de la plataforma, el avance se registra solo. Si descargó el libro, solo sabés cómo va cuando ella lo avisa con "Anunciar avances".</p>' +
+      '<p><strong>👉 Dar un toque:</strong> le manda un recordatorio. Podés dar uno cada 5 días por reseñadora.</p>' +
+      '<p><strong>🔓 Liberar cupo:</strong> aparece solo si pasaron 10 días desde que la aprobaste sin ninguna señal de lectura. Es siempre decisión tuya, nunca se hace sola. Al liberar, ella pierde su lugar y el cupo queda disponible para otra persona.</p>'
+  },
+  resenas: {
+    titulo: '¿Qué veo en Ver reseñas?',
+    largo:
+      '<p>Una carpeta por cada reseña que te entregaron. Con <strong>Ver reseña completa</strong> ves sus estrellas, moods, frases favoritas, comentarios y los links donde la publicó.</p>' +
+      '<p><strong>Calificar reseña:</strong> respondés unas afirmaciones de SÍ/NO sobre su trabajo y cada SÍ suma una estrella. Esa calificación cuenta para su ranking.</p>' +
+      '<p><strong>💌 Agradecer:</strong> aparece en las reseñas que calificaste con 4 o 5 estrellas, para mandarle un mensaje de agradecimiento.</p>'
+  },
+  impulsar: {
+    titulo: '¿Qué es impulsar una campaña?',
+    largo:
+      '<p>Son planes pagos que le dan más visibilidad a <strong>una campaña puntual</strong>. Cada plan se puede usar una sola vez por campaña y no afecta a tus otras campañas.</p>' +
+      '<ul>' +
+      '<li><strong>Impulso:</strong> reseñadoras con alta compatibilidad de gustos con tu libro.</li>' +
+      '<li><strong>Select:</strong> reseñadoras con más visibilidad en redes.</li>' +
+      '<li><strong>Resistence:</strong> reseñadoras confiables y con buen match, para que los cupos se completen.</li>' +
+      '<li><strong>Complete:</strong> estrategia personalizada con auditoría del equipo.</li></ul>' +
+      '<p>Al tocar el botón ves qué incluye cada uno y su precio. Si tenés créditos o un cupón, podés usarlos en la compra.</p>' +
+      '<p>No se activa al instante: te enviamos el link de pago y, una vez confirmado, lo activamos.</p>'
+  },
+  cancelar: {
+    titulo: '¿Cuándo puedo cancelar?',
+    largo:
+      '<p>Solo podés cancelar durante los <strong>primeros 5 días</strong> desde que creaste la campaña. Pasado ese plazo, el botón desaparece.</p>' +
+      '<p>Cancelar no se puede deshacer: la campaña pasa a Historial como cancelada y avisamos a las reseñadoras que ya habías aprobado.</p>' +
+      '<p>Si cancelás varias campañas en un mismo mes, tu cuenta puede quedar bloqueada para crear campañas nuevas.</p>' +
+      '<p>Si solo querés corregir algo, usá <strong>Editar campaña</strong> en lugar de cancelar.</p>'
+  },
+  nueva_campana: {
+    titulo: '¿Cómo creo una campaña?',
+    largo:
+      '<ul>' +
+      '<li>Podés elegir un libro de tu biblioteca para que se completen los datos solos, o cargarlo desde cero.</li>' +
+      '<li>La campaña dura <strong>30 días</strong> y puede tener hasta <strong>10 reseñadoras</strong>.</li>' +
+      '<li>Si sos autor, tu primera campaña es <strong>gratis</strong>. Desde la segunda se usa una campaña individual o de un pack (las comprás en <strong>Mi plan</strong>). Si no tenés ninguna disponible, desde el mismo formulario podés pagar solo esa campaña.</li>' +
+      '<li>Tenés que subir el libro en <strong>EPUB y PDF</strong>, elegir género y al menos un trope, y 2 plataformas donde querés recibir reseñas.</li>' +
+      '<li>Podés cancelarla solo durante los primeros 5 días.</li></ul>'
+  },
+  creditos: {
+    titulo: '¿Qué son los créditos?',
+    largo:
+      '<p>Son un descuento que te damos cuando una campaña tuvo bajo rendimiento: si al terminar se ocuparon menos de la mitad de los cupos, o se entregaron la mitad de reseñas o menos, recibís <strong>1.000 créditos</strong>.</p>' +
+      '<p>Cada crédito vale <strong>$1 ARS</strong> y los usás para pagar parte de un plan en <strong>Impulsar campaña</strong>: en la compra, tildás "usar créditos". Se pueden combinar con un cupón.</p>' +
+      '<p><strong>Vencen a los 60 días</strong> de otorgados. Arriba ves cuántos te quedan y cuándo vence el próximo.</p>'
+  },
+  credito_mensual: {
+    titulo: '¿Qué es el Impulso o Complete gratis?',
+    largo:
+      '<p>Es un beneficio de las suscripciones de antes: una vez al mes podés activar gratis un Impulso (plan Basic) o un Complete (plan Premium) en una de tus campañas activas.</p>' +
+      '<p>Se renueva el día 1 de cada mes. Si no lo usás, no se acumula.</p>'
+  }
+};
+
+/** HTML del botón "?" que abre la ayuda de un botón del panel del autor. */
+function ayudaBotonAutorHtml(clave) {
+  const def = AYUDAS_BOTONES_AUTOR[clave];
+  const etiqueta = def ? def.titulo : 'Ayuda';
+  return '<button type="button" class="ayuda-btn ayuda-btn--lado" aria-label="' + _ayudaEscapar(etiqueta) + '" ' +
+         'onclick="event.stopPropagation(); abrirAyudaBotonAutor(\'' + clave + '\')">?</button>';
+}
+
+/** Envuelve un botón con su "?" al lado (fila flexible, el botón ocupa el ancho). */
+function conAyudaBotonAutor(botonHtml, clave) {
+  return '<div class="boton-con-ayuda">' + botonHtml + ayudaBotonAutorHtml(clave) + '</div>';
+}
+
+function abrirAyudaBotonAutor(clave) {
+  const def = AYUDAS_BOTONES_AUTOR[clave];
+  if (!def) return;
+  const t = document.getElementById('modal-ayuda-boton-titulo');
+  const b = document.getElementById('modal-ayuda-boton-cuerpo');
+  if (t) t.textContent = def.titulo;
+  if (b) b.innerHTML = def.largo;
+  if (typeof mostrarModal === 'function') mostrarModal('modal-ayuda-boton');
+}
+
+function cerrarAyudaBotonAutor() {
+  const m = document.getElementById('modal-ayuda-boton');
+  if (m) m.classList.remove('activo');
+  if (!document.querySelector('.modal.activo') && typeof cerrarModales === 'function') cerrarModales();
+}
+
 /* "?" al lado de "Anunciar avances" (ARCs activos): abre una ventanita (#modal-ayuda-avances en app.html) */
 function ayudaAvancesBtnHtml() {
   return '<button type="button" class="ayuda-btn ayuda-btn--lado" aria-label="¿Para qué sirve anunciar avances?" ' +
@@ -469,7 +635,7 @@ function decorarAyudas(contenedor) {
 
   raiz.querySelectorAll('[data-ayuda]').forEach(etiqueta => {
     if (etiqueta.dataset.ayudaLista) return;
-    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda] || AYUDAS_PERFIL[etiqueta.dataset.ayuda] || AYUDAS_LIBRO[etiqueta.dataset.ayuda] || AYUDAS_PANEL[etiqueta.dataset.ayuda];
+    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda] || AYUDAS_PERFIL[etiqueta.dataset.ayuda] || AYUDAS_LIBRO[etiqueta.dataset.ayuda] || AYUDAS_PANEL[etiqueta.dataset.ayuda] || AYUDAS_PANEL_AUTOR[etiqueta.dataset.ayuda];
     if (!def) return;
     etiqueta.dataset.ayudaLista = '1';
 

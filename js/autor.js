@@ -100,6 +100,9 @@ async function cargarPanelAutor() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
+  // Explicación debajo de cada pestaña (frase gris + "?"); es idempotente.
+  if (typeof decorarAyudas === 'function') decorarAyudas('seccion-panel-autor');
+
   // cargarCampañasAutor y cargarHistorialAutor van secuenciales (no en el
   // Promise.all) porque el botón "Renovar" del historial necesita comparar
   // contra _campañasAutor ya cargado para saber si es la campaña más
@@ -151,6 +154,7 @@ async function cargarCreditoMensualGratis(idUsuario) {
     <div class="creditos-autor-banner">
       🚀 Tenés 1 <strong>${nombrePlan} gratis</strong> este mes.
       <button class="btn-secundario btn-sm" style="margin-left:8px;" onclick="abrirSelectorCreditoMensualGratis()">Activarlo en una campaña</button>
+      ${ayudaBotonAutorHtml('credito_mensual')}
     </div>
   `;
 }
@@ -231,6 +235,7 @@ async function cargarCreditosAutor(idUsuario) {
   contenedor.innerHTML = `
     <div class="creditos-autor-banner">
       🎁 Tenés <strong>${Math.round(disponibles).toLocaleString('es-AR')} créditos</strong> disponibles · vencen el ${proximoVencimiento}
+      ${ayudaBotonAutorHtml('creditos')}
     </div>
   `;
 }
@@ -466,17 +471,17 @@ function construirCardCampañaAutor(c) {
         <div class="campana-panel-acciones">
           ${c.estado === 'activa' ? `
           <button class="btn-secundario btn-sm btn-full" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
-          <button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>
-          <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
-          ${botonImpulsarCampanaHtml(c)}
+          ${conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>`, 'seguimiento')}
+          ${conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>`, 'resenas')}
+          ${conAyudaBotonAutor(botonImpulsarCampanaHtml(c), 'impulsar')}
           <button class="btn-secundario btn-sm btn-full" onclick="compartirCampana('${c.id}', '${c.nombreLibro}')">📤 Compartir</button>
           <button class="btn-secundario btn-sm btn-full" onclick="abrirEditarCampana('${c.id}')">✏️ Editar campaña</button>
           ${_puedeCancelarCampana(c.creadoEn)
-            ? `<button class="btn-secundario btn-sm btn-full btn-peligro" onclick="confirmarCancelarCampana('${c.id}', '${c.nombreLibro}')">Cancelar campaña</button>`
+            ? conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full btn-peligro" onclick="confirmarCancelarCampana('${c.id}', '${c.nombreLibro}')">Cancelar campaña</button>`, 'cancelar')
             : ''}
           ` : `
-          <button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>
-          <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+          ${conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>`, 'seguimiento')}
+          ${conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>`, 'resenas')}
           ${(c.estado === 'finalizada' && _esUltimaCampanaDelLibro(c))
             ? `<button class="btn-primario btn-sm btn-full" onclick="abrirRenovarCampana('${c.id}')">🔁 Renovar campaña</button>`
             : ''}
@@ -1933,7 +1938,7 @@ function _renderListaHistorial() {
           <span>Finalizó ${formatearFechaAmigable(c.fechaLimite)}</span>
         </div>
         <div class="campana-panel-acciones">
-          <button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>
+          ${conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>`, 'resenas')}
           ${(c.estado === 'finalizada' && _esUltimaCampanaDelLibro(c))
             ? `<button class="btn-primario btn-sm btn-full" onclick="abrirRenovarCampana('${c.id}')">🔁 Renovar campaña</button>`
             : ''}
