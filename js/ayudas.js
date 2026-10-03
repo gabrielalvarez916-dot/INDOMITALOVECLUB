@@ -113,6 +113,69 @@ const AYUDAS_RESENA = {
   comentarios: { corto: 'Un mensajito para el autor: qué te gustó, qué te sorprendió… Es opcional.' }
 };
 
+
+/* ════════════════════════════════════════════════════════════
+   NUEVA CAMPAÑA (también se usa al renovar una campaña)
+   Claves con prefijo nc_ para no pisar las de Entregar reseña.
+   ════════════════════════════════════════════════════════════ */
+
+const AYUDAS_CAMPANA = {
+  nc_biblioteca: { corto: 'Si ya cargaste tu libro, elegilo y completamos los datos por vos.' },
+  nc_autor: { corto: 'Como querés que aparezca en la campaña (nombre real o seudónimo).' },
+  nc_sinopsis: {
+    corto: 'Lo que van a leer las reseñadoras antes de postularse.',
+    titulo: '¿Qué pongo en la sinopsis?',
+    largo: 'Es la contratapa de tu libro: contá de qué trata sin spoilear el final. Es lo que convence a las reseñadoras de postularse, así que cuidala. Lo ideal son unos pocos párrafos.'
+  },
+  nc_generoTropes: {
+    corto: 'Elegí el género y al menos un trope. Con esto te encontramos reseñadoras compatibles.',
+    titulo: '¿Cómo elijo género y tropes?',
+    largo:
+      '1. Elegí el <strong>género</strong>. Según cuál sea, vas a poder elegir uno o más <strong>subgéneros</strong>.<br>' +
+      '2. Buscá y sumá los <strong>tropes</strong> de tu libro (necesitás al menos uno).<br><br>' +
+      'Los tropes sirven para que la plataforma te recomiende a las reseñadoras a las que les gusta ese tipo de historias. Elegí los que realmente tiene tu libro. Si falta alguno, podés proponerlo y el equipo lo revisa.'
+  },
+  nc_portada: { corto: 'Imagen JPG, PNG o WebP. Si elegiste un libro de tu biblioteca, ya tiene portada: subí un archivo solo si querés cambiarla.' },
+  nc_epub: {
+    corto: 'Subí las dos versiones: cada reseñadora elige cómo prefiere leer.',
+    titulo: '¿Por qué pido EPUB y PDF?',
+    largo: 'Pedimos los dos formatos porque cada reseñadora puede elegir cómo quiere leer tu libro. Los dos archivos son obligatorios.'
+  },
+  nc_pdf: {
+    corto: 'Obligatorio. Es la otra opción de lectura.',
+    titulo: '¿Por qué pido EPUB y PDF?',
+    largo: 'Pedimos los dos formatos porque cada reseñadora puede elegir cómo quiere leer tu libro. Los dos archivos son obligatorios.'
+  },
+  nc_amazon: { corto: 'Si tu libro está en Amazon, pegá el link a la página del libro.' },
+  nc_cupos: {
+    corto: 'Cuántas reseñadoras querés que lean tu libro.',
+    titulo: '¿Cuántos cupos pongo?',
+    largo: 'Es la cantidad de personas que van a poder leer tu libro y reseñarlo. El máximo es 10 por campaña. Pensá que cada cupo ocupado es una reseña que esperás recibir.'
+  },
+  nc_fecha: { corto: 'Se calcula sola: tu campaña dura 30 días desde hoy.' },
+  nc_paginas: { corto: 'Se muestra en la card de la campaña para que las reseñadoras sepan cuánto tiene el libro.' },
+  nc_plataformas: {
+    corto: 'Elegí 2 plataformas donde querés recibir las reseñas.',
+    titulo: '¿Qué plataformas elijo?',
+    largo: 'Son los lugares donde las reseñadoras van a publicar su reseña. Cada una tiene que cargar el link de una de las dos que elijas acá. Elegí las que usás y donde más te sirve tener reseñas: por ejemplo, Amazon y Goodreads ayudan a las ventas; Instagram y TikTok, a la visibilidad.'
+  },
+  nc_modalidad: {
+    corto: 'Elegí si pueden descargar el libro o solo leerlo dentro de Indómita.',
+    titulo: '¿Qué cambia entre una y otra?',
+    largo:
+      '<strong>Solo visor:</strong> las reseñadoras leen dentro de la plataforma, sin poder descargar el archivo.<br>' +
+      '<strong>Permite descarga:</strong> pueden bajarlo y leerlo donde quieran (por ejemplo, en su e-reader). Puede atraer más reseñadoras, pero el archivo queda en sus manos.'
+  }
+};
+
+const ERRORES_CAMPANA = {
+  sinPlataformas: 'Elegí 2 plataformas donde querés recibir reseñas.',
+  sinPortada: 'Falta la portada. Subí una imagen o elegí un libro de tu biblioteca.',
+  sinArchivos: 'Subí los dos archivos del libro: el EPUB y el PDF.',
+  sinGenero: 'Elegí un género para la campaña.',
+  sinTropes: 'Elegí al menos un trope para tu campaña.'
+};
+
 /* ── Mensajes de error del flujo ── */
 const ERRORES_RESENA = {
   sinFrase: 'Falta tu frase favorita. Es obligatoria: copiá una del libro que te haya marcado.',
@@ -135,7 +198,7 @@ function decorarAyudas(contenedor) {
 
   raiz.querySelectorAll('[data-ayuda]').forEach(etiqueta => {
     if (etiqueta.dataset.ayudaLista) return;
-    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda];
+    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda];
     if (!def) return;
     etiqueta.dataset.ayudaLista = '1';
 

@@ -2122,9 +2122,9 @@ async function crearNuevaCampana(event) {
     document.querySelectorAll('input[name="plataformas"]:checked')
   ).map(cb => cb.value);
 
-  if (plataformasSeleccionadas.length < 1 || plataformasSeleccionadas.length > 2) {
+  if (plataformasSeleccionadas.length !== 2) {
     const errPlat = document.getElementById('plataformas-error');
-    if (errPlat) { errPlat.textContent = 'Elegí entre 1 y 2 plataformas.'; errPlat.style.display = 'block'; }
+    if (errPlat) { errPlat.textContent = ERRORES_CAMPANA.sinPlataformas; errPlat.style.display = 'block'; }
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
     return;
   } else {
@@ -2157,7 +2157,7 @@ if (!plataformasSeleccionadas.every(p => plataformasValidas.includes(p))) {
 
   if (!linkPortada) {
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-    mostrarMensajeError('nc-error', 'La portada es obligatoria.');
+    mostrarMensajeError('nc-error', ERRORES_CAMPANA.sinPortada);
     return;
   }
 
@@ -2167,7 +2167,7 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
 
   if (!esRenovacion && (!archivoEpub || !archivoPdf)) {
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-    mostrarMensajeError('nc-error', 'Subí el archivo EPUB y el archivo PDF.');
+    mostrarMensajeError('nc-error', ERRORES_CAMPANA.sinArchivos);
     return;
   }
 
@@ -2187,13 +2187,13 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
 
   if (!seleccionTropes.id_genero) {
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-    mostrarMensajeError('nc-error', 'Elegí un género para la campaña.');
+    mostrarMensajeError('nc-error', ERRORES_CAMPANA.sinGenero);
     return;
   }
 
   if (seleccionTropes.idsTropes.length === 0) {
     toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-    mostrarMensajeError('nc-error', 'Elegí al menos un trope para la campaña.');
+    mostrarMensajeError('nc-error', ERRORES_CAMPANA.sinTropes);
     return;
   }
 
@@ -3074,6 +3074,9 @@ function _resetModoRenovacionCampana() {
 
 async function inicializarModalNuevaCampana() {
   _resetModoRenovacionCampana();
+
+  // Ayudas cortas y botones "?" (js/ayudas.js). Es idempotente: decora una sola vez.
+  if (typeof decorarAyudas === 'function') decorarAyudas('modal-nueva-campana');
 
   await renderizarSelectorTropes('nc-tropes-contenedor', 'nc');
 

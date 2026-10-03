@@ -1042,8 +1042,12 @@
     <div class="modal-body">
   <form id="form-nueva-campana" onsubmit="crearNuevaCampana(event)">
   <div id="nc-campos-formulario">
+  <div class="ayuda-encabezado">
+    <p class="ayuda-encabezado-texto">Completá los datos de tu libro, subí los archivos y elegí cómo querés recibir reseñas. Tu campaña va a estar activa durante 30 días. Los campos con * son obligatorios. 💛</p>
+  </div>
+  <p class="form-separador">📖 Tu libro</p>
   <div class="form-grupo">
-    <label class="form-label">¿Querés usar un libro de tu biblioteca?</label>
+    <label class="form-label" data-ayuda="nc_biblioteca">¿Querés usar un libro de tu biblioteca?</label>
     <select id="nc-libro-selector" class="form-input" onchange="precargarLibroEnCampana()">
       <option value="">— Completar manualmente —</option>
     </select>
@@ -1053,60 +1057,59 @@
     <input type="text" id="nc-nombre-libro" class="form-input" required />
   </div>
   <div class="form-grupo">
-    <label class="form-label">Nombre del autor *</label>
+    <label class="form-label" data-ayuda="nc_autor">Nombre del autor *</label>
     <input type="text" id="nc-nombre-autor" class="form-input" required />
   </div>
   <div class="form-grupo">
-    <label class="form-label">Sinopsis *</label>
+    <label class="form-label" data-ayuda="nc_sinopsis">Sinopsis *</label>
     <textarea id="nc-sinopsis" class="form-textarea" rows="4" required></textarea>
   </div>
 <div class="form-grupo">
-  <label class="form-label">Género y tropes</label>
+  <label class="form-label" data-ayuda="nc_generoTropes">Género y tropes *</label>
   <div id="nc-tropes-contenedor"></div>
 </div>
         <div class="form-grupo">
-          <label class="form-label">Portada *</label>
+          <label class="form-label" data-ayuda="nc_portada">Portada *</label>
           <div id="nc-portada-preview"></div>
           <input type="file" id="nc-link-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
-          <p class="form-hint">Si elegiste un libro de tu biblioteca, ya tiene portada — subí un archivo solo si querés cambiarla.</p>
         </div>
+        <p class="form-separador">📁 Archivos</p>
         <div class="form-fila">
   <div class="form-grupo">
-    <label class="form-label" id="nc-epub-label">Archivo EPUB *</label>
+    <label class="form-label" id="nc-epub-label" data-ayuda="nc_epub">Archivo EPUB *</label>
     <input type="file" id="nc-archivo-epub" class="form-input" accept=".epub,application/epub+zip" required />
     <p id="nc-epub-hint-renovacion" class="form-hint" style="display:none;">Se reutiliza el EPUB ya cargado. Subí uno nuevo solo si querés reemplazarlo.</p>
   </div>
   <div class="form-grupo">
-    <label class="form-label" id="nc-pdf-label">Archivo PDF *</label>
+    <label class="form-label" id="nc-pdf-label" data-ayuda="nc_pdf">Archivo PDF *</label>
     <input type="file" id="nc-archivo-pdf" class="form-input" accept=".pdf,application/pdf" required />
     <p id="nc-pdf-hint-renovacion" class="form-hint" style="display:none;">Se reutiliza el PDF ya cargado. Subí uno nuevo solo si querés reemplazarlo.</p>
   </div>
 </div>
         <div class="form-grupo">
-          <label class="form-label">Link Amazon (opcional)</label>
+          <label class="form-label" data-ayuda="nc_amazon">Link Amazon (opcional)</label>
           <input type="url" id="nc-link-amazon" class="form-input" placeholder="https://amazon.com/..." />
         </div>
+        <p class="form-separador">⚙️ Cómo querés recibir reseñas</p>
         <div class="form-fila">
   <div class="form-grupo">
-    <label class="form-label">Cupos de reseñad@res *</label>
+    <label class="form-label" data-ayuda="nc_cupos">Cupos de reseñad@res *</label>
     <input type="number" id="nc-cupos" class="form-input" min="1" max="100" required />
     <p id="nc-cupos-tope-hint" class="form-hint" style="display:none;"></p>
     <p id="nc-cupos-regalo-hint" class="form-hint" style="display:none; color:var(--bordo); font-weight:600;"></p>
   </div>
   <div class="form-grupo">
-    <label class="form-label">Fecha de cierre</label>
+    <label class="form-label" data-ayuda="nc_fecha">Fecha de cierre</label>
     <p id="nc-fecha-limite-info" class="form-input" style="background:var(--crema); display:flex; align-items:center; color:var(--gris-suave);"></p>
   </div>
 </div>
         <div class="form-grupo">
-          <label class="form-label">Cantidad de páginas *</label>
+          <label class="form-label" data-ayuda="nc_paginas">Cantidad de páginas *</label>
           <input type="number" id="nc-paginas" class="form-input" min="1" placeholder="Ej: 320" required />
-          <p class="form-hint">Se muestra en la card de la campaña para que l@s reseñador@s sepan cuánto tiene el libro.</p>
         </div>
     <!-- Plataformas de reseña -->
 <div class="form-grupo">
-  <label class="form-label">Plataformas de reseña <span style="color:var(--rojo, #c0392b);">*</span></label>
-  <p class="form-hint" style="margin-bottom:8px;">Elegí entre 1 y 2 plataformas donde querés recibir reseñas.</p>
+  <label class="form-label" data-ayuda="nc_plataformas">Plataformas de reseña <span style="color:var(--rojo, #c0392b);">*</span></label>
   <div id="plataformas-error" class="mensaje-error" style="display:none;"></div>
   <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:4px;">
     <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -1133,7 +1136,7 @@
   </div>
 </div>
     <div class="form-grupo">
-  <label class="form-label">Modalidad de lectura *</label>
+  <label class="form-label" data-ayuda="nc_modalidad">Modalidad de lectura *</label>
   <div class="radio-grupo">
     <label class="radio-opcion">
       <input type="radio" name="nc-modalidad-lectura" value="visor" checked />
@@ -2305,9 +2308,9 @@
 <script src="js/resenador-premium.js?v=1"></script>
 <script src="js/feed.js?v=5"></script>
 <script src="js/buscador-perfiles.js"></script>
-<script src="js/autor.js?v=3"></script>
+<script src="js/autor.js?v=4"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=1"></script>
+<script src="js/ayudas.js?v=2"></script>
 <script src="js/resenador.js?v=5"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/vendedor.js"></script>
