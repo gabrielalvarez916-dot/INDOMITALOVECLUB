@@ -6616,3 +6616,12 @@ img { max-width: 100%; display: block; }
 .ayuda-postulacion-pasos { margin: 0 0 14px 18px; padding: 0; line-height: 1.55; font-size: 14px; color: var(--gris-texto); }
 .ayuda-postulacion-pasos li { margin-bottom: 6px; }
 .ayuda-postulacion-cuerpo p { font-size: 14px; line-height: 1.55; color: var(--gris-texto); margin: 0 0 12px; }
+
+/* ── Explicación debajo de cada pestaña del panel del reseñador ── */
+.ayuda-pestana { font-weight: 700; color: var(--bordo); font-size: 15px; margin: 0; }
+.ayuda-panel-texto ul { margin: 0 0 8px 18px; padding: 0; }
+.ayuda-panel-texto li { margin-bottom: 4px; }
+.ayuda-panel-texto p { margin: 0 0 6px; }
+.ayuda-btn--lado { margin-left: 0; flex-shrink: 0; }
+.arc-avance-fila { display: flex; align-items: center; gap: 8px; }
+.arc-avance-fila > button:first-child { flex: 1; }

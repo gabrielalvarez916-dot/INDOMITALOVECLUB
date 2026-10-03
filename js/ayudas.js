@@ -360,6 +360,88 @@ function cerrarAyudaPostulacion() {
 }
 
 /* ════════════════════════════════════════════════════════════
+   Panel del reseñador: explicación debajo de cada pestaña
+   Mismos textos en mobile: src/lib/ayudasPanelResenador.js
+   ════════════════════════════════════════════════════════════ */
+
+const AYUDAS_PANEL = {
+  panel_postulaciones: {
+    corto: 'Acá ves el estado de todas las campañas a las que te postulaste.',
+    titulo: '¿Qué puedo hacer acá?',
+    largo: '<ul>' +
+      '<li>Cada postulación aparece como <strong>pendiente</strong> (el autor todavía no decidió), <strong>aprobada</strong> o <strong>rechazada</strong>.</li>' +
+      '<li>Cuando te aprueban, ves la fecha límite para entregar y podés abrir el libro directo desde acá.</li>' +
+      '<li>Tocá el nombre del autor para ver su perfil.</li>' +
+      '<li>Cuando entregues la reseña, la campaña pasa a Historial.</li></ul>'
+  },
+  panel_arcs: {
+    corto: 'Los libros que ya te aprobaron y todavía no reseñaste.',
+    titulo: '¿Qué puedo hacer acá?',
+    largo: '<ul>' +
+      '<li><strong>Leer</strong> el libro (EPUB o PDF) o <strong>descargarlo</strong>, según lo que haya elegido el autor.</li>' +
+      '<li><strong>Anunciar avances</strong> para contarle al autor por dónde vas.</li>' +
+      '<li><strong>Entregar reseña</strong> cuando termines.</li>' +
+      '<li><strong>Abandonar libro (DNF)</strong> si no podés seguir. Te va a pedir el motivo y se libera el cupo.</li>' +
+      '<li>La fecha en rojo significa que la campaña venció. Todavía tenés <strong>7 días de gracia</strong> para entregar, pero esa reseña suma menos puntos.</li>' +
+      '<li>La banderita 🚩 sirve para denunciar un libro.</li></ul>'
+  },
+  panel_historial: {
+    corto: 'Tus reseñas entregadas y los libros que abandonaste.',
+    titulo: '¿Qué puedo hacer acá?',
+    largo: '<ul>' +
+      '<li>Tocá una reseña para volver a verla completa (estrellas, moods, frases favoritas).</li>' +
+      '<li>Ves tus <strong>estrellas</strong>, tu <strong>completion</strong> (qué porcentaje de las reseñas que te tocaban entregaste) y los links que cargaste.</li>' +
+      '<li>Si el autor te dejó un mensaje de agradecimiento, te aparece un 💌 y lo leés dentro de la reseña.</li>' +
+      '<li>Los libros que abandonaste figuran con la etiqueta <strong>DNF</strong>.</li></ul>'
+  },
+  panel_biblioteca: {
+    corto: 'Tus libros ordenados en estantes. Se arma sola.',
+    titulo: '¿Cómo funciona?',
+    largo: '<ul>' +
+      '<li><strong>Favoritos:</strong> las campañas que guardaste con el corazón. Este estante es privado, solo lo ves vos.</li>' +
+      '<li><strong>TBR:</strong> los libros que ya te aprobaron y todavía no reseñaste.</li>' +
+      '<li><strong>Leídos:</strong> los libros que ya reseñaste.</li>' +
+      '<li><strong>DNF:</strong> los que abandonaste.</li>' +
+      '<li>No cargás nada a mano: los libros se mueven de estante cuando te aprueban, entregás o abandonás.</li></ul>'
+  },
+  panel_ranking: {
+    corto: 'El ranking se reinicia cada mes. Acá ves cuánto sumaste y dónde estás.',
+    titulo: '¿Cómo se calculan los puntos?',
+    largo:
+      '<p><strong>Suma:</strong></p><ul>' +
+      '<li>Reseña entregada <strong>a tiempo</strong>: <strong>+100</strong></li>' +
+      '<li>Reseña entregada <strong>tarde</strong>: <strong>+40</strong></li>' +
+      '<li>Cada <strong>"SÍ"</strong> que te marque el autor al calificarte (entregada a tiempo, respetó el formato elegido, evidencia lectura completa, opinión propia argumentada, tono respetuoso): <strong>+10</strong> cada uno, hasta <strong>+50</strong>.</li>' +
+      '<li>Las <strong>estrellas que te pone el autor</strong>: de <strong>−40</strong> (1★) a <strong>+40</strong> (5★). Con 3★ no suma ni resta.</li>' +
+      '<li>Eventos y juegos (secretos encontrados, retos): hasta <strong>+50</strong> por los secretos, más los puntos de cada reto.</li></ul>' +
+      '<p><strong>Resta:</strong></p><ul>' +
+      '<li>No entregar una reseña (incumplida): <strong>−100</strong></li>' +
+      '<li>Abandonar un libro (DNF): <strong>−40</strong></li>' +
+      '<li>Perder el cupo por no registrar avances en 10 días: <strong>−40</strong></li></ul>' +
+      '<p><strong>Otras cosas que se tienen en cuenta:</strong></p><ul>' +
+      '<li>Cuenta el <strong>mes en que se cierra</strong> cada campaña (cuando entregás, abandonás o se vence).</li>' +
+      '<li><strong>Completion:</strong> el porcentaje de reseñas entregadas sobre las que vencían ese mes. Con 100% ganás una insignia del mes.</li>' +
+      '<li><strong>Ligas</strong> según los puntos del mes: Bronce (1 o más), Plata (150), Oro (450), Diamante (900). Los <strong>5 primeros</strong> forman el podio y hasta el puesto 20 entran al Top 20.</li>' +
+      '<li><strong>Desempate:</strong> gana quien tenga más reseñas a tiempo y, si siguen empatados, más "SÍ" del autor.</li>' +
+      '<li>Con <strong>Reseñadores Premium</strong>, tu primera reseña del mes vale el doble (200 a tiempo, 80 tarde).</li></ul>'
+  }
+};
+
+/* "?" al lado de "Anunciar avances" (ARCs activos): abre una ventanita (#modal-ayuda-avances en app.html) */
+function ayudaAvancesBtnHtml() {
+  return '<button type="button" class="ayuda-btn ayuda-btn--lado" aria-label="¿Para qué sirve anunciar avances?" ' +
+         'onclick="event.stopPropagation(); abrirAyudaAvances()">?</button>';
+}
+function abrirAyudaAvances() {
+  if (typeof mostrarModal === 'function') mostrarModal('modal-ayuda-avances');
+}
+function cerrarAyudaAvances() {
+  const m = document.getElementById('modal-ayuda-avances');
+  if (m) m.classList.remove('activo');
+  if (!document.querySelector('.modal.activo') && typeof cerrarModales === 'function') cerrarModales();
+}
+
+/* ════════════════════════════════════════════════════════════
    Motor: decora cualquier elemento con data-ayuda="clave"
    - agrega la línea corta debajo de la etiqueta
    - agrega el botón "?" que abre/cierra un panel con el texto largo
@@ -387,7 +469,7 @@ function decorarAyudas(contenedor) {
 
   raiz.querySelectorAll('[data-ayuda]').forEach(etiqueta => {
     if (etiqueta.dataset.ayudaLista) return;
-    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda] || AYUDAS_PERFIL[etiqueta.dataset.ayuda] || AYUDAS_LIBRO[etiqueta.dataset.ayuda];
+    const def = AYUDAS_RESENA[etiqueta.dataset.ayuda] || AYUDAS_CAMPANA[etiqueta.dataset.ayuda] || AYUDAS_PERFIL[etiqueta.dataset.ayuda] || AYUDAS_LIBRO[etiqueta.dataset.ayuda] || AYUDAS_PANEL[etiqueta.dataset.ayuda];
     if (!def) return;
     etiqueta.dataset.ayudaLista = '1';
 

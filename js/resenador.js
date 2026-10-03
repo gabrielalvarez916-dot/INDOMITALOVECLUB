@@ -84,6 +84,9 @@ async function cargarPanelResenador() {
   const email = Sesion.email();
   if (!email) return;
 
+  // Explicación debajo de cada pestaña (frase gris + "?"); es idempotente.
+  if (typeof decorarAyudas === 'function') decorarAyudas('seccion-panel-resenador');
+
   await Promise.all([
     cargarEstadisticasReseñador(email),
     cargarPostulacionesReseñador(email),
@@ -456,7 +459,10 @@ function construirCardArcActivo(p) {
   ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">Leer PDF</button>`   : ''}
   ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
   ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
-  <button class="btn-secundario btn-full" onclick="abrirModalAnunciarAvance('${p.idPostulacion}', '${c.nombreLibro}')">📣 Anunciar avances</button>
+  <div class="arc-avance-fila">
+    <button class="btn-secundario btn-full" onclick="abrirModalAnunciarAvance('${p.idPostulacion}', '${c.nombreLibro}')">📣 Anunciar avances</button>
+    ${ayudaAvancesBtnHtml()}
+  </div>
   <button class="btn-secundario btn-full arc-btn-resena" onclick="abrirCargarResena('${c.id}')">✓ Entregar reseña</button>
   <button class="btn-peligro btn-full" onclick="abrirModalDNF('${p.idPostulacion}', '${c.nombreLibro}', '${c.nombreAutor}')">Abandonar libro (DNF)</button>
 </div>

@@ -1033,6 +1033,13 @@ async function cargarBibliotecaSeccion() {
   if (seccionFavoritos) seccionFavoritos.style.display = _bibliotecaEsPropia ? '' : 'none';
   if (_bibliotecaEsPropia) _cargarFavoritosBiblioteca();
 
+  // Explicación de la biblioteca: solo en la propia, no al mirar la de otra persona.
+  const ayudaBib = document.getElementById('bib-ayuda-propia');
+  if (ayudaBib) {
+    ayudaBib.style.display = _bibliotecaEsPropia ? '' : 'none';
+    if (_bibliotecaEsPropia && typeof decorarAyudas === 'function') decorarAyudas(ayudaBib);
+  }
+
   _estadoBibliotecaSeccion('cargando');
 
   try {

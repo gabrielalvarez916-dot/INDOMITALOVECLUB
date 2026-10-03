@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=7" />
+  <link rel="stylesheet" href="css/styles.css?v=8" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
@@ -383,12 +383,15 @@
       <div class="panel-layout">
         <div class="panel-layout-principal">
           <div id="tab-mis-postulaciones" class="tab-contenido activo">
+            <p class="ayuda-pestana" data-ayuda="panel_postulaciones">📬 Mis postulaciones</p>
             <div id="resenador-postulaciones-lista" class="postulaciones-lista"></div>
           </div>
           <div id="tab-arcs-activos" class="tab-contenido">
+            <p class="ayuda-pestana" data-ayuda="panel_arcs">📖 ARCs activos</p>
             <div id="resenador-arcs-lista" class="arcs-lista"></div>
           </div>
           <div id="tab-historial-resenador" class="tab-contenido">
+            <p class="ayuda-pestana" data-ayuda="panel_historial">🗂️ Historial</p>
             <div id="resenador-historial-lista" class="campanas-lista"></div>
           </div>
         </div>
@@ -406,6 +409,7 @@
 
       <!-- Mi ranking: a ancho completo, fuera del layout con banners -->
       <div id="tab-ranking" class="tab-contenido">
+        <p class="ayuda-pestana" data-ayuda="panel_ranking">🏆 Mi ranking</p>
         <div id="resenador-ranking-info" class="ranking-info"></div>
       </div>
     </div>
@@ -416,6 +420,10 @@
     <div class="seccion-inner">
       <div class="panel-header">
         <h2 class="panel-titulo" id="bib-titulo-seccion">Biblioteca</h2>
+      </div>
+
+      <div id="bib-ayuda-propia" style="display:none;">
+        <p class="ayuda-pestana" data-ayuda="panel_biblioteca">📚 Mi biblioteca</p>
       </div>
 
       <div id="bib-cargando" class="cargando-container">
@@ -1800,6 +1808,22 @@
     </div>
   </div>
 
+  <!-- Modal: para qué sirve anunciar avances (botón "?" en ARCs activos) -->
+  <div id="modal-ayuda-avances" class="modal modal--anidado">
+    <div class="modal-header">
+      <h3 class="modal-titulo">¿Para qué sirve anunciar avances?</h3>
+      <button class="modal-cerrar" onclick="cerrarAyudaAvances()">✕</button>
+    </div>
+    <div class="modal-body ayuda-postulacion-cuerpo">
+      <p>Es la forma de avisarle al autor que estás leyendo su libro: elegís <strong>Empezando/avanzando</strong>, <strong>Por la mitad</strong> o <strong>Finalizado</strong>, y le llega un aviso.</p>
+      <p><strong>Es importante</strong> porque si pasan <strong>10 días desde que te aprobaron sin ningún avance registrado</strong>, el autor puede liberar tu cupo. Si eso pasa, perdés la campaña y te restan <strong>40 puntos</strong> en el ranking. Si te pasa varias veces seguidas, se cuenta como incumplimiento.</p>
+      <p>Si leés dentro de la app, el avance se registra solo, pero conviene usar el botón igual como respaldo. Si descargaste el libro, el botón es la única forma de avisar.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-primario" onclick="cerrarAyudaAvances()">Entendido</button>
+    </div>
+  </div>
+
   <!-- Modal: cómo funciona postularse (botón "?" junto a Postularme) -->
   <div id="modal-ayuda-postulacion" class="modal modal--anidado">
     <div class="modal-header">
@@ -2336,7 +2360,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=4"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=6"></script>
+<script src="js/ayudas.js?v=7"></script>
 <script src="js/resenador.js?v=5"></script>
 <script src="js/admin.js?v=4"></script>
 <script src="js/vendedor.js"></script>
