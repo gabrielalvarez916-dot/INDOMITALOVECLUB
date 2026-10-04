@@ -42,14 +42,15 @@ const Flechazos = (() => {
   // Contadores en el perfil propio (clickeables: abren la lista privada)
   // ──────────────────────────────────────────────────────────
   async function cargarContadores() {
-    const cont = document.getElementById('flechazos-contadores');
-    if (!cont) return;
+    // Hay un bloque por cada cabecera propia (autor / reseñador / editorial); se llenan todos
+    const conts = document.querySelectorAll('.flechazos-contadores');
+    if (!conts.length) return;
     try {
       const { data, error } = await supabaseClient.rpc('mis_contadores_flechazos');
       if (error || !data || data.error) return;
-      document.getElementById('flechazos-n-flechados').textContent = data.flechados ?? 0;
-      document.getElementById('flechazos-n-flechadores').textContent = data.flechadores ?? 0;
-      cont.style.display = 'flex';
+      document.querySelectorAll('.flechazos-n-flechados').forEach(el => { el.textContent = data.flechados ?? 0; });
+      document.querySelectorAll('.flechazos-n-flechadores').forEach(el => { el.textContent = data.flechadores ?? 0; });
+      conts.forEach(c => { c.style.display = 'flex'; });
     } catch (e) {
       console.error('Flechazos: error cargando contadores', e);
     }

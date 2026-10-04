@@ -6657,6 +6657,23 @@ img { max-width: 100%; display: block; }
 .flechazos-contador strong { font-size: 20px; color: var(--bordo); line-height: 1.1; }
 .flechazos-contador span { font-size: 12px; color: var(--gris-medio); }
 
+/* Versión chica: botones en fila, debajo de las redes en la cabecera del perfil */
+.flechazos-contadores--chico {
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+}
+.flechazos-contadores--chico .flechazos-contador {
+  flex: none;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radio-pill);
+}
+.flechazos-contadores--chico .flechazos-contador strong { font-size: 14px; }
+.flechazos-contadores--chico .flechazos-contador span { font-size: 11px; }
+
 /* Contadores públicos en el perfil de otra persona (solo números, no clickeables) */
 .pp-flechazos-contadores {
   display: flex;
@@ -6690,13 +6707,13 @@ img { max-width: 100%; display: block; }
 .pp-btn-flechar {
   align-self: flex-start;
   margin-top: 6px;
-  padding: 6px 16px;
+  padding: 4px 12px;
   border-radius: var(--radio-pill);
   border: 1px solid var(--bordo);
   background: var(--bordo);
   color: var(--blanco);
   font-family: var(--fuente-texto);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transicion);

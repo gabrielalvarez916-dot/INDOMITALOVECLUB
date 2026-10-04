@@ -521,16 +521,6 @@
         <button class="btn-primario" id="btn-editar-perfil" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
       </div>
 
-      <!-- Contadores de flechazos (los números son públicos; las listas, al tocarlos, solo las ve la propia persona) -->
-      <div id="flechazos-contadores" class="flechazos-contadores" style="display:none;">
-        <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
-          <strong id="flechazos-n-flechados">0</strong><span>Flechados</span>
-        </button>
-        <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
-          <strong id="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
-        </button>
-      </div>
-
       <!-- ESTADO: cargando (vista propia embebida) -->
       <div id="pp-cargando-propio" class="cargando-container">
         <div class="spinner"></div>
@@ -554,6 +544,15 @@
     <p id="pp-ubicacion-propio" class="pp-ubicacion"></p>
     <p id="pp-autor-miembro-desde-propio" class="pp-miembro-desde"></p>
     <div id="pp-redes-propio"   class="pp-redes"></div>
+    <!-- Flechazos: los números son públicos; las listas (al tocar) solo las ve la propia persona -->
+    <div class="flechazos-contadores flechazos-contadores--chico" style="display:none;">
+      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
+        <strong class="flechazos-n-flechados">0</strong><span>Flechados</span>
+      </button>
+      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
+        <strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
+      </button>
+    </div>
   </div>
 </div>
         <!-- Gamificación del autor -->
@@ -589,6 +588,15 @@
     <p id="pp-alias-r-propio"     class="pp-alias"></p>
     <p id="pp-ubicacion-r-propio" class="pp-ubicacion"></p>
     <div id="pp-redes-r-propio"   class="pp-redes"></div>
+    <!-- Flechazos: los números son públicos; las listas (al tocar) solo las ve la propia persona -->
+    <div class="flechazos-contadores flechazos-contadores--chico" style="display:none;">
+      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
+        <strong class="flechazos-n-flechados">0</strong><span>Flechados</span>
+      </button>
+      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
+        <strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -681,6 +689,15 @@
             <p id="pp-ubicacion-ed-propio" class="pp-ubicacion"></p>
             <p id="pp-editorial-miembro-desde-propio" class="pp-miembro-desde"></p>
             <div id="pp-redes-ed-propio"   class="pp-redes"></div>
+    <!-- Flechazos: los números son públicos; las listas (al tocar) solo las ve la propia persona -->
+    <div class="flechazos-contadores flechazos-contadores--chico" style="display:none;">
+      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
+        <strong class="flechazos-n-flechados">0</strong><span>Flechados</span>
+      </button>
+      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
+        <strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
+      </button>
+    </div>
           </div>
         </div>
 
