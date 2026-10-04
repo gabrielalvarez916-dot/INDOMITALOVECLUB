@@ -22,40 +22,28 @@ async function cargarPerfil() {
 
   if (typeof Flechazos !== 'undefined') Flechazos.cargarContadores();
 
+  // Las variables _id...PerfilActual cambian cada vez que se abre el perfil de OTRA persona,
+  // así que no sirven para saber quién soy yo. Mi id se resuelve (y se guarda aparte) acá.
+  const rpcId = { 'autor': 'obtener_id_autor_por_email', 'reseñador': 'obtener_id_resenador_por_email', 'editorial': 'obtener_id_editorial_por_email' }[rol];
+  if (!rpcId) return;
+  if (!_miIdPerfil || _miIdPerfilEmail !== Sesion.email()) {
+    const { data: idPropio, error: errId } = await supabaseClient.rpc(rpcId, { p_email: Sesion.email() });
+    if (errId || !idPropio || idPropio.error) {
+      _estadoPerfilPublico('error', '-propio');
+      return;
+    }
+    _miIdPerfil = idPropio.id;
+    _miIdPerfilEmail = Sesion.email();
+  }
+
   if (rol === 'autor') {
-    if (!_idAutorPerfilActual) {
-      const { data: idAut, error: errId } = await supabaseClient.rpc('obtener_id_autor_por_email', { p_email: Sesion.email() });
-      if (errId || !idAut || idAut.error) {
-        _estadoPerfilPublico('error', '-propio');
-        return;
-      }
-      _idAutorPerfilActual = idAut.id;
-    }
-    await _cargarPerfilAutor(_idAutorPerfilActual, '-propio');
-
+    await _cargarPerfilAutor(_miIdPerfil, '-propio');
   } else if (rol === 'reseñador') {
-    if (!_idReseñadorPerfilActual) {
-      const { data: idRes, error: errId } = await supabaseClient.rpc('obtener_id_resenador_por_email', { p_email: Sesion.email() });
-      if (errId || !idRes || idRes.error) {
-        _estadoPerfilPublico('error', '-propio');
-        return;
-      }
-      _idReseñadorPerfilActual = idRes.id;
-      _bibliotecaEsPropia = true;
-    }
-    await _cargarPerfilReseñador(_idReseñadorPerfilActual, '-propio');
+    _bibliotecaEsPropia = true;
+    await _cargarPerfilReseñador(_miIdPerfil, '-propio');
     cargarEstadoVerificacionSeguidores();
-
   } else if (rol === 'editorial') {
-    if (!_idEditorialPerfilActual) {
-      const { data: idEdi, error: errId } = await supabaseClient.rpc('obtener_id_editorial_por_email', { p_email: Sesion.email() });
-      if (errId || !idEdi || idEdi.error) {
-        _estadoPerfilPublico('error', '-propio');
-        return;
-      }
-      _idEditorialPerfilActual = idEdi.id;
-    }
-    await _cargarPerfilEditorial(_idEditorialPerfilActual, '-propio');
+    await _cargarPerfilEditorial(_miIdPerfil, '-propio');
   }
 }
 

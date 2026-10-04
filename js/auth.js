@@ -687,7 +687,7 @@ async function verificarModalActualizacion() {
 const DESTINOS_BOTON_MODAL_AUTOR_EDITORIAL = {
   panel: () => { if (typeof mostrarPanelRol === 'function') mostrarPanelRol(); },
   feed: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('feed'); },
-  biblioteca: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('biblioteca-autor'); },
+  biblioteca: () => { if (typeof abrirMiBibliotecaAutor === 'function') abrirMiBibliotecaAutor(); },
   ranking: () => {
     if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
     setTimeout(() => document.getElementById('tabbtn-ranking-libros')?.click(), 50);
@@ -698,7 +698,7 @@ const DESTINOS_BOTON_MODAL_AUTOR_EDITORIAL = {
 const DESTINOS_BOTON_MODAL_RESENADOR = {
   perfil: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('perfil'); },
   feed: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('feed'); },
-  biblioteca: () => { if (typeof mostrarSeccion === 'function') mostrarSeccion('biblioteca-resenador'); },
+  biblioteca: () => { if (typeof abrirMiBiblioteca === 'function') abrirMiBiblioteca(); },
   ranking: () => {
     if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
     setTimeout(() => document.getElementById('tabbtn-ranking-resenador')?.click(), 50);

@@ -412,7 +412,7 @@
         <button class="tab" onclick="cambiarTab(this, 'tab-arcs-activos')">ARCs activos</button>
         <button class="tab" onclick="cambiarTab(this, 'tab-historial-resenador')">Historial</button>
         <button class="tab" id="tabbtn-ranking-resenador" onclick="cambiarTab(this, 'tab-ranking'); if(typeof enfocarMiPuestoRanking === 'function') enfocarMiPuestoRanking();">Mi ranking</button>
-        <button class="tab" onclick="mostrarSeccion('biblioteca-resenador')">Mi biblioteca</button>
+        <button class="tab" onclick="abrirMiBiblioteca()">Mi biblioteca</button>
       </div>
 
       <div class="panel-layout">
@@ -585,7 +585,7 @@
             <div class="estante-fila" id="pp-autor-libros-propio"></div>
             <div class="estante-tabla"></div>
           </div>
-          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-autor-propio" onclick="abrirBibliotecaAutor()">Ver todos los libros</button></div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-autor-propio" onclick="abrirBibliotecaAutor(_miIdPerfil)">Ver todos los libros</button></div>
       <div class="pp-tab-panel" data-panel="campanas"><div id="pp-autor-campanas-propio" class="pp-libros-goodreads-grid"></div></div>
       <div class="pp-tab-panel" data-panel="logros"><div class="pp-bloque" id="pp-autor-gamificacion-cont-propio"><div id="pp-autor-gamificacion-propio"></div></div></div>
       </div>
@@ -652,7 +652,7 @@
             <div id="pp-r-ultimos-libros-propio" class="pp-libros-goodreads-grid"></div>
             <div class="estante-tabla"></div>
           </div>
-          <button type="button" class="pp-link-accion" id="pp-btn-ver-biblioteca-propio" onclick="abrirBiblioteca()">Ver biblioteca completa</button></div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-biblioteca-propio" onclick="abrirBiblioteca(_miIdPerfil)">Ver biblioteca completa</button></div>
       <div class="pp-tab-panel" data-panel="insignias">
           <div class="pp-bloque"><p class="pp-bloque-titulo">Estadísticas</p><div id="pp-r-stats-propio" class="pp-stats-grid"></div></div>
           <div class="pp-bloque"><p class="pp-bloque-titulo" data-ayuda="perf_insignias">Insignias</p><div id="pp-r-insignias-propio"></div></div></div>
@@ -693,7 +693,7 @@
             <div class="estante-fila" id="pp-editorial-libros-propio"></div>
             <div class="estante-tabla"></div>
           </div>
-          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-editorial-propio" onclick="abrirBibliotecaAutor()">Ver todos los libros</button></div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-editorial-propio" onclick="abrirBibliotecaAutor(_miIdPerfil)">Ver todos los libros</button></div>
       <div class="pp-tab-panel" data-panel="campanas"><div id="pp-editorial-campanas-propio" class="pp-libros-goodreads-grid"></div></div>
       <div class="pp-tab-panel" data-panel="sobre">
           <div class="pp-bloque" id="pp-bloque-editorial-descripcion-propio" style="display:none;"><p class="pp-bloque-titulo">Presentación</p><p id="pp-editorial-descripcion-propio" class="pp-texto-truncado"></p></div>

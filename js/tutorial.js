@@ -83,7 +83,7 @@ const _PASOS_AUTOR_EDITORIAL = [
     gate: _tutGateAvatarAutor,
     mensajeBloqueo: 'Elegí un avatar para tu perfil (botón "Cambiar avatar") para poder continuar.' },
   { destino: 'btn-agregar-libro-biblioteca-autor', abrir: () => {
-      mostrarSeccion('biblioteca-autor');
+      abrirMiBibliotecaAutor();
       setTimeout(() => mostrarModal('modal-nuevo-libro'), 400);
     },
     gate: _tutGateLibroAutor,
@@ -133,7 +133,7 @@ const TUTORIAL_PASOS_CONFIG = {
         mostrarPanelRol();
         setTimeout(() => document.getElementById('tabbtn-ranking-resenador')?.click(), 50);
       } },
-    { destino: 'bib-titulo-seccion', abrir: () => mostrarSeccion('biblioteca-resenador') },
+    { destino: 'bib-titulo-seccion', abrir: () => abrirMiBiblioteca() },
     { destino: 'nav-evento', abrir: () => mostrarSeccion('evento') },
     { destino: null, abrir: () => {} }
   ],

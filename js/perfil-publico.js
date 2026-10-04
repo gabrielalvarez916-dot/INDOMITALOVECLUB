@@ -122,6 +122,9 @@ async function _cargarPerfilAutor(idAutor, sufijo = '') {
 // ────────────────────────────────────────────────────────────
 
 let _idReseñadorPerfilActual = null;
+// Mi propio id de perfil (no cambia al mirar perfiles ajenos, a diferencia de _id...PerfilActual)
+let _miIdPerfil = null;
+let _miIdPerfilEmail = null;
 let _bibliotecaEsPropia = false;
 let _bibliotecaLibrosLeidosCache = [];
 let _idAutorPerfilActual = null;
@@ -1190,11 +1193,28 @@ async function abrirBiblioteca(idReseñadorOverride) {
   if (!idReseñador) return;
 
   _idReseñadorPerfilActual = idReseñador;
-  _bibliotecaEsPropia = false;  // ← viene del perfil público de otra persona
+  _bibliotecaEsPropia = !!_miIdPerfil && idReseñador === _miIdPerfil;  // false si viene del perfil de otra persona
 
   cerrarModales();
 
   mostrarSeccion('biblioteca-resenador');
+}
+
+/**
+ * Abre MI biblioteca desde un acceso directo (pestaña "Mi biblioteca", botones del modal, tutorial).
+ * Sin esto, si antes se vio el perfil de otra persona, se abría la biblioteca de ella.
+ */
+function _miIdVigente() {
+  return (_miIdPerfil && _miIdPerfilEmail === Sesion.email()) ? _miIdPerfil : null;
+}
+function abrirMiBiblioteca() {
+  _idReseñadorPerfilActual = _miIdVigente();   // null → cargarBibliotecaSeccion lo resuelve por email
+  _bibliotecaEsPropia = true;
+  mostrarSeccion('biblioteca-resenador');
+}
+function abrirMiBibliotecaAutor() {
+  _idAutorPerfilActual = _miIdVigente();       // null → cargarBibliotecaAutorSeccion lo resuelve por email
+  mostrarSeccion('biblioteca-autor');
 }
 
 // Función nueva — se llama desde ui.js cuando se navega a 'biblioteca-resenador'
@@ -1274,7 +1294,7 @@ async function cargarBibliotecaAutorSeccion() {
     esPropia = true;
   } else {
     const sesion = Sesion.obtener();
-    esPropia = !!sesion && sesion.id === _idAutorPerfilActual;
+    esPropia = (!!sesion && sesion.id === _idAutorPerfilActual) || (!!_miIdPerfil && _miIdPerfil === _idAutorPerfilActual);
   }
 
   const btnAgregar = document.getElementById('btn-agregar-libro-biblioteca-autor');
