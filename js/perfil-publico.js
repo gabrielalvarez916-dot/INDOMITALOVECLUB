@@ -875,6 +875,7 @@ function ppCambiarTab(btn) {
   const clave = btn.dataset.tab;
   perfil.querySelectorAll('.pp-tab').forEach(t => t.classList.toggle('pp-tab--activa', t === btn));
   perfil.querySelectorAll('.pp-tab-panel').forEach(p => p.classList.toggle('pp-tab-panel--activo', p.dataset.panel === clave));
+  requestAnimationFrame(() => _activarScrollHorizontal(perfil));
   // Los "Ver más" se miden con el panel visible
   if (perfil.id && perfil.id.indexOf('pp-bloque-reseñador') === 0) {
     _evaluarBotonesVerMas(perfil.id.replace('pp-bloque-reseñador', ''));
@@ -941,6 +942,74 @@ function _irATabDesdeDestacada(el, tab) {
   if (barra) barra.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+
+// ────────────────────────────────────────────────────────────
+// SCROLL HORIZONTAL EN PC: flechas ‹ › + arrastrar con el mouse
+// (en celular se sigue deslizando con el dedo)
+// ────────────────────────────────────────────────────────────
+const _SELECTOR_SCROLL_H = '.pp-destacadas, .pp-insignias-carrusel, .pp-estanteria .estante-fila';
+
+function _actualizarFlechasScroll(el) {
+  const wrap = el.parentElement;
+  if (!wrap || !wrap.classList.contains('pp-scroll-wrap')) return;
+  const max = el.scrollWidth - el.clientWidth;
+  const izq = wrap.querySelector('.pp-scroll-flecha--izq');
+  const der = wrap.querySelector('.pp-scroll-flecha--der');
+  if (izq) izq.classList.toggle('pp-scroll-flecha--visible', max > 4 && el.scrollLeft > 4);
+  if (der) der.classList.toggle('pp-scroll-flecha--visible', max > 4 && el.scrollLeft < max - 4);
+}
+
+function _activarScrollHorizontal(root) {
+  (root || document).querySelectorAll(_SELECTOR_SCROLL_H).forEach(el => {
+    if (el.dataset.scrollInit) { _actualizarFlechasScroll(el); return; }
+    el.dataset.scrollInit = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pp-scroll-wrap' + (el.classList.contains('pp-destacadas') ? ' pp-scroll-wrap--destacadas' : '')
+      + (el.classList.contains('pp-insignias-carrusel') ? ' pp-scroll-wrap--insignias' : '');
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+
+    [['izq', -1, '‹', 'Anterior'], ['der', 1, '›', 'Siguiente']].forEach(([lado, dir, txt, aria]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pp-scroll-flecha pp-scroll-flecha--' + lado;
+      b.setAttribute('aria-label', aria);
+      b.textContent = txt;
+      b.onclick = (ev) => { ev.stopPropagation(); el.scrollBy({ left: dir * Math.max(160, el.clientWidth * 0.75), behavior: 'smooth' }); };
+      wrap.appendChild(b);
+    });
+
+    // Arrastrar con el mouse
+    let abajo = false, inicioX = 0, inicioScroll = 0, movido = false;
+    el.addEventListener('mousedown', (ev) => {
+      if (ev.button !== 0) return;
+      abajo = true; movido = false; inicioX = ev.clientX; inicioScroll = el.scrollLeft;
+      el.style.scrollSnapType = 'none';
+      ev.preventDefault(); // evita arrastrar la imagen en vez de la fila
+    });
+    window.addEventListener('mousemove', (ev) => {
+      if (!abajo) return;
+      const dx = ev.clientX - inicioX;
+      if (Math.abs(dx) > 5) movido = true;
+      el.scrollLeft = inicioScroll - dx;
+    });
+    window.addEventListener('mouseup', () => {
+      if (!abajo) return;
+      abajo = false;
+      el.style.scrollSnapType = '';
+    });
+    // Si fue un arrastre, no cuenta como click sobre la insignia/libro
+    el.addEventListener('click', (ev) => { if (movido) { ev.stopPropagation(); ev.preventDefault(); movido = false; } }, true);
+
+    el.addEventListener('scroll', () => _actualizarFlechasScroll(el), { passive: true });
+    _actualizarFlechasScroll(el);
+  });
+}
+window.addEventListener('resize', () => {
+  document.querySelectorAll(_SELECTOR_SCROLL_H).forEach(el => { if (el.dataset.scrollInit) _actualizarFlechasScroll(el); });
+});
+
 /** Si una pestaña quedó sin nada visible, muestra un aviso en vez de un hueco */
 function _marcarPanelesVacios(bloqueId) {
   const bloque = document.getElementById(bloqueId);
@@ -963,6 +1032,7 @@ function _marcarPanelesVacios(bloqueId) {
     }
     aviso.style.display = hayContenido ? 'none' : '';
   });
+  _activarScrollHorizontal(bloque);
 }
 
 /**

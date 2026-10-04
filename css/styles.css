@@ -7039,3 +7039,24 @@ img { max-width: 100%; display: block; }
   .pp-perfil .pp-avatar { width: 112px; height: 112px; }
   .pp-hstat strong { font-size: 21px; }
 }
+
+/* Flechas ‹ › para mover filas horizontales con el mouse (solo PC) */
+.pp-scroll-wrap { position: relative; }
+.pp-scroll-flecha {
+  display: none; position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--blanco); border: 1px solid var(--gris-borde);
+  box-shadow: var(--sombra-card); color: var(--bordo);
+  font-size: 22px; line-height: 1; padding: 0 0 3px; cursor: pointer;
+  align-items: center; justify-content: center; transition: var(--transicion);
+}
+.pp-scroll-flecha:hover { background: var(--rosa-claro); }
+.pp-scroll-flecha--izq { left: -4px; }
+.pp-scroll-flecha--der { right: -4px; }
+.pp-scroll-wrap--destacadas .pp-scroll-flecha { top: 34px; }
+.pp-scroll-wrap--insignias .pp-scroll-flecha { top: 40px; }
+@media (hover: hover) and (pointer: fine) {
+  .pp-scroll-flecha--visible { display: flex; }
+  .pp-destacadas, .pp-insignias-carrusel, .pp-estanteria .estante-fila { cursor: grab; }
+  .pp-destacadas, .pp-insignias-carrusel { user-select: none; }
+}
