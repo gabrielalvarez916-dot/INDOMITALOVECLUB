@@ -521,6 +521,16 @@
         <button class="btn-primario" id="btn-editar-perfil" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
       </div>
 
+      <!-- Contadores privados de flechazos (solo los ve la propia persona) -->
+      <div id="flechazos-contadores" class="flechazos-contadores" style="display:none;">
+        <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
+          <strong id="flechazos-n-flechados">0</strong><span>Flechados</span>
+        </button>
+        <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
+          <strong id="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
+        </button>
+      </div>
+
       <!-- ESTADO: cargando (vista propia embebida) -->
       <div id="pp-cargando-propio" class="cargando-container">
         <div class="spinner"></div>
@@ -2034,6 +2044,30 @@
   </div>
 </div>
 
+  <!-- Modal: lista de flechazos (Flechados / Me flecharon) -->
+<div id="modal-flechazos" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="flechazos-modal-titulo">Flechados</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p id="flechazos-modal-ayuda" class="flechazos-ayuda"></p>
+    <div id="flechazos-lista" class="flechazos-lista"></div>
+  </div>
+</div>
+
+  <!-- Modal: invitar a una campaña -->
+<div id="modal-invitar-campana" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo" id="invitar-campana-titulo">Invitar a una campaña</h3>
+    <button class="modal-cerrar" onclick="Flechazos.cerrarInvitar()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p class="flechazos-ayuda">Elegí la campaña a la que querés invitarla a reseñar.</p>
+    <div id="invitar-campana-lista" class="flechazos-lista"></div>
+  </div>
+</div>
+
   <!-- Modal: denuncia -->
 <div id="modal-denuncia" class="modal">
   <div class="modal-header">
@@ -2414,6 +2448,7 @@
 <script src="js/banners-admin.js"></script>
 <script src="js/eventos-admin.js"></script>
 <script src="js/perfil-publico.js?v=2"></script>
+<script src="js/flechazos.js"></script>
 <script src="js/tutorial.js"></script>
 </body>
 </html>

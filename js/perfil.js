@@ -20,6 +20,8 @@ async function cargarPerfil() {
   const rol     = Sesion.rol();
   if (!usuario) return;
 
+  if (typeof Flechazos !== 'undefined') Flechazos.cargarContadores();
+
   if (rol === 'autor') {
     if (!_idAutorPerfilActual) {
       const { data: idAut, error: errId } = await supabaseClient.rpc('obtener_id_autor_por_email', { p_email: Sesion.email() });

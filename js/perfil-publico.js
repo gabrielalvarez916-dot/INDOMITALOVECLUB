@@ -34,6 +34,8 @@ async function abrirPerfilPublico(id, rol) {
     } else if (rol === 'editorial') {
       await _cargarPerfilEditorial(id);
     }
+    // Botón Flechar / Desflechar (no aparece en el propio perfil)
+    if (typeof Flechazos !== 'undefined') Flechazos.pintarBotonPerfilPublico(id);
   } catch (e) {
     _estadoPerfilPublico('error');
   }
