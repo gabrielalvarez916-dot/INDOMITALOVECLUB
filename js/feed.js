@@ -959,15 +959,16 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
             <div style="background:var(--bordo); width:${c.matchScore}%; height:6px; border-radius:20px;"></div>
           </div>
         </div>` : ''}
-      ${Sesion.rol() === 'reseñador' ? `
-        <div style="margin:8px 0 16px; text-align:right;">
-          <button type="button" id="btn-favorito-campana-modal" class="btn-favorito-campana"
+      ${(Sesion.rol() === 'reseñador' || MeTienta.boton('campana', c.id)) ? `
+        <div style="margin:8px 0 16px; display:flex; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:wrap;">
+          ${MeTienta.boton('campana', c.id)}
+          ${Sesion.rol() === 'reseñador' ? `<button type="button" id="btn-favorito-campana-modal" class="btn-favorito-campana"
             onclick="_toggleFavoritoCampanaModal('${c.id}', ${c.matchScore !== undefined && c.matchScore !== null ? Math.round(c.matchScore) : 'null'})"
             title="${_estaCampanaEnFavoritos(c.id) ? 'Sacar de favoritos' : 'Guardar en favoritos'}"
             style="background:var(--blanco); border:1.5px solid var(--bordo); border-radius:20px; cursor:pointer; padding:7px 16px; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--bordo);">
             <span id="icono-favorito-campana-modal" style="font-size:18px; line-height:1;">${_estaCampanaEnFavoritos(c.id) ? '❤️' : '🤍'}</span>
             <span id="texto-favorito-campana-modal">${_estaCampanaEnFavoritos(c.id) ? 'En favoritos' : 'Guardar en favoritos'}</span>
-          </button>
+          </button>` : ''}
         </div>` : ''}
       <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--crema-oscura);">
         <p style="font-size:13px;"><strong>Cupos disponibles:</strong> ${c.cuposDisponibles} de ${c.cuposTotal}</p>
@@ -977,6 +978,7 @@ ${c.plataformasReseña && c.plataformasReseña.length > 0
       ${bloqueReseñasHtml}
       ${amazonHtml}
     `;
+    if (typeof MeTienta !== 'undefined') MeTienta.hidratar('campana', [c.id]);
   }
 
   const rol = Sesion.rol();
