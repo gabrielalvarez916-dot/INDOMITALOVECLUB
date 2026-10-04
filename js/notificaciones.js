@@ -411,6 +411,14 @@ Object.assign(VARIANTES, {
       (d) => `Vos y ${d.aliasSeguidor || 'alguien'} se flecharon. Que empiece el romance.`,
     ],
   },
+  chat_mensaje: {
+    emoji: '💬',
+    textos: [
+      (d) => `${d.aliasRemitente || 'Alguien'} te escribió un mensaje.`,
+      (d) => `Mensaje nuevo de ${d.aliasRemitente || 'alguien'}. Fijate qué te dice.`,
+      (d) => `${d.aliasRemitente || 'Alguien'} te dejó un mensaje. Pasá a leerlo.`,
+    ],
+  },
   invitacion_campana: {
     emoji: '💌',
     textos: [
@@ -658,6 +666,12 @@ function _navegarPorNotificacion(notif) {
     if (notif.referenciaId && rol && typeof abrirPerfilPublico === 'function') {
       abrirPerfilPublico(notif.referenciaId, rol);
     }
+    return;
+  }
+
+  // Mensaje de chat: abre esa conversación (el chat vive dentro de Perfil)
+  if (notif.tipo === 'chat_mensaje') {
+    if (notif.referenciaId && typeof Chat !== 'undefined') Chat.abrirDesdeNotificacion(notif.referenciaId);
     return;
   }
 

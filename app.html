@@ -56,7 +56,6 @@
         <a href="#" class="nav-link" id="nav-admin-estadisticas" style="display:none;" onclick="mostrarSeccion('admin-estadisticas')">Estadísticas</a>
         <a href="#" class="nav-link" id="nav-admin-visuales" style="display:none;" onclick="mostrarSeccion('admin-visuales')">Visuales</a>
         <a href="#" class="nav-link" id="nav-admin-check" style="display:none;" onclick="mostrarSeccion('admin-check')">Check</a>
-        <a href="#" class="nav-link" id="nav-mensajes" style="display:none;" onclick="mostrarSeccion('mensajes')">💬 Mensajes <span id="nav-mensajes-badge" class="chat-badge" style="display:none;"></span></a>
         <a href="#" class="nav-link" id="nav-admin-chats" style="display:none;" onclick="mostrarSeccion('admin-chats')">Chats</a>
         <a href="#" class="nav-link" id="nav-admin-vendedores" style="display:none;" onclick="mostrarSeccion('admin-vendedores')">Vendedores</a>
         <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
@@ -539,7 +538,10 @@
 
       <div class="panel-header">
         <h2 class="panel-titulo">Mi perfil</h2>
-        <button class="btn-primario" id="btn-editar-perfil" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-secundario" id="btn-mensajes-perfil" style="display:none;" onclick="mostrarSeccion('mensajes')">💬 Mensajes <span id="perfil-mensajes-badge" class="chat-badge" style="display:none;"></span></button>
+          <button class="btn-primario" id="btn-editar-perfil" onclick="mostrarModal('modal-editar-perfil'); cargarFormularioEdicionPerfil();">✏️ Editar perfil</button>
+        </div>
       </div>
 
       <!-- ESTADO: cargando (vista propia embebida) -->
@@ -908,6 +910,7 @@
   <section id="seccion-mensajes" class="seccion" style="display:none;">
     <div class="seccion-inner">
       <div id="chat-vista-bandeja">
+        <p style="margin:0 0 8px;"><button type="button" class="btn-secundario" onclick="mostrarSeccion('perfil')">← Volver a mi perfil</button></p>
         <h2 class="panel-titulo">💬 Mensajes</h2>
         <p class="muro-ayuda">Podés chatear con quien tengas una campaña en común (autores y reseñadoras) y con reseñadoras que se flechan entre sí. El equipo de Indómita puede revisar los chats para moderación.</p>
         <p style="margin:0 0 12px;"><button type="button" class="btn-secundario" onclick="Chat.verBloqueados()">🚫 Bloqueados</button></p>
@@ -2544,7 +2547,7 @@
 <script src="js/perfil-publico.js?v=2"></script>
 <script src="js/flechazos.js"></script>
 <script src="js/me-tienta.js?v=2"></script>
-<script src="js/chat.js?v=1"></script>
+<script src="js/chat.js?v=2"></script>
 <script src="js/admin-chats.js?v=1"></script>
 <script src="js/muro.js?v=2"></script>
 <script src="js/tutorial.js"></script>

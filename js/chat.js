@@ -38,14 +38,15 @@ const Chat = (() => {
 
   // ── Badge de no leídos en el menú ─────────────────────────
   async function actualizarBadge() {
-    const nav = document.getElementById('nav-mensajes');
-    if (!nav) return;
-    if (!puede()) { nav.style.display = 'none'; return; }
-    nav.style.display = 'inline-block';
+    // "Mensajes" vive dentro de Perfil (no en el menú principal): el aviso de mensajes nuevos llega por la campanita
+    const btn = document.getElementById('btn-mensajes-perfil');
+    if (!btn) return;
+    if (!puede()) { btn.style.display = 'none'; return; }
+    btn.style.display = '';
     try {
       const { data } = await supabaseClient.rpc('chat_no_leidos');
       const n = parseInt(data, 10) || 0;
-      const b = document.getElementById('nav-mensajes-badge');
+      const b = document.getElementById('perfil-mensajes-badge');
       if (b) { b.textContent = n > 99 ? '99+' : n; b.style.display = n > 0 ? 'inline-block' : 'none'; }
     } catch (e) { /* silencioso */ }
   }
@@ -60,8 +61,8 @@ const Chat = (() => {
   function detener() {
     if (_pollBadge) { clearInterval(_pollBadge); _pollBadge = null; }
     _detenerConv();
-    const nav = document.getElementById('nav-mensajes');
-    if (nav) nav.style.display = 'none';
+    const btn = document.getElementById('btn-mensajes-perfil');
+    if (btn) btn.style.display = 'none';
   }
 
   function _detenerConv() {
@@ -208,6 +209,13 @@ const Chat = (() => {
     }
   }
 
+  // Desde la campanita: abre la conversación del aviso
+  function abrirDesdeNotificacion(idChat) {
+    if (!idChat) return;
+    mostrarSeccion('mensajes');
+    abrirConversacion(idChat);
+  }
+
   // ── Abrir chat desde un perfil ────────────────────────────
   async function escribirA(idUsuario) {
     const { data, error } = await supabaseClient.rpc('chat_abrir', { p_con: idUsuario });
@@ -285,7 +293,7 @@ const Chat = (() => {
   }
 
   return {
-    iniciar, detener, actualizarBadge, cargarBandeja, abrirConversacion, enviar, escribirA,
+    iniciar, detener, actualizarBadge, cargarBandeja, abrirConversacion, abrirDesdeNotificacion, enviar, escribirA,
     bloquear, desbloquear, verBloqueados, denunciarChat, denunciarMensaje, pintarAccionesPerfilPublico
   };
 })();

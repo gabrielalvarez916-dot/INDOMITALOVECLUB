@@ -172,6 +172,7 @@ function mostrarSeccion(nombre) {
       break;
     case 'perfil':
       if (typeof cargarPerfil === 'function') cargarPerfil();
+      if (typeof Chat !== 'undefined') Chat.actualizarBadge();
       break;
     case 'guia-resenador':
       if (typeof cargarGuiaResenador === 'function') cargarGuiaResenador();
