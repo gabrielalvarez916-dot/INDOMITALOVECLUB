@@ -392,6 +392,35 @@ const INSIGNIA_VARIANTES = {
   },
 };
 
+// FLECHAR (seguir): flechazo nuevo, flechazo mutuo e invitación a campaña.
+// Mismo copy que la Edge Function enviar-push-notificacion.
+Object.assign(VARIANTES, {
+  flechazo_nuevo: {
+    emoji: '💘',
+    textos: [
+      (d) => `${d.aliasSeguidor || 'Alguien'} te flechó. Ya no podés fingir que no sos interesante.`,
+      (d) => `Alguien tiene buen gusto: ${d.aliasSeguidor || 'alguien'} te flechó.`,
+      (d) => `${d.aliasSeguidor || 'Alguien'} te tiró un flechazo. Fijate si le devolvés.`,
+    ],
+  },
+  flechazo_mutuo: {
+    emoji: '💞',
+    textos: [
+      (d) => `${d.aliasSeguidor || 'Alguien'} te devolvió el flechazo. Esto va en serio.`,
+      (d) => `Flechazo mutuo con ${d.aliasSeguidor || 'alguien'}. Se dijeron todo sin decirse nada.`,
+      (d) => `Vos y ${d.aliasSeguidor || 'alguien'} se flecharon. Que empiece el romance.`,
+    ],
+  },
+  invitacion_campana: {
+    emoji: '💌',
+    textos: [
+      (d) => `${d.aliasAutor || 'Alguien'} te invitó a reseñar "${d.nombreLibro || 'su campaña'}". No se le dice que no a cualquiera.`,
+      (d) => `Te llegó una invitación: "${d.nombreLibro || 'una campaña'}", de ${d.aliasAutor || 'alguien'}. Pasá a ver.`,
+      (d) => `${d.aliasAutor || 'Alguien'} te quiere leyendo "${d.nombreLibro || 'su libro'}". Mirá la campaña.`,
+    ],
+  },
+});
+
 // Tipos sin variantes (copy fijo)
 const NOTIF_TEXTOS = {
   campaña_cancelada_admin: (d) => `Tu campaña "${d.nombreLibro || ''}" fue cancelada por el equipo de Indómita.`,
@@ -621,6 +650,23 @@ async function _clickNotificacion(idNotificacion) {
  * Usa funciones que ya existen en tu app (mostrarSeccion, verDetalleCampaña, etc.)
  */
 function _navegarPorNotificacion(notif) {
+  // Flechazos: abre el perfil de quien te flechó
+  if (notif.tipo === 'flechazo_nuevo' || notif.tipo === 'flechazo_mutuo') {
+    const rol = notif.datosExtra?.rolSeguidor;
+    if (notif.referenciaId && rol && typeof abrirPerfilPublico === 'function') {
+      abrirPerfilPublico(notif.referenciaId, rol);
+    }
+    return;
+  }
+
+  // Invitación a campaña: abre el detalle de esa campaña
+  if (notif.tipo === 'invitacion_campana') {
+    if (notif.referenciaId && typeof verDetalleCampaña === 'function') {
+      verDetalleCampaña(notif.referenciaId);
+    }
+    return;
+  }
+
   const tiposCampaña = [
     'postulacion_nueva', 'resena_cargada', 'campaña_finalizada',
     'campaña_cancelada_admin', 'postulacion_abandono',
