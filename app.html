@@ -556,78 +556,66 @@
         <p class="estado-vacio-texto">No se pudo cargar el perfil.</p>
       </div>
 
-      <!-- BLOQUE AUTOR (propio) — copia de #pp-bloque-autor con sufijo -propio -->
-      <div id="pp-bloque-autor-propio" style="display:none;">
+      <!-- BLOQUE AUTOR (propio) -->
+      <div id="pp-bloque-autor-propio" class="pp-perfil" style="display:none;">
 
-        <!-- Cabecera -->
-        <div class="pp-cabecera">
-        <img id="pp-avatar-propio" src="" alt="Avatar" class="pp-avatar" />
-  <div class="pp-cabecera-info">
-    <p id="pp-alias-propio"     class="pp-alias"></p>
-    <p id="pp-ubicacion-propio" class="pp-ubicacion"></p>
-    <p id="pp-autor-miembro-desde-propio" class="pp-miembro-desde"></p>
-    <div id="pp-redes-propio"   class="pp-redes"></div>
-    <!-- Flechazos: los números son públicos; las listas (al tocar) solo las ve la propia persona -->
-    <div class="flechazos-contadores flechazos-contadores--chico" style="display:none;">
-      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
-        <strong class="flechazos-n-flechados">0</strong><span>Flechados</span>
-      </button>
-      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
-        <strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
-      </button>
-    </div>
-  </div>
-</div>
-        <!-- Gamificación del autor -->
-        <div class="pp-bloque" id="pp-autor-gamificacion-cont-propio" style="display:none;">
-          <div id="pp-autor-gamificacion-propio"></div>
+      <div class="pp-portada" aria-hidden="true"></div>
+      <div class="pp-cabecera">
+        <div class="pp-avatar-aro"><img id="pp-avatar-propio" src="" alt="Avatar" class="pp-avatar" /></div>
+        <div class="pp-hstats">
+          <div class="pp-hstat"><strong id="pp-hn-main-autor-propio">–</strong><span>Libros</span></div>
+          <button type="button" class="pp-hstat pp-hstat--click" onclick="Flechazos.abrirLista('flechados')"><strong class="flechazos-n-flechados">0</strong><span>Flechados</span></button><button type="button" class="pp-hstat pp-hstat--click" onclick="Flechazos.abrirLista('flechadores')"><strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span></button>
         </div>
-
-        <!-- Libros -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">Mis libros</p>
-          <div id="pp-autor-libros-propio" class="estante-fila"></div>
-          <button class="btn-secundario btn-full" id="pp-btn-ver-libros-autor-propio" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
-            Ver todos mis libros →
-          </button>
+      </div>
+      <div class="pp-cabecera-info">
+        <p id="pp-alias-propio" class="pp-alias"></p>
+        <div class="pp-chips-fila">
+          <span class="pp-rol-chip">Autor@</span>
+          
         </div>
+        <p id="pp-ubicacion-propio" class="pp-ubicacion"></p>
+        <p id="pp-autor-miembro-desde-propio" class="pp-miembro-desde"></p>
+      </div>
+      <div id="pp-redes-propio" class="pp-redes"></div>
+      <div id="pp-destacadas-autor-propio" class="pp-destacadas" data-tab="logros" style="display:none;"></div>
 
-        <!-- Campañas activas -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">Campañas activas</p>
-          <div id="pp-autor-campanas-propio" class="pp-libros-goodreads-grid"></div>
-        </div>
-
+      <div class="pp-tabs" role="tablist"><button type="button" class="pp-tab pp-tab--activa" role="tab" data-tab="libros" onclick="ppCambiarTab(this)">Libros</button><button type="button" class="pp-tab" role="tab" data-tab="campanas" onclick="ppCambiarTab(this)">Campañas</button><button type="button" class="pp-tab" role="tab" data-tab="logros" onclick="ppCambiarTab(this)">Logros</button></div>
+      <div class="pp-tab-panel pp-tab-panel--activo" data-panel="libros">
+          <div class="pp-estanteria">
+            <div class="estante-fila" id="pp-autor-libros-propio"></div>
+            <div class="estante-tabla"></div>
+          </div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-autor-propio" onclick="abrirBibliotecaAutor()">Ver todos los libros</button></div>
+      <div class="pp-tab-panel" data-panel="campanas"><div id="pp-autor-campanas-propio" class="pp-libros-goodreads-grid"></div></div>
+      <div class="pp-tab-panel" data-panel="logros"><div class="pp-bloque" id="pp-autor-gamificacion-cont-propio"><div id="pp-autor-gamificacion-propio"></div></div></div>
       </div>
       <!-- /BLOQUE AUTOR (propio) -->
+      <!-- BLOQUE RESEÑADOR (propio) -->
+      <div id="pp-bloque-reseñador-propio" class="pp-perfil" style="display:none;">
 
-      <!-- BLOQUE RESEÑADOR (propio) — copia de #pp-bloque-reseñador con sufijo -propio -->
-      <div id="pp-bloque-reseñador-propio" style="display:none;">
-
-        <!-- Cabecera -->
-        <div class="pp-cabecera">
-  <img id="pp-avatar-r-propio" src="" alt="Avatar" class="pp-avatar" />
-  <div class="pp-cabecera-info">
-    <p id="pp-alias-r-propio"     class="pp-alias"></p>
-    <p id="pp-ubicacion-r-propio" class="pp-ubicacion"></p>
-    <div id="pp-redes-r-propio"   class="pp-redes"></div>
-    <!-- Flechazos: los números son públicos; las listas (al tocar) solo las ve la propia persona -->
-    <div class="flechazos-contadores flechazos-contadores--chico" style="display:none;">
-      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
-        <strong class="flechazos-n-flechados">0</strong><span>Flechados</span>
-      </button>
-      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
-        <strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-        <!-- Badge histórico + miembro desde -->
-        <div class="pp-bloque pp-encabezado-historico">
-          <div id="pp-r-badge-historico-propio" class="pp-badges-fila"></div>
-          <p id="pp-r-miembro-desde-propio" class="pp-miembro-desde"></p>
+      <div class="pp-portada" aria-hidden="true"></div>
+      <div class="pp-cabecera">
+        <div class="pp-avatar-aro"><img id="pp-avatar-r-propio" src="" alt="Avatar" class="pp-avatar" /></div>
+        <div class="pp-hstats">
+          <div class="pp-hstat"><strong id="pp-hn-main-r-propio">–</strong><span>Reseñas</span></div>
+          <button type="button" class="pp-hstat pp-hstat--click" onclick="Flechazos.abrirLista('flechados')"><strong class="flechazos-n-flechados">0</strong><span>Flechados</span></button><button type="button" class="pp-hstat pp-hstat--click" onclick="Flechazos.abrirLista('flechadores')"><strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span></button>
         </div>
+      </div>
+      <div class="pp-cabecera-info">
+        <p id="pp-alias-r-propio" class="pp-alias"></p>
+        <div class="pp-chips-fila">
+          <span class="pp-rol-chip">Reseñad@r</span>
+          <div id="pp-r-badge-historico-propio" class="pp-badges-fila"></div>
+        </div>
+        <p id="pp-ubicacion-r-propio" class="pp-ubicacion"></p>
+        <p id="pp-r-miembro-desde-propio" class="pp-miembro-desde"></p>
+    <div class="pp-bio" id="pp-bloque-descripcion-propio">
+      <p id="pp-reseñador-descripcion-propio" class="pp-texto-truncado"></p>
+      <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion-propio" onclick="_toggleVerMas('descripcion','-propio')" style="display:none;">Ver más</button>
+    </div>
+      </div>
+      <div id="pp-redes-r-propio" class="pp-redes"></div>
+      <div id="pp-destacadas-r-propio" class="pp-destacadas" data-tab="insignias" style="display:none;"></div>
 
         <!-- Verificación de seguidores (privado, solo visible para el propio reseñador) -->
         <div class="pp-bloque" id="bloque-verificacion-seguidores" style="display:none;">
@@ -658,104 +646,59 @@
           </div>
         </div>
 
-        <!-- Estadísticas históricas como reseñador -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">Estadísticas como reseñad@r</p>
-          <div id="pp-r-stats-propio" class="pp-stats-grid"></div>
-        </div>
-
-        <!-- Insignias -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo" data-ayuda="perf_insignias">Insignias</p>
-          <div id="pp-r-insignias-propio"></div>
-        </div>
-
-        <!-- Géneros favoritos -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo" data-ayuda="perf_generos">Géneros favoritos</p>
-          <div id="pp-reseñador-generos-propio"></div>
-        </div>
-
-        <div class="pp-bloque" id="pp-bloque-descripcion-propio">
-          <p class="pp-bloque-titulo">Sobre mí</p>
-          <p id="pp-reseñador-descripcion-propio" class="pp-texto-truncado"></p>
-          <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion-propio" onclick="_toggleVerMas('descripcion','-propio')" style="display:none;">Ver más</button>
-        </div>
-
-        <!-- Tropes favoritos -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo" data-ayuda="perf_tropes">Tropes favoritos</p>
-          <div id="pp-reseñador-tropes-propio" class="pp-tropes-lista pp-tropes-truncado"></div>
-          <button class="pp-btn-vermas" id="pp-btn-vermas-tropes-propio" onclick="_toggleVerMas('tropes','-propio')" style="display:none;">Ver más</button>
-        </div>
-
-        <!-- Últimos libros reseñados -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">Últimos libros reseñados</p>
-          <div id="pp-r-ultimos-libros-propio" class="pp-libros-goodreads-grid"></div>
-          <button class="btn-secundario btn-full" id="pp-btn-ver-biblioteca-propio" style="margin-top:12px;" onclick="abrirBiblioteca()">
-            Ver biblioteca completa →
-          </button>
-        </div>
-
+      <div class="pp-tabs" role="tablist"><button type="button" class="pp-tab pp-tab--activa" role="tab" data-tab="libros" onclick="ppCambiarTab(this)">Libros</button><button type="button" class="pp-tab" role="tab" data-tab="insignias" onclick="ppCambiarTab(this)">Insignias</button><button type="button" class="pp-tab" role="tab" data-tab="sobre" onclick="ppCambiarTab(this)">Sobre mí</button></div>
+      <div class="pp-tab-panel pp-tab-panel--activo" data-panel="libros">
+          <div class="pp-estanteria pp-estanteria--cards">
+            <div id="pp-r-ultimos-libros-propio" class="pp-libros-goodreads-grid"></div>
+            <div class="estante-tabla"></div>
+          </div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-biblioteca-propio" onclick="abrirBiblioteca()">Ver biblioteca completa</button></div>
+      <div class="pp-tab-panel" data-panel="insignias">
+          <div class="pp-bloque"><p class="pp-bloque-titulo">Estadísticas</p><div id="pp-r-stats-propio" class="pp-stats-grid"></div></div>
+          <div class="pp-bloque"><p class="pp-bloque-titulo" data-ayuda="perf_insignias">Insignias</p><div id="pp-r-insignias-propio"></div></div></div>
+      <div class="pp-tab-panel" data-panel="sobre">
+          <div class="pp-bloque"><p class="pp-bloque-titulo" data-ayuda="perf_generos">Géneros favoritos</p><div id="pp-reseñador-generos-propio"></div></div>
+          <div class="pp-bloque"><p class="pp-bloque-titulo" data-ayuda="perf_tropes">Tropes favoritos</p>
+            <div id="pp-reseñador-tropes-propio" class="pp-tropes-lista pp-tropes-truncado"></div>
+            <button class="pp-btn-vermas" id="pp-btn-vermas-tropes-propio" onclick="_toggleVerMas('tropes','-propio')" style="display:none;">Ver más</button>
+          </div></div>
       </div>
       <!-- /BLOQUE RESEÑADOR (propio) -->
-
       <!-- BLOQUE EDITORIAL (propio) -->
-      <div id="pp-bloque-editorial-propio" style="display:none;">
+      <div id="pp-bloque-editorial-propio" class="pp-perfil" style="display:none;">
 
-        <!-- Cabecera -->
-        <div class="pp-cabecera">
-          <img id="pp-avatar-ed-propio" src="" alt="Avatar" class="pp-avatar" />
-          <div class="pp-cabecera-info">
-            <p id="pp-alias-ed-propio"     class="pp-alias"></p>
-            <p id="pp-ubicacion-ed-propio" class="pp-ubicacion"></p>
-            <p id="pp-editorial-miembro-desde-propio" class="pp-miembro-desde"></p>
-            <div id="pp-redes-ed-propio"   class="pp-redes"></div>
-    <!-- Flechazos: los números son públicos; las listas (al tocar) solo las ve la propia persona -->
-    <div class="flechazos-contadores flechazos-contadores--chico" style="display:none;">
-      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechados')">
-        <strong class="flechazos-n-flechados">0</strong><span>Flechados</span>
-      </button>
-      <button type="button" class="flechazos-contador" onclick="Flechazos.abrirLista('flechadores')">
-        <strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span>
-      </button>
-    </div>
+      <div class="pp-portada" aria-hidden="true"></div>
+      <div class="pp-cabecera">
+        <div class="pp-avatar-aro"><img id="pp-avatar-ed-propio" src="" alt="Avatar" class="pp-avatar" /></div>
+        <div class="pp-hstats">
+          <div class="pp-hstat"><strong id="pp-hn-main-ed-propio">–</strong><span>Libros</span></div>
+          <button type="button" class="pp-hstat pp-hstat--click" onclick="Flechazos.abrirLista('flechados')"><strong class="flechazos-n-flechados">0</strong><span>Flechados</span></button><button type="button" class="pp-hstat pp-hstat--click" onclick="Flechazos.abrirLista('flechadores')"><strong class="flechazos-n-flechadores">0</strong><span>Me flecharon</span></button>
+        </div>
+      </div>
+      <div class="pp-cabecera-info">
+        <p id="pp-alias-ed-propio" class="pp-alias"></p>
+        <div class="pp-chips-fila">
+          <span class="pp-rol-chip">Editorial</span>
+          
+        </div>
+        <p id="pp-ubicacion-ed-propio" class="pp-ubicacion"></p>
+        <p id="pp-editorial-miembro-desde-propio" class="pp-miembro-desde"></p>
+      </div>
+      <div id="pp-redes-ed-propio" class="pp-redes"></div>
+      <div id="pp-destacadas-ed-propio" class="pp-destacadas" data-tab="sobre" style="display:none;"></div>
+
+      <div class="pp-tabs" role="tablist"><button type="button" class="pp-tab pp-tab--activa" role="tab" data-tab="libros" onclick="ppCambiarTab(this)">Libros</button><button type="button" class="pp-tab" role="tab" data-tab="campanas" onclick="ppCambiarTab(this)">Campañas</button><button type="button" class="pp-tab" role="tab" data-tab="sobre" onclick="ppCambiarTab(this)">Sobre nosotros</button></div>
+      <div class="pp-tab-panel pp-tab-panel--activo" data-panel="libros">
+          <div class="pp-estanteria">
+            <div class="estante-fila" id="pp-editorial-libros-propio"></div>
+            <div class="estante-tabla"></div>
           </div>
-        </div>
-
-        <!-- Gamificación -->
-        <div class="pp-bloque" id="pp-editorial-gamificacion-cont-propio" style="display:none;">
-          <div id="pp-editorial-gamificacion-propio"></div>
-        </div>
-
-        <!-- Presentación -->
-        <div class="pp-bloque" id="pp-bloque-editorial-descripcion-propio" style="display:none;">
-          <p class="pp-bloque-titulo">Presentación</p>
-          <p id="pp-editorial-descripcion-propio" class="pp-texto-truncado"></p>
-        </div>
-
-        <!-- Géneros que trabajamos -->
-        <div class="pp-bloque" id="pp-bloque-editorial-generos-propio" style="display:none;">
-          <p class="pp-bloque-titulo">Géneros que trabajamos</p>
-          <p id="pp-editorial-generos-propio" class="pp-etiquetas"></p>
-        </div>
-
-        <!-- Libros -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">Mis libros publicados</p>
-          <div id="pp-editorial-libros-propio" class="estante-fila"></div>
-          <button class="btn-secundario btn-full" id="pp-btn-ver-libros-editorial-propio" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
-            Ver todos mis libros →
-          </button>
-        </div>
-
-        <!-- Campañas activas -->
-        <div class="pp-bloque">
-          <p class="pp-bloque-titulo">Campañas activas</p>
-          <div id="pp-editorial-campanas-propio" class="pp-libros-goodreads-grid"></div>
-        </div>
-
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-editorial-propio" onclick="abrirBibliotecaAutor()">Ver todos los libros</button></div>
+      <div class="pp-tab-panel" data-panel="campanas"><div id="pp-editorial-campanas-propio" class="pp-libros-goodreads-grid"></div></div>
+      <div class="pp-tab-panel" data-panel="sobre">
+          <div class="pp-bloque" id="pp-bloque-editorial-descripcion-propio" style="display:none;"><p class="pp-bloque-titulo">Presentación</p><p id="pp-editorial-descripcion-propio" class="pp-texto-truncado"></p></div>
+          <div class="pp-bloque" id="pp-bloque-editorial-generos-propio" style="display:none;"><p class="pp-bloque-titulo">Géneros que trabajamos</p><p id="pp-editorial-generos-propio" class="pp-etiquetas"></p></div>
+          <div class="pp-bloque" id="pp-editorial-gamificacion-cont-propio" style="display:none;"><div id="pp-editorial-gamificacion-propio"></div></div></div>
       </div>
       <!-- /BLOQUE EDITORIAL (propio) -->
 
@@ -2331,157 +2274,145 @@
     <!-- Se pinta siempre que hay datos; queda dentro de cada bloque para no acoplar -->
  
     <!-- BLOQUE AUTOR -->
-   <div id="pp-bloque-autor" style="display:none;">
+      <div id="pp-bloque-autor" class="pp-perfil" style="display:none;">
 
-      <!-- Cabecera -->
+      <div class="pp-portada" aria-hidden="true"></div>
       <div class="pp-cabecera">
-        <img id="pp-avatar" src="" alt="Avatar" class="pp-avatar" />
-  <div class="pp-cabecera-info">
-    <p id="pp-alias"     class="pp-alias"></p>
-    <button id="pp-btn-denunciar-autor" class="pp-btn-denunciar" onclick="abrirModalDenuncia('usuario_autor', _idAutorPerfilActual)" title="Denunciar">🚩 Denunciar</button>
-    <p id="pp-ubicacion" class="pp-ubicacion"></p>
-    <p id="pp-autor-miembro-desde" class="pp-miembro-desde"></p>
-    <div id="pp-redes"   class="pp-redes"></div>
-  </div>
-</div>
-
-  <!-- Gamificación del autor -->
-      <div class="pp-bloque" id="pp-autor-gamificacion-cont" style="display:none;">
-        <div id="pp-autor-gamificacion"></div>
-      </div>
-
- 
-      <!-- Libros -->
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Mis libros</p>
-        <div id="pp-autor-libros" class="estante-fila"></div>
-        <button class="btn-secundario btn-full" id="pp-btn-ver-libros-autor" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
-          Ver todos mis libros →
-        </button>
-      </div>
- 
-      <!-- Campañas activas -->
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Campañas activas</p>
-        <div id="pp-autor-campanas" class="pp-libros-goodreads-grid"></div>
-      </div>
- 
-    </div>
-    <!-- /BLOQUE AUTOR -->
- 
- 
-    <!-- BLOQUE RESEÑADOR -->
-    <div id="pp-bloque-reseñador" style="display:none;">
- 
-      <!-- Cabecera -->
-<div class="pp-cabecera">
-  <img id="pp-avatar-r" src="" alt="Avatar" class="pp-avatar" />
-  <div class="pp-cabecera-info">
-    <p id="pp-alias-r"     class="pp-alias"></p>
-    <button id="pp-btn-denunciar-r" class="pp-btn-denunciar" onclick="abrirModalDenuncia('usuario_resenador', _idReseñadorPerfilActual)" title="Denunciar">🚩 Denunciar</button>
-    <p id="pp-ubicacion-r" class="pp-ubicacion"></p>
-    <div id="pp-redes-r"   class="pp-redes"></div>
-  </div>
-</div>
-
-<!-- Badge histórico + miembro desde -->
-<div class="pp-bloque pp-encabezado-historico">
-  <div id="pp-r-badge-historico" class="pp-badges-fila"></div>
-  <p id="pp-r-miembro-desde" class="pp-miembro-desde"></p>
-</div>
-
-<!-- Estadísticas históricas como reseñador -->
-<div class="pp-bloque">
-  <p class="pp-bloque-titulo">Estadísticas como reseñad@r</p>
-  <div id="pp-r-stats" class="pp-stats-grid"></div>
-</div>
-
-<!-- Insignias -->
-<div class="pp-bloque">
-  <p class="pp-bloque-titulo" data-ayuda="perf_insignias">Insignias</p>
-  <div id="pp-r-insignias"></div>
-</div>
-
-    
-      <!-- Géneros favoritos -->
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Géneros favoritos</p>
-        <div id="pp-reseñador-generos"></div>
-      </div>
-
-    <div class="pp-bloque" id="pp-bloque-descripcion">
-  <p class="pp-bloque-titulo">Sobre mí</p>
-  <p id="pp-reseñador-descripcion" class="pp-texto-truncado"></p>
-  <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion" onclick="_toggleVerMas('descripcion')" style="display:none;">Ver más</button>
-</div>
- 
-     <!-- Tropes favoritos -->
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Tropes favoritos</p>
-        <div id="pp-reseñador-tropes" class="pp-tropes-lista pp-tropes-truncado"></div>
-        <button class="pp-btn-vermas" id="pp-btn-vermas-tropes" onclick="_toggleVerMas('tropes')" style="display:none;">Ver más</button>
-      </div>
- 
-     <!-- Últimos libros reseñados -->
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Últimos libros reseñados</p>
-        <div id="pp-r-ultimos-libros" class="pp-libros-goodreads-grid"></div>
-        <button class="btn-secundario btn-full" id="pp-btn-ver-biblioteca" style="margin-top:12px;" onclick="abrirBiblioteca()">
-          Ver biblioteca completa →
-        </button>
-      </div>
- 
-   </div>
-    <!-- /BLOQUE RESEÑADOR -->
-
-    <!-- BLOQUE EDITORIAL -->
-    <div id="pp-bloque-editorial" style="display:none;">
-
-      <!-- Cabecera -->
-      <div class="pp-cabecera">
-        <img id="pp-avatar-ed" src="" alt="Avatar" class="pp-avatar" />
-        <div class="pp-cabecera-info">
-          <p id="pp-alias-ed"     class="pp-alias"></p>
-          <button id="pp-btn-denunciar-ed" class="pp-btn-denunciar" onclick="abrirModalDenuncia('usuario_autor', _idEditorialPerfilActual)" title="Denunciar">🚩 Denunciar</button>
-          <p id="pp-ubicacion-ed" class="pp-ubicacion"></p>
-<p id="pp-editorial-miembro-desde" class="pp-miembro-desde"></p>
-          <div id="pp-redes-ed"   class="pp-redes"></div>
+        <div class="pp-avatar-aro"><img id="pp-avatar" src="" alt="Avatar" class="pp-avatar" /></div>
+        <div class="pp-hstats">
+          <div class="pp-hstat"><strong id="pp-hn-main-autor">–</strong><span>Libros</span></div>
+          <div class="pp-hstat"><strong class="pp-hstat-n-flechados">–</strong><span>Flechados</span></div><div class="pp-hstat"><strong class="pp-hstat-n-flechadores">–</strong><span>Me flecharon</span></div>
         </div>
       </div>
-
-      <!-- Gamificación -->
-      <div class="pp-bloque" id="pp-editorial-gamificacion-cont" style="display:none;">
-        <div id="pp-editorial-gamificacion"></div>
+      <div class="pp-cabecera-info">
+        <p id="pp-alias" class="pp-alias"></p>
+        <div class="pp-chips-fila">
+          <span class="pp-rol-chip">Autor@</span>
+          
+        </div>
+        <p id="pp-ubicacion" class="pp-ubicacion"></p>
+        <p id="pp-autor-miembro-desde" class="pp-miembro-desde"></p>
       </div>
-
-      <!-- Presentación -->
-      <div class="pp-bloque" id="pp-bloque-editorial-descripcion" style="display:none;">
-        <p class="pp-bloque-titulo">Presentación</p>
-        <p id="pp-editorial-descripcion" class="pp-texto-truncado"></p>
+    <div class="pp-acciones">
+      <div class="pp-menu">
+        <button type="button" class="pp-menu-btn" onclick="ppToggleMenu(this, event)" aria-label="Más opciones" title="Más opciones">⋯</button>
+        <div class="pp-menu-lista" style="display:none;">
+          <button type="button" id="pp-btn-denunciar-autor" class="pp-menu-item" onclick="abrirModalDenuncia('usuario_autor', _idAutorPerfilActual)">🚩 Denunciar</button>
+        </div>
       </div>
-
-      <!-- Géneros que trabajamos -->
-      <div class="pp-bloque" id="pp-bloque-editorial-generos" style="display:none;">
-        <p class="pp-bloque-titulo">Géneros que trabajamos</p>
-        <p id="pp-editorial-generos" class="pp-etiquetas"></p>
-      </div>
-
-      <!-- Libros -->
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Libros publicados</p>
-        <div id="pp-editorial-libros" class="estante-fila"></div>
-        <button class="btn-secundario btn-full" id="pp-btn-ver-libros-editorial" style="margin-top:12px;" onclick="abrirBibliotecaAutor()">
-          Ver todos los libros →
-        </button>
-      </div>
-
-      <!-- Campañas activas -->
-      <div class="pp-bloque">
-        <p class="pp-bloque-titulo">Campañas activas</p>
-        <div id="pp-editorial-campanas" class="pp-libros-goodreads-grid"></div>
-      </div>
-
     </div>
+      <div id="pp-redes" class="pp-redes"></div>
+      <div id="pp-destacadas-autor" class="pp-destacadas" data-tab="logros" style="display:none;"></div>
+
+      <div class="pp-tabs" role="tablist"><button type="button" class="pp-tab pp-tab--activa" role="tab" data-tab="libros" onclick="ppCambiarTab(this)">Libros</button><button type="button" class="pp-tab" role="tab" data-tab="campanas" onclick="ppCambiarTab(this)">Campañas</button><button type="button" class="pp-tab" role="tab" data-tab="logros" onclick="ppCambiarTab(this)">Logros</button></div>
+      <div class="pp-tab-panel pp-tab-panel--activo" data-panel="libros">
+          <div class="pp-estanteria">
+            <div class="estante-fila" id="pp-autor-libros"></div>
+            <div class="estante-tabla"></div>
+          </div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-autor" onclick="abrirBibliotecaAutor()">Ver todos los libros</button></div>
+      <div class="pp-tab-panel" data-panel="campanas"><div id="pp-autor-campanas" class="pp-libros-goodreads-grid"></div></div>
+      <div class="pp-tab-panel" data-panel="logros"><div class="pp-bloque" id="pp-autor-gamificacion-cont"><div id="pp-autor-gamificacion"></div></div></div>
+      </div>
+    <!-- /BLOQUE AUTOR -->
+    <!-- BLOQUE RESEÑADOR -->
+      <div id="pp-bloque-reseñador" class="pp-perfil" style="display:none;">
+
+      <div class="pp-portada" aria-hidden="true"></div>
+      <div class="pp-cabecera">
+        <div class="pp-avatar-aro"><img id="pp-avatar-r" src="" alt="Avatar" class="pp-avatar" /></div>
+        <div class="pp-hstats">
+          <div class="pp-hstat"><strong id="pp-hn-main-r">–</strong><span>Reseñas</span></div>
+          <div class="pp-hstat"><strong class="pp-hstat-n-flechados">–</strong><span>Flechados</span></div><div class="pp-hstat"><strong class="pp-hstat-n-flechadores">–</strong><span>Me flecharon</span></div>
+        </div>
+      </div>
+      <div class="pp-cabecera-info">
+        <p id="pp-alias-r" class="pp-alias"></p>
+        <div class="pp-chips-fila">
+          <span class="pp-rol-chip">Reseñad@r</span>
+          <div id="pp-r-badge-historico" class="pp-badges-fila"></div>
+        </div>
+        <p id="pp-ubicacion-r" class="pp-ubicacion"></p>
+        <p id="pp-r-miembro-desde" class="pp-miembro-desde"></p>
+    <div class="pp-bio" id="pp-bloque-descripcion">
+      <p id="pp-reseñador-descripcion" class="pp-texto-truncado"></p>
+      <button class="pp-btn-vermas" id="pp-btn-vermas-descripcion" onclick="_toggleVerMas('descripcion','')" style="display:none;">Ver más</button>
+    </div>
+      </div>
+    <div class="pp-acciones">
+      <div class="pp-menu">
+        <button type="button" class="pp-menu-btn" onclick="ppToggleMenu(this, event)" aria-label="Más opciones" title="Más opciones">⋯</button>
+        <div class="pp-menu-lista" style="display:none;">
+          <button type="button" id="pp-btn-denunciar-r" class="pp-menu-item" onclick="abrirModalDenuncia('usuario_resenador', _idReseñadorPerfilActual)">🚩 Denunciar</button>
+        </div>
+      </div>
+    </div>
+      <div id="pp-redes-r" class="pp-redes"></div>
+      <div id="pp-destacadas-r" class="pp-destacadas" data-tab="insignias" style="display:none;"></div>
+
+
+      <div class="pp-tabs" role="tablist"><button type="button" class="pp-tab pp-tab--activa" role="tab" data-tab="libros" onclick="ppCambiarTab(this)">Libros</button><button type="button" class="pp-tab" role="tab" data-tab="insignias" onclick="ppCambiarTab(this)">Insignias</button><button type="button" class="pp-tab" role="tab" data-tab="sobre" onclick="ppCambiarTab(this)">Sobre mí</button></div>
+      <div class="pp-tab-panel pp-tab-panel--activo" data-panel="libros">
+          <div class="pp-estanteria pp-estanteria--cards">
+            <div id="pp-r-ultimos-libros" class="pp-libros-goodreads-grid"></div>
+            <div class="estante-tabla"></div>
+          </div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-biblioteca" onclick="abrirBiblioteca()">Ver biblioteca completa</button></div>
+      <div class="pp-tab-panel" data-panel="insignias">
+          <div class="pp-bloque"><p class="pp-bloque-titulo">Estadísticas</p><div id="pp-r-stats" class="pp-stats-grid"></div></div>
+          <div class="pp-bloque"><p class="pp-bloque-titulo" data-ayuda="perf_insignias">Insignias</p><div id="pp-r-insignias"></div></div></div>
+      <div class="pp-tab-panel" data-panel="sobre">
+          <div class="pp-bloque"><p class="pp-bloque-titulo">Géneros favoritos</p><div id="pp-reseñador-generos"></div></div>
+          <div class="pp-bloque"><p class="pp-bloque-titulo">Tropes favoritos</p>
+            <div id="pp-reseñador-tropes" class="pp-tropes-lista pp-tropes-truncado"></div>
+            <button class="pp-btn-vermas" id="pp-btn-vermas-tropes" onclick="_toggleVerMas('tropes','')" style="display:none;">Ver más</button>
+          </div></div>
+      </div>
+    <!-- /BLOQUE RESEÑADOR -->
+    <!-- BLOQUE EDITORIAL -->
+      <div id="pp-bloque-editorial" class="pp-perfil" style="display:none;">
+
+      <div class="pp-portada" aria-hidden="true"></div>
+      <div class="pp-cabecera">
+        <div class="pp-avatar-aro"><img id="pp-avatar-ed" src="" alt="Avatar" class="pp-avatar" /></div>
+        <div class="pp-hstats">
+          <div class="pp-hstat"><strong id="pp-hn-main-ed">–</strong><span>Libros</span></div>
+          <div class="pp-hstat"><strong class="pp-hstat-n-flechados">–</strong><span>Flechados</span></div><div class="pp-hstat"><strong class="pp-hstat-n-flechadores">–</strong><span>Me flecharon</span></div>
+        </div>
+      </div>
+      <div class="pp-cabecera-info">
+        <p id="pp-alias-ed" class="pp-alias"></p>
+        <div class="pp-chips-fila">
+          <span class="pp-rol-chip">Editorial</span>
+          
+        </div>
+        <p id="pp-ubicacion-ed" class="pp-ubicacion"></p>
+        <p id="pp-editorial-miembro-desde" class="pp-miembro-desde"></p>
+      </div>
+    <div class="pp-acciones">
+      <div class="pp-menu">
+        <button type="button" class="pp-menu-btn" onclick="ppToggleMenu(this, event)" aria-label="Más opciones" title="Más opciones">⋯</button>
+        <div class="pp-menu-lista" style="display:none;">
+          <button type="button" id="pp-btn-denunciar-ed" class="pp-menu-item" onclick="abrirModalDenuncia('usuario_autor', _idEditorialPerfilActual)">🚩 Denunciar</button>
+        </div>
+      </div>
+    </div>
+      <div id="pp-redes-ed" class="pp-redes"></div>
+      <div id="pp-destacadas-ed" class="pp-destacadas" data-tab="sobre" style="display:none;"></div>
+
+      <div class="pp-tabs" role="tablist"><button type="button" class="pp-tab pp-tab--activa" role="tab" data-tab="libros" onclick="ppCambiarTab(this)">Libros</button><button type="button" class="pp-tab" role="tab" data-tab="campanas" onclick="ppCambiarTab(this)">Campañas</button><button type="button" class="pp-tab" role="tab" data-tab="sobre" onclick="ppCambiarTab(this)">Sobre nosotros</button></div>
+      <div class="pp-tab-panel pp-tab-panel--activo" data-panel="libros">
+          <div class="pp-estanteria">
+            <div class="estante-fila" id="pp-editorial-libros"></div>
+            <div class="estante-tabla"></div>
+          </div>
+          <button type="button" class="pp-link-accion" id="pp-btn-ver-libros-editorial" onclick="abrirBibliotecaAutor()">Ver todos los libros</button></div>
+      <div class="pp-tab-panel" data-panel="campanas"><div id="pp-editorial-campanas" class="pp-libros-goodreads-grid"></div></div>
+      <div class="pp-tab-panel" data-panel="sobre">
+          <div class="pp-bloque" id="pp-bloque-editorial-descripcion" style="display:none;"><p class="pp-bloque-titulo">Presentación</p><p id="pp-editorial-descripcion" class="pp-texto-truncado"></p></div>
+          <div class="pp-bloque" id="pp-bloque-editorial-generos" style="display:none;"><p class="pp-bloque-titulo">Géneros que trabajamos</p><p id="pp-editorial-generos" class="pp-etiquetas"></p></div>
+          <div class="pp-bloque" id="pp-editorial-gamificacion-cont" style="display:none;"><div id="pp-editorial-gamificacion"></div></div></div>
+      </div>
     <!-- /BLOQUE EDITORIAL -->
  
   </div>

@@ -44,7 +44,7 @@ const Flechazos = (() => {
   async function cargarContadores() {
     // Hay un bloque por cada cabecera propia (autor / reseñador / editorial); se llenan todos
     const conts = document.querySelectorAll('.flechazos-contadores');
-    if (!conts.length) return;
+    if (!conts.length && !document.querySelector('.flechazos-n-flechados')) return;
     try {
       const { data, error } = await supabaseClient.rpc('mis_contadores_flechazos');
       if (error || !data || data.error) return;
@@ -244,9 +244,18 @@ const Flechazos = (() => {
     );
     let info = null;
     bloques.forEach(b => {
-      if (b.style.display !== 'none' && !info) info = b.querySelector('.pp-cabecera-info');
+      if (b.style.display !== 'none' && !info) info = b.querySelector('.pp-acciones') || b.querySelector('.pp-cabecera-info');
     });
     return info;
+  }
+
+  // Bloque visible del perfil público (para pintar los números de la cabecera)
+  function _bloquePerfilPublicoVisible() {
+    let visible = null;
+    document.querySelectorAll('#pp-bloque-autor, #pp-bloque-reseñador, #pp-bloque-editorial').forEach(b => {
+      if (b.style.display !== 'none' && !visible) visible = b;
+    });
+    return visible;
   }
 
   // Contadores PÚBLICOS en el perfil de otra persona (solo números, sin listas)
@@ -258,15 +267,12 @@ const Flechazos = (() => {
       const { data, error } = await supabaseClient.rpc('contadores_flechazos', { p_id_usuario: idUsuario });
       if (error || !data || data.error) return;
 
-      const info = _cabeceraPerfilPublico();
-      if (!info) return;
-
-      const div = document.createElement('div');
-      div.className = 'pp-flechazos-contadores';
-      div.innerHTML =
-        `<span><strong>${Number(data.flechados) || 0}</strong> Flechados</span>` +
-        `<span><strong>${Number(data.flechadores) || 0}</strong> Me flecharon</span>`;
-      info.appendChild(div);
+      const bloque = _bloquePerfilPublicoVisible();
+      if (!bloque) return;
+      const nFlechados = bloque.querySelector('.pp-hstat-n-flechados');
+      const nFlechadores = bloque.querySelector('.pp-hstat-n-flechadores');
+      if (nFlechados) nFlechados.textContent = Number(data.flechados) || 0;
+      if (nFlechadores) nFlechadores.textContent = Number(data.flechadores) || 0;
     } catch (e) {
       console.error('Flechazos: error cargando contadores públicos', e);
     }

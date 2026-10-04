@@ -267,26 +267,34 @@ const Chat = (() => {
 
   // ── Botones en el perfil público ──────────────────────────
   async function pintarAccionesPerfilPublico(idUsuario) {
-    document.querySelectorAll('#modal-perfil-publico .pp-chat-acciones').forEach(b => b.remove());
+    document.querySelectorAll('#modal-perfil-publico .pp-chat-acciones, #modal-perfil-publico .pp-menu-item--chat').forEach(b => b.remove());
     if (!idUsuario || !puede() || idUsuario === ((Sesion.obtener() || {}).id)) return;
     try {
       const { data, error } = await supabaseClient.rpc('chat_estado_con', { p_con: idUsuario });
       if (error || !data || data.error) return;
       const bloques = document.querySelectorAll('#pp-bloque-autor, #pp-bloque-reseñador, #pp-bloque-editorial');
-      let info = null;
-      bloques.forEach(b => { if (b.style.display !== 'none' && !info) info = b.querySelector('.pp-cabecera-info'); });
-      if (!info) return;
+      let bloque = null;
+      bloques.forEach(b => { if (b.style.display !== 'none' && !bloque) bloque = b; });
+      if (!bloque) return;
+      const acciones = bloque.querySelector('.pp-acciones');
+      const menu = bloque.querySelector('.pp-menu-lista');
+      if (!acciones) return;
       const cont = document.createElement('div');
       cont.className = 'pp-chat-acciones';
       if (data.bloqueadoPorMi) {
-        cont.innerHTML = `<button type="button" class="btn-secundario" onclick="Chat.desbloquear('${_esc(idUsuario)}'); cerrarModales();">Desbloquear</button>`;
+        cont.innerHTML = `<button type="button" class="btn-secundario pp-btn-desbloquear" onclick="Chat.desbloquear('${_esc(idUsuario)}'); cerrarModales();">Desbloquear</button>`;
       } else {
-        cont.innerHTML = `
-          ${data.puede ? `<button type="button" class="btn-primario pp-btn-mensaje" onclick="Chat.escribirA('${_esc(idUsuario)}')">💬 Mensaje</button>` : ''}
-          <button type="button" class="btn-secundario" onclick="Chat.bloquear('${_esc(idUsuario)}')">🚫 Bloquear</button>
-          <button type="button" class="btn-secundario" onclick="abrirModalDenuncia('perfil', '${_esc(idUsuario)}')">🚩 Denunciar</button>`;
+        if (data.puede) cont.innerHTML = `<button type="button" class="btn-primario pp-btn-mensaje" onclick="Chat.escribirA('${_esc(idUsuario)}')">💬 Mensaje</button>`;
+        if (menu) {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'pp-menu-item pp-menu-item--chat';
+          item.textContent = '🚫 Bloquear';
+          item.onclick = () => Chat.bloquear(idUsuario);
+          menu.insertBefore(item, menu.firstChild);
+        }
       }
-      info.appendChild(cont);
+      acciones.appendChild(cont);
     } catch (e) {
       console.error('Chat: error estado con', e);
     }

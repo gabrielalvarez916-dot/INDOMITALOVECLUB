@@ -18,6 +18,7 @@ async function abrirPerfilPublico(id, rol) {
   if (!id || !rol) return;
 
   _mostrarModalPerfilPublico();
+  _resetTabsPerfil();
   _estadoPerfilPublico('cargando');
 
   try {
@@ -153,6 +154,7 @@ async function _cargarPerfilReseñador(idReseñador, sufijo = '') {
   }, sufijo);
   _pintarUltimosLibros(ultimosLibros || [], sufijo);
   _estadoPerfilPublico('reseñador', sufijo);
+  _marcarPanelesVacios('pp-bloque-reseñador' + sufijo);
   _evaluarBotonesVerMas(sufijo);
 }
 
@@ -171,7 +173,7 @@ function _evaluarBotonesVerMas(sufijo = '') {
     const descripcionEl = document.getElementById('pp-reseñador-descripcion' + sufijo);
     const btnDescripcion = document.getElementById('pp-btn-vermas-descripcion' + sufijo);
     if (descripcionEl && btnDescripcion) {
-      const estaTruncado = descripcionEl.scrollHeight > descripcionEl.clientHeight + 1;
+      const estaTruncado = descripcionEl.scrollHeight > descripcionEl.clientHeight + 6;
       btnDescripcion.style.display = estaTruncado ? 'inline-block' : 'none';
     }
 
@@ -218,6 +220,8 @@ function _toggleVerMas(bloque, sufijo = '') {
 function _pintarPerfilAutor(perfil, libros, campañas, gamif, sufijo = '') {
   // Cabecera común
   _pintarCabeceraComun(perfil, sufijo);
+  _setNumeroPrincipal('autor', sufijo, libros.length);
+  _pintarDestacadas('autor', sufijo, perfil.insigniasAgrupadas);
 
   // Miembro desde
   const miembroDesdeEl = document.getElementById('pp-autor-miembro-desde' + sufijo);
@@ -280,6 +284,7 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif, sufijo = '') {
       }).join('');
     }
   }
+  _marcarPanelesVacios('pp-bloque-autor' + sufijo);
 }
 
 /**
@@ -287,6 +292,8 @@ function _pintarPerfilAutor(perfil, libros, campañas, gamif, sufijo = '') {
  */
 function _pintarPerfilEditorial(perfil, libros, campañas, gamif, sufijo = '') {
   _pintarCabeceraComun(perfil, '-ed' + sufijo);
+  _setNumeroPrincipal('ed', sufijo, libros.length);
+  _pintarDestacadas('ed', sufijo, perfil.insigniasAgrupadas);
 
   const miembroDesdeEl = document.getElementById('pp-editorial-miembro-desde' + sufijo);
   if (miembroDesdeEl) {
@@ -366,6 +373,7 @@ function _pintarPerfilEditorial(perfil, libros, campañas, gamif, sufijo = '') {
       }).join('');
     }
   }
+  _marcarPanelesVacios('pp-bloque-editorial' + sufijo);
 }
 
 /**
@@ -856,11 +864,115 @@ function _esc(str) {
     .replace(/'/g, '&#39;');
 }
 
+// ────────────────────────────────────────────────────────────
+// PERFIL ESTILO RED SOCIAL: pestañas, menú ⋯, número principal, destacadas
+// ────────────────────────────────────────────────────────────
+
+/** Cambia de pestaña dentro de un perfil (Libros / Insignias / Sobre mí, etc.) */
+function ppCambiarTab(btn) {
+  const perfil = btn.closest('.pp-perfil');
+  if (!perfil) return;
+  const clave = btn.dataset.tab;
+  perfil.querySelectorAll('.pp-tab').forEach(t => t.classList.toggle('pp-tab--activa', t === btn));
+  perfil.querySelectorAll('.pp-tab-panel').forEach(p => p.classList.toggle('pp-tab-panel--activo', p.dataset.panel === clave));
+  // Los "Ver más" se miden con el panel visible
+  if (perfil.id && perfil.id.indexOf('pp-bloque-reseñador') === 0) {
+    _evaluarBotonesVerMas(perfil.id.replace('pp-bloque-reseñador', ''));
+  }
+}
+
+/** Vuelve todas las pestañas a la primera (al abrir un perfil nuevo) */
+function _resetTabsPerfil() {
+  document.querySelectorAll('#modal-perfil-publico .pp-perfil').forEach(perfil => {
+    const primera = perfil.querySelector('.pp-tab');
+    if (primera) ppCambiarTab(primera);
+    const menu = perfil.querySelector('.pp-menu-lista');
+    if (menu) menu.style.display = 'none';
+  });
+}
+
+/** Abre / cierra el menú ⋯ (Bloquear, Denunciar) */
+function ppToggleMenu(btn, ev) {
+  if (ev) ev.stopPropagation();
+  const lista = btn.parentElement.querySelector('.pp-menu-lista');
+  if (!lista) return;
+  const abrir = lista.style.display === 'none';
+  document.querySelectorAll('.pp-menu-lista').forEach(l => { l.style.display = 'none'; });
+  lista.style.display = abrir ? '' : 'none';
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.pp-menu-lista').forEach(l => { l.style.display = 'none'; });
+});
+
+/** Número principal de la cabecera (Libros / Reseñas) */
+function _setNumeroPrincipal(rolKey, sufijo, n) {
+  const el = document.getElementById('pp-hn-main-' + rolKey + sufijo);
+  if (el) el.textContent = String(Number(n) || 0);
+}
+
+/**
+ * Fila de "destacadas": las insignias en círculos, bajo la cabecera.
+ * Al tocar una, se salta a la pestaña de insignias/logros.
+ */
+function _pintarDestacadas(rolKey, sufijo, insigniasAgrupadas) {
+  const cont = document.getElementById('pp-destacadas-' + rolKey + sufijo);
+  if (!cont) return;
+  const todas = [];
+  ['ESPECIALES', 'RANKING', 'NIVEL', 'HITOS'].forEach(cat => {
+    ((insigniasAgrupadas || {})[cat] || []).forEach(i => todas.push(i));
+  });
+  if (todas.length === 0) { cont.style.display = 'none'; cont.innerHTML = ''; return; }
+  const tab = cont.dataset.tab;
+  cont.innerHTML = todas.slice(0, 10).map(i => `
+    <button type="button" class="pp-destacada" onclick="_irATabDesdeDestacada(this, '${_esc(tab)}')" title="${_esc(i.label || i.codigo)}">
+      <span class="pp-destacada-aro"><span class="pp-destacada-interior">${
+        i.imagenUrl ? `<img src="${_esc(i.imagenUrl)}" alt="" />` : '🏅'
+      }</span></span>
+      <span class="pp-destacada-label">${_esc(i.label || i.codigo)}</span>
+    </button>`).join('');
+  cont.style.display = 'flex';
+}
+
+function _irATabDesdeDestacada(el, tab) {
+  const perfil = el.closest('.pp-perfil');
+  const btn = perfil && perfil.querySelector('.pp-tab[data-tab="' + tab + '"]');
+  if (btn) ppCambiarTab(btn);
+  const barra = perfil && perfil.querySelector('.pp-tabs');
+  if (barra) barra.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/** Si una pestaña quedó sin nada visible, muestra un aviso en vez de un hueco */
+function _marcarPanelesVacios(bloqueId) {
+  const bloque = document.getElementById(bloqueId);
+  if (!bloque) return;
+  bloque.querySelectorAll('.pp-tab-panel').forEach(panel => {
+    let aviso = panel.querySelector('.pp-panel-vacio');
+    const hayContenido = Array.from(panel.children).some(ch => {
+      if (ch.classList.contains('pp-panel-vacio')) return false;
+      if (ch.style.display === 'none') return false;
+      if (ch.classList.contains('pp-bloque')) {
+        return ch.style.display !== 'none' && ch.textContent.trim().length > 0;
+      }
+      return true;
+    });
+    if (!aviso) {
+      aviso = document.createElement('p');
+      aviso.className = 'pp-vacio pp-panel-vacio';
+      aviso.textContent = 'Todavía no hay nada para mostrar acá.';
+      panel.appendChild(aviso);
+    }
+    aviso.style.display = hayContenido ? 'none' : '';
+  });
+}
+
 /**
  * @param {string} [sufijo=''] — '' para el modal público, '-propio' para la pestaña Perfil embebida
  */
 function _pintarEncabezadoHistorico(encabezado, sufijo = '') {
   if (!encabezado) return;
+
+  _setNumeroPrincipal('r', sufijo, encabezado.reseñasEntregadas);
+  _pintarDestacadas('r', sufijo, encabezado.insigniasAgrupadas);
 
   const badgeCont = document.getElementById('pp-r-badge-historico' + sufijo);
   if (badgeCont) {
