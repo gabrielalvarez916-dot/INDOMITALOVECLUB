@@ -158,6 +158,8 @@ function mostrarSeccion(nombre) {
   // Acciones específicas al mostrar cada sección
   switch (nombre) {
     case 'feed':
+      // El feed siempre abre en la pestaña Campañas; el Muro de actividad es una solapa aparte
+      if (typeof Muro !== 'undefined') { Muro.prepararPestanas(); Muro.cambiarPestana('campanas'); }
       if (typeof cargarFeed === 'function') cargarFeed();
       break;
     case 'panel-autor':
