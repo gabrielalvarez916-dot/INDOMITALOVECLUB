@@ -6992,3 +6992,50 @@ img { max-width: 100%; display: block; }
 /* En la pestaña Perfil (fondo crema) */
 #seccion-perfil .pp-tabs { background: var(--crema-suave); }
 #seccion-perfil .pp-avatar-aro { box-shadow: 0 0 0 4px var(--crema-suave), var(--sombra-card); }
+
+/* ════════════════════════════════════════════════════════════
+   PERFIL v2 — todo centrado, avatar más grande, números debajo
+   del nombre (separados de la portada). Pisa reglas anteriores.
+   ════════════════════════════════════════════════════════════ */
+.pp-portada { height: 120px; }
+.pp-perfil .pp-cabecera {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: -64px 6px 4px;
+  text-align: center;
+}
+.pp-perfil .pp-avatar { width: 128px; height: 128px; }
+.pp-avatar-aro { padding: 4px; box-shadow: 0 0 0 5px var(--blanco), var(--sombra-card); }
+#seccion-perfil .pp-avatar-aro { box-shadow: 0 0 0 5px var(--crema-suave), var(--sombra-card); }
+
+.pp-perfil .pp-cabecera-info {
+  align-items: center; margin: 0; width: 100%;
+}
+.pp-perfil .pp-alias { font-size: 1.6rem; }
+.pp-chips-fila { justify-content: center; margin: 4px 0; }
+.pp-perfil .pp-ubicacion, .pp-perfil .pp-miembro-desde { margin: 2px 0 0; text-align: center; }
+.pp-bio { max-width: 460px; text-align: center; margin: 10px auto 0; }
+
+/* Franja de números: propia, con aire, lejos de la portada */
+.pp-hstats {
+  flex: none; display: flex; justify-content: center; align-items: stretch;
+  gap: 0; margin: 18px auto 16px; padding: 12px 0; max-width: 460px;
+  border-top: 1px solid var(--gris-borde); border-bottom: 1px solid var(--gris-borde);
+}
+.pp-hstat { flex: 1; padding: 4px 8px; }
+.pp-hstat + .pp-hstat { border-left: 1px solid var(--gris-borde); }
+.pp-hstat strong { font-size: 24px; }
+
+.pp-acciones { justify-content: center; max-width: 420px; margin: 0 auto 14px; }
+.pp-perfil .pp-redes { justify-content: center; margin: 0 6px 16px; }
+.pp-destacadas { padding-left: 6px; padding-right: 6px; }
+.pp-destacadas .pp-destacada:first-child { margin-left: auto; }
+.pp-destacadas .pp-destacada:last-child  { margin-right: auto; }
+
+@media (max-width: 420px) {
+  .pp-portada { height: 104px; }
+  .pp-perfil .pp-cabecera { margin-top: -56px; }
+  .pp-perfil .pp-avatar { width: 112px; height: 112px; }
+  .pp-hstat strong { font-size: 21px; }
+}
