@@ -1008,7 +1008,7 @@ async function confirmarImpulsarCampana(idCampana, precioArs, precioUsd, planId 
  */
 async function verPostulacionesCampana(idCampana, nombreLibro) {
   cambiarTab(
-    document.querySelector('.tab:nth-child(2)'),
+    document.getElementById('tabbtn-postulaciones-autor'),
     'tab-postulaciones'
   );
 
