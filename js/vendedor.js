@@ -256,7 +256,10 @@ function _vendHtmlClientes(clientes) {
   return `
     <div class="vend-clientes-header">
       <h3 class="vend-subtitulo" style="margin:0;">Mis clientes</h3>
-      <button class="btn-secundario btn-sm" onclick="abrirCalendarioVendedor()">📅 Calendario</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-secundario btn-sm" onclick="descargarExcelVencenManana(this)">📥 Excel: vencen mañana</button>
+        <button class="btn-secundario btn-sm" onclick="abrirCalendarioVendedor()">📅 Calendario</button>
+      </div>
     </div>
     <input type="search" id="vend-buscador-clientes" class="vend-copiar-input" style="width:100%;max-width:420px;margin-bottom:12px;"
       placeholder="Buscar por nombre, mail, Instagram, libro, Nuevo, Activo, Select…" oninput="_vendFiltrarClientes(this.value)" />
@@ -662,4 +665,56 @@ async function _vendCopiarLinkGenerado() {
     document.execCommand('copy');
   }
   mostrarToast('Link copiado.', 'ok');
+}
+
+
+// ────────────────────────────────────────────────────────────
+// EXCEL · CAMPAÑAS QUE VENCEN MAÑANA (ASESOR / AUTOR / CORREO / LIBRO)
+// Se arma en el momento de tocar el botón, así que cada día muestra
+// las campañas del "mañana" de ese día. Vendedor: solo sus clientes.
+// Admin: todos los vendedores (y los autores sin asesor).
+// ────────────────────────────────────────────────────────────
+
+function _vendCargarSheetJS() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = () => resolve();
+    sc.onerror = () => reject(new Error('No se pudo cargar la librería de Excel'));
+    document.head.appendChild(sc);
+  });
+}
+
+async function descargarExcelVencenManana(btn) {
+  const textoOriginal = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Generando…'; }
+  try {
+    const [{ data, error }] = await Promise.all([
+      supabaseClient.rpc('vendedor_campanas_por_vencer', { p_dias: 1 }),
+      _vendCargarSheetJS()
+    ]);
+    if (error || !data) throw error || new Error('Sin datos');
+
+    const filas = Array.isArray(data.filas) ? data.filas : [];
+    if (!filas.length) {
+      mostrarToast('No hay campañas que venzan mañana.', 'ok');
+      return;
+    }
+
+    const hoja = XLSX.utils.json_to_sheet(
+      filas.map(f => ({ 'ASESOR': f.asesor || '', 'AUTOR': f.autor || '', 'CORREO': f.correo || '', 'LIBRO': f.libro || '' })),
+      { header: ['ASESOR', 'AUTOR', 'CORREO', 'LIBRO'] }
+    );
+    hoja['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 34 }, { wch: 42 }];
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Vencen mañana');
+    XLSX.writeFile(libro, `campanas-por-vencer-${data.fecha}.xlsx`);
+    mostrarToast(`Excel descargado (${filas.length} campaña${filas.length === 1 ? '' : 's'}).`, 'ok');
+  } catch (e) {
+    console.error('Error generando Excel de campañas por vencer:', e);
+    mostrarToast('No se pudo generar el Excel. Probá de nuevo.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
+  }
 }

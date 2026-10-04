@@ -394,6 +394,9 @@ async function cargarClientesVendedoresAdmin() {
     : '—';
 
   cont.innerHTML = `
+    <div style="margin-bottom:20px;">
+      <button class="btn-secundario btn-sm" onclick="descargarExcelVencenManana(this)">📥 Excel: campañas que vencen mañana (todos los asesores)</button>
+    </div>
     <div class="admin-verificacion-manual" style="margin-bottom:24px;">
       <p class="admin-verificacion-manual-titulo">Reasignar un cliente a mano</p>
       <p class="admin-verificacion-manual-texto">Solo autores y editoriales. Queda registrado en el historial y el cliente arranca un nuevo período de 3 meses con el vendedor elegido.</p>
