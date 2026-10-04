@@ -6657,6 +6657,17 @@ img { max-width: 100%; display: block; }
 .flechazos-contador strong { font-size: 20px; color: var(--bordo); line-height: 1.1; }
 .flechazos-contador span { font-size: 12px; color: var(--gris-medio); }
 
+/* Contadores públicos en el perfil de otra persona (solo números, no clickeables) */
+.pp-flechazos-contadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: var(--gris-medio);
+}
+.pp-flechazos-contadores strong { font-size: 16px; color: var(--bordo); margin-right: 4px; }
+
 .flechazos-ayuda { font-size: 13px; color: var(--gris-medio); margin: 0 0 14px; }
 .flechazos-lista { display: flex; flex-direction: column; gap: 4px; }
 .flechazo-item {

@@ -34,8 +34,12 @@ async function abrirPerfilPublico(id, rol) {
     } else if (rol === 'editorial') {
       await _cargarPerfilEditorial(id);
     }
-    // Botón Flechar / Desflechar (no aparece en el propio perfil)
-    if (typeof Flechazos !== 'undefined') Flechazos.pintarBotonPerfilPublico(id);
+    // Contadores públicos (Flechados / Me flecharon) y botón Flechar / Desflechar.
+    // Las listas son privadas: acá solo se ven los números.
+    if (typeof Flechazos !== 'undefined') {
+      await Flechazos.pintarContadoresPerfilPublico(id);
+      Flechazos.pintarBotonPerfilPublico(id);
+    }
   } catch (e) {
     _estadoPerfilPublico('error');
   }

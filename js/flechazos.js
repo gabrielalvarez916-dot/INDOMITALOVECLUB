@@ -1,8 +1,10 @@
 // ============================================================
 // flechazos.js — Indómita Love Club
 // Seguir ("flechar") usuarios.
-//  - Contadores PRIVADOS en el perfil propio: Flechados / Me flecharon
-//  - Modal con la lista (Flechados: botón Desflechar; Me flecharon: solo info
+//  - Contadores PÚBLICOS (Flechados / Me flecharon): se ven en el perfil propio
+//    y en el perfil público de cualquier persona.
+//  - Las LISTAS son PRIVADAS: solo las ve la propia persona, desde su perfil.
+//    Modal con la lista (Flechados: botón Desflechar; Me flecharon: solo info
 //    y, si sos autor/editorial, botón Invitar a una campaña)
 //  - Botón Flechar / Desflechar en el perfil público de otras personas
 // ============================================================
@@ -37,7 +39,7 @@ const Flechazos = (() => {
   }
 
   // ──────────────────────────────────────────────────────────
-  // Contadores privados (perfil propio)
+  // Contadores en el perfil propio (clickeables: abren la lista privada)
   // ──────────────────────────────────────────────────────────
   async function cargarContadores() {
     const cont = document.getElementById('flechazos-contadores');
@@ -234,6 +236,41 @@ const Flechazos = (() => {
   // ──────────────────────────────────────────────────────────
   // Botón Flechar / Desflechar en el perfil público de otra persona
   // ──────────────────────────────────────────────────────────
+  // Cabecera del bloque visible del modal de perfil público
+  function _cabeceraPerfilPublico() {
+    const bloques = document.querySelectorAll(
+      '#pp-bloque-autor, #pp-bloque-reseñador, #pp-bloque-editorial'
+    );
+    let info = null;
+    bloques.forEach(b => {
+      if (b.style.display !== 'none' && !info) info = b.querySelector('.pp-cabecera-info');
+    });
+    return info;
+  }
+
+  // Contadores PÚBLICOS en el perfil de otra persona (solo números, sin listas)
+  async function pintarContadoresPerfilPublico(idUsuario) {
+    document.querySelectorAll('#modal-perfil-publico .pp-flechazos-contadores').forEach(b => b.remove());
+    if (!idUsuario || !Sesion.activa()) return;
+
+    try {
+      const { data, error } = await supabaseClient.rpc('contadores_flechazos', { p_id_usuario: idUsuario });
+      if (error || !data || data.error) return;
+
+      const info = _cabeceraPerfilPublico();
+      if (!info) return;
+
+      const div = document.createElement('div');
+      div.className = 'pp-flechazos-contadores';
+      div.innerHTML =
+        `<span><strong>${Number(data.flechados) || 0}</strong> Flechados</span>` +
+        `<span><strong>${Number(data.flechadores) || 0}</strong> Me flecharon</span>`;
+      info.appendChild(div);
+    } catch (e) {
+      console.error('Flechazos: error cargando contadores públicos', e);
+    }
+  }
+
   async function pintarBotonPerfilPublico(idUsuario) {
     // Limpia botón anterior
     document.querySelectorAll('#modal-perfil-publico .pp-btn-flechar').forEach(b => b.remove());
@@ -244,13 +281,7 @@ const Flechazos = (() => {
       if (error || !data || data.error || !data.puedo_flechar) return;
 
       // Busca la cabecera del bloque visible del modal
-      const bloques = document.querySelectorAll(
-        '#pp-bloque-autor, #pp-bloque-reseñador, #pp-bloque-editorial'
-      );
-      let info = null;
-      bloques.forEach(b => {
-        if (b.style.display !== 'none' && !info) info = b.querySelector('.pp-cabecera-info');
-      });
+      const info = _cabeceraPerfilPublico();
       if (!info) return;
 
       const btn = document.createElement('button');
@@ -302,6 +333,7 @@ const Flechazos = (() => {
     abrirInvitar,
     invitar,
     cerrarInvitar,
+    pintarContadoresPerfilPublico,
     pintarBotonPerfilPublico
   };
 })();
