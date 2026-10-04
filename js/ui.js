@@ -120,6 +120,8 @@ function mostrarSeccion(nombre) {
     'admin-visuales',
     'admin-check',
     'admin-vendedores',
+    'admin-chats',
+    'mensajes',
     'panel-vendedor',
     'biblioteca-resenador',
     'biblioteca-autor',
@@ -195,6 +197,12 @@ function mostrarSeccion(nombre) {
       break;
     case 'admin-check':
       if (typeof cargarVerificacionesAdmin === 'function') cargarVerificacionesAdmin();
+      break;
+    case 'mensajes':
+      if (typeof Chat !== 'undefined') Chat.cargarBandeja();
+      break;
+    case 'admin-chats':
+      if (typeof AdminChats !== 'undefined') AdminChats.cargar();
       break;
     case 'admin-vendedores':
       if (typeof cargarVendedoresAdmin === 'function') cargarVendedoresAdmin();
@@ -275,7 +283,7 @@ function mostrarHeaderLogueado(usuario) {
 
   // Muestra los links de admin (Planes, Soporte, Estadísticas, Visuales, Check) solo si es admin
   const esAdmin = usuario.rol === 'admin';
-  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores'].forEach(id => {
+  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores', 'nav-admin-chats'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = esAdmin ? 'inline-block' : 'none';
   });

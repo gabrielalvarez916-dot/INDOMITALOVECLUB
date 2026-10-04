@@ -40,6 +40,7 @@ async function abrirPerfilPublico(id, rol) {
       await Flechazos.pintarContadoresPerfilPublico(id);
       Flechazos.pintarBotonPerfilPublico(id);
     }
+    if (typeof Chat !== 'undefined') Chat.pintarAccionesPerfilPublico(id);
   } catch (e) {
     _estadoPerfilPublico('error');
   }

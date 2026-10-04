@@ -56,6 +56,8 @@
         <a href="#" class="nav-link" id="nav-admin-estadisticas" style="display:none;" onclick="mostrarSeccion('admin-estadisticas')">Estadísticas</a>
         <a href="#" class="nav-link" id="nav-admin-visuales" style="display:none;" onclick="mostrarSeccion('admin-visuales')">Visuales</a>
         <a href="#" class="nav-link" id="nav-admin-check" style="display:none;" onclick="mostrarSeccion('admin-check')">Check</a>
+        <a href="#" class="nav-link" id="nav-mensajes" style="display:none;" onclick="mostrarSeccion('mensajes')">💬 Mensajes <span id="nav-mensajes-badge" class="chat-badge" style="display:none;"></span></a>
+        <a href="#" class="nav-link" id="nav-admin-chats" style="display:none;" onclick="mostrarSeccion('admin-chats')">Chats</a>
         <a href="#" class="nav-link" id="nav-admin-vendedores" style="display:none;" onclick="mostrarSeccion('admin-vendedores')">Vendedores</a>
         <a href="#" class="nav-link" id="nav-perfil" style="display:none;" onclick="mostrarSeccion('perfil')">Perfil</a>
         <a href="#" class="nav-link" id="nav-guia-resenador" style="display:none;" onclick="mostrarSeccion('guia-resenador')">Guía</a>
@@ -899,6 +901,40 @@
       <div id="tab-admin-estadisticas-soporte" class="tab-contenido">
         <div id="admin-estadisticas-soporte-contenedor"></div>
       </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: MENSAJES (chat 1 a 1) -->
+  <section id="seccion-mensajes" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <div id="chat-vista-bandeja">
+        <h2 class="panel-titulo">💬 Mensajes</h2>
+        <p class="muro-ayuda">Podés chatear con quien tengas una campaña en común (autores y reseñadoras) y con reseñadoras que se flechan entre sí. El equipo de Indómita puede revisar los chats para moderación.</p>
+        <p style="margin:0 0 12px;"><button type="button" class="btn-secundario" onclick="Chat.verBloqueados()">🚫 Bloqueados</button></p>
+        <div id="chat-bandeja-lista" class="chat-bandeja"></div>
+      </div>
+      <div id="chat-vista-conversacion" style="display:none;">
+        <div id="chat-conv-cabecera" class="chat-conv-cabecera"></div>
+        <div id="chat-mensajes" class="chat-mensajes"></div>
+        <div id="chat-conv-pie" class="chat-conv-pie"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ADMIN · CHATS (moderación) -->
+  <section id="seccion-admin-chats" class="seccion" style="display:none;">
+    <div class="seccion-inner">
+      <h2 class="panel-titulo">Moderación de chats</h2>
+      <div id="admin-chats-listado">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px;">
+          <input type="text" id="admin-chats-busqueda" placeholder="Buscar por alias o email…" style="flex:1; min-width:200px;"
+                 onkeydown="if(event.key==='Enter') AdminChats.cargar()" />
+          <label style="font-size:13px;"><input type="checkbox" onchange="AdminChats.filtrarDenunciados(this.checked)" /> Solo denunciados</label>
+          <button type="button" class="btn-primario" onclick="AdminChats.cargar()">Buscar</button>
+        </div>
+        <div id="admin-chats-lista" class="chat-bandeja"></div>
+      </div>
+      <div id="admin-chats-detalle" style="display:none;"></div>
     </div>
   </section>
 
@@ -2092,7 +2128,18 @@
   </div>
 </div>
 
-  <!-- Modal: quiénes dieron Me tienta -->
+  <!-- Modal: personas bloqueadas -->
+<div id="modal-bloqueados" class="modal">
+  <div class="modal-header">
+    <h3 class="modal-titulo">🚫 Bloqueados</h3>
+    <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div id="bloqueados-lista" class="flechazos-lista"></div>
+  </div>
+</div>
+
+<!-- Modal: quiénes dieron Me tienta -->
 <div id="modal-me-tienta" class="modal">
   <div class="modal-header">
     <h3 class="modal-titulo">🔥 Les tentó</h3>
@@ -2497,6 +2544,8 @@
 <script src="js/perfil-publico.js?v=2"></script>
 <script src="js/flechazos.js"></script>
 <script src="js/me-tienta.js?v=2"></script>
+<script src="js/chat.js?v=1"></script>
+<script src="js/admin-chats.js?v=1"></script>
 <script src="js/muro.js?v=2"></script>
 <script src="js/tutorial.js"></script>
 </body>

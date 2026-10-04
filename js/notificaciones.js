@@ -467,6 +467,7 @@ function _textoNotificacion(notif) {
 // ────────────────────────────────────────────────────────────
 
 function iniciarNotificaciones() {
+  if (typeof Chat !== 'undefined') Chat.iniciar();
   const cont = document.getElementById('notif-campana-cont');
   if (!cont) return;
   cont.style.display = '';
@@ -478,6 +479,7 @@ function iniciarNotificaciones() {
 }
 
 function detenerNotificaciones() {
+  if (typeof Chat !== 'undefined') Chat.detener();
   const cont = document.getElementById('notif-campana-cont');
   if (cont) cont.style.display = 'none';
   if (_notifPollingId) {
