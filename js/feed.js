@@ -484,6 +484,9 @@ function renderizarFeed(campañas) {
   toggleElemento('feed-lista-titulo', true);
   toggleElemento('feed-ticker', true);
   toggleElemento('feed-vacio', false);
+
+  // "Me tienta" en las campañas del feed: trae los contadores de las que se ven
+  if (typeof MeTienta !== 'undefined') MeTienta.hidratar('campana', campañas.map(c => c.id));
 }
 
 
@@ -658,6 +661,7 @@ let botonHtml = '';
        <div class="campana-tropes">
       ${tropesHtml}</div>
 ${requisitosHtml}
+        <div class="me-tienta-fila">${MeTienta.boton('campana', c.id)}</div>
         ${c.rankingLibro && c.rankingLibro.totalReseñas > 0 ? `
           <div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0;">
             ${c.rankingLibro.esTop5  ? `<span class="badge badge-top5">🏆 Top 5</span>` : ''}
@@ -854,6 +858,7 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
                 <span class="resenas-obtenidas-item-estrellas">${'★'.repeat(r.puntuacionLibro || 0)}${'☆'.repeat(5 - (r.puntuacionLibro || 0))}</span>
               </div>
               <p class="resenas-obtenidas-item-comentario">${_esc(r.comentarios)}</p>
+              <div class="me-tienta-fila">${MeTienta.boton('resena', r.idResena, r.meTienta)}</div>
             </div>
           `).join('')}
         </div>

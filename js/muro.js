@@ -92,6 +92,7 @@ const Muro = (() => {
           <div class="muro-item-cuerpo">
             <div class="muro-item-texto"><span class="muro-item-icono">${t.icono}</span> ${t.html}</div>
             <div class="muro-item-fecha">${_hace(it.fecha)}</div>
+            <div class="muro-item-acciones">${MeTienta.boton('actividad', it.id, it.meTienta)}</div>
           </div>
           ${portada ? `<img class="flechazo-portada" src="${_esc(portada)}" alt="" onerror="this.style.display='none'" />` : ''}
         </div>`;
