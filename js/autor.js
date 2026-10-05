@@ -2412,7 +2412,7 @@ async function cargarPlanAutor(idUsuario) {
   // congelados, así que en "Mi plan" le mostramos SUS números reales, no los nuevos de marketing.
   const esSuscriptorCongelado = u.limite_resenadores_override !== null && u.limite_resenadores_override !== undefined;
 
-  const esEditorial = Sesion.rol() === 'editorial';
+  // Autor y editorial comparten el mismo esquema: campaña individual o pack de campañas (pago único).
 
   // Fecha de próximo pago / estado de la suscripción: aplica a suscriptores
   // pagos (basic/premium). Es un dato aparte de fecha_vencimiento_plan (que
@@ -2445,13 +2445,11 @@ async function cargarPlanAutor(idUsuario) {
 
   let planes;
 
-  // Precios de campaña individual / packs de crédito. Solo aplica a
-  // autores (no editoriales): editorial sigue con su propio plan de
-  // suscripción (Editorial Plus), que no cambia acá.
+  // Precios de campaña individual / packs de crédito (autor y editorial).
   let preciosCampanas = null;
-  const tieneSuscripcionActiva = !esEditorial && (plan === 'basic' || plan === 'premium') && (estadoSuscripcion === 'activa' || estadoSuscripcion === 'pausada' || estadoSuscripcion === 'pago_fallido');
+  const tieneSuscripcionActiva = (plan === 'basic' || plan === 'premium') && (estadoSuscripcion === 'activa' || estadoSuscripcion === 'pausada' || estadoSuscripcion === 'pago_fallido');
 
-  if (!esEditorial && !tieneSuscripcionActiva) {
+  if (!tieneSuscripcionActiva) {
     const { data: configCampanas } = await supabaseClient
       .from('configuracion')
       .select('clave, valor')
@@ -2466,108 +2464,6 @@ async function cargarPlanAutor(idUsuario) {
       pack_basic: { ars: valC('PACK_BASIC_PRECIO_ARS'), usd: valC('PACK_BASIC_PRECIO_USD') },
       pack_premium: { ars: valC('PACK_PREMIUM_PRECIO_ARS'), usd: valC('PACK_PREMIUM_PRECIO_USD') }
     };
-  }
-
-  // ── Editorial: sigue teniendo suscripción mensual (Free / Editorial Plus).
-  // Esto NO cambia — el reemplazo de suscripciones por pago único es solo
-  // para el rol autor.
-  if (esEditorial) {
-    const { data: config } = await supabaseClient
-      .from('configuracion')
-      .select('clave, valor')
-      .in('clave', [
-        'PRECIO_EDITORIAL_PLUS_ARS',
-        'PLAN_EDITORIAL_FREE_CAMPANAS',
-        'PLAN_EDITORIAL_FREE_RESENADORES',
-        'PLAN_EDITORIAL_PLUS_CAMPANAS',
-        'PLAN_EDITORIAL_PLUS_RESENADORES'
-      ]);
-
-    const val = (clave, fallback) => (config || []).find(c => c.clave === clave)?.valor ?? fallback;
-
-    const precioPlus       = parseInt(val('PRECIO_EDITORIAL_PLUS_ARS', '60000'));
-    const campanasFree     = val('PLAN_EDITORIAL_FREE_CAMPANAS', '5');
-    const resenadoresFree  = val('PLAN_EDITORIAL_FREE_RESENADORES', '40');
-    const campanasPlus     = val('PLAN_EDITORIAL_PLUS_CAMPANAS', '-1');
-    const resenadoresPlus  = val('PLAN_EDITORIAL_PLUS_RESENADORES', '-1');
-
-    planes = [
-      {
-        id: 'editorial_free',
-        nombre: 'Free',
-        precio: '$0',
-        subprecio: 'Para empezar',
-        beneficios: [
-          `${campanasFree} campañas por mes`,
-          `Hasta ${resenadoresFree} reseñadores`
-        ],
-        esPremium: false
-      },
-      {
-        id: 'editorial_plus',
-        nombre: 'Editorial Plus',
-        precio: `$${precioPlus.toLocaleString('es-AR')}`,
-        subprecio: 'Facturación mensual',
-        beneficios: [
-          campanasPlus === '-1' ? 'Campañas ilimitadas' : `${campanasPlus} campañas por mes`,
-          resenadoresPlus === '-1' ? 'Reseñadores ilimitados' : `Hasta ${resenadoresPlus} reseñadores`
-        ],
-        esPremium: true
-      }
-    ];
-
-    contenedor.innerHTML = `
-      <h3 style="font-family:var(--fuente-titulo); font-size:24px; font-weight:700; color:var(--bordo); font-style:italic; text-align:center; margin-bottom:24px;">Elegí tu plan</h3>
-      <div style="display:flex; flex-direction:column; gap:14px;">
-        ${planes.map(p => {
-          const esActual = p.id === plan;
-          const esMenor = (p.id === 'editorial_free' && plan === 'editorial_plus');
-          return `
-            <div style="
-              background: ${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'};
-              border: ${esActual ? '2px solid var(--bordo)' : '1px solid var(--gris-borde)'};
-              border-radius: var(--radio-grande);
-              padding: 20px 22px;
-              display: grid;
-              grid-template-columns: 1fr auto auto;
-              align-items: center;
-              gap: 16px;
-              box-shadow: var(--sombra-card);
-            ">
-              <div>
-                <span style="
-                  display: inline-block;
-                  background: ${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'};
-                  color: ${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'};
-                  font-size: 11px; font-weight: 700; padding: 3px 12px;
-                  border-radius: var(--radio-pill); margin-bottom: 8px;
-                ">${p.nombre}${esActual ? ' ✓' : ''}</span>
-                <p style="font-family:var(--fuente-titulo); font-size:28px; font-weight:700; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; line-height:1.1; margin-bottom:2px;">${p.precio}<span style="font-size:14px; font-weight:400;">/mes</span></p>
-                <p style="font-size:12px; color:${p.esPremium ? 'rgba(255,255,255,0.7)' : 'var(--gris-suave)'}; margin-bottom:0;">${p.subprecio}</p>
-              </div>
-              <div style="display:flex; flex-direction:column; gap:6px;">
-                ${p.beneficios.map(b => `
-                  <p style="font-size:13px; color:${p.esPremium ? 'var(--blanco)' : 'var(--gris-texto)'}; display:flex; align-items:center; gap:6px; margin:0;">
-                    <span style="color:${p.esPremium ? 'rgba(255,255,255,0.8)' : 'var(--bordo)'};">✓</span> ${b}
-                  </p>
-                `).join('')}
-              </div>
-              <div>
-                ${esActual
-                  ? `<button class="btn-sm" disabled style="background:${p.esPremium ? 'rgba(255,255,255,0.2)' : 'var(--rosa-claro)'}; color:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:default;">Plan actual</button>`
-                  : esMenor
-                  ? ''
-                  : `<button class="btn-sm" onclick="iniciarPago('${p.id}')" style="background:${p.esPremium ? 'var(--blanco)' : 'var(--bordo)'}; color:${p.esPremium ? 'var(--bordo)' : 'var(--blanco)'}; border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer;">Elegir ${p.nombre}</button>`
-                }
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-      ${(fechaVenc && u.estado_plan !== 'pausado' && u.estado_plan !== 'pago_fallido') ? `<p style="text-align:center; font-size:12px; color:var(--gris-suave); margin-top:16px;">Plan activo hasta ${formatearFechaAmigable(fechaVenc)}</p>` : ''}
-      ${bloqueEstadoSuscripcion}
-    `;
-    return;
   }
 
   // ── Autor: ya NO hay suscripciones mensuales para elegir acá (Free/Basic/
@@ -2611,7 +2507,7 @@ async function cargarPlanAutor(idUsuario) {
   // al fallback de "cualquiera de los 4" (ese fallback es solo para los
   // planes de campaña Impulso/Select/Resistence/Complete).
   let cuponCampanaGratis = null;
-  if (!esEditorial && !tieneSuscripcionActiva) {
+  if (!tieneSuscripcionActiva) {
     const cuponesActivos = await _obtenerCuponesActivosAutor(idUsuario);
     cuponCampanaGratis = cuponesActivos.find(c => c.tipo === 'gratis' && c.plan === 'campana') || null;
   }
