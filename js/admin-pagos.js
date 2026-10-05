@@ -24,7 +24,8 @@ const PAGOS_PROVEEDORES = {
 const PAGOS_COSTOS_CATEGORIAS = {
   banner_feed: 'Banners del feed',
   banner_resenador: 'Banners del panel reseñador',
-  vendedor: 'Comisiones de vendedores'
+  vendedor: 'Comisiones de vendedores',
+  gasto_fijo: 'Gastos fijos mensuales'
 };
 
 const PAGOS_COTIZACION_DEFAULT = 1550;
@@ -510,7 +511,7 @@ function renderPagosCostos() {
 
     <p class="pagos-nota">
       Los banners se cobran una sola vez por obra y tipo (feed o panel reseñador): si ya se diseñó, no se vuelve a contar.
-      La fecha es la del impulso que lo originó.
+      La fecha es la del impulso que lo originó. Los gastos fijos (Supabase, Resend) se suman solos una vez por mes.
     </p>
   `;
 }
