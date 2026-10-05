@@ -685,8 +685,8 @@ function _vendDetalleDiaCalendario(fechaStr) {
       return `
         <div class="cal-detalle-card">
           <p class="cal-detalle-texto"><strong>📞 ${_vendEsc(ev.autor || ev.alias || '—')}</strong> ${vencido ? '<span class="badge badge-pendiente">Atrasado</span>' : ''}</p>
-          <p class="cal-detalle-meta">${_vendEsc(ev.email || '')}</p>
-          ${ig ? `<p class="cal-detalle-meta"><a href="${_vendEsc(ig)}" target="_blank" rel="noopener noreferrer">Instagram</a></p>` : ''}
+          ${ev.email ? `<p class="cal-detalle-meta"><a href="${_vendEsc('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(ev.email))}" target="_blank" rel="noopener noreferrer" onclick="_vendToque('${ev.id_cliente}','mail')">${_vendEsc(ev.email)}</a></p>` : ''}
+          ${ig ? `<p class="cal-detalle-meta"><a href="${_vendEsc(ig)}" target="_blank" rel="noopener noreferrer" onclick="_vendToque('${ev.id_cliente}','instagram')">Instagram</a></p>` : ''}
           <p class="cal-detalle-fecha">🕐 Volver a comunicar a las ${hora}</p>
         </div>`;
     }).join('');

@@ -111,7 +111,42 @@ async function cargarVendedoresListaAdmin() {
       <p class="admin-verificacion-manual-texto">Se usa una única vez, al lanzar el programa: reparte de forma pareja los autores y editoriales existentes entre los vendedores habilitados.</p>
       <button class="btn-secundario" id="btn-vend-reparto" onclick="repartoInicialVendedoresAdmin()">Ejecutar reparto inicial</button>
     </div>
+
+    <h3 class="vend-subtitulo" style="margin-top:32px;">Gestión de cada vendedor (${_vendEsc(_vendMesLindo(_adminVendMes))})</h3>
+    <p class="form-info" style="margin-top:0;">Contactados: clientes distintos a los que el vendedor les tocó el link de Instagram o mail este mes (más los que marcó como contactados). Última gestión: último toque a un link este mes. Se reinicia cada mes.</p>
+    <div id="admin-vend-gestion"><div class="cargando-container"><div class="spinner"></div></div></div>
   `;
+  cargarGestionVendedoresAdmin();
+}
+
+async function cargarGestionVendedoresAdmin() {
+  const cont = document.getElementById('admin-vend-gestion');
+  if (!cont) return;
+  const { data, error } = await supabaseClient.rpc('admin_gestion_vendedores');
+  if (error || !Array.isArray(data)) {
+    console.error('Error cargando gestión de vendedores:', error);
+    cont.innerHTML = '<p class="mensaje-error">No se pudo cargar la gestión de los vendedores.</p>';
+    return;
+  }
+  if (!data.length) { cont.innerHTML = '<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay vendedores.</p></div>'; return; }
+  cont.innerHTML = `
+    <div class="vend-tabla-scroll">
+      <table class="admin-tabla">
+        <thead><tr><th>Vendedor</th><th>Código</th><th>Clientes contactados en el mes</th><th>Última gestión</th></tr></thead>
+        <tbody>
+          ${data.map(f => {
+            const v = _adminVendMapa[f.id_vendedor] || {};
+            return `
+              <tr>
+                <td>${_vendEsc(v.nombre || '—')}<br><span class="vend-mini">${_vendEsc(v.email || '')}</span></td>
+                <td><strong>${_vendEsc(v.codigo || '—')}</strong></td>
+                <td>${f.contactados_mes}</td>
+                <td>${f.ultima_gestion ? _vendFechaHora(f.ultima_gestion) : '—'}</td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 async function crearVendedorAdmin(e) {
