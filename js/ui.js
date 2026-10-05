@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (usuario) {
     mostrarHeaderLogueado(usuario);
-    mostrarSeccion('feed');
+    // Vendedores: al entrar o refrescar van directo a su panel. El resto, a Campañas.
+    mostrarSeccion(usuario.rol === 'vendedor' ? 'panel-vendedor' : 'feed');
     setTimeout(() => {
       if (typeof verificarModalActualizacion === 'function') {
         verificarModalActualizacion();
