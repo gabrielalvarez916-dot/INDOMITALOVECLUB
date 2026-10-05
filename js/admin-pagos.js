@@ -33,6 +33,7 @@ const PAGOS_COTIZACION_DEFAULT = 1550;
 let _pagosFilas = [];
 let _pagosComisiones = [];
 let _pagosCostos = [];                             // costos en USD (función admin_costos)
+let _pagosCostosEliminados = [];                   // costos dados de baja (admin_costos_eliminados)
 let _pagosFiltroCostos = { mes: 'todos', categoria: 'todas' };
 let _pagosMesResumen = null;                       // 'YYYY-MM' o 'todos'
 let _pagosFiltroDetalle = { mes: 'todos', categoria: 'todas' };
@@ -139,10 +140,11 @@ async function cargarPagosAdmin() {
   const cont = document.getElementById('admin-pagos-resumen');
   if (cont) cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const [resIng, resCom, resCos] = await Promise.all([
+  const [resIng, resCom, resCos, resEli] = await Promise.all([
     supabaseClient.rpc('admin_ingresos'),
     supabaseClient.rpc('admin_comisiones_listar'),
-    supabaseClient.rpc('admin_costos')
+    supabaseClient.rpc('admin_costos'),
+    supabaseClient.rpc('admin_costos_eliminados')
   ]);
 
   if (resIng.error || !Array.isArray(resIng.data)) {
@@ -154,6 +156,8 @@ async function cargarPagosAdmin() {
   _pagosComisiones = Array.isArray(resCom.data) ? resCom.data : [];
   if (resCos.error) console.error('Error cargando costos:', resCos.error);
   _pagosCostos = Array.isArray(resCos.data) ? resCos.data : [];
+  if (resEli.error) console.error('Error cargando costos eliminados:', resEli.error);
+  _pagosCostosEliminados = Array.isArray(resEli.data) ? resEli.data : [];
 
   const mesActual = _pagosHoyArg().slice(0, 7);
   const meses = _pagosMeses();
@@ -426,7 +430,7 @@ function renderPagosCostos() {
   const cont = document.getElementById('admin-pagos-costos');
   if (!cont) return;
 
-  if (!_pagosCostos.length) {
+  if (!_pagosCostos.length && !_pagosCostosEliminados.length) {
     cont.innerHTML = '<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay costos registrados.</p></div>';
     return;
   }
@@ -496,7 +500,7 @@ function renderPagosCostos() {
     ${filas.length ? `
       <div class="vend-tabla-scroll">
         <table class="admin-tabla">
-          <thead><tr><th>Fecha</th><th>Rubro</th><th>Detalle</th><th class="pagos-num">Monto USD</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Rubro</th><th>Detalle</th><th class="pagos-num">Monto USD</th><th></th></tr></thead>
           <tbody>
             ${filas.map(k => `
               <tr>
@@ -504,16 +508,69 @@ function renderPagosCostos() {
                 <td>${_pagosEsc(_pagosNombreCostoCategoria(k.categoria))}</td>
                 <td>${_pagosEsc(k.detalle)}</td>
                 <td class="pagos-num pagos-neg">${_pagosMonto(k.monto_usd, 'USD')}</td>
+                <td>${k.categoria === 'vendedor'
+                  ? '<span class="form-info" title="Las comisiones de vendedores se anulan anulando la venta">—</span>'
+                  : `<button class="btn-secundario btn-sm" title="Eliminar este costo" onclick="eliminarCostoPagos('${_pagosEsc(k.id)}', '${_pagosEsc(k.categoria)}')">🗑 Eliminar</button>`}</td>
               </tr>`).join('')}
           </tbody>
         </table>
       </div>` : '<div class="estado-vacio"><p class="estado-vacio-texto">No hay costos con estos filtros.</p></div>'}
+
+    ${_pagosCostosEliminados.length ? `
+      <details class="pagos-nota" style="margin-top:16px">
+        <summary>Costos eliminados (${_pagosCostosEliminados.length}) · no suman en ningún total</summary>
+        <div class="vend-tabla-scroll">
+          <table class="admin-tabla">
+            <thead><tr><th>Fecha</th><th>Rubro</th><th>Detalle</th><th class="pagos-num">Monto USD</th><th></th></tr></thead>
+            <tbody>
+              ${_pagosCostosEliminados.map(k => `
+                <tr>
+                  <td>${_pagosEsc(_pagosFechaHora(k.fecha))}</td>
+                  <td>${_pagosEsc(_pagosNombreCostoCategoria(k.categoria))}</td>
+                  <td>${_pagosEsc(k.detalle)}</td>
+                  <td class="pagos-num">${_pagosMonto(k.monto_usd, 'USD')}</td>
+                  <td><button class="btn-secundario btn-sm" onclick="restaurarCostoPagos('${_pagosEsc(k.id)}', '${_pagosEsc(k.categoria)}')">↩ Restaurar</button></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </details>` : ''}
 
     <p class="pagos-nota">
       Los banners se cobran una sola vez por obra y tipo (feed o panel reseñador): si ya se diseñó, no se vuelve a contar.
       La fecha es la del impulso que lo originó. Los gastos fijos (Supabase, Resend) se suman solos una vez por mes.
     </p>
   `;
+}
+
+async function eliminarCostoPagos(id, categoria) {
+  const k = _pagosCostos.find(x => String(x.id) === String(id) && x.categoria === categoria);
+  const desc = k ? `${k.detalle} (${_pagosMonto(k.monto_usd, 'USD')})` : 'este costo';
+  if (!confirm(`¿Eliminar "${desc}"?\n\nDeja de sumar en el Resumen y en la ganancia real. Si te equivocás, lo podés restaurar desde "Costos eliminados".`)) return;
+
+  const { error } = await supabaseClient.rpc('admin_costo_eliminar', {
+    p_id_origen: String(id), p_categoria: categoria, p_motivo: null
+  });
+  if (error) {
+    console.error('Error eliminando costo:', error);
+    mostrarToast(error.message || 'No se pudo eliminar el costo.', 'error');
+    return;
+  }
+  mostrarToast('Costo eliminado. Ya no suma en los totales.', 'ok');
+  await cargarPagosAdmin();
+}
+
+async function restaurarCostoPagos(id, categoria) {
+  const { error } = await supabaseClient.rpc('admin_costo_restaurar', {
+    p_id_origen: String(id), p_categoria: categoria
+  });
+  if (error) {
+    console.error('Error restaurando costo:', error);
+    mostrarToast(error.message || 'No se pudo restaurar el costo.', 'error');
+    return;
+  }
+  mostrarToast('Costo restaurado.', 'ok');
+  await cargarPagosAdmin();
 }
 
 // ────────────────────────────────────────────────────────────
