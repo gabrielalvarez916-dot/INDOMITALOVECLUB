@@ -57,9 +57,10 @@ async function cargarPanelVendedor() {
 
   cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const [resPanel, resClientes] = await Promise.all([
+  const [resPanel, resClientes, resGestion] = await Promise.all([
     supabaseClient.rpc('vendedor_mi_panel'),
-    supabaseClient.rpc('vendedor_mis_clientes')
+    supabaseClient.rpc('vendedor_mis_clientes'),
+    supabaseClient.rpc('vendedor_mi_gestion')
   ]);
 
   if (resPanel.error || !resPanel.data) {
@@ -70,6 +71,9 @@ async function cargarPanelVendedor() {
 
   const panel = resPanel.data;
   const clientes = Array.isArray(resClientes.data) ? resClientes.data : [];
+  if (resGestion.error) console.error('Error cargando gestión de contactos:', resGestion.error);
+  _vendGestion = resGestion.data || { contactados_mes: 0, ultima_gestion: null, pendientes: [] };
+  _vendPendientes = new Set(Array.isArray(_vendGestion.pendientes) ? _vendGestion.pendientes : []);
 
   _vendCodigoActual = panel.codigo || '';
   _vendLinkActual = `${window.location.origin}/?v=${_vendCodigoActual}`;
@@ -78,12 +82,153 @@ async function cargarPanelVendedor() {
     ${panel.estado === 'suspendido' ? `
       <div class="vend-aviso">Tu cuenta de vendedor está suspendida. Por ahora no se registran comisiones nuevas. Escribinos a soporte si tenés dudas.</div>
     ` : ''}
+    ${_vendHtmlGestion()}
     ${_vendHtmlResumen(panel)}
     ${_vendHtmlProductos(panel.por_producto || {})}
     ${_vendHtmlLinkCodigo()}
     ${_vendHtmlClientes(clientes)}
     ${_vendHtmlLiquidaciones(panel.liquidaciones || [])}
   `;
+}
+
+// ============================================================
+// GESTIÓN DE CONTACTOS: toques en links (Instagram / mail)
+// Cada toque se registra; el cliente cuenta una sola vez por mes
+// en "Contactados". Al tocar un link se pide el resultado, y se
+// vuelve a pedir en cada nuevo toque (el resultado no queda fijo).
+// ============================================================
+
+let _vendGestion = { contactados_mes: 0, ultima_gestion: null, pendientes: [] };
+let _vendPendientes = new Set();
+
+function _vendHtmlGestion() {
+  return `
+    <div class="stats-grid" style="margin-bottom:16px;">
+      <div class="stat-card">
+        <span class="stat-numero" id="vend-g-contactados">${Number(_vendGestion.contactados_mes) || 0}</span>
+        <span class="stat-label">Contactados este mes</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-numero" id="vend-g-ultima" style="font-size:1.4rem;">${_vendEsc(_vendFecha(_vendGestion.ultima_gestion))}</span>
+        <span class="stat-label">Última gestión</span>
+      </div>
+    </div>
+  `;
+}
+
+async function _vendRefrescarGestion() {
+  const { data, error } = await supabaseClient.rpc('vendedor_mi_gestion');
+  if (error || !data) return;
+  _vendGestion = data;
+  _vendPendientes = new Set(Array.isArray(data.pendientes) ? data.pendientes : []);
+  const a = document.getElementById('vend-g-contactados');
+  const b = document.getElementById('vend-g-ultima');
+  if (a) a.textContent = Number(data.contactados_mes) || 0;
+  if (b) b.textContent = _vendFecha(data.ultima_gestion);
+}
+
+function _vendMarcarPendiente(idCliente, pendiente) {
+  if (pendiente) _vendPendientes.add(idCliente); else _vendPendientes.delete(idCliente);
+  const el = document.getElementById(`vend-pend-${idCliente}`);
+  if (el) el.style.display = pendiente ? '' : 'none';
+}
+
+// Se llama al tocar el link de Instagram o de mail. El link se abre normal;
+// acá solo registramos el toque y pedimos el resultado.
+async function _vendToque(idCliente, canal) {
+  _vendMarcarPendiente(idCliente, true);
+  try {
+    const { data, error } = await supabaseClient.rpc('vendedor_registrar_toque', { p_id_cliente: idCliente, p_canal: canal });
+    if (error || data?.error) {
+      console.error('Error registrando toque:', error || data?.error);
+    }
+  } catch (e) {
+    console.error('Error registrando toque:', e);
+  }
+  _vendRefrescarGestion();
+  setTimeout(() => _vendPedirResultado(idCliente), 600);
+}
+
+function _vendPedirResultado(idCliente) {
+  const c = _vendClientesCache.find(x => x.id_cliente === idCliente);
+  if (!c) return;
+  mostrarModal('modal-detalle-campana');
+  const titulo = document.getElementById('modal-detalle-titulo');
+  const body = document.getElementById('modal-detalle-body');
+  const footer = document.getElementById('modal-detalle-footer');
+  if (titulo) titulo.textContent = 'Resultado del contacto';
+  if (body) {
+    body.innerHTML = `
+      <p class="form-info" style="margin-top:0;">Cliente: <strong>${_vendEsc(c.autor || c.alias || '—')}</strong></p>
+      <div class="form-grupo">
+        <label class="form-label">¿Cómo te fue?</label>
+        <select id="vend-res-razon" class="form-input" onchange="_vendResultadoCambio()">
+          <option value="">Elegí el resultado…</option>
+          ${_VEND_RAZONES.map(r => `<option value="${r.clave}">${r.nombre}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-grupo" id="vend-res-grupo-fecha" style="display:none;">
+        <label class="form-label">¿Cuándo volver a comunicar?</label>
+        <input type="datetime-local" id="vend-res-fecha" class="form-input" />
+      </div>
+    `;
+  }
+  if (footer) {
+    footer.innerHTML = `
+      <button class="btn-secundario" onclick="cerrarModales()">Más tarde</button>
+      <button class="btn-primario" id="vend-res-btn" onclick="_vendGuardarResultado('${idCliente}')">Guardar</button>
+    `;
+  }
+}
+
+function _vendResultadoCambio() {
+  const razon = document.getElementById('vend-res-razon')?.value;
+  const g = document.getElementById('vend-res-grupo-fecha');
+  if (g) g.style.display = razon === 'volver_a_comunicar' ? '' : 'none';
+}
+
+async function _vendGuardarResultado(idCliente) {
+  const razon = document.getElementById('vend-res-razon')?.value;
+  const fecha = document.getElementById('vend-res-fecha')?.value;
+  if (!razon) { mostrarToast('Elegí el resultado.', 'error'); return; }
+  const pideFecha = razon === 'volver_a_comunicar';
+  if (pideFecha && !fecha) { mostrarToast('Elegí cuándo volver a comunicarte.', 'error'); return; }
+  const fechaIso = pideFecha ? _vendInputFechaAIso(fecha) : null;
+
+  const btn = document.getElementById('vend-res-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+  const { data, error } = await supabaseClient.rpc('vendedor_guardar_seguimiento', {
+    p_id_cliente: idCliente,
+    p_contactado: true,
+    p_razon: razon,
+    p_fecha_recontacto: fechaIso
+  });
+  if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+
+  if (error || data?.error) {
+    console.error('Error guardando resultado:', error || data?.error);
+    mostrarToast(data?.error || 'No se pudo guardar. Probá de nuevo.', 'error');
+    return;
+  }
+
+  const c = _vendClientesCache.find(x => x.id_cliente === idCliente);
+  if (c) { c.contactado = true; c.razon_contacto = razon; c.fecha_recontacto = fechaIso; }
+
+  // Refleja el resultado en los selectores de la fila (si está en pantalla).
+  const selC = document.getElementById(`vend-seg-contactado-${idCliente}`);
+  const selR = document.getElementById(`vend-seg-razon-${idCliente}`);
+  const inpF = document.getElementById(`vend-seg-fecha-${idCliente}`);
+  if (selC) selC.value = '1';
+  if (selR) { selR.style.display = ''; selR.value = razon; }
+  if (inpF) {
+    inpF.style.display = pideFecha ? '' : 'none';
+    inpF.value = pideFecha ? _vendIsoAInputFecha(fechaIso) : '';
+  }
+
+  _vendMarcarPendiente(idCliente, false);
+  cerrarModales();
+  mostrarToast('Resultado guardado.', 'ok');
+  _vendRefrescarGestion();
 }
 
 function _vendHtmlResumen(p) {
@@ -208,7 +353,15 @@ function _vendCeldaInstagram(c) {
   const url = _vendLinkRed(c.instagram, 'https://www.instagram.com/');
   if (!url) return '<span class="vend-mini">—</span>';
   const usuario = String(c.instagram).trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '').replace(/\?.*$/, '');
-  return `<a href="${_vendEsc(url)}" target="_blank" rel="noopener noreferrer" style="font-weight:600;">@${_vendEsc(usuario || 'instagram')}</a>`;
+  return `<a href="${_vendEsc(url)}" target="_blank" rel="noopener noreferrer" style="font-weight:600;" onclick="_vendToque('${c.id_cliente}','instagram')">@${_vendEsc(usuario || 'instagram')}</a>`;
+}
+
+// Mail: abre una ventana de mensaje nuevo en Gmail (sin texto) y cuenta el toque.
+// Solo para clientes activos; en el historial de traspasados el mail no viene.
+function _vendLinkMail(c) {
+  const url = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(c.email);
+  if (c.estado !== 'activo') return `<span class="vend-mini">${_vendEsc(c.email)}</span>`;
+  return `<a class="vend-mini" href="${_vendEsc(url)}" target="_blank" rel="noopener noreferrer" onclick="_vendToque('${c.id_cliente}','mail')">${_vendEsc(c.email)}</a>`;
 }
 
 // Etiqueta: Activo (tiene o tuvo campaña) / Nuevo (nunca creó una).
@@ -273,7 +426,7 @@ function _vendHtmlListadoClientes(clientes, buscando) {
 
   const fila = (c) => `
     <tr>
-      <td>${_vendEsc(c.autor || c.alias || '—')}${c.email ? `<br><span class="vend-mini">${_vendEsc(c.email)}</span>` : ''}${_vendRedes(c)}</td>
+      <td>${_vendEsc(c.autor || c.alias || '—')}${c.email ? `<br>${_vendLinkMail(c)}` : ''}${_vendRedes(c)}</td>
       <td>${c.estado === 'activo' ? _vendCeldaInstagram(c) : '<span class="vend-mini">—</span>'}</td>
       <td>${_vendEsc(c.libros || '—')}</td>
       <td>${_vendFecha(c.fecha_asignacion)}</td>
@@ -342,10 +495,12 @@ function _vendHtmlLiquidaciones(liqs) {
 
 const _VEND_RAZONES = [
   { clave: 'venta',                  nombre: 'Venta' },
+  { clave: 'posible_venta',          nombre: 'Posible venta' },
   { clave: 'no_respondio',           nombre: 'No respondió' },
   { clave: 'negativa_precio',        nombre: 'Negativa por precio' },
   { clave: 'negativa_otro_servicio', nombre: 'Negativa por otro servicio' },
   { clave: 'negativa_otro_motivo',   nombre: 'Negativa por otro motivo' },
+  { clave: 'no_recibio_resenas',     nombre: 'Recibió pocas reseñas' },
   { clave: 'volver_a_comunicar',     nombre: 'Volver a comunicar' }
 ];
 
@@ -381,6 +536,7 @@ function _vendHtmlSeguimiento(c) {
   const razon = c.razon_contacto || '';
   const mostrarFecha = contactado && razon === 'volver_a_comunicar';
   return `
+    <button class="badge badge-pendiente" id="vend-pend-${id}" style="${_vendPendientes.has(id) ? '' : 'display:none;'}cursor:pointer;border:0;margin-bottom:6px;" onclick="_vendPedirResultado('${id}')">⏳ Falta resultado</button>
     <div class="vend-seg">
       <select id="vend-seg-contactado-${id}" class="vend-seg-select" onchange="_vendSeguimientoCambio('${id}')">
         <option value="0" ${!contactado ? 'selected' : ''}>No contactado</option>
