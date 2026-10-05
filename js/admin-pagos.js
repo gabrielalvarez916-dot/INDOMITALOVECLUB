@@ -21,10 +21,18 @@ const PAGOS_PROVEEDORES = {
   manual: 'Manual (admin)'
 };
 
+const PAGOS_COSTOS_CATEGORIAS = {
+  banner_feed: 'Banners del feed',
+  banner_resenador: 'Banners del panel reseñador',
+  vendedor: 'Comisiones de vendedores'
+};
+
 const PAGOS_COTIZACION_DEFAULT = 1550;
 
 let _pagosFilas = [];
 let _pagosComisiones = [];
+let _pagosCostos = [];                             // costos en USD (función admin_costos)
+let _pagosFiltroCostos = { mes: 'todos', categoria: 'todas' };
 let _pagosMesResumen = null;                       // 'YYYY-MM' o 'todos'
 let _pagosFiltroDetalle = { mes: 'todos', categoria: 'todas' };
 let _pagosSheetJsPromesa = null;
@@ -90,7 +98,20 @@ function _pagosCambiarCotizacion(valor) {
 
 function _pagosMeses() {
   const set = new Set(_pagosFilas.map(f => f.mes));
+  _pagosCostos.forEach(k => { if (k.mes) set.add(k.mes); });
   return Array.from(set).sort().reverse();
+}
+
+function _pagosCostosDelPeriodo(mes) {
+  return _pagosCostos.filter(k => mes === 'todos' || k.mes === mes);
+}
+
+function _pagosSumaCostosUsd(lista) {
+  return lista.reduce((s, k) => s + (Number(k.monto_usd) || 0), 0);
+}
+
+function _pagosNombreCostoCategoria(id) {
+  return PAGOS_COSTOS_CATEGORIAS[id] || id;
 }
 
 function _pagosAgregar(filas) {
@@ -117,9 +138,10 @@ async function cargarPagosAdmin() {
   const cont = document.getElementById('admin-pagos-resumen');
   if (cont) cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const [resIng, resCom] = await Promise.all([
+  const [resIng, resCom, resCos] = await Promise.all([
     supabaseClient.rpc('admin_ingresos'),
-    supabaseClient.rpc('admin_comisiones_listar')
+    supabaseClient.rpc('admin_comisiones_listar'),
+    supabaseClient.rpc('admin_costos')
   ]);
 
   if (resIng.error || !Array.isArray(resIng.data)) {
@@ -129,6 +151,8 @@ async function cargarPagosAdmin() {
   }
   _pagosFilas = resIng.data;
   _pagosComisiones = Array.isArray(resCom.data) ? resCom.data : [];
+  if (resCos.error) console.error('Error cargando costos:', resCos.error);
+  _pagosCostos = Array.isArray(resCos.data) ? resCos.data : [];
 
   const mesActual = _pagosHoyArg().slice(0, 7);
   const meses = _pagosMeses();
@@ -138,6 +162,7 @@ async function cargarPagosAdmin() {
 
   renderPagosResumen();
   renderPagosDetalle();
+  renderPagosCostos();
   renderPagosComisiones();
 }
 
@@ -161,6 +186,11 @@ function renderPagosResumen() {
     : _pagosFilas.filter(f => f.mes === _pagosMesResumen);
   const aggPeriodo = _pagosAgregar(periodo);
   const tituloPeriodo = _pagosMesResumen === 'todos' ? 'Todos los meses' : _pagosMesLindo(_pagosMesResumen);
+
+  // Costos del período (vienen en USD) y plata real que queda
+  const costosPeriodoUsd = _pagosSumaCostosUsd(_pagosCostosDelPeriodo(_pagosMesResumen));
+  const costosPeriodoArs = costosPeriodoUsd * cot;
+  const gananciaReal = _pagosEquiv(aggPeriodo, 'neto', cot) - costosPeriodoArs;
 
   // Filas por rubro
   const filasRubro = PAGOS_CATEGORIAS.map(c => {
@@ -202,13 +232,17 @@ function renderPagosResumen() {
       const a = _pagosAgregar(delMes.filter(f => f.categoria === c.id));
       return `<td class="pagos-num">${a.n ? _pagosMonto(_pagosEquiv(a, 'neto', cot), 'ARS') : '—'}</td>`;
     }).join('');
+    const costosMes = _pagosSumaCostosUsd(_pagosCostosDelPeriodo(m)) * cot;
+    const gananciaMes = _pagosEquiv(total, 'neto', cot) - costosMes;
     return `
       <tr>
         <td><strong>${_pagosEsc(_pagosMesLindo(m))}</strong></td>
         <td class="pagos-num">${total.n}</td>
         ${celdas}
         <td class="pagos-num pagos-neg">${_pagosMonto(_pagosEquiv(total, 'comision', cot), 'ARS')}</td>
-        <td class="pagos-num"><strong>${_pagosMonto(_pagosEquiv(total, 'neto', cot), 'ARS')}</strong></td>
+        <td class="pagos-num">${_pagosMonto(_pagosEquiv(total, 'neto', cot), 'ARS')}</td>
+        <td class="pagos-num pagos-neg">${_pagosMonto(costosMes, 'ARS')}</td>
+        <td class="pagos-num"><strong>${_pagosMonto(gananciaMes, 'ARS')}</strong></td>
       </tr>`;
   }).join('');
 
@@ -231,8 +265,16 @@ function renderPagosResumen() {
     <h3 class="vend-subtitulo">${_pagosEsc(tituloPeriodo)}</h3>
     <div class="stats-grid">
       <div class="stat-card">
+        <span class="pagos-stat-num">${_pagosMonto(gananciaReal, 'ARS')}</span>
+        <span class="stat-label">Ganancia real (neto − costos)</span>
+      </div>
+      <div class="stat-card">
+        <span class="pagos-stat-num pagos-neg">${_pagosMonto(costosPeriodoArs, 'ARS')}</span>
+        <span class="stat-label">Costos (USD ${_pagosFmt(costosPeriodoUsd, 2)})</span>
+      </div>
+      <div class="stat-card">
         <span class="pagos-stat-num">${_pagosMonto(_pagosEquiv(aggPeriodo, 'neto', cot), 'ARS')}</span>
-        <span class="stat-label">Neto (me queda)</span>
+        <span class="stat-label">Neto de cobros (después de comisiones)</span>
       </div>
       <div class="stat-card">
         <span class="pagos-stat-num">${_pagosMonto(_pagosEquiv(aggPeriodo, 'bruto', cot), 'ARS')}</span>
@@ -292,6 +334,7 @@ function renderPagosResumen() {
           <th>Mes</th><th class="pagos-num">Cobros</th>
           ${PAGOS_CATEGORIAS.map(c => `<th class="pagos-num">${_pagosEsc(c.nombre)}</th>`).join('')}
           <th class="pagos-num">Comisiones</th><th class="pagos-num">Neto total</th>
+          <th class="pagos-num">Costos</th><th class="pagos-num">Ganancia real</th>
         </tr></thead>
         <tbody>${filasMeses}</tbody>
       </table>
@@ -300,6 +343,7 @@ function renderPagosResumen() {
     <p class="pagos-nota">
       Los dólares se pasan a pesos con la cotización de arriba, solo para los totales "en pesos". El detalle y el Excel guardan cada moneda por separado.
       Las comisiones son las que cargues en la pestaña Comisiones; mientras no las ajustes con los valores reales de tus cuentas, el neto es una estimación.
+      Los costos se cargan en dólares (pestaña Costos) y acá se pasan a pesos con la misma cotización; la ganancia real es el neto menos esos costos.
       La fecha de cada cobro es la hora argentina. Los cobros se anotan solos a medida que se aprueban los pagos.
     </p>
   `;
@@ -370,6 +414,104 @@ function renderPagosDetalle() {
           </tbody>
         </table>
       </div>` : '<div class="estado-vacio"><p class="estado-vacio-texto">No hay cobros con estos filtros.</p></div>'}
+  `;
+}
+
+// ────────────────────────────────────────────────────────────
+// PESTAÑA · COSTOS
+// ────────────────────────────────────────────────────────────
+
+function renderPagosCostos() {
+  const cont = document.getElementById('admin-pagos-costos');
+  if (!cont) return;
+
+  if (!_pagosCostos.length) {
+    cont.innerHTML = '<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay costos registrados.</p></div>';
+    return;
+  }
+
+  const cot = _pagosCotizacion();
+  const meses = _pagosMeses();
+  const { mes, categoria } = _pagosFiltroCostos;
+  const filas = _pagosCostos.filter(k =>
+    (mes === 'todos' || k.mes === mes) && (categoria === 'todas' || k.categoria === categoria));
+  const totalUsd = _pagosSumaCostosUsd(filas);
+
+  // Totales por rubro dentro del mes elegido (sin el filtro de rubro)
+  const delMes = _pagosCostos.filter(k => mes === 'todos' || k.mes === mes);
+  const idsCat = Object.keys(PAGOS_COSTOS_CATEGORIAS);
+  delMes.forEach(k => { if (!idsCat.includes(k.categoria)) idsCat.push(k.categoria); });
+  const filasRubro = idsCat.map(id => {
+    const lista = delMes.filter(k => k.categoria === id);
+    if (!lista.length) return '';
+    const usd = _pagosSumaCostosUsd(lista);
+    return `
+      <tr>
+        <td>${_pagosEsc(_pagosNombreCostoCategoria(id))}</td>
+        <td class="pagos-num">${lista.length}</td>
+        <td class="pagos-num">${_pagosMonto(usd, 'USD')}</td>
+        <td class="pagos-num">${_pagosMonto(usd * cot, 'ARS')}</td>
+      </tr>`;
+  }).join('');
+  const totalMesUsd = _pagosSumaCostosUsd(delMes);
+
+  cont.innerHTML = `
+    <div class="pagos-controles">
+      <div class="form-grupo">
+        <label for="pagos-cos-mes">Mes</label>
+        <select id="pagos-cos-mes" class="form-select" onchange="_pagosFiltroCostos.mes = this.value; renderPagosCostos()">
+          <option value="todos" ${mes === 'todos' ? 'selected' : ''}>Todos los meses</option>
+          ${meses.map(m => `<option value="${m}" ${m === mes ? 'selected' : ''}>${_pagosEsc(_pagosMesLindo(m))}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-grupo">
+        <label for="pagos-cos-cat">Rubro</label>
+        <select id="pagos-cos-cat" class="form-select" onchange="_pagosFiltroCostos.categoria = this.value; renderPagosCostos()">
+          <option value="todas" ${categoria === 'todas' ? 'selected' : ''}>Todos los rubros</option>
+          ${idsCat.map(id => `<option value="${_pagosEsc(id)}" ${id === categoria ? 'selected' : ''}>${_pagosEsc(_pagosNombreCostoCategoria(id))}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="vend-tabla-scroll">
+      <table class="admin-tabla">
+        <thead><tr><th>Rubro</th><th class="pagos-num">Cantidad</th><th class="pagos-num">USD</th><th class="pagos-num">En pesos</th></tr></thead>
+        <tbody>
+          ${filasRubro}
+          <tr class="pagos-total">
+            <td>Total</td>
+            <td class="pagos-num">${delMes.length}</td>
+            <td class="pagos-num">${_pagosMonto(totalMesUsd, 'USD')}</td>
+            <td class="pagos-num">${_pagosMonto(totalMesUsd * cot, 'ARS')}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="form-info">
+      ${filas.length} costos con estos filtros · ${_pagosMonto(totalUsd, 'USD')} (${_pagosMonto(totalUsd * cot, 'ARS')} a la cotización del Resumen)
+    </p>
+
+    ${filas.length ? `
+      <div class="vend-tabla-scroll">
+        <table class="admin-tabla">
+          <thead><tr><th>Fecha</th><th>Rubro</th><th>Detalle</th><th class="pagos-num">Monto USD</th></tr></thead>
+          <tbody>
+            ${filas.map(k => `
+              <tr>
+                <td>${_pagosEsc(_pagosFechaHora(k.fecha))}</td>
+                <td>${_pagosEsc(_pagosNombreCostoCategoria(k.categoria))}</td>
+                <td>${_pagosEsc(k.detalle)}</td>
+                <td class="pagos-num pagos-neg">${_pagosMonto(k.monto_usd, 'USD')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : '<div class="estado-vacio"><p class="estado-vacio-texto">No hay costos con estos filtros.</p></div>'}
+
+    <p class="pagos-nota">
+      Los banners se cobran una sola vez por obra y tipo (feed o panel reseñador): si ya se diseñó, no se vuelve a contar.
+      La fecha es la del impulso que lo originó.
+    </p>
   `;
 }
 
