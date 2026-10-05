@@ -121,6 +121,7 @@ function mostrarSeccion(nombre) {
     'admin-visuales',
     'admin-check',
     'admin-vendedores',
+    'admin-pagos',
     'admin-chats',
     'mensajes',
     'panel-vendedor',
@@ -209,6 +210,9 @@ function mostrarSeccion(nombre) {
     case 'admin-vendedores':
       if (typeof cargarVendedoresAdmin === 'function') cargarVendedoresAdmin();
       break;
+    case 'admin-pagos':
+      if (typeof cargarPagosAdmin === 'function') cargarPagosAdmin();
+      break;
     case 'panel-vendedor':
       if (typeof cargarPanelVendedor === 'function') cargarPanelVendedor();
       break;
@@ -285,7 +289,7 @@ function mostrarHeaderLogueado(usuario) {
 
   // Muestra los links de admin (Planes, Soporte, Estadísticas, Visuales, Check) solo si es admin
   const esAdmin = usuario.rol === 'admin';
-  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores', 'nav-admin-chats'].forEach(id => {
+  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores', 'nav-admin-pagos', 'nav-admin-chats'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = esAdmin ? 'inline-block' : 'none';
   });
@@ -322,7 +326,7 @@ function mostrarHeaderDeslogueado() {
   const navGuiaResenador = document.getElementById('nav-guia-resenador');
   if (navGuiaResenador) navGuiaResenador.style.display = 'none';
 
-  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores'].forEach(id => {
+  ['nav-admin-planes', 'nav-admin-soporte', 'nav-admin-estadisticas', 'nav-admin-visuales', 'nav-admin-check', 'nav-admin-vendedores', 'nav-admin-pagos'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
