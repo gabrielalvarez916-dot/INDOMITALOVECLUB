@@ -34,8 +34,29 @@ function _nombreBadgeHistorico(codigo) {
   return nombres[codigo] || codigo || 'un nuevo nivel';
 }
 
+// Aviso a autores con postulaciones pendientes que SÍ pueden aprobar
+// (lo genera fn_aviso_postulaciones_pendientes_autor en la base).
+// Mismo copy que la Edge Function enviar-push-aviso-autor.
+function _avisoPendDatos(d) {
+  const n = Math.max(1, Number(d.cantidad) || 1);
+  const c = Math.max(1, Number(d.campanas) || 1);
+  return {
+    donde: c === 1 ? `en "${d.nombreLibro || 'tu campaña'}"` : `en ${c} de tus campañas`,
+    quien: n === 1 ? '1 reseñadora espera' : `${n} reseñadoras esperan`,
+    hay: n === 1 ? 'Hay 1 postulación' : `Hay ${n} postulaciones`,
+  };
+}
+
 const VARIANTES = {
   // AUTOR
+  postulaciones_pendientes_autor: {
+    emoji: '⏳',
+    textos: [
+      (d) => { const t = _avisoPendDatos(d); return `${t.quien} tu respuesta ${t.donde}. Las postulaciones no se aprueban solas.`; },
+      (d) => { const t = _avisoPendDatos(d); return `${t.hay} sin responder ${t.donde}. Cuanto antes respondas, antes empiezan a leer.`; },
+      (d) => { const t = _avisoPendDatos(d); return `${t.quien} tu respuesta ${t.donde}. Un minuto tuyo y ya pueden empezar a leer.`; },
+    ],
+  },
   postulacion_nueva: {
     emoji: '😏',
     textos: [
@@ -672,6 +693,12 @@ function _navegarPorNotificacion(notif) {
   // Mensaje de chat: abre esa conversación (el chat vive dentro de Perfil)
   if (notif.tipo === 'chat_mensaje') {
     if (notif.referenciaId && typeof Chat !== 'undefined') Chat.abrirDesdeNotificacion(notif.referenciaId);
+    return;
+  }
+
+  // Aviso de postulaciones pendientes: lleva al panel del autor (no trae referenciaId)
+  if (notif.tipo === 'postulaciones_pendientes_autor') {
+    if (typeof mostrarPanelRol === 'function') mostrarPanelRol();
     return;
   }
 
