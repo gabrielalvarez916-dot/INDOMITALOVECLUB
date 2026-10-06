@@ -4060,6 +4060,17 @@ img { max-width: 100%; display: block; }
   to { transform: rotate(360deg); }
 }
 
+/* ── Campaña paga en el feed de reseñadores: brillo rosita claro, sutil ── */
+.campana-card-horizontal.campana-paga {
+  border-color: #F7CFDD;
+  box-shadow: 0 0 14px rgba(244, 166, 194, 0.55);
+}
+
+.campana-card-horizontal.campana-paga:hover {
+  box-shadow: 0 0 18px rgba(244, 166, 194, 0.75);
+  border-color: #F4A6C2;
+}
+
 /* ── Campaña vencida en feed (relleno) ── */
 .campana-vencida {
   opacity: 0.6;

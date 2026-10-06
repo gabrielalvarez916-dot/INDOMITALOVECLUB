@@ -83,10 +83,16 @@ function mezclarArray(arr) {
 // "Todas las campañas" NUNCA se ordena por coincidencia: es puro azar
 // (se reparte de nuevo cada tanto tiempo), lo único fijo es que las
 // campañas sin cupo quedan siempre debajo de todo.
-function ordenarFeed(campañas) {
-  const conCupo = mezclarArray(campañas.filter(c => c.cuposDisponibles > 0));
+// pagasPrimero: solo en el feed de reseñadores confiables. Las campañas pagas
+// con cupo van arriba de todo; el resto queda como siempre.
+let _feedPagasArriba = false;
+function ordenarFeed(campañas, pagasPrimero = false) {
+  const conCupo = campañas.filter(c => c.cuposDisponibles > 0);
   const sinCupo = mezclarArray(campañas.filter(c => c.cuposDisponibles <= 0));
-  return [...conCupo, ...sinCupo];
+  if (!pagasPrimero) return [...mezclarArray(conCupo), ...sinCupo];
+  const pagas = mezclarArray(conCupo.filter(c => c.esPaga));
+  const resto = mezclarArray(conCupo.filter(c => !c.esPaga));
+  return [...pagas, ...resto, ...sinCupo];
 }
 
 // Variabilidad: cada tanto tiempo se vuelve a barajar "Todas las campañas"
@@ -97,7 +103,7 @@ function iniciarVariabilidadFeed() {
     const seccionFeed = document.getElementById('seccion-feed');
     if (!seccionFeed || seccionFeed.style.display === 'none') return;
     if (!_campañasTodas || _campañasTodas.length === 0) return;
-    _campañasTodas = ordenarFeed(_campañasTodas);
+    _campañasTodas = ordenarFeed(_campañasTodas, _feedPagasArriba);
     filtrarFeed();
   }, INTERVALO_VARIABILIDAD_FEED_MS);
 }
@@ -269,8 +275,23 @@ async function cargarFeed() {
     }
   }
 
+  // Campañas pagas (campaña individual, crédito de pack, o autor con
+  // suscripción Basic/Premium vigente), en una sola llamada. Solo reseñadores.
+  // Los confiables (no bloqueados) las ven arriba de todo; todos los
+  // reseñadores las ven con brillo rosita.
+  let idsPagas = new Set();
+  _feedPagasArriba = false;
+  if (usuario?.rol === 'reseñador' && idsCampanas.length > 0) {
+    const [{ data: pagasRows, error: errorPagas }, { data: estadoResenador }] = await Promise.all([
+      supabaseClient.rpc('obtener_campanas_pagas', { p_ids: idsCampanas }),
+      supabaseClient.rpc('mi_estado_resenador')
+    ]);
+    if (!errorPagas) idsPagas = new Set((pagasRows || []).map(r => r.id_campana));
+    _feedPagasArriba = !!estadoResenador && estadoResenador.estado === 'confiable' && !estadoResenador.bloqueado;
+  }
+
   _campañasTodas = await Promise.all(
-    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[_claveLibroCampana(c)], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id], idsCampanasImpulsadas.has(c.id), matchesPorCampana[c.id]))
+    (campanas || []).map(c => normalizarCampana(c, rankingsPorLibro[_claveLibroCampana(c)], archivosPorCampana[c.id], tropesPorCampana[c.id], subgenerosPorCampana[c.id], idsCampanasImpulsadas.has(c.id), matchesPorCampana[c.id], idsPagas.has(c.id)))
   );
   if (_campañasTodas.length === 0) {
     toggleElemento('feed-vacio', true);
@@ -322,7 +343,7 @@ async function cargarFeed() {
     );
   }
 
-  _campañasTodas = ordenarFeed(_campañasTodas);
+  _campañasTodas = ordenarFeed(_campañasTodas, _feedPagasArriba);
 
   actualizarContadoresFiltroGenero();
 
@@ -401,7 +422,7 @@ function botonSoloParaVosHtml(c) {
   return `<button class="btn-secundario btn-sm" disabled style="width:100%; opacity:0.5; cursor:not-allowed;">Sin cupos</button>`;
 }
 
-async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero, impulsada = false, match) {
+async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgenero, impulsada = false, match, esPaga = false) {
   const hoy = new Date();
   const fechaLimite = new Date(c.fecha_limite);
 
@@ -433,6 +454,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
     linkPortada: c.link_portada,
     portadaValida: !!c.link_portada,
     impulsada,
+    esPaga,
     linkAmazon: c.link_amazon_libro,
     cuposDisponibles: c.cupos_disponibles,
     cuposTotal: c.cupos_total,
@@ -640,7 +662,7 @@ let botonHtml = '';
     : '';
 
   return `
-    <div class="campana-card-horizontal${c.estaVencida ? ' campana-vencida' : ''}" onclick="verDetalleCampaña('${c.id}')">
+    <div class="campana-card-horizontal${c.estaVencida ? ' campana-vencida' : ''}${c.esPaga && !c.estaVencida && Sesion.rol() === 'reseñador' ? ' campana-paga' : ''}" onclick="verDetalleCampaña('${c.id}')">
       ${portadaHtml}
       <div class="campana-info">
 <p class="campana-autor"
