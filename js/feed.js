@@ -1014,9 +1014,10 @@ async function iniciarPostulacion(idCampaña) {
     return;
   }
 
-  // Programa Reseñadores Premium (opcional para todos): si el reseñador
-  // no pagó el mes y hace 2 días o más que no ve el modal, lo muestra
-  // antes de seguir con la postulación. Si devuelve false, ya abrió el
+  // Programa Reseñadores Premium (pago único): según el grupo del reseñador
+  // (confiable / a prueba / con penalizaciones) puede mostrar el modal
+  // antes de seguir con la postulación; en libros de campañas pagas, un
+  // reseñador a prueba no puede continuar sin pagar o ganarse la confianza. Si devuelve false, ya abrió el
   // modal y el flujo continúa desde ahí (rechazarPorAhora / vuelta de pago).
   if (typeof ResenadorPremium !== 'undefined') {
     const puedeContinuar = await ResenadorPremium.interceptarPostulacion(idCampaña);
@@ -1135,6 +1136,12 @@ async function confirmarPostulacion(idCampaña) {
   });
 
   if (error) {
+    // Libro de campaña paga y reseñador a prueba: en vez del error crudo,
+    // se abre el modal que explica cómo pasar a confiable.
+    if ((error.message || '').includes('PREMIUM_REQUERIDO') && typeof ResenadorPremium !== 'undefined') {
+      await ResenadorPremium.abrirPorRechazoBackend(idCampaña);
+      return;
+    }
     mostrarToast(error.message || '😈 La postulación dijo "hoy no". Probá de nuevo.', 'error');
     return;
   }
