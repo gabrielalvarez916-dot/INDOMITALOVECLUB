@@ -9,7 +9,7 @@ let _bannersAdmin = [];
 // Recuerda lo que se escribió en cada buscador y si la carpeta de inactivos
 // estaba abierta, para que no se pierda al activar/desactivar/editar un banner.
 let _busquedaBanners = { feed: '', panel: '', inactivos: '' };
-let _carpetaInactivosAbierta = false;
+let _vistaBanners = 'activos'; // 'activos' | 'inactivos'
 let _observadorVideosBanner = null;
 
 /** Escapa texto para meterlo en HTML o en un atributo. */
@@ -386,46 +386,66 @@ async function refrescarListaBanners() {
     return;
   }
 
-  // Más antiguo primero: el orden en que se creó o se activó por última vez.
+  // Más nuevo primero: el último creado o activado queda arriba.
   const porFecha = (a, b) =>
-    new Date(a.activadoEn || a.creadoEn).getTime() - new Date(b.activadoEn || b.creadoEn).getTime();
+    new Date(b.activadoEn || b.creadoEn).getTime() - new Date(a.activadoEn || a.creadoEn).getTime();
 
   const activos = _bannersAdmin.filter(b => b.activo).sort(porFecha);
   const inactivos = _bannersAdmin.filter(b => !b.activo).sort(porFecha);
   const feed = activos.filter(b => b.ubicacion !== 'panel_resenador');
   const panel = activos.filter(b => b.ubicacion === 'panel_resenador');
 
+  const tabEstilo = (activa) =>
+    `padding:8px 16px; border-radius:999px; border:1px solid var(--bordo); cursor:pointer; font-weight:600; ` +
+    (activa ? 'background:var(--bordo); color:#fff;' : 'background:transparent; color:var(--bordo);');
+
+  // Solo se dibuja la vista elegida: la otra no existe en la página, así que
+  // no carga ni un video.
+  const vistaInactivos = _vistaBanners === 'inactivos';
+
   contenedor.innerHTML = `
     <h3 class="panel-titulo" style="font-size:20px; margin-bottom:14px;">Banners cargados</h3>
-    ${_construirBloqueBanners('feed', '🏠 Feed', feed, true)}
-    ${_construirBloqueBanners('panel', '📱 Panel reseñadores', panel, true)}
-    <details id="banners-carpeta-inactivos" style="margin-top:22px;" ${_carpetaInactivosAbierta ? 'open' : ''}>
-      <summary style="cursor:pointer; font-weight:600; font-size:17px; padding:8px 0;">
-        📁 Inactivos (${inactivos.length})
-      </summary>
-      <div id="banners-inactivos-contenido" style="margin-top:10px;"></div>
-    </details>
+    <div style="display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
+      <button type="button" style="${tabEstilo(!vistaInactivos)}" onclick="cambiarVistaBanners('activos')">Activos (${activos.length})</button>
+      <button type="button" style="${tabEstilo(vistaInactivos)}" onclick="cambiarVistaBanners('inactivos')">Inactivos (${inactivos.length})</button>
+    </div>
+    ${vistaInactivos
+      ? _construirBloqueBanners('inactivos', null, inactivos, false)
+      : _construirBloqueBanners('feed', '🏠 Feed', feed, true) + _construirBloqueBanners('panel', '📱 Panel reseñadores', panel, true)}
   `;
 
-  // La carpeta de inactivos no carga ningún video/imagen hasta que se abre.
-  const carpeta = document.getElementById('banners-carpeta-inactivos');
-  const rellenarInactivos = () => {
-    const cont = document.getElementById('banners-inactivos-contenido');
-    if (!cont || cont.dataset.listo === '1') return;
-    cont.dataset.listo = '1';
-    cont.innerHTML = _construirBloqueBanners('inactivos', null, inactivos, false);
+  if (vistaInactivos) {
     _aplicarBusquedaBanners('inactivos');
-  };
-  carpeta.addEventListener('toggle', () => {
-    _carpetaInactivosAbierta = carpeta.open;
-    if (carpeta.open) rellenarInactivos();
-  });
-  if (_carpetaInactivosAbierta) rellenarInactivos();
-
-  _aplicarBusquedaBanners('feed');
-  _aplicarBusquedaBanners('panel');
-  _iniciarObservadorVideosBanner();
+  } else {
+    _aplicarBusquedaBanners('feed');
+    _aplicarBusquedaBanners('panel');
+    _iniciarObservadorVideosBanner();
+  }
   _actualizarContadoresBanner();
+}
+
+/** Cambia entre la vista de banners activos y la de inactivos. */
+function cambiarVistaBanners(vista) {
+  if (_observadorVideosBanner) _observadorVideosBanner.disconnect();
+  _vistaBanners = vista === 'inactivos' ? 'inactivos' : 'activos';
+  refrescarListaBanners();
+}
+
+/**
+ * En la vista de inactivos, carga el archivo de UN banner solo cuando se
+ * toca "Ver" (no se baja nada antes).
+ */
+function verMediaBannerInactivo(idBanner) {
+  const b = _bannersAdmin.find(x => x.id === idBanner);
+  const cont = document.getElementById(`banner-media-${idBanner}`);
+  if (!b || !cont) return;
+  const url = _escBanner(b.imagenUrl);
+  const estilo = b.ubicacion === 'panel_resenador'
+    ? 'width:68px; height:121px; object-fit:cover; border-radius:6px;'
+    : 'width:160px; height:40px; object-fit:cover; border-radius:6px;';
+  cont.outerHTML = b.tipo === 'video'
+    ? `<video src="${url}#t=0.1" muted loop playsinline controls preload="metadata" style="${estilo}"></video>`
+    : `<img src="${url}" alt="${_escBanner(b.nombreLibro || 'Banner')}" decoding="async" style="${estilo}" />`;
 }
 
 /**
@@ -538,7 +558,9 @@ function construirCardBannerAdmin(b, conMedia = true) {
   const nombre = (b.nombreLibro || '').trim();
   const nombreMostrado = nombre ? _escBanner(nombre) : '<em style="opacity:.6;">Sin nombre — tocá Editar para ponerle uno</em>';
 
-  const miniatura = b.tipo === 'video'
+  const miniaturaPlaceholder = `<button type="button" id="banner-media-${b.id}" class="btn-secundario btn-sm" style="${estiloMiniatura} display:flex; align-items:center; justify-content:center; text-align:center; font-size:12px;" onclick="verMediaBannerInactivo('${b.id}')">${b.tipo === 'video' ? '🎬' : '🖼️'} Ver</button>`;
+
+  const miniatura = !conMedia ? miniaturaPlaceholder : b.tipo === 'video'
     ? `<video src="${urlSegura}#t=0.1" muted loop playsinline preload="metadata" ${reproducir ? 'data-autoplay-visible="1"' : ''} style="${estiloMiniatura}" onerror="this.style.display='none'"></video>`
     : `<img src="${urlSegura}" alt="${_escBanner(nombre || 'Banner')}" loading="lazy" decoding="async" style="${estiloMiniatura}" onerror="this.style.display='none'" />`;
 
