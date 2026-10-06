@@ -411,7 +411,7 @@ async function refrescarListaBanners() {
     </div>
     ${vistaInactivos
       ? _construirBloqueBanners('inactivos', null, inactivos, false)
-      : _construirBloqueBanners('feed', '🏠 Feed', feed, true) + _construirBloqueBanners('panel', '📱 Panel reseñadores', panel, true)}
+      : _construirBloqueBanners('feed', '🏠 Feed', feed, false) + _construirBloqueBanners('panel', '📱 Panel reseñadores', panel, false)}
   `;
 
   if (vistaInactivos) {
@@ -419,7 +419,6 @@ async function refrescarListaBanners() {
   } else {
     _aplicarBusquedaBanners('feed');
     _aplicarBusquedaBanners('panel');
-    _iniciarObservadorVideosBanner();
   }
   _actualizarContadoresBanner();
 }
@@ -432,8 +431,8 @@ function cambiarVistaBanners(vista) {
 }
 
 /**
- * En la vista de inactivos, carga el archivo de UN banner solo cuando se
- * toca "Ver" (no se baja nada antes).
+ * Carga el archivo de UN banner solo cuando se toca "Ver" (no se baja
+ * nada antes). Vale para Feed, Panel reseñadores e Inactivos.
  */
 function verMediaBannerInactivo(idBanner) {
   const b = _bannersAdmin.find(x => x.id === idBanner);
@@ -444,7 +443,7 @@ function verMediaBannerInactivo(idBanner) {
     ? 'width:68px; height:121px; object-fit:cover; border-radius:6px;'
     : 'width:160px; height:40px; object-fit:cover; border-radius:6px;';
   cont.outerHTML = b.tipo === 'video'
-    ? `<video src="${url}#t=0.1" muted loop playsinline controls preload="metadata" style="${estilo}"></video>`
+    ? `<video src="${url}" muted loop playsinline controls autoplay preload="auto" style="${estilo}"></video>`
     : `<img src="${url}" alt="${_escBanner(b.nombreLibro || 'Banner')}" decoding="async" style="${estilo}" />`;
 }
 
