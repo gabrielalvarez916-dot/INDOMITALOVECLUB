@@ -6,6 +6,27 @@
 
 let _bannersAdmin = [];
 
+// Recuerda lo que se escribió en cada buscador y si la carpeta de inactivos
+// estaba abierta, para que no se pierda al activar/desactivar/editar un banner.
+let _busquedaBanners = { feed: '', panel: '', inactivos: '' };
+let _carpetaInactivosAbierta = false;
+let _observadorVideosBanner = null;
+
+/** Escapa texto para meterlo en HTML o en un atributo. */
+function _escBanner(texto) {
+  return String(texto ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** Minúsculas y sin tildes, para que buscar "angel" encuentre "Ángel". */
+function _normalizarBusquedaBanner(texto) {
+  return String(texto ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
 /**
  * Carga la sección de Banners en el panel admin: formulario + lista.
  * Se llama al mostrar el tab "Banners".
@@ -94,6 +115,11 @@ function renderizarFormBanner() {
     <div id="banner-contadores" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;"></div>
     <h3 class="panel-titulo" style="font-size:20px;">Agregar banner</h3>
     <form id="form-nuevo-banner" onsubmit="crearBannerAdmin(event)">
+      <div class="form-grupo">
+        <label class="form-label">Nombre del libro *</label>
+        <input type="text" id="banner-nombre-libro" class="form-input" placeholder="Ej: Hundido" maxlength="120" required />
+        <p class="form-info">Es el nombre con el que vas a encontrar este banner en la lista.</p>
+      </div>
       <div class="form-grupo">
         <label class="form-label">Ubicación</label>
         <select id="banner-ubicacion" class="form-input" onchange="_actualizarHintBanner()">
@@ -252,6 +278,12 @@ async function crearBannerAdmin(event) {
   const tipo = document.getElementById('banner-tipo')?.value === 'video' ? 'video' : 'imagen';
   const archivo = document.getElementById('banner-archivo')?.files?.[0];
   const estado = document.getElementById('banner-subida-estado');
+  const nombreLibro = document.getElementById('banner-nombre-libro')?.value?.trim();
+
+  if (!nombreLibro) {
+    mostrarMensajeError('banner-error', 'Escribí el nombre del libro.');
+    return;
+  }
 
   if (!archivo) {
     mostrarMensajeError('banner-error', 'Elegí un archivo primero.');
@@ -301,7 +333,8 @@ async function crearBannerAdmin(event) {
     p_id_campana: idCampana || null,
     p_ubicacion: ubicacion,
     p_slot: slot,
-    p_fecha_fin: fechaFin
+    p_fecha_fin: fechaFin,
+    p_nombre_libro: nombreLibro
   });
 
   toggleBoton('btn-crear-banner', true, '', 'Subir y agregar banner');
@@ -323,7 +356,10 @@ async function crearBannerAdmin(event) {
 }
 
 /**
- * Pide a Supabase la lista completa de banners y la renderiza.
+ * Pide a Supabase la lista completa de banners y la renderiza separada en
+ * tres bloques: Feed (activos), Panel reseñadores (activos) y una carpeta
+ * de Inactivos. Cada bloque tiene su propio buscador por nombre de libro.
+ * Dentro de cada bloque van en el orden en que se crearon o activaron.
  */
 async function refrescarListaBanners() {
   const contenedor = document.getElementById('admin-banners-lista');
@@ -334,7 +370,7 @@ async function refrescarListaBanners() {
   const { data: resultado, error } = await supabaseClient.rpc('admin_listar_banners');
 
   if (error || !resultado || resultado.error) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar los banners.'}</p>`;
+    contenedor.innerHTML = `<p class="mensaje-error">${_escBanner(resultado?.error || 'Error al cargar los banners.')}</p>`;
     return;
   }
 
@@ -350,22 +386,142 @@ async function refrescarListaBanners() {
     return;
   }
 
+  // Más antiguo primero: el orden en que se creó o se activó por última vez.
+  const porFecha = (a, b) =>
+    new Date(a.activadoEn || a.creadoEn).getTime() - new Date(b.activadoEn || b.creadoEn).getTime();
+
+  const activos = _bannersAdmin.filter(b => b.activo).sort(porFecha);
+  const inactivos = _bannersAdmin.filter(b => !b.activo).sort(porFecha);
+  const feed = activos.filter(b => b.ubicacion !== 'panel_resenador');
+  const panel = activos.filter(b => b.ubicacion === 'panel_resenador');
+
   contenedor.innerHTML = `
     <h3 class="panel-titulo" style="font-size:20px; margin-bottom:14px;">Banners cargados</h3>
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      ${_bannersAdmin.map(b => construirCardBannerAdmin(b)).join('')}
-    </div>
+    ${_construirBloqueBanners('feed', '🏠 Feed', feed, true)}
+    ${_construirBloqueBanners('panel', '📱 Panel reseñadores', panel, true)}
+    <details id="banners-carpeta-inactivos" style="margin-top:22px;" ${_carpetaInactivosAbierta ? 'open' : ''}>
+      <summary style="cursor:pointer; font-weight:600; font-size:17px; padding:8px 0;">
+        📁 Inactivos (${inactivos.length})
+      </summary>
+      <div id="banners-inactivos-contenido" style="margin-top:10px;"></div>
+    </details>
   `;
+
+  // La carpeta de inactivos no carga ningún video/imagen hasta que se abre.
+  const carpeta = document.getElementById('banners-carpeta-inactivos');
+  const rellenarInactivos = () => {
+    const cont = document.getElementById('banners-inactivos-contenido');
+    if (!cont || cont.dataset.listo === '1') return;
+    cont.dataset.listo = '1';
+    cont.innerHTML = _construirBloqueBanners('inactivos', null, inactivos, false);
+    _aplicarBusquedaBanners('inactivos');
+  };
+  carpeta.addEventListener('toggle', () => {
+    _carpetaInactivosAbierta = carpeta.open;
+    if (carpeta.open) rellenarInactivos();
+  });
+  if (_carpetaInactivosAbierta) rellenarInactivos();
+
+  _aplicarBusquedaBanners('feed');
+  _aplicarBusquedaBanners('panel');
+  _iniciarObservadorVideosBanner();
   _actualizarContadoresBanner();
+}
+
+/**
+ * Construye un bloque (título + buscador + cards) para un grupo de banners.
+ *
+ * @param {'feed'|'panel'|'inactivos'} grupo
+ * @param {string|null} titulo - null para no mostrar título (carpeta de inactivos)
+ * @param {Object[]} banners
+ * @param {boolean} conMedia - false = miniaturas livianas (sin autoplay)
+ */
+function _construirBloqueBanners(grupo, titulo, banners, conMedia) {
+  const cards = banners.length
+    ? banners.map(b => construirCardBannerAdmin(b, conMedia)).join('')
+    : '<p class="lista-item-meta" style="margin:8px 0;">No hay banners acá.</p>';
+
+  return `
+    <section data-grupo-banner="${grupo}" style="margin-top:${titulo ? '22px' : '0'};">
+      ${titulo ? `<h4 style="font-size:17px; margin:0 0 8px;">${titulo} <span class="badge">${banners.length}</span></h4>` : ''}
+      <input type="search" id="banner-buscar-${grupo}" class="form-input"
+        placeholder="Buscar por nombre de libro…" value="${_escBanner(_busquedaBanners[grupo])}"
+        oninput="_busquedaBanners['${grupo}']=this.value; _aplicarBusquedaBanners('${grupo}')"
+        style="margin-bottom:8px;" />
+      <p id="banner-buscar-info-${grupo}" class="lista-item-meta" style="margin:0 0 8px; display:none;"></p>
+      <div id="banner-lista-${grupo}" style="display:flex; flex-direction:column; gap:14px;">
+        ${cards}
+      </div>
+    </section>
+  `;
+}
+
+/**
+ * Filtra las cards de un grupo según lo escrito en su buscador.
+ * Solo oculta/muestra: no vuelve a cargar ningún video.
+ *
+ * @param {'feed'|'panel'|'inactivos'} grupo
+ */
+function _aplicarBusquedaBanners(grupo) {
+  const lista = document.getElementById(`banner-lista-${grupo}`);
+  if (!lista) return;
+
+  const q = _normalizarBusquedaBanner(_busquedaBanners[grupo]);
+  const cards = lista.querySelectorAll('[data-banner-nombre]');
+  let visibles = 0;
+
+  cards.forEach(card => {
+    const coincide = !q || card.dataset.bannerNombre.includes(q);
+    card.style.display = coincide ? '' : 'none';
+    if (coincide) visibles++;
+  });
+
+  const info = document.getElementById(`banner-buscar-info-${grupo}`);
+  if (info) {
+    if (q) {
+      info.style.display = 'block';
+      info.textContent = visibles === 0
+        ? 'Ningún banner coincide con la búsqueda.'
+        : `${visibles} de ${cards.length} banners`;
+    } else {
+      info.style.display = 'none';
+    }
+  }
+}
+
+/**
+ * Reproduce los videos solo mientras están a la vista y los pausa al
+ * salir de pantalla, para que la lista no se ponga lenta con muchos videos.
+ */
+function _iniciarObservadorVideosBanner() {
+  if (_observadorVideosBanner) _observadorVideosBanner.disconnect();
+
+  const videos = document.querySelectorAll('#admin-banners-lista video[data-autoplay-visible="1"]');
+  if (!videos.length) return;
+
+  if (!('IntersectionObserver' in window)) return;
+
+  _observadorVideosBanner = new IntersectionObserver((entradas) => {
+    entradas.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.play().catch(() => {});
+      } else {
+        e.target.pause();
+      }
+    });
+  }, { rootMargin: '100px' });
+
+  videos.forEach(v => _observadorVideosBanner.observe(v));
 }
 
 /**
  * Construye la card de un banner para el panel admin.
  *
  * @param {Object} b
+ * @param {boolean} [conMedia=true] - false para inactivos: miniatura liviana, sin autoplay
  * @returns {string} HTML de la card
  */
-function construirCardBannerAdmin(b) {
+function construirCardBannerAdmin(b, conMedia = true) {
   // El feed es un banner ancho (1200x300 ≈ 4:1) y el panel del reseñador es
   // formato historia, vertical (1080x1920 ≈ 9:16). Cada miniatura respeta la
   // proporción real de su espacio para que se vea completa y se entienda de
@@ -375,26 +531,36 @@ function construirCardBannerAdmin(b) {
     ? 'width:68px; height:121px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;'
     : 'width:160px; height:40px; object-fit:cover; border-radius:6px; background:var(--crema); flex-shrink:0;';
 
+  // Solo los activos y vigentes se reproducen solos (y únicamente mientras
+  // están en pantalla). El resto carga solo el primer cuadro.
+  const reproducir = conMedia && b.activo && !b.vencido;
+  const urlSegura = _escBanner(b.imagenUrl);
+  const nombre = (b.nombreLibro || '').trim();
+  const nombreMostrado = nombre ? _escBanner(nombre) : '<em style="opacity:.6;">Sin nombre — tocá Editar para ponerle uno</em>';
+
   const miniatura = b.tipo === 'video'
-    ? `<video src="${b.imagenUrl}" muted loop playsinline autoplay preload="auto" style="${estiloMiniatura}" onerror="this.style.display='none'"></video>`
-    : `<img src="${b.imagenUrl}" alt="Banner" style="${estiloMiniatura}" onerror="this.style.display='none'" />`;
+    ? `<video src="${urlSegura}#t=0.1" muted loop playsinline preload="metadata" ${reproducir ? 'data-autoplay-visible="1"' : ''} style="${estiloMiniatura}" onerror="this.style.display='none'"></video>`
+    : `<img src="${urlSegura}" alt="${_escBanner(nombre || 'Banner')}" loading="lazy" decoding="async" style="${estiloMiniatura}" onerror="this.style.display='none'" />`;
 
   const fechaFinTexto = b.fechaFin ? `⏰ Se apaga solo el ${formatearFechaAmigable(b.fechaFin)}` : '';
+  const linkSeguro = _escBanner(b.linkDestino || '');
 
   return `
-    <div class="lista-item" style="align-items:center;">
+    <div class="lista-item" style="align-items:center;" data-banner-nombre="${_escBanner(_normalizarBusquedaBanner(nombre))}">
       ${miniatura}
       <div class="lista-item-body">
+        <p style="margin:0 0 4px; font-weight:700; font-size:16px;">${nombreMostrado}</p>
         <p class="lista-item-meta" style="margin-bottom:4px;">
           ${b.activo ? '<span class="badge badge-activa">Activo</span>' : '<span class="badge badge-cancelada">Inactivo</span>'}
+          ${b.vencido ? '&nbsp;<span class="badge badge-cancelada">Vencido</span>' : ''}
           &nbsp;${b.tipo === 'video' ? '<span class="badge">🎬 Video</span>' : '<span class="badge">🖼️ Imagen</span>'}
           &nbsp;<span class="badge">${b.ubicacion === 'panel_resenador' ? `📱 Panel reseñador · Espacio ${b.slot === 2 ? 2 : 1}` : '🏠 Feed'}</span>
           &nbsp;Orden: ${b.orden ?? 0}
           &nbsp;Duración: ${b.duracionSegundos ?? 10}s
         </p>
         ${fechaFinTexto ? `<p class="lista-item-meta" style="margin:0;">${fechaFinTexto}</p>` : ''}
-        ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${b.linkDestino}" target="_blank" class="red-link">${truncarTexto(b.linkDestino, 50)}</a></p>` : ''}
-        ${b.idCampana ? `<p class="lista-item-meta" style="margin:0;">Destino: campaña "${b.nombreCampana || 'sin nombre'}"</p>` : ''}
+        ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${linkSeguro}" target="_blank" rel="noopener" class="red-link">${_escBanner(truncarTexto(b.linkDestino, 50))}</a></p>` : ''}
+        ${b.idCampana ? `<p class="lista-item-meta" style="margin:0;">Destino: campaña "${_escBanner(b.nombreCampana || 'sin nombre')}"</p>` : ''}
         ${!b.linkDestino && !b.idCampana ? '<p class="lista-item-meta" style="margin:0;">Sin destino</p>' : ''}
         <div id="banner-editar-${b.id}"></div>
         <div class="lista-item-acciones">
@@ -431,6 +597,10 @@ async function abrirEditarBannerAdmin(idBanner) {
   contenedor.innerHTML = `
     <div style="background:var(--crema); border-radius:8px; padding:12px; margin:10px 0; display:flex; flex-direction:column; gap:10px;">
       <div class="form-grupo" style="margin:0;">
+        <label class="form-label">Nombre del libro</label>
+        <input type="text" id="banner-edit-nombre-${idBanner}" class="form-input" maxlength="120" value="${_escBanner(b.nombreLibro || '')}" />
+      </div>
+      <div class="form-grupo" style="margin:0;">
         <label class="form-label">Ubicación</label>
         <select id="banner-edit-ubicacion-${idBanner}" class="form-input" onchange="_actualizarSlotEditBanner('${idBanner}')">
           <option value="feed" ${b.ubicacion !== 'panel_resenador' ? 'selected' : ''}>Feed</option>
@@ -454,7 +624,7 @@ async function abrirEditarBannerAdmin(idBanner) {
       </div>
       <div class="form-grupo" id="banner-edit-grupo-link-${idBanner}" style="margin:0; display:${tipoDestinoActual === 'link' ? 'block' : 'none'};">
         <label class="form-label">Link de destino</label>
-        <input type="url" id="banner-edit-link-${idBanner}" class="form-input" value="${b.linkDestino || ''}" />
+        <input type="url" id="banner-edit-link-${idBanner}" class="form-input" value="${_escBanner(b.linkDestino || '')}" />
       </div>
       <div class="form-grupo" id="banner-edit-grupo-campana-${idBanner}" style="margin:0; display:${tipoDestinoActual === 'campana' ? 'block' : 'none'};">
         <label class="form-label">Campaña</label>
@@ -543,6 +713,7 @@ async function guardarEditarBannerAdmin(idBanner) {
   const slot = document.getElementById(`banner-edit-slot-${idBanner}`)?.value === '2' ? 2 : 1;
   const fechaFinInput = document.getElementById(`banner-edit-fecha-fin-${idBanner}`)?.value;
   const fechaFin = fechaFinInput ? new Date(fechaFinInput).toISOString() : null;
+  const nombreLibro = document.getElementById(`banner-edit-nombre-${idBanner}`)?.value?.trim() || null;
 
   if (tipoDestino === 'campana' && !idCampana) {
     mostrarToast('Elegí una campaña.', 'error');
@@ -558,7 +729,8 @@ async function guardarEditarBannerAdmin(idBanner) {
     p_ubicacion: ubicacion,
     p_slot: slot,
     p_fecha_fin: fechaFin,
-    p_limpiar_fecha_fin: !fechaFinInput
+    p_limpiar_fecha_fin: !fechaFinInput,
+    p_nombre_libro: nombreLibro
   });
 
   if (error || !resultado || resultado.error) {
