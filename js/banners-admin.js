@@ -436,15 +436,28 @@ function cambiarVistaBanners(vista) {
  */
 function verMediaBannerInactivo(idBanner) {
   const b = _bannersAdmin.find(x => x.id === idBanner);
-  const cont = document.getElementById(`banner-media-${idBanner}`);
-  if (!b || !cont) return;
+  const zona = document.getElementById(`banner-preview-${idBanner}`);
+  const boton = document.getElementById(`banner-media-${idBanner}`);
+  if (!b || !zona) return;
+
+  // Si ya está abierta, se cierra y se descarga el archivo.
+  if (zona.innerHTML.trim() !== '') {
+    zona.innerHTML = '';
+    if (boton) boton.innerHTML = `${b.tipo === 'video' ? '🎬' : '🖼️'} Ver`;
+    return;
+  }
+
   const url = _escBanner(b.imagenUrl);
+  // Vista previa grande, debajo de los datos y en la proporción real del espacio
+  // (feed 4:1 ancho; panel reseñadores 9:16 vertical).
   const estilo = b.ubicacion === 'panel_resenador'
-    ? 'width:68px; height:121px; object-fit:cover; border-radius:6px;'
-    : 'width:160px; height:40px; object-fit:cover; border-radius:6px;';
-  cont.outerHTML = b.tipo === 'video'
+    ? 'display:block; width:200px; max-width:100%; aspect-ratio:9/16; object-fit:contain; background:#000; border-radius:8px;'
+    : 'display:block; width:100%; max-width:640px; aspect-ratio:4/1; object-fit:contain; background:#000; border-radius:8px;';
+
+  zona.innerHTML = b.tipo === 'video'
     ? `<video src="${url}" muted loop playsinline controls autoplay preload="auto" style="${estilo}"></video>`
     : `<img src="${url}" alt="${_escBanner(b.nombreLibro || 'Banner')}" decoding="async" style="${estilo}" />`;
+  if (boton) boton.innerHTML = '✖ Cerrar';
 }
 
 /**
@@ -583,6 +596,7 @@ function construirCardBannerAdmin(b, conMedia = true) {
         ${b.linkDestino ? `<p class="lista-item-meta" style="margin:0;">Destino: <a href="${linkSeguro}" target="_blank" rel="noopener" class="red-link">${_escBanner(truncarTexto(b.linkDestino, 50))}</a></p>` : ''}
         ${b.idCampana ? `<p class="lista-item-meta" style="margin:0;">Destino: campaña "${_escBanner(b.nombreCampana || 'sin nombre')}"</p>` : ''}
         ${!b.linkDestino && !b.idCampana ? '<p class="lista-item-meta" style="margin:0;">Sin destino</p>' : ''}
+        <div id="banner-preview-${b.id}" style="margin:8px 0;"></div>
         <div id="banner-editar-${b.id}"></div>
         <div class="lista-item-acciones">
           <button class="btn-secundario btn-sm" onclick="abrirEditarBannerAdmin('${b.id}')">Editar</button>
