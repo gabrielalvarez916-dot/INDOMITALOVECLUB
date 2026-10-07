@@ -795,7 +795,7 @@ async function descargarExcelVencidasMes(btn) {
       return;
     }
 
-    const cab = ['VENCIMIENTO', 'SITUACIÓN', 'ASESOR', 'AUTOR', 'CORREO', 'LIBRO'];
+    const cab = ['VENCIMIENTO', 'SITUACIÓN', 'ASESOR', 'AUTOR', 'CORREO', 'INSTAGRAM', 'LIBRO'];
     const hoja = XLSX.utils.json_to_sheet(
       filas.map(f => ({
         'VENCIMIENTO': f.fecha_limite || '',
@@ -803,11 +803,12 @@ async function descargarExcelVencidasMes(btn) {
         'ASESOR': f.asesor || '',
         'AUTOR': f.autor || '',
         'CORREO': f.correo || '',
+        'INSTAGRAM': f.instagram || '',
         'LIBRO': f.libro || ''
       })),
       { header: cab }
     );
-    hoja['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 16 }, { wch: 28 }, { wch: 34 }, { wch: 42 }];
+    hoja['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 16 }, { wch: 28 }, { wch: 34 }, { wch: 24 }, { wch: 42 }];
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, 'Vencidas del mes');
     XLSX.writeFile(libro, `campanas-vencidas-del-mes-${data.hoy}.xlsx`);
