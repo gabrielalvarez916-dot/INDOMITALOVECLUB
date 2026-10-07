@@ -124,7 +124,7 @@ async function abrirDisenadorAdmin(id, scroll = true) {
 
   const [rAsig, rTareas, rYaAsig, rExcl] = await Promise.all([
     supabaseClient.rpc('admin_vis_disenador_asignaciones', { p_disenador_id: id }),
-    supabaseClient.rpc('admin_listar_tareas_impulso'),
+    supabaseClient.rpc('admin_vis_tareas_disponibles'),
     supabaseClient.rpc('admin_vis_disenador_tareas_asignadas'),
     supabaseClient.rpc('admin_vis_tareas_excluidas')
   ]);
@@ -138,12 +138,10 @@ async function abrirDisenadorAdmin(id, scroll = true) {
   const yaAsignadas = new Map((rYaAsig.data.tareas || []).map(t => [String(t.tarea_id), t.disenador]));
   const excluidas = new Set((rExcl.data.tareas || []).map(t => String(t.tarea_id)));
 
-  // Pendientes asignables: banner feed / reseñadores, plan Impulso-Select-Resistence-Complete, aún sin diseñador
+  // Pendientes asignables: solo banners NO entregados y que no se repiten (mismo autor + libro + tipo ya hecho/pagado).
+  // La regla está en la base (admin_vis_tareas_disponibles) y es la misma que usa el sistema de Ingresos.
   const disponibles = (rTareas.data.tareas || []).filter(t =>
-    (t.estado === 'pendiente' || t.estado === 'hecho') &&
-    [t.fechaCreacion, t.fechaHecho].some(f => f && /^2026-(09|10)/.test(String(f))) &&
     (t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado') &&
-    DIS_PLANES.includes(String(t.plan || '').toLowerCase()) &&
     !yaAsignadas.has(String(t.id)) &&
     !excluidas.has(String(t.id))
   );
@@ -203,7 +201,7 @@ async function asignarTareasDisenadorAdmin(idDisenador) {
   if (tareas.length === 0) { mostrarToast('Marcá al menos un banner.', 'error'); return; }
   const { data, error } = await supabaseClient.rpc('admin_vis_disenador_asignar', { p_disenador_id: idDisenador, p_tareas: tareas });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo asignar.', 'error'); return; }
-  mostrarToast(`${data.asignadas} pedido(s) asignado(s).`, 'ok');
+  mostrarToast(`${data.asignadas} pedido(s) asignado(s).` + (data.repetidas_omitidas ? ` ${data.repetidas_omitidas} omitido(s) por repetirse con un banner ya hecho.` : ''), 'ok');
   await cargarDisenadoresAdmin();
 }
 
