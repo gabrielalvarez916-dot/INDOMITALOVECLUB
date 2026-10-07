@@ -28,7 +28,7 @@ async function cargarDisenadoresAdmin() {
   if (!cont) return;
   cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const { data, error } = await supabaseClient.rpc('admin_disenadores_listar');
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenadores_listar');
   if (error || !data || data.error) {
     cont.innerHTML = `<p class="mensaje-error">${_disEsc(data?.error || error?.message || 'No se pudo cargar. ¿Está aplicada la migración de diseñadores?')}</p>`;
     return;
@@ -84,7 +84,7 @@ async function crearDisenadorAdmin() {
   const email = document.getElementById('dis-email').value.trim();
   if (!nombre) { mostrarToast('Poné el nombre del diseñador.', 'error'); return; }
 
-  const { data, error } = await supabaseClient.rpc('admin_disenador_crear', { p_nombre: nombre, p_telefono: telefono, p_email: email });
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_crear', { p_nombre: nombre, p_telefono: telefono, p_email: email });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo crear.', 'error'); return; }
   mostrarToast('Diseñador creado.', 'ok');
   _disAbierto = data.id;
@@ -97,7 +97,7 @@ async function editarDisenadorAdmin(id) {
   const nombre = prompt('Nombre:', d.nombre); if (nombre === null) return;
   const telefono = prompt('Teléfono:', d.telefono || ''); if (telefono === null) return;
   const email = prompt('Correo:', d.email || ''); if (email === null) return;
-  const { data, error } = await supabaseClient.rpc('admin_disenador_editar', { p_id: id, p_nombre: nombre, p_telefono: telefono, p_email: email });
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_editar', { p_id: id, p_nombre: nombre, p_telefono: telefono, p_email: email });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo guardar.', 'error'); return; }
   mostrarToast('Guardado.', 'ok');
   await cargarDisenadoresAdmin();
@@ -106,7 +106,7 @@ async function editarDisenadorAdmin(id) {
 async function archivarDisenadorAdmin(id) {
   const d = _disLista.find(x => x.id === id);
   if (!confirm(`¿Archivar a ${d ? d.nombre : 'este diseñador'}? Deja de aparecer en la lista, pero su historial de entregas se conserva en el Excel.`)) return;
-  const { data, error } = await supabaseClient.rpc('admin_disenador_archivar', { p_id: id });
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_archivar', { p_id: id });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo archivar.', 'error'); return; }
   if (_disAbierto === id) _disAbierto = null;
   await cargarDisenadoresAdmin();
@@ -123,9 +123,9 @@ async function abrirDisenadorAdmin(id, scroll = true) {
   cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
   const [rAsig, rTareas, rYaAsig] = await Promise.all([
-    supabaseClient.rpc('admin_disenador_asignaciones', { p_disenador_id: id }),
+    supabaseClient.rpc('admin_vis_disenador_asignaciones', { p_disenador_id: id }),
     supabaseClient.rpc('admin_listar_tareas_impulso'),
-    supabaseClient.rpc('admin_disenador_tareas_asignadas')
+    supabaseClient.rpc('admin_vis_disenador_tareas_asignadas')
   ]);
   const falla = [rAsig, rTareas, rYaAsig].find(r => r.error || !r.data || r.data.error);
   if (falla) {
@@ -195,21 +195,21 @@ async function asignarTareasDisenadorAdmin(idDisenador) {
     tarea_id: c.dataset.id, tipo: c.dataset.tipo, plan: c.dataset.plan, nombre_libro: c.dataset.libro
   }));
   if (tareas.length === 0) { mostrarToast('Marcá al menos un banner.', 'error'); return; }
-  const { data, error } = await supabaseClient.rpc('admin_disenador_asignar', { p_disenador_id: idDisenador, p_tareas: tareas });
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_asignar', { p_disenador_id: idDisenador, p_tareas: tareas });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo asignar.', 'error'); return; }
   mostrarToast(`${data.asignadas} pedido(s) asignado(s).`, 'ok');
   await cargarDisenadoresAdmin();
 }
 
 async function marcarEntregaDisenadorAdmin(idAsignacion, entregado) {
-  const { data, error } = await supabaseClient.rpc('admin_disenador_marcar_entrega', { p_asignacion_id: idAsignacion, p_entregado: entregado });
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_marcar_entrega', { p_asignacion_id: idAsignacion, p_entregado: entregado });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo actualizar.', 'error'); return; }
   await cargarDisenadoresAdmin();
 }
 
 async function desasignarDisenadorAdmin(idAsignacion) {
   if (!confirm('¿Quitar este pedido al diseñador? Vuelve a quedar disponible para asignar.')) return;
-  const { data, error } = await supabaseClient.rpc('admin_disenador_desasignar', { p_asignacion_id: idAsignacion });
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_desasignar', { p_asignacion_id: idAsignacion });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo quitar.', 'error'); return; }
   await cargarDisenadoresAdmin();
 }
@@ -259,7 +259,7 @@ function _disAgrupar(entregas, claveFn) {
 async function descargarExcelDisenadores() {
   try {
     await _disCargarSheetJS();
-    const { data, error } = await supabaseClient.rpc('admin_disenadores_entregas');
+    const { data, error } = await supabaseClient.rpc('admin_vis_disenadores_entregas');
     if (error || !data || data.error) throw new Error(data?.error || error?.message || 'No se pudieron leer las entregas.');
 
     const entregas = (data.entregas || []).map(e => ({ ...e, dia: _disFecha(e.entregado_en) }));
