@@ -660,7 +660,7 @@ function mostrarMensajeLimitePlan(mensajeOriginal) {
   // (ver validar_limites_plan_campana en la base).
   let texto;
   if (esLimiteCampanas) {
-    texto = 'Ya usaste todas las campañas que tenés disponibles. Comprá una campaña individual o un pack antes de cargar los datos.';
+    texto = 'Ya usaste todas las campañas que tenés disponibles. Elegí cómo seguir antes de cargar los datos:';
   } else {
     texto = 'Sin suscripción, cada campaña admite hasta 10 reseñadores como máximo. Bajá los cupos a 10 o menos para poder publicarla.';
   }
@@ -710,6 +710,18 @@ function mostrarMensajeLimitePlan(mensajeOriginal) {
         }
       })
       .catch(() => {});
+  }
+
+  // Autor/editorial sin campañas: mostramos las tres opciones (individual, Pack Basic, Pack Premium)
+  // directamente acá, con precio y regalo. Si por algún motivo no cargan, queda el flujo anterior.
+  const ofertas = document.getElementById('nc-limite-plan-ofertas');
+  if (ofertas) { ofertas.style.display = 'none'; ofertas.innerHTML = ''; }
+  if (esLimiteCampanas && typeof renderOfertasLimiteCampana === 'function') {
+    renderOfertasLimiteCampana().then(ok => {
+      if (!ok) return;
+      if (btnMejorarPlan) btnMejorarPlan.style.display = 'none';
+      if (btnPagar) btnPagar.style.display = 'none';
+    });
   }
 
   return true;

@@ -2512,7 +2512,8 @@ async function cargarPlanAutor(idUsuario) {
     cuponCampanaGratis = cuponesActivos.find(c => c.tipo === 'gratis' && c.plan === 'campana') || null;
   }
 
-  contenedor.innerHTML = _renderBloqueCampanasSueltas(preciosCampanas, cuponCampanaGratis);
+  const masElegida = await _ofertaMasElegida();
+  contenedor.innerHTML = _renderBloqueCampanasSueltas(preciosCampanas, cuponCampanaGratis, masElegida);
 }
 
 /**
@@ -2529,7 +2530,7 @@ async function cargarPlanAutor(idUsuario) {
  * @param {{id:string}|null} cuponCampanaGratis Cupón de beca (campaña
  *   individual gratis) activo del autor, si tiene uno. Nunca aplica a packs.
  */
-function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis) {
+function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis, masElegida) {
   precios = precios || { individual: {}, pack_basic: {}, pack_premium: {} };
 
   const bloqueCuponBeca = cuponCampanaGratis ? `
@@ -2581,7 +2582,7 @@ function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis) {
           box-shadow: var(--sombra-card);
         ">
           <div>
-            <p style="font-family:var(--fuente-titulo); font-size:17px; font-weight:700; color:var(--gris-texto); margin-bottom:4px;">${o.nombre}</p>
+            <p style="font-family:var(--fuente-titulo); font-size:17px; font-weight:700; color:var(--gris-texto); margin-bottom:4px;">${o.nombre}${masElegida === o.tipo ? ' <span style="display:inline-block; vertical-align:middle; background:var(--bordo); color:var(--blanco); font-size:10px; font-weight:700; padding:2px 9px; border-radius:var(--radio-pill); margin-left:6px;">⭐ Más elegido</span>' : ''}</p>
             <p style="font-size:12px; color:var(--gris-suave); margin-bottom:6px;">${o.descripcion}</p>
             <p style="font-size:13px; color:var(--gris-texto); margin:0;">
               ${o.precio.ars ? `$${Number(o.precio.ars).toLocaleString('es-AR')} ARS` : '—'}
@@ -2621,7 +2622,7 @@ async function comprarCampanaOPack(tipo) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
     mostrarToast('💅 Tu sesión decidió tomarse un descanso. Iniciá sesión de nuevo.', 'error');
-    return;
+    return false;
   }
 
   try {
@@ -2633,14 +2634,96 @@ async function comprarCampanaOPack(tipo) {
     if (error || !data?.ok) {
       const detalle = await _leerErrorEdgeFunction(error, data?.error || 'No se pudo generar el link de pago.');
       mostrarToast(detalle, 'error');
-      return;
+      return false;
     }
 
     window.open(data.linkPago, '_blank');
     mostrarToast('Se abrió el link de pago en otra pestaña. Cuando se acredite, ya vas a poder usar el crédito.', 'ok');
+    return true;
   } catch (e) {
     console.error('Error generando pago de campaña/pack:', e);
     mostrarToast('Ocurrió un error inesperado. Probá de nuevo.', 'error');
+    return false;
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Ofertas de campaña/packs dentro del aviso de "no tenés campañas disponibles"
+// (modal de nueva campaña y de renovar campaña — ambos pasan por acá).
+// ────────────────────────────────────────────────────────────
+
+// Opción más comprada de los últimos 90 días. La base solo devuelve algo cuando hay
+// datos suficientes y un ganador claro; si no, no se muestra ninguna etiqueta.
+let _masElegidaCache = { t: 0, v: null };
+async function _ofertaMasElegida() {
+  if (Date.now() - _masElegidaCache.t < 5 * 60 * 1000) return _masElegidaCache.v;
+  let tipo = null;
+  try {
+    const { data, error } = await supabaseClient.rpc('campana_oferta_mas_elegida');
+    if (!error && data && data.tipo) tipo = data.tipo;
+  } catch (e) { /* sin etiqueta */ }
+  _masElegidaCache = { t: Date.now(), v: tipo };
+  return tipo;
+}
+
+async function renderOfertasLimiteCampana() {
+  const cont = document.getElementById('nc-limite-plan-ofertas');
+  if (!cont) return false;
+  try {
+    const [{ data: cfg }, masElegida] = await Promise.all([
+      supabaseClient.from('configuracion').select('clave, valor').in('clave', [
+        'CAMPANA_PRECIO_ARS', 'CAMPANA_PRECIO_USD', 'PACK_BASIC_PRECIO_ARS', 'PACK_BASIC_PRECIO_USD',
+        'PACK_PREMIUM_PRECIO_ARS', 'PACK_PREMIUM_PRECIO_USD'
+      ]),
+      _ofertaMasElegida()
+    ]);
+    const v = (k) => Number((cfg || []).find(c => c.clave === k)?.valor);
+    const ofertas = [
+      { tipo: 'individual', nombre: 'Campaña individual', n: 1, ars: v('CAMPANA_PRECIO_ARS'), usd: v('CAMPANA_PRECIO_USD'),
+        desc: '1 campaña. Pago único, sin regalo.' },
+      { tipo: 'pack_basic', nombre: 'Pack Basic', n: 3, ars: v('PACK_BASIC_PRECIO_ARS'), usd: v('PACK_BASIC_PRECIO_USD'),
+        desc: '3 campañas para usar cuando quieras, sin vencimiento. 🎁 Incluye 1 Impulso de regalo.' },
+      { tipo: 'pack_premium', nombre: 'Pack Premium', n: 5, ars: v('PACK_PREMIUM_PRECIO_ARS'), usd: v('PACK_PREMIUM_PRECIO_USD'),
+        desc: '5 campañas para usar cuando quieras, sin vencimiento. 🎁 Incluye 1 Complete de regalo.' }
+    ].filter(o => o.usd > 0 || o.ars > 0);
+    if (!ofertas.length) return false;
+
+    const base = ofertas.find(o => o.tipo === 'individual');
+    const porCampana = (o) => {
+      if (o.n === 1 || !base || !(o.usd > 0) || !(base.usd > 0)) return '';
+      const x = o.usd / o.n;
+      if (x >= base.usd) return '';
+      const ahorro = Math.round((1 - x / base.usd) * 100);
+      return `<span style="display:block; font-size:11px; color:var(--bordo); margin-top:2px;">≈ USD ${x.toFixed(2).replace('.', ',')} por campaña · ${ahorro}% menos que la individual</span>`;
+    };
+    const precio = (o) => `${o.ars > 0 ? '$' + o.ars.toLocaleString('es-AR') + ' ARS' : ''}${o.ars > 0 && o.usd > 0 ? ' / ' : ''}${o.usd > 0 ? 'USD ' + o.usd : ''}`;
+
+    cont.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+        ${ofertas.map(o => `
+          <div style="background:var(--blanco); border:${masElegida === o.tipo ? '2px solid var(--bordo)' : '1px solid var(--gris-borde)'}; border-radius:var(--radio); padding:12px 14px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center;">
+            <div>
+              <p style="margin:0 0 3px; font-weight:700; color:var(--gris-texto); font-size:14px;">${o.nombre}${masElegida === o.tipo ? ' <span style="display:inline-block; vertical-align:middle; background:var(--bordo); color:var(--blanco); font-size:10px; font-weight:700; padding:2px 9px; border-radius:var(--radio-pill); margin-left:6px;">⭐ Más elegido</span>' : ''}</p>
+              <p style="margin:0 0 4px; font-size:12px; color:var(--gris-suave);">${o.desc}</p>
+              <p style="margin:0; font-size:13px; color:var(--gris-texto);">${precio(o)}${porCampana(o)}</p>
+            </div>
+            <button type="button" class="btn-primario btn-sm" onclick="comprarDesdeModalCampana('${o.tipo}')">Comprar</button>
+          </div>`).join('')}
+      </div>`;
+    cont.style.display = 'block';
+    return true;
+  } catch (e) {
+    console.error('Error armando ofertas del aviso de límite:', e);
+    return false;
+  }
+}
+
+async function comprarDesdeModalCampana(tipo) {
+  const ok = await comprarCampanaOPack(tipo);
+  const msj = document.getElementById('nc-limite-plan-pago-msj');
+  if (ok && msj) {
+    msj.textContent = 'Se abrió el link de pago en otra pestaña. Cuando se acredite, tocá "Ya pagué, revisar de nuevo" para seguir con tu campaña.';
+    msj.style.display = 'block';
   }
 }
 
