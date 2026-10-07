@@ -283,7 +283,7 @@ function _disHoja(XLSX, titulo, subtitulo, cabecera, filas, opt = {}) {
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const borde = { style: 'thin', color: { rgb: DIS_XL.borde } };
   const bordes = { top: borde, bottom: borde, left: borde, right: borde };
-  const usd = opt.usd || [], centro = opt.centro || [];
+  const usd = opt.usd || [], centro = opt.centro || [], num = opt.num || [];
   const ultimaFila = aoa.length - 1;
 
   for (let r = 0; r < aoa.length; r++) {
@@ -305,6 +305,7 @@ function _disHoja(XLSX, titulo, subtitulo, cabecera, filas, opt = {}) {
         const cebra = (r % 2 === 0) ? DIS_XL.rosaSuave : DIS_XL.blanco;
         let est = { font: { name: 'Calibri', sz: 11, color: { rgb: '3A2A2D' } }, fill: { fgColor: { rgb: cebra } }, border: bordes, alignment: { vertical: 'center', horizontal: centro.includes(c) || usd.includes(c) ? 'center' : 'left' } };
         if (usd.includes(c) && celda.t === 'n') { celda.z = DIS_FMT_USD; est.font = { name: 'Calibri', sz: 11, bold: true, color: { rgb: DIS_XL.vino } }; }
+        if (num.includes(c) && celda.t === 'n') { celda.z = '#,##0.00'; est.alignment = { vertical: 'center', horizontal: 'right' }; }
         if (opt.celda) { const extra = opt.celda(c, celda.v); if (extra) est = { ...est, ...extra }; }
         celda.s = est;
       }

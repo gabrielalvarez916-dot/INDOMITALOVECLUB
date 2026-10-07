@@ -283,6 +283,9 @@ async function cargarVentasVendedoresAdmin() {
   const mesInput = document.getElementById('vend-ventas-mes');
   const mes = (mesInput && mesInput.value) || _adminVendMes;
 
+  const selPrevio = document.getElementById('vend-excel-vendedor');
+  const vendSel = selPrevio ? selPrevio.value : '';
+
   cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
   const { data: ventas, error } = await supabaseClient
@@ -308,6 +311,13 @@ async function cargarVentasVendedoresAdmin() {
       <input type="month" id="vend-ventas-mes" value="${_vendEsc(mes)}" onchange="cargarVentasVendedoresAdmin()" class="form-input" style="max-width:200px;" />
       <span class="form-info" style="margin:0;">${validas.length} ventas válidas · ${lista.length - validas.length} anuladas</span>
     </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <select id="vend-excel-vendedor" class="form-input" style="max-width:260px;">
+        <option value="">Todos los vendedores</option>
+        ${_adminVendLista.map(v => `<option value="${_vendEsc(v.id)}"${v.id === vendSel ? ' selected' : ''}>${_vendEsc(v.codigo)}${v.nombre ? ' · ' + _vendEsc(v.nombre) : ''}</option>`).join('')}
+      </select>
+      <button class="btn-secundario btn-sm" onclick="descargarExcelVentasVendedores()">⬇ Excel de ventas (diario, semanal y mensual)</button>
+    </div>
     ${lista.length ? `
       <div class="vend-tabla-scroll">
         <table class="admin-tabla">
@@ -331,6 +341,136 @@ async function cargarVentasVendedoresAdmin() {
         </table>
       </div>` : `<div class="estado-vacio"><p class="estado-vacio-texto">No hay ventas en ${_vendEsc(_vendMesLindo(mes))}.</p></div>`}
   `;
+}
+
+// ────────────────────────────────────────────────────────────
+// EXCEL DE VENTAS (diario, semanal y mensual) — para pasarle a los vendedores
+// Usa los helpers de estilo de admin-disenadores.js (_disHoja, _disCargarSheetJS, DIS_XL).
+// ────────────────────────────────────────────────────────────
+async function descargarExcelVentasVendedores() {
+  try {
+    await _adminVendAsegurarMapa();
+    const XLSX = await _disCargarSheetJS();
+    const idSel = (document.getElementById('vend-excel-vendedor') || {}).value || '';
+
+    // Todas las ventas (de a 1000 por página)
+    let ventas = [];
+    for (let desde = 0; ; desde += 1000) {
+      const { data, error } = await supabaseClient
+        .from('vendedor_ventas')
+        .select('id_vendedor, id_cliente, tipo, producto, monto_cobrado, moneda, mes, creado_en, anulada_en')
+        .order('creado_en', { ascending: true })
+        .range(desde, desde + 999);
+      if (error) throw new Error('No se pudieron leer las ventas.');
+      ventas = ventas.concat(data || []);
+      if (!data || data.length < 1000) break;
+    }
+    if (idSel) ventas = ventas.filter(v => v.id_vendedor === idSel);
+    if (ventas.length === 0) { mostrarToast('Todavía no hay ventas para armar el Excel.', 'error'); return; }
+
+    const { data: niveles } = await supabaseClient.from('vendedores_niveles').select('desde_ventas, hasta_ventas, usd_por_venta').order('desde_ventas');
+    const tarifa = (cant) => {
+      const n = (niveles || []).find(x => cant >= x.desde_ventas && (x.hasta_ventas == null || cant <= x.hasta_ventas));
+      return n ? Number(n.usd_por_venta) : 0;
+    };
+    const clientes = await _adminVendNombresClientes(ventas.map(v => v.id_cliente));
+
+    // Comisión por venta: depende de cuántas ventas válidas tuvo el vendedor ese mes (mismo cálculo que el panel)
+    const cant = {};
+    ventas.filter(v => !v.anulada_en).forEach(v => { const k = v.id_vendedor + '|' + v.mes; cant[k] = (cant[k] || 0) + 1; });
+    const nombreVend = (id) => { const u = _adminVendMapa[id]; return u ? (u.nombre || u.email || u.codigo) : '—'; };
+    const codigoVend = (id) => (_adminVendMapa[id] || {}).codigo || '—';
+
+    const filas = ventas.map(v => ({
+      dia: _disFecha(v.creado_en),
+      mes: v.mes,
+      idVend: v.id_vendedor,
+      vendedor: nombreVend(v.id_vendedor),
+      codigo: codigoVend(v.id_vendedor),
+      cliente: (clientes[v.id_cliente] || {}).nombre || '—',
+      pack: v.tipo === 'pack',
+      producto: v.producto || '',
+      monto: Number(v.monto_cobrado || 0),
+      moneda: v.moneda || '',
+      anulada: !!v.anulada_en,
+      comision: v.anulada_en ? 0 : tarifa(cant[v.id_vendedor + '|' + v.mes] || 0)
+    }));
+    const validas = filas.filter(f => !f.anulada);
+    if (validas.length === 0) { mostrarToast('Hay ventas, pero todas están anuladas.', 'error'); return; }
+
+    const hoy = _disFecha(new Date().toISOString());
+    const quien = idSel ? `Vendedor: ${nombreVend(idSel)} (${codigoVend(idSel)})` : 'Todos los vendedores';
+    const sub = `${quien}  ·  Generado el ${hoy}  ·  Solo ventas válidas (las anuladas figuran en el Detalle)`;
+
+    const agrupar = (claveFn) => {
+      const mapa = new Map();
+      validas.forEach(f => {
+        const clave = claveFn(f), k = clave + '|' + f.idVend;
+        if (!mapa.has(k)) mapa.set(k, { clave, vendedor: f.vendedor, ventas: 0, packs: 0, impulsos: 0, comision: 0 });
+        const g = mapa.get(k);
+        g.ventas++; if (f.pack) g.packs++; else g.impulsos++;
+        g.comision += f.comision;
+      });
+      return [...mapa.values()].sort((a, b) => a.clave < b.clave ? 1 : a.clave > b.clave ? -1 : a.vendedor.localeCompare(b.vendedor));
+    };
+    const sum = (arr, k) => arr.reduce((s, f) => s + f[k], 0);
+    const cab = (primera) => [primera, 'Vendedor', 'Ventas', 'Packs', 'Impulsos', 'Comisión USD'];
+    const totalFila = (arr) => ['TOTAL', '', sum(arr, 'ventas'), sum(arr, 'packs'), sum(arr, 'impulsos'), sum(arr, 'comision')];
+    const wb = XLSX.utils.book_new();
+
+    // Resumen por vendedor
+    const porVend = new Map();
+    filas.forEach(f => {
+      if (!porVend.has(f.idVend)) porVend.set(f.idVend, { vendedor: f.vendedor, codigo: f.codigo, ventas: 0, packs: 0, impulsos: 0, anuladas: 0, comision: 0 });
+      const g = porVend.get(f.idVend);
+      if (f.anulada) { g.anuladas++; return; }
+      g.ventas++; if (f.pack) g.packs++; else g.impulsos++;
+      g.comision += f.comision;
+    });
+    const resumen = [...porVend.values()].sort((a, b) => b.comision - a.comision);
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Resumen de ventas', sub,
+      ['Vendedor', 'Código', 'Ventas', 'Packs', 'Impulsos', 'Anuladas', 'Comisión USD'],
+      resumen.map(g => [g.vendedor, g.codigo, g.ventas, g.packs, g.impulsos, g.anuladas, g.comision]),
+      { anchos: [32, 16, 12, 12, 12, 12, 18], centro: [1, 2, 3, 4, 5], usd: [6],
+        total: ['TOTAL', '', sum(resumen, 'ventas'), sum(resumen, 'packs'), sum(resumen, 'impulsos'), sum(resumen, 'anuladas'), sum(resumen, 'comision')] }), 'Resumen');
+
+    // Diario
+    const diario = agrupar(f => f.dia);
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Ventas por día', sub, cab('Día'),
+      diario.map(g => [g.clave, g.vendedor, g.ventas, g.packs, g.impulsos, g.comision]),
+      { anchos: [14, 32, 12, 12, 12, 18], centro: [0, 2, 3, 4], usd: [5], total: totalFila(diario) }), 'Diario');
+
+    // Semanal (lunes a domingo)
+    const semanal = agrupar(f => _disLunes(f.dia));
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Ventas por semana', sub, cab('Semana'),
+      semanal.map(g => [`${g.clave} al ${_disDomingo(g.clave)}`, g.vendedor, g.ventas, g.packs, g.impulsos, g.comision]),
+      { anchos: [26, 32, 12, 12, 12, 18], centro: [2, 3, 4], usd: [5], total: totalFila(semanal) }), 'Semanal');
+
+    // Mensual (con el valor por venta que le tocó ese mes)
+    const mensual = agrupar(f => f.mes);
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Ventas por mes', sub,
+      ['Mes', 'Vendedor', 'Ventas', 'Packs', 'Impulsos', 'USD por venta', 'Comisión USD'],
+      mensual.map(g => [_vendMesLindo(g.clave).replace(/^./, c => c.toUpperCase()), g.vendedor, g.ventas, g.packs, g.impulsos, g.ventas ? g.comision / g.ventas : 0, g.comision]),
+      { anchos: [20, 32, 12, 12, 12, 16, 18], centro: [0, 2, 3, 4], usd: [5, 6],
+        total: ['TOTAL', '', sum(mensual, 'ventas'), sum(mensual, 'packs'), sum(mensual, 'impulsos'), '', sum(mensual, 'comision')] }), 'Mensual');
+
+    // Detalle (con filtros; las anuladas se marcan)
+    const colorEstado = (c, v) => c === 7 ? (v === 'Anulada'
+      ? { fill: { fgColor: { rgb: 'EDEDED' } }, font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '7A7A7A' } } }
+      : { fill: { fgColor: { rgb: 'F2D3D9' } }, font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: DIS_XL.vino } } }) : null;
+    const detalle = [...filas].reverse();
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Detalle de ventas', sub,
+      ['Día', 'Vendedor', 'Cliente', 'Tipo', 'Producto', 'Monto cobrado', 'Moneda', 'Estado', 'Comisión USD'],
+      detalle.map(f => [f.dia, f.vendedor, f.cliente, f.pack ? 'Pack' : 'Impulso', f.producto, f.monto, f.moneda, f.anulada ? 'Anulada' : 'Válida', f.comision]),
+      { anchos: [14, 28, 28, 12, 28, 16, 10, 12, 16], centro: [0, 3, 6, 7], num: [5], usd: [8], filtro: true, celda: colorEstado,
+        total: ['TOTAL', '', '', '', '', '', '', '', sum(detalle, 'comision')] }), 'Detalle');
+
+    const sufijo = idSel ? codigoVend(idSel).toLowerCase() : 'todos';
+    XLSX.writeFile(wb, `Indomita-ventas-${sufijo}-${hoy}.xlsx`);
+  } catch (e) {
+    console.error('Excel ventas vendedores:', e);
+    mostrarToast(e.message || 'No se pudo generar el Excel.', 'error');
+  }
 }
 
 // ────────────────────────────────────────────────────────────
