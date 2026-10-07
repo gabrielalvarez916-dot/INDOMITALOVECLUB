@@ -122,12 +122,13 @@ async function abrirDisenadorAdmin(id, scroll = true) {
   const d = _disLista.find(x => x.id === id);
   cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const [rAsig, rTareas, rYaAsig] = await Promise.all([
+  const [rAsig, rTareas, rYaAsig, rExcl] = await Promise.all([
     supabaseClient.rpc('admin_vis_disenador_asignaciones', { p_disenador_id: id }),
     supabaseClient.rpc('admin_listar_tareas_impulso'),
-    supabaseClient.rpc('admin_vis_disenador_tareas_asignadas')
+    supabaseClient.rpc('admin_vis_disenador_tareas_asignadas'),
+    supabaseClient.rpc('admin_vis_tareas_excluidas')
   ]);
-  const falla = [rAsig, rTareas, rYaAsig].find(r => r.error || !r.data || r.data.error);
+  const falla = [rAsig, rTareas, rYaAsig, rExcl].find(r => r.error || !r.data || r.data.error);
   if (falla) {
     cont.innerHTML = `<p class="mensaje-error">${_disEsc(falla.data?.error || falla.error?.message || 'Error al cargar.')}</p>`;
     return;
@@ -135,13 +136,16 @@ async function abrirDisenadorAdmin(id, scroll = true) {
 
   const asignaciones = rAsig.data.asignaciones || [];
   const yaAsignadas = new Map((rYaAsig.data.tareas || []).map(t => [String(t.tarea_id), t.disenador]));
+  const excluidas = new Set((rExcl.data.tareas || []).map(t => String(t.tarea_id)));
 
   // Pendientes asignables: banner feed / reseñadores, plan Impulso-Select-Resistence-Complete, aún sin diseñador
   const disponibles = (rTareas.data.tareas || []).filter(t =>
-    t.estado === 'pendiente' &&
+    (t.estado === 'pendiente' || t.estado === 'hecho') &&
+    [t.fechaCreacion, t.fechaHecho].some(f => f && /^2026-(09|10)/.test(String(f))) &&
     (t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado') &&
     DIS_PLANES.includes(String(t.plan || '').toLowerCase()) &&
-    !yaAsignadas.has(String(t.id))
+    !yaAsignadas.has(String(t.id)) &&
+    !excluidas.has(String(t.id))
   );
 
   const ganado = asignaciones.filter(a => a.entregado).reduce((s, a) => s + Number(a.monto_usd), 0);
@@ -170,11 +174,11 @@ async function abrirDisenadorAdmin(id, scroll = true) {
           </td>
         </tr>`).join('')}</tbody></table></div>`}
 
-    <div class="form-separador" style="margin-top:24px;">Asignar pedidos pendientes</div>
-    ${disponibles.length === 0 ? '<p class="form-info">No hay banners pendientes sin asignar (Impulso, Select, Resistence, Complete).</p>' : `
+    <div class="form-separador" style="margin-top:24px;">Asignar pedidos</div>
+    ${disponibles.length === 0 ? '<p class="form-info">No hay banners sin asignar (Impulso, Select, Resistence, Complete).</p>' : `
     <p class="form-info">Elegí los banners que le querés pasar a ${_disEsc(d ? d.nombre : 'este diseñador')}.</p>
     <div class="vend-tabla-scroll"><table class="admin-tabla">
-      <thead><tr><th></th><th>Fecha</th><th>Plan</th><th>Libro</th><th>Tipo</th><th>Paga</th></tr></thead>
+      <thead><tr><th></th><th>Fecha</th><th>Plan</th><th>Libro</th><th>Tipo</th><th>Paga</th><th>Estado</th><th></th></tr></thead>
       <tbody>${disponibles.map(t => `
         <tr>
           <td><input type="checkbox" class="dis-check-tarea"
@@ -184,6 +188,8 @@ async function abrirDisenadorAdmin(id, scroll = true) {
           <td>${_disEsc(t.nombreLibro || '—')}</td>
           <td>${DIS_NOMBRE_TIPO[t.tipoAccion]}</td>
           <td>${_disUsd(DIS_TARIFAS[t.tipoAccion])}</td>
+          <td>${t.estado === 'hecho' ? '<span class="badge badge-aprobada">Hecho</span>' : '<span class="badge badge-pendiente">Pendiente</span>'}</td>
+          <td><button class="btn-secundario btn-sm" onclick="excluirTareaDisenadorAdmin('${_disEsc(t.id)}')">Eliminar</button></td>
         </tr>`).join('')}</tbody></table></div>
     <button class="btn-primario" style="margin-top:12px;" onclick="asignarTareasDisenadorAdmin('${_disEsc(id)}')">Asignar seleccionados</button>`}
   `;
@@ -211,6 +217,13 @@ async function desasignarDisenadorAdmin(idAsignacion) {
   if (!confirm('¿Quitar este pedido al diseñador? Vuelve a quedar disponible para asignar.')) return;
   const { data, error } = await supabaseClient.rpc('admin_vis_disenador_desasignar', { p_asignacion_id: idAsignacion });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo quitar.', 'error'); return; }
+  await cargarDisenadoresAdmin();
+}
+
+async function excluirTareaDisenadorAdmin(idTarea) {
+  if (!confirm('¿Sacar este pedido de la lista? No se borra el pedido, solo deja de aparecer para asignar a diseñadores.')) return;
+  const { data, error } = await supabaseClient.rpc('admin_vis_tarea_excluir', { p_tarea_id: String(idTarea) });
+  if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo sacar.', 'error'); return; }
   await cargarDisenadoresAdmin();
 }
 
