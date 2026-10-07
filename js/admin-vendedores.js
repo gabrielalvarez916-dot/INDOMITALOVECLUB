@@ -571,6 +571,7 @@ async function cargarClientesVendedoresAdmin() {
   cont.innerHTML = `
     <div style="margin-bottom:20px;">
       <button class="btn-secundario btn-sm" onclick="descargarExcelVencenManana(this)">📥 Excel: campañas que vencen mañana (todos los asesores)</button>
+      <button class="btn-secundario btn-sm" onclick="descargarExcelVencidasMes(this)">📥 Excel: campañas vencidas del mes (todos los asesores)</button>
     </div>
     <div class="admin-verificacion-manual" style="margin-bottom:24px;">
       <p class="admin-verificacion-manual-titulo">Reasignar un cliente a mano</p>
@@ -772,4 +773,49 @@ async function cargarIntentosCodigoAdmin() {
         </table>
       </div>` : '<div class="estado-vacio"><p class="estado-vacio-texto">No hay intentos registrados.</p></div>'}
   `;
+}
+
+// ────────────────────────────────────────────────────────────
+// EXCEL · CAMPAÑAS VENCIDAS DEL MES (solo admin)
+// Todas las campañas del mes en curso: las que ya vencieron y las que
+// todavía van a vencer. Excluye canceladas.
+// ────────────────────────────────────────────────────────────
+
+async function descargarExcelVencidasMes(btn) {
+  const textoOriginal = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Generando…'; }
+  try {
+    const XLSX = await _disCargarSheetJS();
+    const { data, error } = await supabaseClient.rpc('admin_campanas_vencidas_mes');
+    if (error || !data) throw error || new Error('Sin datos');
+
+    const filas = Array.isArray(data.filas) ? data.filas : [];
+    if (!filas.length) {
+      mostrarToast('No hay campañas que venzan este mes.', 'ok');
+      return;
+    }
+
+    const cab = ['VENCIMIENTO', 'SITUACIÓN', 'ASESOR', 'AUTOR', 'CORREO', 'LIBRO'];
+    const hoja = XLSX.utils.json_to_sheet(
+      filas.map(f => ({
+        'VENCIMIENTO': f.fecha_limite || '',
+        'SITUACIÓN': f.situacion || '',
+        'ASESOR': f.asesor || '',
+        'AUTOR': f.autor || '',
+        'CORREO': f.correo || '',
+        'LIBRO': f.libro || ''
+      })),
+      { header: cab }
+    );
+    hoja['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 16 }, { wch: 28 }, { wch: 34 }, { wch: 42 }];
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Vencidas del mes');
+    XLSX.writeFile(libro, `campanas-vencidas-del-mes-${data.hoy}.xlsx`);
+    mostrarToast(`Excel descargado (${filas.length} campaña${filas.length === 1 ? '' : 's'}).`, 'ok');
+  } catch (e) {
+    console.error('Error generando Excel de campañas vencidas del mes:', e);
+    mostrarToast('No se pudo generar el Excel. Probá de nuevo.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
+  }
 }
