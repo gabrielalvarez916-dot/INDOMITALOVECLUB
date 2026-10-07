@@ -228,13 +228,16 @@ async function excluirTareaDisenadorAdmin(idTarea) {
 // ────────────────────────────────────────────────────────────
 // EXCEL (diario y semanal)
 // ────────────────────────────────────────────────────────────
+// Librería de Excel con estilos (colores, bordes, formatos). Se guarda aparte para no pisar la que usan otras pantallas.
+let _disXlsxEstilos = null;
 function _disCargarSheetJS() {
-  if (window.XLSX) return Promise.resolve();
+  if (_disXlsxEstilos) return Promise.resolve(_disXlsxEstilos);
   if (_disSheetJsPromesa) return _disSheetJsPromesa;
   _disSheetJsPromesa = new Promise((resolve, reject) => {
+    const previo = window.XLSX;
     const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload = () => resolve();
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+    s.onload = () => { _disXlsxEstilos = window.XLSX; if (previo) window.XLSX = previo; resolve(_disXlsxEstilos); };
     s.onerror = () => { _disSheetJsPromesa = null; reject(new Error('No se pudo cargar la librería de Excel.')); };
     document.head.appendChild(s);
   });
@@ -267,53 +270,104 @@ function _disAgrupar(entregas, claveFn) {
   return [...mapa.values()].sort((a, b) => a.clave < b.clave ? 1 : a.clave > b.clave ? -1 : a.disenador.localeCompare(b.disenador));
 }
 
+// Paleta Indómita
+const DIS_XL = { vino: '7B1C2E', vinoOscuro: '4A0F1B', rosa: 'C4919A', rosaClaro: 'F7E9EC', rosaSuave: 'FBF3F4', blanco: 'FFFFFF', borde: 'E3C9CE' };
+const DIS_FMT_USD = '"USD "#,##0.00';
+
+// Arma una hoja con título, subtítulo, cabecera, filas con cebra y fila de total.
+// opt: { anchos:[], usd:[índices de columnas en dinero], centro:[índices centradas], total:[fila], filtro:bool, celda:(c, valor)=>estilo extra }
+function _disHoja(XLSX, titulo, subtitulo, cabecera, filas, opt = {}) {
+  const ncol = cabecera.length;
+  const aoa = [[titulo], [subtitulo], cabecera, ...filas];
+  if (opt.total) aoa.push(opt.total);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const borde = { style: 'thin', color: { rgb: DIS_XL.borde } };
+  const bordes = { top: borde, bottom: borde, left: borde, right: borde };
+  const usd = opt.usd || [], centro = opt.centro || [];
+  const ultimaFila = aoa.length - 1;
+
+  for (let r = 0; r < aoa.length; r++) {
+    for (let c = 0; c < ncol; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+      const celda = ws[ref];
+      const esTotal = opt.total && r === ultimaFila;
+      if (r === 0) {
+        celda.s = { font: { name: 'Calibri', sz: 18, bold: true, color: { rgb: DIS_XL.blanco } }, fill: { fgColor: { rgb: DIS_XL.vino } }, alignment: { vertical: 'center', horizontal: 'left', indent: 1 } };
+      } else if (r === 1) {
+        celda.s = { font: { name: 'Calibri', sz: 10, italic: true, color: { rgb: DIS_XL.vino } }, fill: { fgColor: { rgb: DIS_XL.rosaClaro } }, alignment: { vertical: 'center', horizontal: 'left', indent: 1 } };
+      } else if (r === 2) {
+        celda.s = { font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: DIS_XL.vinoOscuro } }, fill: { fgColor: { rgb: DIS_XL.rosa } }, border: bordes, alignment: { vertical: 'center', horizontal: centro.includes(c) || usd.includes(c) ? 'center' : 'left', wrapText: true } };
+      } else if (esTotal) {
+        celda.s = { font: { name: 'Calibri', sz: 12, bold: true, color: { rgb: DIS_XL.blanco } }, fill: { fgColor: { rgb: DIS_XL.vino } }, border: bordes, alignment: { vertical: 'center', horizontal: centro.includes(c) || usd.includes(c) ? 'center' : 'left' } };
+        if (usd.includes(c) && celda.t === 'n') celda.z = DIS_FMT_USD;
+      } else {
+        const cebra = (r % 2 === 0) ? DIS_XL.rosaSuave : DIS_XL.blanco;
+        let est = { font: { name: 'Calibri', sz: 11, color: { rgb: '3A2A2D' } }, fill: { fgColor: { rgb: cebra } }, border: bordes, alignment: { vertical: 'center', horizontal: centro.includes(c) || usd.includes(c) ? 'center' : 'left' } };
+        if (usd.includes(c) && celda.t === 'n') { celda.z = DIS_FMT_USD; est.font = { name: 'Calibri', sz: 11, bold: true, color: { rgb: DIS_XL.vino } }; }
+        if (opt.celda) { const extra = opt.celda(c, celda.v); if (extra) est = { ...est, ...extra }; }
+        celda.s = est;
+      }
+    }
+  }
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: ncol - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: ncol - 1 } }];
+  ws['!cols'] = (opt.anchos || cabecera.map(() => 18)).map(w => ({ wch: w }));
+  ws['!rows'] = aoa.map((_, r) => ({ hpx: r === 0 ? 38 : r === 1 ? 22 : r === 2 ? 30 : 24 }));
+  if (opt.filtro) ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 2, c: 0 }, e: { r: ultimaFila, c: ncol - 1 } }) };
+  return ws;
+}
+
 async function descargarExcelDisenadores() {
   try {
-    await _disCargarSheetJS();
+    const XLSX = await _disCargarSheetJS();
     const { data, error } = await supabaseClient.rpc('admin_vis_disenadores_entregas');
     if (error || !data || data.error) throw new Error(data?.error || error?.message || 'No se pudieron leer las entregas.');
 
     const entregas = (data.entregas || []).map(e => ({ ...e, dia: _disFecha(e.entregado_en) }));
     if (entregas.length === 0) { mostrarToast('Todavía no hay entregas marcadas.', 'error'); return; }
 
-    const XLSX = window.XLSX;
+    const hoy = _disFecha(new Date().toISOString());
+    const sub = `Generado el ${hoy}  ·  Banner feed USD 2  ·  Banner reseñadores USD 1`;
     const wb = XLSX.utils.book_new();
     const cab = (primera) => [primera, 'Diseñador', 'Banners feed', 'Banners reseñadores', 'Total USD'];
+    const sum = (arr, k) => arr.reduce((s, f) => s + f[k], 0);
 
-    // Diario
-    const diario = _disAgrupar(entregas, e => e.dia);
-    const aoaD = [cab('Día'), ...diario.map(f => [f.clave, f.disenador, f.feed, f.resenadores, f.total])];
-    aoaD.push(['TOTAL', '', diario.reduce((s, f) => s + f.feed, 0), diario.reduce((s, f) => s + f.resenadores, 0), diario.reduce((s, f) => s + f.total, 0)]);
-    const wsD = XLSX.utils.aoa_to_sheet(aoaD); wsD['!cols'] = [{ wch: 12 }, { wch: 26 }, { wch: 14 }, { wch: 20 }, { wch: 12 }];
-    XLSX.utils.book_append_sheet(wb, wsD, 'Diario');
-
-    // Semanal (lunes a domingo)
-    const semanal = _disAgrupar(entregas, e => _disLunes(e.dia));
-    const aoaS = [cab('Semana'), ...semanal.map(f => [`${f.clave} al ${_disDomingo(f.clave)}`, f.disenador, f.feed, f.resenadores, f.total])];
-    aoaS.push(['TOTAL', '', semanal.reduce((s, f) => s + f.feed, 0), semanal.reduce((s, f) => s + f.resenadores, 0), semanal.reduce((s, f) => s + f.total, 0)]);
-    const wsS = XLSX.utils.aoa_to_sheet(aoaS); wsS['!cols'] = [{ wch: 26 }, { wch: 26 }, { wch: 14 }, { wch: 20 }, { wch: 12 }];
-    XLSX.utils.book_append_sheet(wb, wsS, 'Semanal');
-
-    // Total por diseñador
+    // Resumen por diseñador (ranking)
     const porDis = new Map();
     entregas.forEach(e => {
-      if (!porDis.has(e.disenador)) porDis.set(e.disenador, { feed: 0, resenadores: 0, total: 0 });
+      if (!porDis.has(e.disenador)) porDis.set(e.disenador, { disenador: e.disenador, feed: 0, resenadores: 0, total: 0 });
       const f = porDis.get(e.disenador);
       if (e.tipo === 'banner') f.feed++; else f.resenadores++;
       f.total += Number(e.monto_usd);
     });
-    const aoaT = [['Diseñador', 'Banners feed', 'Banners reseñadores', 'Total USD'],
-      ...[...porDis.entries()].map(([n, f]) => [n, f.feed, f.resenadores, f.total])];
-    const wsT = XLSX.utils.aoa_to_sheet(aoaT); wsT['!cols'] = [{ wch: 26 }, { wch: 14 }, { wch: 20 }, { wch: 12 }];
-    XLSX.utils.book_append_sheet(wb, wsT, 'Total por diseñador');
+    const resumen = [...porDis.values()].sort((a, b) => b.total - a.total);
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Resumen de diseñadores', sub,
+      ['Diseñador', 'Banners feed', 'Banners reseñadores', 'Total banners', 'Total USD'],
+      resumen.map(f => [f.disenador, f.feed, f.resenadores, f.feed + f.resenadores, f.total]),
+      { anchos: [30, 16, 22, 16, 16], centro: [1, 2, 3], usd: [4], total: ['TOTAL', sum(resumen, 'feed'), sum(resumen, 'resenadores'), sum(resumen, 'feed') + sum(resumen, 'resenadores'), sum(resumen, 'total')] }), 'Resumen');
 
-    // Detalle
-    const aoaX = [['Día', 'Diseñador', 'Tipo', 'Plan', 'Libro', 'USD'],
-      ...entregas.map(e => [e.dia, e.disenador, DIS_NOMBRE_TIPO[e.tipo] || e.tipo, e.plan || '', e.nombre_libro || '', Number(e.monto_usd)])];
-    const wsX = XLSX.utils.aoa_to_sheet(aoaX); wsX['!cols'] = [{ wch: 12 }, { wch: 26 }, { wch: 20 }, { wch: 12 }, { wch: 34 }, { wch: 8 }];
-    XLSX.utils.book_append_sheet(wb, wsX, 'Detalle');
+    // Diario
+    const diario = _disAgrupar(entregas, e => e.dia);
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Entregas por día', sub, cab('Día'),
+      diario.map(f => [f.clave, f.disenador, f.feed, f.resenadores, f.total]),
+      { anchos: [14, 30, 16, 22, 16], centro: [0, 2, 3], usd: [4], total: ['TOTAL', '', sum(diario, 'feed'), sum(diario, 'resenadores'), sum(diario, 'total')] }), 'Diario');
 
-    XLSX.writeFile(wb, `Indomita-disenadores-${_disFecha(new Date().toISOString())}.xlsx`);
+    // Semanal (lunes a domingo)
+    const semanal = _disAgrupar(entregas, e => _disLunes(e.dia));
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Entregas por semana', sub, cab('Semana'),
+      semanal.map(f => [`${f.clave} al ${_disDomingo(f.clave)}`, f.disenador, f.feed, f.resenadores, f.total]),
+      { anchos: [26, 30, 16, 22, 16], centro: [2, 3], usd: [4], total: ['TOTAL', '', sum(semanal, 'feed'), sum(semanal, 'resenadores'), sum(semanal, 'total')] }), 'Semanal');
+
+    // Detalle (con filtros y tipo de banner con color)
+    const colorTipo = (c, v) => c === 2 ? (v === 'Banner feed'
+      ? { fill: { fgColor: { rgb: 'F2D3D9' } }, font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: DIS_XL.vino } } }
+      : { fill: { fgColor: { rgb: 'E9E1F2' } }, font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '4B3A6B' } } }) : null;
+    XLSX.utils.book_append_sheet(wb, _disHoja(XLSX, 'Indómita · Detalle de entregas', sub,
+      ['Día', 'Diseñador', 'Tipo', 'Plan', 'Libro', 'USD'],
+      entregas.map(e => [e.dia, e.disenador, DIS_NOMBRE_TIPO[e.tipo] || e.tipo, e.plan ? e.plan.charAt(0).toUpperCase() + e.plan.slice(1) : '', e.nombre_libro || '', Number(e.monto_usd)]),
+      { anchos: [14, 26, 22, 14, 50, 14], centro: [0, 2, 3], usd: [5], filtro: true, celda: colorTipo, total: ['TOTAL', '', '', '', '', entregas.reduce((s, e) => s + Number(e.monto_usd), 0)] }), 'Detalle');
+
+    XLSX.writeFile(wb, `Indomita-disenadores-${hoy}.xlsx`);
   } catch (e) {
     console.error('Excel diseñadores:', e);
     mostrarToast(e.message || 'No se pudo generar el Excel.', 'error');
