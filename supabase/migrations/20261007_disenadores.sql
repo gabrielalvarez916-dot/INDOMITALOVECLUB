@@ -41,7 +41,7 @@ create or replace function public.admin_vis_disenadores_listar()
 returns json language plpgsql security definer set search_path = public as $$
 begin
   if not es_admin() then return json_build_object('error', 'No autorizado'); end if;
-  return json_build_object('vis_disenadores', coalesce((
+  return json_build_object('disenadores', coalesce((
     select json_agg(d order by d.nombre) from (
       select di.id, di.nombre, di.telefono, di.email, di.activo,
         count(a.id) filter (where not a.entregado)                    as pendientes,
