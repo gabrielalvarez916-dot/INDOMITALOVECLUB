@@ -652,10 +652,17 @@ async function cargarSuscripcionesAdmin() {
   // Arriba de todo solo las suscripciones activas; el resto del sistema
   // (compras de campañas individuales y packs) va en las tablas de abajo.
   const suscripciones = (resultado.suscripciones || []).filter(s => s.estado === 'activa');
+  const busquedaPrevia = document.getElementById('admin-buscar-pagos')?.value || '';
 
   const { data: resCompras, error: errCompras } = await supabaseClient.rpc('admin_listar_compras_campanas');
   const compras = resCompras?.compras || [];
   const creditos = resCompras?.creditos || [];
+  window._pagosAdmin = { suscripciones, compras };
+
+  const htmlBuscador = `
+    <input type="text" id="admin-buscar-pagos" class="input-buscar" placeholder="Buscar por mail, autor, libro, plan, estado, medio de pago..." oninput="filtrarPagosAdmin()" style="max-width:460px; margin-bottom:6px;" />
+    <p class="form-info" style="margin:0 0 14px;">Lo último que se pagó va siempre arriba. Si un pendiente se paga días después, sube al primer lugar.</p>
+  `;
 
   const htmlSuscripciones = `
     <h3 style="margin:0 0 8px; font-size:15px;">Suscripciones activas</h3>
@@ -675,7 +682,7 @@ async function cargarSuscripcionesAdmin() {
           <th>Último pago</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tbody-suscripciones-admin">
         ${suscripciones.map(s => construirFilaSuscripcionAdmin(s)).join('')}
       </tbody>
     </table>`}
@@ -695,10 +702,11 @@ async function cargarSuscripcionesAdmin() {
           <th>Estado</th>
           <th>Monto</th>
           <th>Proveedor</th>
+          <th>Fecha</th>
           <th></th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tbody-compras-admin">
         ${compras.map(c => construirFilaCompraCampanaAdmin(c)).join('')}
       </tbody>
     </table>`}
@@ -728,7 +736,60 @@ async function cargarSuscripcionesAdmin() {
     </table>`}
   `;
 
-  contenedor.innerHTML = htmlSuscripciones + htmlCompras + htmlCreditos;
+  contenedor.innerHTML = htmlBuscador + htmlSuscripciones + htmlCompras + htmlCreditos;
+
+  if (busquedaPrevia) {
+    document.getElementById('admin-buscar-pagos').value = busquedaPrevia;
+    filtrarPagosAdmin();
+  }
+}
+
+// ── Helpers de búsqueda del panel Planes ──
+
+/** Pasa a minúsculas y saca tildes, para que "campana" encuentre "campaña". */
+function _normalizarBusquedaAdmin(txt) {
+  return String(txt ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+/** Fecha y hora corta en horario de Argentina (dd/mm/aaaa hh:mm). */
+function _fechaPlanAdmin(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  return d.toLocaleString('es-AR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires'
+  });
+}
+
+/**
+ * Filtra las tablas de la pestaña Pagos (suscripciones activas y compras de
+ * campañas) con lo escrito en el buscador. Mantiene el orden: último pago arriba.
+ */
+function filtrarPagosAdmin() {
+  const texto = _normalizarBusquedaAdmin(document.getElementById('admin-buscar-pagos')?.value);
+  const datos = window._pagosAdmin || { suscripciones: [], compras: [] };
+  const nombresPaquete = { individual: 'individual', basic: 'pack basic', premium: 'pack premium' };
+  const nombresEstado = { aprobado: 'aprobado pagado', pendiente: 'pendiente', cancelado: 'cancelado rechazado' };
+  const nombresProv = { paypal: 'paypal', mercadopago: 'mercado pago mercadopago', googleplay: 'google play' };
+
+  const coincide = (pajar) => !texto || _normalizarBusquedaAdmin(pajar).includes(texto);
+  const sinResultados = (cols) => `<tr><td colspan="${cols}" style="text-align:center; opacity:.7; padding:14px;">Sin resultados para esa búsqueda.</td></tr>`;
+
+  const tbodyS = document.getElementById('tbody-suscripciones-admin');
+  if (tbodyS) {
+    const lista = datos.suscripciones.filter(x =>
+      coincide([x.email, x.plan, x.estado, x.proveedorPago, x.monto, x.moneda].join(' ')));
+    tbodyS.innerHTML = lista.length ? lista.map(x => construirFilaSuscripcionAdmin(x)).join('') : sinResultados(7);
+  }
+
+  const tbodyC = document.getElementById('tbody-compras-admin');
+  if (tbodyC) {
+    const lista = datos.compras.filter(c =>
+      coincide([c.email, c.autor, (c.libros || []).join(' '), nombresPaquete[c.paquete] || 'pack',
+        nombresEstado[c.estado] || c.estado, nombresProv[c.proveedor] || c.proveedor, c.monto, c.moneda].join(' ')));
+    tbodyC.innerHTML = lista.length ? lista.map(c => construirFilaCompraCampanaAdmin(c)).join('') : sinResultados(9);
+  }
 }
 
 /**
@@ -759,6 +820,9 @@ function construirFilaCompraCampanaAdmin(c) {
       <td>${estadoBadge}</td>
       <td>${monto}</td>
       <td style="font-size:12px;">${proveedor}</td>
+      <td style="font-size:12px; white-space:nowrap;">${c.fechaPago
+        ? `<strong>${_fechaPlanAdmin(c.fechaPago)}</strong>`
+        : `<span style="opacity:.65;">Creada ${_fechaPlanAdmin(c.fechaCreacion)}</span>`}</td>
       <td>${c.estado === 'pendiente' ? `<button class="btn-secundario btn-sm btn-peligro" onclick="eliminarComprasPendientesAdmin(['${c.idCompra}'])">Eliminar</button>` : ''}</td>
     </tr>
   `;
@@ -942,6 +1006,7 @@ async function cargarImpulsosAdmin() {
 
   const impulsos = resultado.impulsos || [];
   window._impulsosAdmin = impulsos;
+  const busquedaPreviaImp = document.getElementById('admin-buscar-impulso')?.value || '';
 
   if (impulsos.length === 0) {
     contenedor.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay solicitudes de impulso.</p></div>`;
@@ -954,7 +1019,7 @@ async function cargarImpulsosAdmin() {
       (Mercado Pago / PayPal) y, cuando confirme el pago, tocá "Activar impulso": eso manda las notificaciones
       a los reseñadores de alta coincidencia y mete la campaña en el slider por los días configurados.
     </p>
-    <input type="text" id="admin-buscar-impulso" class="input-buscar" placeholder="Buscar por nombre o mail del autor..." oninput="filtrarImpulsosAdmin()" style="max-width:400px;" />
+    <input type="text" id="admin-buscar-impulso" class="input-buscar" placeholder="Buscar por libro, autor, mail, plan, estado..." oninput="filtrarImpulsosAdmin()" style="max-width:460px;" />
     <table class="admin-tabla" id="tabla-impulsos">
       <thead>
         <tr>
@@ -976,20 +1041,31 @@ async function cargarImpulsosAdmin() {
       </tbody>
     </table>
   `;
+
+  if (busquedaPreviaImp) {
+    document.getElementById('admin-buscar-impulso').value = busquedaPreviaImp;
+    filtrarImpulsosAdmin();
+  }
 }
 
 /**
- * Filtra la tabla de impulsos por nombre o mail del autor.
+ * Filtra la tabla de impulsos por libro, autor, mail, plan, estado o medio de pago.
+ * Mantiene el orden: último pago arriba.
  */
 function filtrarImpulsosAdmin() {
-  const texto = (document.getElementById('admin-buscar-impulso')?.value || '').toLowerCase();
-  const impulsos = (window._impulsosAdmin || []).filter(i =>
-    (i.emailAutor || '').toLowerCase().includes(texto) ||
-    (i.aliasAutor || '').toLowerCase().includes(texto)
-  );
+  const texto = _normalizarBusquedaAdmin(document.getElementById('admin-buscar-impulso')?.value);
+  const nombresEstado = { pendiente: 'pendiente', pagado: 'pagado activo', rechazado: 'rechazado' };
+  const impulsos = (window._impulsosAdmin || []).filter(i => !texto || _normalizarBusquedaAdmin([
+    i.nombreLibro, i.emailAutor, i.aliasAutor, i.plan, nombresEstado[i.estado] || i.estado,
+    i.proveedorPago, i.moneda
+  ].join(' ')).includes(texto));
 
   const tbody = document.querySelector('#tabla-impulsos tbody');
-  if (tbody) tbody.innerHTML = impulsos.map(i => construirFilaImpulsoAdmin(i)).join('');
+  if (tbody) {
+    tbody.innerHTML = impulsos.length
+      ? impulsos.map(i => construirFilaImpulsoAdmin(i)).join('')
+      : '<tr><td colspan="11" style="text-align:center; opacity:.7; padding:14px;">Sin resultados para esa búsqueda.</td></tr>';
+  }
 }
 
 /**
@@ -1041,7 +1117,7 @@ function construirFilaImpulsoAdmin(i) {
         : `<span class="badge" style="background:rgba(0,0,0,0.08); color:var(--gris-suave);">No</span>`}</td>
       <td><strong>${simbolo}${Number(i.montoAPagar).toLocaleString('es-AR')}</strong></td>
       <td>${estadoBadge}</td>
-      <td style="font-size:12px;">${i.fechaSolicitud ? String(i.fechaSolicitud).split('T')[0] : '—'}</td>
+      <td style="font-size:12px; white-space:nowrap;">${i.fechaSolicitud ? String(i.fechaSolicitud).split('T')[0] : '—'}${i.fechaPago ? `<br><strong>Pagó ${_fechaPlanAdmin(i.fechaPago)}</strong>` : ''}</td>
       <td style="text-align:center;">
         <input type="checkbox" style="width:18px; height:18px; cursor:pointer;"
           ${i.mensajeIgEnviado ? 'checked' : ''}
