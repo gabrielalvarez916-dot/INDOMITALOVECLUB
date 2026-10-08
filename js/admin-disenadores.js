@@ -9,6 +9,7 @@ const DIS_TARIFAS = { banner: 2, banner_cuadrado: 1 };
 const DIS_NOMBRE_TIPO = { banner: 'Banner feed', banner_cuadrado: 'Banner reseñadores' };
 const DIS_PLANES = ['impulso', 'select', 'resistence', 'complete'];
 const DIS_TZ = 'America/Argentina/Buenos_Aires';
+const DIS_PERIODOS = { semanal: 'Semanal', quincenal: 'Quincenal', mensual: 'Mensual' };
 
 let _disLista = [];
 let _disAbierto = null;          // id del diseñador abierto
@@ -45,6 +46,9 @@ async function cargarDisenadoresAdmin() {
       <div class="form-grupo"><label for="dis-nombre">Nombre</label><input type="text" id="dis-nombre" placeholder="Nombre y apellido" /></div>
       <div class="form-grupo"><label for="dis-telefono">Teléfono</label><input type="tel" id="dis-telefono" placeholder="+54 9 ..." /></div>
       <div class="form-grupo"><label for="dis-email">Correo</label><input type="email" id="dis-email" placeholder="diseñadora@mail.com" /></div>
+      <div class="form-grupo"><label for="dis-periodo">Cada cuánto se le paga</label>
+        <select id="dis-periodo"><option value="">Elegir después</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div>
+      <div class="form-grupo"><label for="dis-paypal">Mail de PayPal (donde se le paga)</label><input type="email" id="dis-paypal" placeholder="paypal@mail.com" /></div>
       <button class="btn-primario" onclick="crearDisenadorAdmin()">Crear diseñador</button>
     </div>
 
@@ -56,15 +60,17 @@ async function cargarDisenadoresAdmin() {
     ${_disLista.length === 0
       ? '<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no cargaste diseñadores.</p></div>'
       : `<div class="vend-tabla-scroll"><table class="admin-tabla">
-          <thead><tr><th>Diseñador</th><th>Contacto</th><th>Pendientes</th><th>Entregados</th><th>Ganó (entregado)</th><th>Por ganar</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Diseñador</th><th>Contacto</th><th>Pago</th><th>Pendientes</th><th>Entregados</th><th>Ganó (entregado)</th><th>Por ganar</th><th>Falta pagarle</th><th>Acciones</th></tr></thead>
           <tbody>${_disLista.map(d => `
             <tr${d.id === _disAbierto ? ' style="background:var(--rosa-claro);"' : ''}>
               <td><strong>${_disEsc(d.nombre)}</strong></td>
               <td style="font-size:12px;">${_disEsc(d.telefono || '—')}<br>${_disEsc(d.email || '—')}</td>
+              <td style="font-size:12px;">${d.periodo_pago ? `<strong>${DIS_PERIODOS[d.periodo_pago]}</strong>` : '<span style="color:#b00;">Sin período</span>'}<br>${d.email_paypal ? _disEsc(d.email_paypal) : '<span style="color:#b00;">Sin PayPal</span>'}</td>
               <td>${d.pendientes}</td>
               <td>${d.entregados}</td>
               <td><strong>${_disUsd(d.ganado_usd)}</strong></td>
               <td>${_disUsd(d.por_ganar_usd)}</td>
+              <td><strong>${_disUsd(Number(d.sin_liquidar_usd || 0) + Number(d.liquidado_sin_pagar_usd || 0))}</strong></td>
               <td style="white-space:nowrap;">
                 <button class="btn-primario btn-sm" onclick="abrirDisenadorAdmin('${_disEsc(d.id)}')">Pedidos</button>
                 <button class="btn-secundario btn-sm" onclick="editarDisenadorAdmin('${_disEsc(d.id)}')">Editar</button>
@@ -72,9 +78,12 @@ async function cargarDisenadoresAdmin() {
               </td>
             </tr>`).join('')}</tbody></table></div>`}
 
+    <div id="admin-dis-liquidaciones" style="margin-top:28px;"></div>
+
     <div id="admin-disenador-detalle" style="margin-top:24px;"></div>
   `;
 
+  await cargarLiquidacionesDisenadoresAdmin();
   if (_disAbierto && _disLista.some(d => d.id === _disAbierto)) await abrirDisenadorAdmin(_disAbierto, false);
 }
 
@@ -82,10 +91,16 @@ async function crearDisenadorAdmin() {
   const nombre = document.getElementById('dis-nombre').value.trim();
   const telefono = document.getElementById('dis-telefono').value.trim();
   const email = document.getElementById('dis-email').value.trim();
+  const periodo = document.getElementById('dis-periodo').value;
+  const paypal = document.getElementById('dis-paypal').value.trim();
   if (!nombre) { mostrarToast('Poné el nombre del diseñador.', 'error'); return; }
 
   const { data, error } = await supabaseClient.rpc('admin_vis_disenador_crear', { p_nombre: nombre, p_telefono: telefono, p_email: email });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo crear.', 'error'); return; }
+  if (periodo || paypal) {
+    const r = await supabaseClient.rpc('admin_vis_disenador_pago_config', { p_id: data.id, p_periodo: periodo, p_email_paypal: paypal });
+    if (r.error || !r.data || r.data.error) { mostrarToast('Se creó, pero: ' + (r.data?.error || r.error?.message || 'no se pudo guardar el pago.'), 'error'); }
+  }
   mostrarToast('Diseñador creado.', 'ok');
   _disAbierto = data.id;
   await cargarDisenadoresAdmin();
@@ -151,6 +166,16 @@ async function abrirDisenadorAdmin(id, scroll = true) {
 
   cont.innerHTML = `
     <div class="form-separador">${_disEsc(d ? d.nombre : 'Diseñador')}</div>
+    <div class="admin-verificacion-manual" style="margin-bottom:16px;">
+      <p class="admin-verificacion-manual-titulo">Datos de pago</p>
+      <div class="form-grupo"><label for="dis-cfg-periodo">Cada cuánto se le paga</label>
+        <select id="dis-cfg-periodo">
+          <option value=""${!d?.periodo_pago ? ' selected' : ''}>Sin elegir</option>
+          ${Object.entries(DIS_PERIODOS).map(([k, v]) => `<option value="${k}"${d?.periodo_pago === k ? ' selected' : ''}>${v}</option>`).join('')}
+        </select></div>
+      <div class="form-grupo"><label for="dis-cfg-paypal">Mail de PayPal</label><input type="email" id="dis-cfg-paypal" value="${_disEsc(d?.email_paypal || '')}" placeholder="paypal@mail.com" /></div>
+      <button class="btn-primario btn-sm" onclick="guardarPagoDisenadorAdmin('${_disEsc(id)}')">Guardar datos de pago</button>
+    </div>
     <p class="form-info">Ganó <strong>${_disUsd(ganado)}</strong> en pedidos entregados · <strong>${_disUsd(porGanar)}</strong> en pedidos asignados sin entregar.</p>
 
     ${asignaciones.length === 0 ? '<p class="form-info">Todavía no tiene pedidos asignados.</p>' : `
@@ -223,6 +248,108 @@ async function excluirTareaDisenadorAdmin(idTarea) {
   const { data, error } = await supabaseClient.rpc('admin_vis_tarea_excluir', { p_tarea_id: String(idTarea) });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo sacar.', 'error'); return; }
   await cargarDisenadoresAdmin();
+}
+
+// ────────────────────────────────────────────────────────────
+// PAGO (período + PayPal) Y LIQUIDACIONES
+// ────────────────────────────────────────────────────────────
+async function guardarPagoDisenadorAdmin(id) {
+  const periodo = document.getElementById('dis-cfg-periodo').value;
+  const paypal = document.getElementById('dis-cfg-paypal').value.trim();
+  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_pago_config', { p_id: id, p_periodo: periodo, p_email_paypal: paypal });
+  if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo guardar.', 'error'); return; }
+  mostrarToast('Datos de pago guardados.', 'ok');
+  await cargarDisenadoresAdmin();
+}
+
+let _disLiqFiltro = 'pendiente';   // 'pendiente' | 'pagada' | ''
+
+function _disRangoPeriodo(desde, hasta) {
+  const f = (iso) => { const [y, m, d] = String(iso).split('-'); return `${d}/${m}/${y}`; };
+  return `${f(desde)} al ${f(hasta)}`;
+}
+
+async function cargarLiquidacionesDisenadoresAdmin() {
+  const cont = document.getElementById('admin-dis-liquidaciones');
+  if (!cont) return;
+  cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
+
+  const { data, error } = await supabaseClient.rpc('admin_vis_liquidaciones_listar', { p_estado: _disLiqFiltro || null });
+  if (error || !data || data.error) {
+    cont.innerHTML = `<p class="mensaje-error">${_disEsc(data?.error || error?.message || 'No se pudieron cargar las liquidaciones.')}</p>`;
+    return;
+  }
+  const lista = data.liquidaciones || [];
+  const pendienteUsd = lista.filter(l => l.estado !== 'pagada').reduce((s, l) => s + Number(l.total_usd || 0), 0);
+
+  cont.innerHTML = `
+    <div class="form-separador">Liquidaciones de diseñadores</div>
+    <p class="form-info">Se arman con los banners que ya <strong>entregaron</strong>, cuando termina el período de cada diseñador (semana de lunes a domingo, quincena 1–15 / 16–fin de mes, o mes completo).</p>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:12px 0 16px;">
+      <button class="btn-primario btn-sm" onclick="generarLiquidacionesDisenadoresAdmin()">Generar liquidaciones</button>
+      <select id="dis-liq-filtro" onchange="_disLiqFiltro = this.value; cargarLiquidacionesDisenadoresAdmin()" class="form-input" style="max-width:200px;">
+        <option value="pendiente"${_disLiqFiltro === 'pendiente' ? ' selected' : ''}>Sin pagar</option>
+        <option value="pagada"${_disLiqFiltro === 'pagada' ? ' selected' : ''}>Pagadas</option>
+        <option value=""${_disLiqFiltro === '' ? ' selected' : ''}>Todas</option>
+      </select>
+      <span class="form-info" style="margin:0;">Falta pagar${_disLiqFiltro === 'pagada' ? ' (en esta vista no aplica)' : ''}: <strong>${_disUsd(pendienteUsd)}</strong></span>
+    </div>
+    ${lista.length === 0 ? '<div class="estado-vacio"><p class="estado-vacio-texto">No hay liquidaciones para mostrar.</p><p class="estado-vacio-sub">Tocá "Generar liquidaciones" cuando termine el período de algún diseñador.</p></div>' : `
+    <div class="vend-tabla-scroll"><table class="admin-tabla">
+      <thead><tr><th>Período</th><th>Diseñador</th><th>PayPal</th><th>Banners</th><th>Cuánto se le paga</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>${lista.map(l => `
+        <tr>
+          <td style="font-size:12px;">${_disEsc(_disRangoPeriodo(l.desde, l.hasta))}<br><span style="color:#888;">${DIS_PERIODOS[l.periodo_tipo] || _disEsc(l.periodo_tipo)}</span></td>
+          <td><strong>${_disEsc(l.disenador)}</strong></td>
+          <td style="font-size:12px;">${l.email_paypal
+            ? `${_disEsc(l.email_paypal)}<br><button class="btn-secundario btn-sm" style="margin-top:4px;" onclick="copiarPaypalDisenadorAdmin('${_disEsc(l.email_paypal)}')">Copiar mail</button>`
+            : '<span style="color:#b00;">Sin PayPal cargado</span>'}</td>
+          <td style="font-size:12px;">${l.cantidad_feed} feed · ${l.cantidad_resenadores} reseñadores</td>
+          <td><strong>${_disUsd(l.total_usd)}</strong></td>
+          <td>${l.estado === 'pagada'
+            ? `<span class="badge badge-aprobada">Pagada · ${_disFecha(l.pagada_en)}</span>${l.referencia_paypal ? `<br><span style="font-size:11px; color:#888;">${_disEsc(l.referencia_paypal)}</span>` : ''}`
+            : '<span class="badge badge-pendiente">Sin pagar</span>'}</td>
+          <td style="white-space:nowrap;">
+            ${l.estado === 'pagada'
+              ? `<button class="btn-secundario btn-sm" onclick="marcarLiquidacionDisenadorAdmin('${_disEsc(l.id)}', false)">Marcar sin pagar</button>`
+              : `<button class="btn-primario btn-sm" onclick="marcarLiquidacionDisenadorAdmin('${_disEsc(l.id)}', true)">Marcar pagada</button>
+                 <button class="btn-secundario btn-sm" onclick="eliminarLiquidacionDisenadorAdmin('${_disEsc(l.id)}')">Eliminar</button>`}
+          </td>
+        </tr>`).join('')}</tbody></table></div>`}
+  `;
+}
+
+async function generarLiquidacionesDisenadoresAdmin() {
+  const { data, error } = await supabaseClient.rpc('admin_vis_liquidaciones_generar');
+  if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudieron generar.', 'error'); return; }
+  let msg = data.creadas > 0 ? `Se generaron ${data.creadas} liquidación(es).` : 'No hay nada nuevo para liquidar (los períodos abiertos todavía no se cierran).';
+  if (data.disenadores_sin_periodo > 0) msg += ` ${data.disenadores_sin_periodo} diseñador(es) con banners entregados no tienen período de pago elegido.`;
+  mostrarToast(msg, data.creadas > 0 ? 'ok' : 'error');
+  await cargarDisenadoresAdmin();
+}
+
+async function marcarLiquidacionDisenadorAdmin(id, pagada) {
+  let referencia = null;
+  if (pagada) {
+    referencia = prompt('Referencia o ID de la transacción de PayPal (opcional). Aceptar para marcar como pagada:');
+    if (referencia === null) return;
+  } else if (!confirm('¿Volver esta liquidación a "Sin pagar"?')) return;
+  const { data, error } = await supabaseClient.rpc('admin_vis_liquidacion_marcar', { p_id: id, p_pagada: pagada, p_referencia: referencia || null });
+  if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo actualizar.', 'error'); return; }
+  mostrarToast(pagada ? 'Liquidación marcada como pagada.' : 'Liquidación vuelta a "Sin pagar".', 'ok');
+  await cargarDisenadoresAdmin();
+}
+
+async function eliminarLiquidacionDisenadorAdmin(id) {
+  if (!confirm('¿Eliminar esta liquidación? Los banners quedan otra vez sin liquidar y se juntan en la próxima.')) return;
+  const { data, error } = await supabaseClient.rpc('admin_vis_liquidacion_eliminar', { p_id: id });
+  if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo eliminar.', 'error'); return; }
+  mostrarToast('Liquidación eliminada.', 'ok');
+  await cargarDisenadoresAdmin();
+}
+
+function copiarPaypalDisenadorAdmin(mail) {
+  navigator.clipboard.writeText(mail).then(() => mostrarToast('Mail copiado.', 'ok'), () => mostrarToast('No se pudo copiar.', 'error'));
 }
 
 // ────────────────────────────────────────────────────────────
