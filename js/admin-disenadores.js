@@ -106,16 +106,9 @@ async function crearDisenadorAdmin() {
   await cargarDisenadoresAdmin();
 }
 
-async function editarDisenadorAdmin(id) {
-  const d = _disLista.find(x => x.id === id);
-  if (!d) return;
-  const nombre = prompt('Nombre:', d.nombre); if (nombre === null) return;
-  const telefono = prompt('Teléfono:', d.telefono || ''); if (telefono === null) return;
-  const email = prompt('Correo:', d.email || ''); if (email === null) return;
-  const { data, error } = await supabaseClient.rpc('admin_vis_disenador_editar', { p_id: id, p_nombre: nombre, p_telefono: telefono, p_email: email });
-  if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo guardar.', 'error'); return; }
-  mostrarToast('Guardado.', 'ok');
-  await cargarDisenadoresAdmin();
+function editarDisenadorAdmin(id) {
+  // Abre el panel del diseñador, que tiene todos los datos (incluido período de pago y PayPal)
+  abrirDisenadorAdmin(id);
 }
 
 async function archivarDisenadorAdmin(id) {
@@ -167,14 +160,17 @@ async function abrirDisenadorAdmin(id, scroll = true) {
   cont.innerHTML = `
     <div class="form-separador">${_disEsc(d ? d.nombre : 'Diseñador')}</div>
     <div class="admin-verificacion-manual" style="margin-bottom:16px;">
-      <p class="admin-verificacion-manual-titulo">Datos de pago</p>
+      <p class="admin-verificacion-manual-titulo">Datos del diseñador</p>
+      <div class="form-grupo"><label for="dis-ed-nombre">Nombre</label><input type="text" id="dis-ed-nombre" value="${_disEsc(d?.nombre || '')}" /></div>
+      <div class="form-grupo"><label for="dis-ed-telefono">Teléfono</label><input type="tel" id="dis-ed-telefono" value="${_disEsc(d?.telefono || '')}" /></div>
+      <div class="form-grupo"><label for="dis-ed-email">Correo</label><input type="email" id="dis-ed-email" value="${_disEsc(d?.email || '')}" /></div>
       <div class="form-grupo"><label for="dis-cfg-periodo">Cada cuánto se le paga</label>
         <select id="dis-cfg-periodo">
           <option value=""${!d?.periodo_pago ? ' selected' : ''}>Sin elegir</option>
           ${Object.entries(DIS_PERIODOS).map(([k, v]) => `<option value="${k}"${d?.periodo_pago === k ? ' selected' : ''}>${v}</option>`).join('')}
         </select></div>
-      <div class="form-grupo"><label for="dis-cfg-paypal">Mail de PayPal</label><input type="email" id="dis-cfg-paypal" value="${_disEsc(d?.email_paypal || '')}" placeholder="paypal@mail.com" /></div>
-      <button class="btn-primario btn-sm" onclick="guardarPagoDisenadorAdmin('${_disEsc(id)}')">Guardar datos de pago</button>
+      <div class="form-grupo"><label for="dis-cfg-paypal">Mail de PayPal (donde se le paga)</label><input type="email" id="dis-cfg-paypal" value="${_disEsc(d?.email_paypal || '')}" placeholder="paypal@mail.com" /></div>
+      <button class="btn-primario btn-sm" onclick="guardarDatosDisenadorAdmin('${_disEsc(id)}')">Guardar</button>
     </div>
     <p class="form-info">Ganó <strong>${_disUsd(ganado)}</strong> en pedidos entregados · <strong>${_disUsd(porGanar)}</strong> en pedidos asignados sin entregar.</p>
 
@@ -253,6 +249,22 @@ async function excluirTareaDisenadorAdmin(idTarea) {
 // ────────────────────────────────────────────────────────────
 // PAGO (período + PayPal) Y LIQUIDACIONES
 // ────────────────────────────────────────────────────────────
+async function guardarDatosDisenadorAdmin(id) {
+  const nombre = document.getElementById('dis-ed-nombre').value.trim();
+  const telefono = document.getElementById('dis-ed-telefono').value.trim();
+  const email = document.getElementById('dis-ed-email').value.trim();
+  const periodo = document.getElementById('dis-cfg-periodo').value;
+  const paypal = document.getElementById('dis-cfg-paypal').value.trim();
+  if (!nombre) { mostrarToast('El nombre no puede quedar vacío.', 'error'); return; }
+
+  const r1 = await supabaseClient.rpc('admin_vis_disenador_editar', { p_id: id, p_nombre: nombre, p_telefono: telefono, p_email: email });
+  if (r1.error || !r1.data || r1.data.error) { mostrarToast(r1.data?.error || r1.error?.message || 'No se pudo guardar.', 'error'); return; }
+  const r2 = await supabaseClient.rpc('admin_vis_disenador_pago_config', { p_id: id, p_periodo: periodo, p_email_paypal: paypal });
+  if (r2.error || !r2.data || r2.data.error) { mostrarToast(r2.data?.error || r2.error?.message || 'No se pudo guardar el pago.', 'error'); return; }
+  mostrarToast('Guardado.', 'ok');
+  await cargarDisenadoresAdmin();
+}
+
 async function guardarPagoDisenadorAdmin(id) {
   const periodo = document.getElementById('dis-cfg-periodo').value;
   const paypal = document.getElementById('dis-cfg-paypal').value.trim();
