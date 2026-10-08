@@ -1307,6 +1307,83 @@ async function cargarPendientesAdmin() {
       desactivación. Los banners cuya fecha de desactivación ya pasó quedan marcados como
       "Finalizado" y se muestran al final.
     </p>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px;">
+      <select id="admin-pendientes-filtro-tipo" onchange="filtrarPendientesAdmin()" aria-label="Filtrar por tipo de encargo" style="padding:8px 10px; border:1px solid var(--rosa-claro, #ddd); border-radius:8px; font-size:14px;">
+        <option value="">Todos los tipos de encargo</option>
+        <option value="banner">Banner feed</option>
+        <option value="banner_cuadrado">Banner reseñadores</option>
+        <option value="historia_instagram">Historia Instagram</option>
+      </select>
+      <input type="search" id="admin-pendientes-buscador" oninput="filtrarPendientesAdmin()" placeholder="Buscar por nombre de libro…" aria-label="Buscar por nombre de libro" autocomplete="off" style="flex:1; min-width:200px; padding:8px 10px; border:1px solid var(--rosa-claro, #ddd); border-radius:8px; font-size:14px;">
+      <span id="admin-pendientes-contador" style="font-size:12px; color:#888;"></span>
+    </div>
+    <div id="admin-pendientes-tabla"></div>
+  `;
+
+  // Guardamos las tareas y repintamos la tabla sin volver a pedir datos cada
+  // vez que se cambia el filtro. Si el admin ya había filtrado (por ejemplo
+  // antes de marcar una tarea como "Hecho", que recarga la lista), se mantiene.
+  _pendientesAdminTareas = tareasOrdenadas;
+  const selectTipo = document.getElementById('admin-pendientes-filtro-tipo');
+  const inputBuscador = document.getElementById('admin-pendientes-buscador');
+  if (selectTipo) selectTipo.value = _pendientesAdminFiltroTipo;
+  if (inputBuscador) inputBuscador.value = _pendientesAdminFiltroTexto;
+  _renderTablaPendientesAdmin();
+}
+
+// Estado de la lista de pendientes: tareas ya cargadas y filtros activos.
+let _pendientesAdminTareas = [];
+let _pendientesAdminFiltroTipo = '';
+let _pendientesAdminFiltroTexto = '';
+
+/**
+ * Minúsculas y sin tildes, para que "Rosa" encuentre "rosá" y "ñ" no moleste.
+ */
+function _normalizarTextoBusquedaAdmin(texto) {
+  return String(texto || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Lee los controles de filtro (tipo de encargo y nombre de libro) y repinta
+ * la tabla de pendientes. No vuelve a consultar la base de datos.
+ */
+function filtrarPendientesAdmin() {
+  _pendientesAdminFiltroTipo = document.getElementById('admin-pendientes-filtro-tipo')?.value || '';
+  _pendientesAdminFiltroTexto = document.getElementById('admin-pendientes-buscador')?.value || '';
+  _renderTablaPendientesAdmin();
+}
+
+/**
+ * Dibuja la tabla de pendientes aplicando los filtros activos.
+ */
+function _renderTablaPendientesAdmin() {
+  const cont = document.getElementById('admin-pendientes-tabla');
+  if (!cont) return;
+
+  const textoBuscado = _normalizarTextoBusquedaAdmin(_pendientesAdminFiltroTexto);
+  const tareasFiltradas = _pendientesAdminTareas.filter(t => {
+    if (_pendientesAdminFiltroTipo && t.tipoAccion !== _pendientesAdminFiltroTipo) return false;
+    if (textoBuscado && !_normalizarTextoBusquedaAdmin(t.nombreLibro).includes(textoBuscado)) return false;
+    return true;
+  });
+
+  const contador = document.getElementById('admin-pendientes-contador');
+  if (contador) {
+    contador.textContent = tareasFiltradas.length === _pendientesAdminTareas.length
+      ? `${tareasFiltradas.length} tareas`
+      : `${tareasFiltradas.length} de ${_pendientesAdminTareas.length} tareas`;
+  }
+
+  if (tareasFiltradas.length === 0) {
+    cont.innerHTML = `<div class="estado-vacio"><p class="estado-vacio-texto">No hay tareas que coincidan con el filtro.</p></div>`;
+    return;
+  }
+
+  cont.innerHTML = `
     <table class="admin-tabla">
       <thead>
         <tr>
@@ -1320,7 +1397,7 @@ async function cargarPendientesAdmin() {
         </tr>
       </thead>
       <tbody>
-        ${tareasOrdenadas.map(t => construirFilaPendienteAdmin(t)).join('')}
+        ${tareasFiltradas.map(t => construirFilaPendienteAdmin(t)).join('')}
       </tbody>
     </table>
   `;
