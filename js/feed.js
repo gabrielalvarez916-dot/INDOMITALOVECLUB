@@ -188,7 +188,16 @@ async function cargarFeed() {
     return 'sin_id_' + (c.nombre_libro || '').toLowerCase().replace(/\s+/g, '_');
   }
 
-  const clavesLibros = [...new Set((campanas || []).map(c => _claveLibroCampana(c)))];
+  // Clave "de respaldo": la que arma el backend cuando la campaña que recibió
+  // las reseñas NO tiene id_libro. Pasa que la campaña activa puede resolver
+  // (por hermana) a un id_libro, pero las reseñas del mes cayeron en otra
+  // campaña sin id_libro, y entonces la fila de ranking quedó como 'sin_id_...'.
+  // Si no probamos también esa clave, el libro queda sin puesto en el feed.
+  function _claveRespaldoCampana(c) {
+    return 'sin_id_' + (c.nombre_libro || '').toLowerCase().replace(/\s+/g, '_');
+  }
+
+  const clavesLibros = [...new Set((campanas || []).flatMap(c => [_claveLibroCampana(c), _claveRespaldoCampana(c)]))];
   let rankingsPorLibro = {};
   const mesActual = new Date().toISOString().slice(0, 7);
   if (clavesLibros.length > 0) {
@@ -218,6 +227,25 @@ async function cargarFeed() {
       }
       rankingsPorLibro[rh.clave_libro].promedio_puntuacion = rh.promedio_puntuacion;
       rankingsPorLibro[rh.clave_libro].total_resenas = rh.total_resenas;
+    });
+
+    // Si el libro no tiene fila de ranking del mes bajo su clave principal
+    // pero sí bajo la clave de respaldo ('sin_id_...'), usamos esa.
+    (campanas || []).forEach(c => {
+      const clavePrincipal = _claveLibroCampana(c);
+      const claveRespaldo = _claveRespaldoCampana(c);
+      if (clavePrincipal === claveRespaldo) return;
+      const principal = rankingsPorLibro[clavePrincipal];
+      const respaldo = rankingsPorLibro[claveRespaldo];
+      if (!respaldo) return;
+      if (!principal || !principal.pos_top) {
+        const fusion = { ...respaldo };
+        // Estrellas y cantidad de reseñas: si la clave principal ya tiene el
+        // dato histórico, ese manda (es el del libro completo).
+        if (principal?.promedio_puntuacion != null) fusion.promedio_puntuacion = principal.promedio_puntuacion;
+        if (principal?.total_resenas != null) fusion.total_resenas = principal.total_resenas;
+        rankingsPorLibro[clavePrincipal] = fusion;
+      }
     });
   }
 
