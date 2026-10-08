@@ -2307,6 +2307,31 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
 
   setTimeout(async () => {
     cerrarModales();
+
+    // Regalo del pack: si la campaña se creó con un crédito de un pack que
+    // incluye un Impulso de regalo, lo reclamamos acá. El RPC lo activa solo
+    // (sin costo) y devuelve { regalo: false } cuando no corresponde, así que
+    // para campañas sin regalo no cambia nada. Si falla, seguimos con el flujo
+    // normal y el regalo queda sin reclamar (el equipo lo puede activar a mano).
+    let regaloImpulsoReclamado = false;
+    try {
+      const { data: regalo, error: errorRegalo } = await supabaseClient
+        .rpc('reclamar_regalo_pack', { p_id_campana: campanaCreada.id });
+
+      if (errorRegalo) {
+        console.error('Error reclamando el regalo del pack:', errorRegalo);
+      } else if (regalo?.regalo && regalo.plan === 'impulso') {
+        regaloImpulsoReclamado = true;
+        if (regalo.activado) {
+          mostrarToast('🎁 ¡Tu Impulso de regalo ya está activo en esta campaña!', 'ok');
+        } else {
+          mostrarToast('🎁 Reclamamos tu Impulso de regalo, pero no pudo activarse solo. El equipo lo activa a mano.', 'advertencia');
+        }
+      }
+    } catch (errRegalo) {
+      console.error('Error inesperado reclamando el regalo del pack:', errRegalo);
+    }
+
     await cargarCampañasAutor(user.id);
     await cargarHistorialAutor(user.id);
     _renderListaCampanasActivas();
@@ -2316,7 +2341,8 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     // Publicidad interna: invita al autor a comprar un plan de impulso
     // (Impulso/Select/Resistence/Complete) para la campaña que acaba de
     // crear/renovar. Es la única publicidad que integramos a la plataforma.
-    if (typeof abrirModalImpulsoPostCreacion === 'function') {
+    // Si ya reclamó el Impulso de regalo, no le ofrecemos comprar otro.
+    if (!regaloImpulsoReclamado && typeof abrirModalImpulsoPostCreacion === 'function') {
       abrirModalImpulsoPostCreacion(campanaCreada.id, datos.nombreLibro);
     }
   }, 1500);
