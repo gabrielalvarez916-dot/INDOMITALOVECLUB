@@ -1300,7 +1300,7 @@ async function cargarPendientesAdmin() {
   contenedor.innerHTML = `
     <p class="form-info" style="margin-bottom:14px;">
       Cada vez que se activa un impulso se generan acá las tareas manuales que hay que hacer
-      (banner del feed, banner del panel de reseñadoras y/o historia de Instagram). Marcá
+      (banner del feed, banner del panel de reseñadoras, historia de Instagram y, en Refine,\n      la revisión de portada y el informe editorial). Marcá
       "Hecho" cuando la subas. Para los banners, te calcula la fecha en la que hay que
       desactivarlos manualmente desde Banner publicitario (una semana para Impulso/Select/
       Resistence, dos semanas para Complete); la historia de Instagram no tiene fecha de
@@ -1313,6 +1313,8 @@ async function cargarPendientesAdmin() {
         <option value="banner">Banner feed</option>
         <option value="banner_cuadrado">Banner reseñadores</option>
         <option value="historia_instagram">Historia Instagram</option>
+        <option value="revision_portada">Revisión de portada</option>
+        <option value="informe_editorial">Informe editorial</option>
       </select>
       <input type="search" id="admin-pendientes-buscador" oninput="filtrarPendientesAdmin()" placeholder="Buscar por nombre de libro…" aria-label="Buscar por nombre de libro" autocomplete="off" style="flex:1; min-width:200px; padding:8px 10px; border:1px solid var(--rosa-claro, #ddd); border-radius:8px; font-size:14px;">
       <span id="admin-pendientes-contador" style="font-size:12px; color:#888;"></span>
@@ -1429,7 +1431,9 @@ function construirFilaPendienteAdmin(t) {
   const nombresAccion = {
     banner: 'Banner (feed)',
     banner_cuadrado: 'Banner (reseñadoras)',
-    historia_instagram: 'Historia Instagram'
+    historia_instagram: 'Historia Instagram',
+    revision_portada: 'Revisión de portada',
+    informe_editorial: 'Informe editorial'
   };
   const nombreAccion = nombresAccion[t.tipoAccion] || t.tipoAccion || '—';
   const esBanner = t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado';

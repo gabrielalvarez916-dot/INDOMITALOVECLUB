@@ -5,9 +5,9 @@
 // Tarifas: banner feed USD 2 · banner reseñadores USD 1 (se fijan en la base al asignar).
 // ============================================================
 
-const DIS_TARIFAS = { banner: 2, banner_cuadrado: 1 };
-const DIS_NOMBRE_TIPO = { banner: 'Banner feed', banner_cuadrado: 'Banner reseñadores' };
-const DIS_PLANES = ['impulso', 'select', 'resistence', 'complete'];
+const DIS_TARIFAS = { banner: 2, banner_cuadrado: 1, revision_portada: 2, informe_editorial: 4 };
+const DIS_NOMBRE_TIPO = { banner: 'Banner feed', banner_cuadrado: 'Banner reseñadores', revision_portada: 'Revisión de portada', informe_editorial: 'Informe editorial' };
+const DIS_PLANES = ['impulso', 'select', 'resistence', 'complete', 'refine'];
 const DIS_TZ = 'America/Argentina/Buenos_Aires';
 const DIS_PERIODOS = { semanal: 'Semanal', quincenal: 'Quincenal', mensual: 'Mensual' };
 
@@ -146,10 +146,10 @@ async function abrirDisenadorAdmin(id, scroll = true) {
   const yaAsignadas = new Map((rYaAsig.data.tareas || []).map(t => [String(t.tarea_id), t.disenador]));
   const excluidas = new Set((rExcl.data.tareas || []).map(t => String(t.tarea_id)));
 
-  // Pendientes asignables: solo banners NO entregados y que no se repiten (mismo autor + libro + tipo ya hecho/pagado).
+  // Pendientes asignables: banners y encargos Refine (revisión de portada / informe editorial) NO entregados y que no se repiten (mismo autor + libro + tipo ya hecho/pagado).
   // La regla está en la base (admin_vis_tareas_disponibles) y es la misma que usa el sistema de Ingresos.
   const disponibles = (rTareas.data.tareas || []).filter(t =>
-    (t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado') &&
+    DIS_TARIFAS[t.tipoAccion] !== undefined &&
     !yaAsignadas.has(String(t.id)) &&
     !excluidas.has(String(t.id))
   );
@@ -194,8 +194,8 @@ async function abrirDisenadorAdmin(id, scroll = true) {
         </tr>`).join('')}</tbody></table></div>`}
 
     <div class="form-separador" style="margin-top:24px;">Asignar pedidos</div>
-    ${disponibles.length === 0 ? '<p class="form-info">No hay banners sin asignar (Impulso, Select, Resistence, Complete).</p>' : `
-    <p class="form-info">Elegí los banners que le querés pasar a ${_disEsc(d ? d.nombre : 'este diseñador')}.</p>
+    ${disponibles.length === 0 ? '<p class="form-info">No hay pedidos sin asignar (banners de Impulso, Select, Resistence, Complete y encargos de Refine).</p>' : `
+    <p class="form-info">Elegí los pedidos (banners, revisiones de portada, informes editoriales) que le querés pasar a ${_disEsc(d ? d.nombre : 'este diseñador')}.</p>
     <div class="vend-tabla-scroll"><table class="admin-tabla">
       <thead><tr><th></th><th>Fecha</th><th>Plan</th><th>Libro</th><th>Tipo</th><th>Paga</th><th>Estado</th><th></th></tr></thead>
       <tbody>${disponibles.map(t => `
@@ -219,7 +219,7 @@ async function asignarTareasDisenadorAdmin(idDisenador) {
   const tareas = [...document.querySelectorAll('.dis-check-tarea:checked')].map(c => ({
     tarea_id: c.dataset.id, tipo: c.dataset.tipo, plan: c.dataset.plan, nombre_libro: c.dataset.libro
   }));
-  if (tareas.length === 0) { mostrarToast('Marcá al menos un banner.', 'error'); return; }
+  if (tareas.length === 0) { mostrarToast('Marcá al menos un pedido.', 'error'); return; }
   const { data, error } = await supabaseClient.rpc('admin_vis_disenador_asignar', { p_disenador_id: idDisenador, p_tareas: tareas });
   if (error || !data || data.error) { mostrarToast(data?.error || error?.message || 'No se pudo asignar.', 'error'); return; }
   mostrarToast(`${data.asignadas} pedido(s) asignado(s).` + (data.repetidas_omitidas ? ` ${data.repetidas_omitidas} omitido(s) por repetirse con un banner ya hecho.` : ''), 'ok');
@@ -316,7 +316,7 @@ async function cargarLiquidacionesDisenadoresAdmin() {
           <td style="font-size:12px;">${l.email_paypal
             ? `${_disEsc(l.email_paypal)}<br><button class="btn-secundario btn-sm" style="margin-top:4px;" onclick="copiarPaypalDisenadorAdmin('${_disEsc(l.email_paypal)}')">Copiar mail</button>`
             : '<span style="color:#b00;">Sin PayPal cargado</span>'}</td>
-          <td style="font-size:12px;">${l.cantidad_feed} feed · ${l.cantidad_resenadores} reseñadores</td>
+          <td style="font-size:12px;">${l.cantidad_feed} feed · ${l.cantidad_resenadores} reseñadores${Number(l.cantidad_refine) ? ` · ${l.cantidad_refine} Refine` : ''}</td>
           <td><strong>${_disUsd(l.total_usd)}</strong></td>
           <td>${l.estado === 'pagada'
             ? `<span class="badge badge-aprobada">Pagada · ${_disFecha(l.pagada_en)}</span>${l.referencia_paypal ? `<br><span style="font-size:11px; color:#888;">${_disEsc(l.referencia_paypal)}</span>` : ''}`
