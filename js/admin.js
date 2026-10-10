@@ -1105,6 +1105,10 @@ function construirFilaImpulsoAdmin(i) {
 
   const nombrePlan = i.plan ? i.plan.charAt(0).toUpperCase() + i.plan.slice(1) : 'Impulso';
 
+  const botonInformeRefine = i.plan === 'refine'
+    ? `<button class="btn-secundario btn-sm" onclick="abrirInformeRefineAdmin('${i.id}')">📝 Generar informe</button>`
+    : '';
+
   return `
     <tr>
       <td>${i.nombreLibro}</td>
@@ -1123,7 +1127,7 @@ function construirFilaImpulsoAdmin(i) {
           ${i.mensajeIgEnviado ? 'checked' : ''}
           onchange="marcarMensajeImpulsoAdmin('${i.id}', this.checked)" />
       </td>
-      <td id="impulso-acciones-${i.id}" style="display:flex; gap:6px; flex-wrap:wrap;">${botones}</td>
+      <td id="impulso-acciones-${i.id}" style="display:flex; gap:6px; flex-wrap:wrap;">${botones}${botonInformeRefine}</td>
     </tr>
   `;
 }
@@ -1239,6 +1243,132 @@ async function rechazarImpulsoAdmin(idImpulso, nombreLibro) {
 
   mostrarToast('Impulso rechazado.', 'ok');
   await cargarImpulsosAdmin();
+}
+
+// ────────────────────────────────────────────────────────────
+// INFORME REFINE (borrador redactado por la IA, revisado por el admin)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Botón "Generar informe" de un impulso Refine.
+ * - Si ya hay un informe guardado para ese impulso, lo abre en el cuadro de texto.
+ * - Si no hay, pide confirmación (cada informe tiene un costo en la API de Claude),
+ *   llama a la Edge Function generar-informe-refine y muestra el borrador.
+ */
+async function abrirInformeRefineAdmin(idImpulso) {
+  const impulso = (window._impulsosAdmin || []).find(i => i.id === idImpulso);
+  if (!impulso) return;
+
+  const { data: existente, error: errBuscar } = await supabaseClient
+    .from('informes_refine')
+    .select('id, borrador, estado, creado_en, aprobado_en')
+    .eq('id_impulso', idImpulso)
+    .order('creado_en', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (errBuscar) {
+    mostrarToast(errBuscar.message || 'No se pudo buscar el informe.', 'error');
+    return;
+  }
+
+  if (existente) {
+    _mostrarPanelInformeRefine(impulso, existente);
+    return;
+  }
+
+  await generarInformeRefineAdmin(impulso);
+}
+
+/**
+ * Llama a la Edge Function que arma los datos, se los manda a Claude y guarda el borrador.
+ */
+async function generarInformeRefineAdmin(impulso) {
+  if (!confirm(`¿Generar el informe Refine de "${impulso.nombreLibro}"?\n\nSe consulta a Claude y tiene un pequeño costo por informe.`)) return;
+
+  mostrarToast('Generando el borrador… puede tardar hasta un minuto.', 'ok');
+
+  const { data, error } = await supabaseClient.functions.invoke('generar-informe-refine', {
+    body: { id_campana: impulso.idCampana, id_impulso: impulso.id }
+  });
+
+  let mensajeError = data?.error || null;
+  if (error && !mensajeError) {
+    try { mensajeError = (await error.context.json())?.error; } catch (e) { /* sin detalle */ }
+    mensajeError = mensajeError || error.message;
+  }
+  if (mensajeError || !data?.informe) {
+    mostrarToast(mensajeError || 'No se pudo generar el informe.', 'error');
+    return;
+  }
+
+  _mostrarPanelInformeRefine(impulso, data.informe);
+}
+
+/**
+ * Panel con el borrador en un cuadro de texto editable, y botones
+ * Guardar cambios / Aprobar / Generar de nuevo.
+ */
+function _mostrarPanelInformeRefine(impulso, informe) {
+  document.getElementById('panel-informe-refine')?.remove();
+
+  const aprobado = informe.estado === 'aprobado';
+  const fondo = document.createElement('div');
+  fondo.id = 'panel-informe-refine';
+  fondo.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:10000; display:flex; align-items:center; justify-content:center; padding:16px;';
+  fondo.innerHTML = `
+    <div style="background:#fff; border-radius:12px; width:min(900px,100%); max-height:92vh; display:flex; flex-direction:column; padding:20px; gap:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <h3 style="margin:0;">Informe Refine — ${escaparHtmlSoporte(impulso.nombreLibro)}</h3>
+        <span id="informe-refine-estado" class="badge ${aprobado ? 'badge-aprobada' : 'badge-pendiente'}">${aprobado ? 'Aprobado' : 'Borrador'}</span>
+      </div>
+      <p class="form-hint" style="margin:0;">Revisá y corregí el texto. Nada se entrega al autor hasta que lo apruebes.</p>
+      <textarea id="informe-refine-texto" style="flex:1; min-height:50vh; width:100%; padding:12px; font-family:inherit; font-size:14px; line-height:1.5; border:1px solid #ccc; border-radius:8px; resize:vertical;"></textarea>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+        <button class="btn-secundario btn-sm" id="informe-refine-regenerar">Generar de nuevo</button>
+        <button class="btn-secundario btn-sm" id="informe-refine-guardar">Guardar cambios</button>
+        <button class="btn-primario btn-sm" id="informe-refine-aprobar">${aprobado ? 'Aprobado ✓' : 'Aprobar'}</button>
+        <button class="btn-secundario btn-sm" id="informe-refine-cerrar">Cerrar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(fondo);
+
+  const texto = document.getElementById('informe-refine-texto');
+  texto.value = informe.borrador || '';
+
+  document.getElementById('informe-refine-cerrar').onclick = () => fondo.remove();
+
+  document.getElementById('informe-refine-guardar').onclick = async () => {
+    const { error } = await supabaseClient
+      .from('informes_refine')
+      .update({ borrador: texto.value })
+      .eq('id', informe.id);
+    mostrarToast(error ? (error.message || 'No se pudo guardar.') : 'Cambios guardados.', error ? 'error' : 'ok');
+  };
+
+  document.getElementById('informe-refine-aprobar').onclick = async () => {
+    if (!confirm('¿Aprobar este informe? Queda marcado como listo.')) return;
+    const { error } = await supabaseClient
+      .from('informes_refine')
+      .update({ borrador: texto.value, estado: 'aprobado', aprobado_en: new Date().toISOString() })
+      .eq('id', informe.id);
+    if (error) {
+      mostrarToast(error.message || 'No se pudo aprobar.', 'error');
+      return;
+    }
+    informe.estado = 'aprobado';
+    const badge = document.getElementById('informe-refine-estado');
+    badge.className = 'badge badge-aprobada';
+    badge.textContent = 'Aprobado';
+    document.getElementById('informe-refine-aprobar').textContent = 'Aprobado ✓';
+    mostrarToast('Informe aprobado.', 'ok');
+  };
+
+  document.getElementById('informe-refine-regenerar').onclick = async () => {
+    fondo.remove();
+    await generarInformeRefineAdmin(impulso);
+  };
 }
 
 /**
