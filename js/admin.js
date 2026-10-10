@@ -1492,6 +1492,7 @@ async function cargarPendientesAdmin() {
         <option value="banner">Banner feed</option>
         <option value="banner_cuadrado">Banner reseñadores</option>
         <option value="historia_instagram">Historia Instagram</option>
+        <option value="informe_editorial">Informe editorial</option>
       </select>
       <input type="search" id="admin-pendientes-buscador" oninput="filtrarPendientesAdmin()" placeholder="Buscar por nombre de libro…" aria-label="Buscar por nombre de libro" autocomplete="off" style="flex:1; min-width:200px; padding:8px 10px; border:1px solid var(--rosa-claro, #ddd); border-radius:8px; font-size:14px;">
       <span id="admin-pendientes-contador" style="font-size:12px; color:#888;"></span>
@@ -1608,7 +1609,8 @@ function construirFilaPendienteAdmin(t) {
   const nombresAccion = {
     banner: 'Banner (feed)',
     banner_cuadrado: 'Banner (reseñadoras)',
-    historia_instagram: 'Historia Instagram'
+    historia_instagram: 'Historia Instagram',
+    informe_editorial: 'Informe editorial'
   };
   const nombreAccion = nombresAccion[t.tipoAccion] || t.tipoAccion || '—';
   const esBanner = t.tipoAccion === 'banner' || t.tipoAccion === 'banner_cuadrado';
