@@ -1306,6 +1306,27 @@ async function generarInformeRefineAdmin(impulso) {
 }
 
 /**
+ * Manda por mail al autor el informe aprobado (Edge Function enviar-informe-refine).
+ * Devuelve { ok, enviado_a, duplicado } o { error }.
+ * "forzar" = true reenvía aunque ya se hubiera enviado antes.
+ */
+async function _enviarInformeRefineAlAutor(idInforme, forzar) {
+  const { data, error } = await supabaseClient.functions.invoke('enviar-informe-refine', {
+    body: { id_informe: idInforme, forzar: !!forzar }
+  });
+
+  let mensajeError = data?.error || null;
+  if (error && !mensajeError) {
+    try { mensajeError = (await error.context.json())?.error; } catch (e) { /* sin detalle */ }
+    mensajeError = mensajeError || error.message;
+  }
+  if (mensajeError || !data?.ok) {
+    return { error: mensajeError || 'No se pudo enviar el mail.' };
+  }
+  return data;
+}
+
+/**
  * Panel con el borrador en un cuadro de texto editable, y botones
  * Guardar cambios / Aprobar / Generar de nuevo.
  */
@@ -1327,7 +1348,7 @@ function _mostrarPanelInformeRefine(impulso, informe) {
       <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
         <button class="btn-secundario btn-sm" id="informe-refine-regenerar">Generar de nuevo</button>
         <button class="btn-secundario btn-sm" id="informe-refine-guardar">Guardar cambios</button>
-        <button class="btn-primario btn-sm" id="informe-refine-aprobar">${aprobado ? 'Aprobado ✓' : 'Aprobar'}</button>
+        <button class="btn-primario btn-sm" id="informe-refine-aprobar">${aprobado ? 'Reenviar al autor' : 'Aprobar y enviar al autor'}</button>
         <button class="btn-secundario btn-sm" id="informe-refine-cerrar">Cerrar</button>
       </div>
     </div>
@@ -1348,21 +1369,49 @@ function _mostrarPanelInformeRefine(impulso, informe) {
   };
 
   document.getElementById('informe-refine-aprobar').onclick = async () => {
-    if (!confirm('¿Aprobar este informe? Queda marcado como listo.')) return;
+    const yaAprobado = informe.estado === 'aprobado';
+    const aviso = yaAprobado
+      ? '¿Reenviar el informe por mail al autor?\n\nSe envía el texto tal como está ahora en el cuadro.'
+      : '¿Aprobar el informe y enviarlo por mail al autor?\n\nSe envía el texto tal como está ahora en el cuadro.';
+    if (!confirm(aviso)) return;
+
+    const botonAprobar = document.getElementById('informe-refine-aprobar');
+    botonAprobar.disabled = true;
+
+    // 1) Guardar el texto final (y aprobar, si todavía no estaba aprobado)
+    const cambios = yaAprobado
+      ? { borrador: texto.value }
+      : { borrador: texto.value, estado: 'aprobado', aprobado_en: new Date().toISOString() };
     const { error } = await supabaseClient
       .from('informes_refine')
-      .update({ borrador: texto.value, estado: 'aprobado', aprobado_en: new Date().toISOString() })
+      .update(cambios)
       .eq('id', informe.id);
     if (error) {
+      botonAprobar.disabled = false;
       mostrarToast(error.message || 'No se pudo aprobar.', 'error');
       return;
     }
+
     informe.estado = 'aprobado';
     const badge = document.getElementById('informe-refine-estado');
     badge.className = 'badge badge-aprobada';
     badge.textContent = 'Aprobado';
-    document.getElementById('informe-refine-aprobar').textContent = 'Aprobado ✓';
-    mostrarToast('Informe aprobado.', 'ok');
+    botonAprobar.textContent = 'Reenviar al autor';
+
+    // 2) Mandar el mail al autor
+    const envio = await _enviarInformeRefineAlAutor(informe.id, yaAprobado);
+    botonAprobar.disabled = false;
+
+    if (envio.error) {
+      mostrarToast(`El informe quedó aprobado, pero el mail no salió: ${envio.error}. Podés reintentar con "Reenviar al autor".`, 'error');
+      return;
+    }
+    mostrarToast(
+      envio.duplicado
+        ? `Este informe ya se había enviado a ${envio.enviado_a}.`
+        : `Informe aprobado y enviado a ${envio.enviado_a}.`,
+      'ok'
+    );
   };
 
   document.getElementById('informe-refine-regenerar').onclick = async () => {
