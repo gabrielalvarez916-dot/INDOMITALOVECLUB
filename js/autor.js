@@ -576,6 +576,22 @@ const PLANES_CAMPANA_INFO = [
       `Publicitamos tu campaña con dos historias en el Instagram de Indómita.`,
       `Notificación directa en formato invitación: durante las dos semanas buscamos activamente nuevos reseñadores según la escala de tu auditoría (por ejemplo: primero 70% de confiabilidad, 1.500 seguidores y 70% de match; luego 70% de match y 70% de confiabilidad; luego 70% de match).`
     ]
+  },
+  {
+    id: 'refine',
+    nombre: 'Refine',
+    subtitulo: 'Evaluación profesional de tu libro',
+    habilitado: true,
+    precioArs: 23250,
+    precioUsd: 15,
+    descripcion: (libro) => `Dale a <strong>${libro}</strong> más posibilidades de conseguir reseñadores y llenar cupos. Refine es una evaluación profesional: revisamos tu sinopsis, tus tropes, tus géneros y el contenido del libro para que se vea mejor frente a los reseñadores, y te entregamos un análisis de portada y un informe de lectura de las primeras 10.000 palabras.`,
+    incluye: () => [
+      `Revisión individual de tu sinopsis, tropes y géneros, con cambios concretos para atraer más reseñadores.`,
+      `Análisis de tu portada hecho por un diseñador.`,
+      `Informe editorial de lectura de las primeras 10.000 palabras.`,
+      `Pensado para que tu libro consiga más reseñadores y más cupos llenos en la plataforma.`
+    ],
+    nota: 'Refine no incluye banners ni notificaciones: es una evaluación del libro. Lo vas a recibir por mail cuando esté listo.'
   }
 ];
 
@@ -603,18 +619,20 @@ async function abrirModalImpulsarCampana(idCampana) {
   const { data: config } = await supabaseClient
     .from('configuracion')
     .select('clave, valor')
-    .in('clave', ['IMPULSO_PRECIO_ARS', 'IMPULSO_PRECIO_USD', 'IMPULSO_DURACION_DIAS_SLIDER', 'IMPULSO_COMPATIBILIDAD_MINIMA']);
+    .in('clave', ['IMPULSO_PRECIO_ARS', 'IMPULSO_PRECIO_USD', 'IMPULSO_DURACION_DIAS_SLIDER', 'IMPULSO_COMPATIBILIDAD_MINIMA', 'REFINE_PRECIO_ARS', 'REFINE_PRECIO_USD']);
   const val = (clave, fallback) => (config || []).find(c => c.clave === clave)?.valor ?? fallback;
   const precioArsImpulso = parseInt(val('IMPULSO_PRECIO_ARS', '6000'));
   const precioUsdImpulso = parseFloat(val('IMPULSO_PRECIO_USD', '4'));
   const dias = val('IMPULSO_DURACION_DIAS_SLIDER', '7');
   const compatMin = val('IMPULSO_COMPATIBILIDAD_MINIMA', '70');
+  const precioArsRefine = parseInt(val('REFINE_PRECIO_ARS', '23250'));
+  const precioUsdRefine = parseFloat(val('REFINE_PRECIO_USD', '15'));
 
   const creditos = await _obtenerCreditosDisponiblesAutor(user.id);
   const creditosTotales = creditos.reduce((acc, c) => acc + c.disponible, 0);
   const cuponesActivos = await _obtenerCuponesActivosAutor(user.id);
 
-  _ultimoContextoPlanesCampana = { idCampana, precioArsImpulso, precioUsdImpulso, dias, compatMin, creditosTotales, cuponesActivos, nombreLibro: campana.nombreLibro, impulsosPorPlan: campana.impulsosPorPlan || {} };
+  _ultimoContextoPlanesCampana = { idCampana, precioArsImpulso, precioUsdImpulso, precioArsRefine, precioUsdRefine, dias, compatMin, creditosTotales, cuponesActivos, nombreLibro: campana.nombreLibro, impulsosPorPlan: campana.impulsosPorPlan || {} };
 
   if (body) body.innerHTML = `
     <div class="planes-campana-acordeon">
@@ -626,11 +644,20 @@ async function abrirModalImpulsarCampana(idCampana) {
 let _ultimoContextoPlanesCampana = null;
 
 /**
+ * Precio vigente de un plan de campaña. Impulso y Refine salen de la tabla
+ * `configuracion`; los demás tienen precio fijo en PLANES_CAMPANA_INFO.
+ */
+function _precioPlanCampana(plan, ctx) {
+  if (plan.id === 'impulso') return { precioArs: ctx.precioArsImpulso, precioUsd: ctx.precioUsdImpulso };
+  if (plan.id === 'refine') return { precioArs: ctx.precioArsRefine || plan.precioArs, precioUsd: ctx.precioUsdRefine || plan.precioUsd };
+  return { precioArs: plan.precioArs, precioUsd: plan.precioUsd };
+}
+
+/**
  * Arma el HTML de un item del acordeón de planes (colapsado por defecto).
  */
 function _renderPlanCampanaItem(plan, ctx) {
-  const precioArs = plan.id === 'impulso' ? ctx.precioArsImpulso : plan.precioArs;
-  const precioUsd = plan.id === 'impulso' ? ctx.precioUsdImpulso : plan.precioUsd;
+  const { precioArs, precioUsd } = _precioPlanCampana(plan, ctx);
   const estadoEstePlan = (ctx.impulsosPorPlan || {})[plan.id];
   const badgeEstado = estadoEstePlan
     ? `<span class="badge-impulso-estado" style="margin-left:6px;">${estadoEstePlan === 'pagado' ? 'Activo' : 'Pendiente'}</span>`
@@ -691,8 +718,7 @@ function toggleAcordeonPlanCampana(idPlan) {
  * plan cuando se despliega dentro del acordeón.
  */
 function _renderPlanCampanaDetalle(plan, ctx) {
-  const precioArs = plan.id === 'impulso' ? ctx.precioArsImpulso : plan.precioArs;
-  const precioUsd = plan.id === 'impulso' ? ctx.precioUsdImpulso : plan.precioUsd;
+  const { precioArs, precioUsd } = _precioPlanCampana(plan, ctx);
   const incluye = plan.incluye(ctx.dias, ctx.compatMin);
 
   // Cada plan es independiente por campaña: comprar Select no bloquea
@@ -752,7 +778,7 @@ function _renderPlanCampanaDetalle(plan, ctx) {
 
     accionesHtml = `
       ${bloqueDescuentos}
-      <p class="form-hint" style="margin-top:10px; margin-bottom:12px;">⏳ No se activa al instante: en breve te enviamos el link de pago para coordinarlo y, una vez confirmado, lo activamos.</p>
+      <p class="form-hint" style="margin-top:10px; margin-bottom:12px;">⏳ No se activa al instante: te enviamos el link de pago y, una vez confirmado, ${plan.id === 'refine' ? 'empezamos a trabajar en la evaluación de tu libro' : 'lo activamos'}.</p>
       <div id="impulsar-error" class="mensaje-error" style="display:none; margin-bottom:10px;"></div>
       <div id="impulsar-ok" class="mensaje-ok" style="display:none; margin-bottom:10px;"></div>
       <div class="plan-campana-acciones">
@@ -2482,13 +2508,21 @@ async function cargarPlanAutor(idUsuario) {
       .in('clave', [
         'CAMPANA_PRECIO_ARS', 'CAMPANA_PRECIO_USD',
         'PACK_BASIC_PRECIO_ARS', 'PACK_BASIC_PRECIO_USD',
-        'PACK_PREMIUM_PRECIO_ARS', 'PACK_PREMIUM_PRECIO_USD'
+        'PACK_PREMIUM_PRECIO_ARS', 'PACK_PREMIUM_PRECIO_USD',
+        'REFINE_COMBO_INDIVIDUAL_ARS', 'REFINE_COMBO_INDIVIDUAL_USD',
+        'REFINE_COMBO_BASIC_ARS', 'REFINE_COMBO_BASIC_USD',
+        'REFINE_COMBO_PREMIUM_ARS', 'REFINE_COMBO_PREMIUM_USD'
       ]);
     const valC = (clave) => (configCampanas || []).find(c => c.clave === clave)?.valor;
     preciosCampanas = {
       individual: { ars: valC('CAMPANA_PRECIO_ARS'), usd: valC('CAMPANA_PRECIO_USD') },
       pack_basic: { ars: valC('PACK_BASIC_PRECIO_ARS'), usd: valC('PACK_BASIC_PRECIO_USD') },
-      pack_premium: { ars: valC('PACK_PREMIUM_PRECIO_ARS'), usd: valC('PACK_PREMIUM_PRECIO_USD') }
+      pack_premium: { ars: valC('PACK_PREMIUM_PRECIO_ARS'), usd: valC('PACK_PREMIUM_PRECIO_USD') },
+      combo: {
+        individual: { ars: valC('REFINE_COMBO_INDIVIDUAL_ARS'), usd: valC('REFINE_COMBO_INDIVIDUAL_USD') },
+        pack_basic: { ars: valC('REFINE_COMBO_BASIC_ARS'), usd: valC('REFINE_COMBO_BASIC_USD') },
+        pack_premium: { ars: valC('REFINE_COMBO_PREMIUM_ARS'), usd: valC('REFINE_COMBO_PREMIUM_USD') }
+      }
     };
   }
 
@@ -2558,6 +2592,7 @@ async function cargarPlanAutor(idUsuario) {
  */
 function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis, masElegida) {
   precios = precios || { individual: {}, pack_basic: {}, pack_premium: {} };
+  const combo = precios.combo || {};
 
   const bloqueCuponBeca = cuponCampanaGratis ? `
     <div style="margin-bottom:18px; background:var(--rosa-claro); border:1px solid var(--bordo); border-radius:var(--radio-grande); padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
@@ -2614,9 +2649,10 @@ function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis, masElegida) {
               ${o.precio.ars ? `$${Number(o.precio.ars).toLocaleString('es-AR')} ARS` : '—'}
               ${o.precio.usd ? ` &nbsp;/&nbsp; USD ${o.precio.usd}` : ''}
             </p>
+            ${_htmlOfertaRefineCombo(o.tipo, o.precio, combo[o.tipo], 'refine-combo-' + o.tipo)}
           </div>
           <div>
-            <button class="btn-sm" onclick="comprarCampanaOPack('${o.tipo}')" style="background:var(--bordo); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;">Comprar</button>
+            <button class="btn-sm" onclick="comprarCampanaOPack('${o.tipo}', document.getElementById('refine-combo-${o.tipo}')?.checked === true)" style="background:var(--bordo); color:var(--blanco); border:none; padding:8px 16px; border-radius:var(--radio-pill); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;">Comprar</button>
           </div>
         </div>
       `).join('')}
@@ -2626,9 +2662,29 @@ function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis, masElegida) {
       <p style="font-family:var(--fuente-titulo); font-size:15px; font-weight:700; color:var(--bordo); margin-bottom:10px;">¿Qué son Impulso y Complete?</p>
       <p style="font-size:13px; color:var(--gris-texto); margin-bottom:8px;">Son boosts de visibilidad para UNA campaña puntual — no afectan al resto de tus campañas.</p>
       <p style="font-size:13px; color:var(--gris-texto); margin-bottom:8px;"><strong>Impulso:</strong> le muestra tu campaña a reseñadores con 70% o más de compatibilidad de gustos con tu libro, para conseguir postulaciones más rápido y más afines. Se activa solo apenas lo usás.</p>
-      <p style="font-size:13px; color:var(--gris-texto); margin:0;"><strong>Complete:</strong> le da a tu campaña prioridad de revisión manual del equipo (portada destacada, notificación directa a reseñadores compatibles, mayor visibilidad general). Lo activa el equipo, no es automático.</p>
+      <p style="font-size:13px; color:var(--gris-texto); margin-bottom:8px;"><strong>Complete:</strong> le da a tu campaña prioridad de revisión manual del equipo (portada destacada, notificación directa a reseñadores compatibles, mayor visibilidad general). Lo activa el equipo, no es automático.</p>
+      <p style="font-size:13px; color:var(--gris-texto); margin:0;"><strong>Refine:</strong> evaluación profesional de tu libro: revisamos sinopsis, tropes, géneros y contenido, y te entregamos un análisis de portada y un informe de lectura de las primeras 10.000 palabras, para que consiga más reseñadores y llene más cupos. Podés sumarlo al comprar tu campaña o pack, o por separado desde "Impulsar campaña".</p>
     </div>
   `;
+}
+
+/**
+ * Bloque opcional "Sumá Refine" que va debajo de cada opción de compra
+ * (campaña individual, Pack Basic, Pack Premium). Muestra cuánto se suma al
+ * precio y deja una casilla para elegirlo. Si no hay precio combo
+ * configurado, no muestra nada.
+ */
+function _htmlOfertaRefineCombo(tipo, precioBase, precioCombo, idCheck) {
+  const ars = Number(precioCombo?.ars), usd = Number(precioCombo?.usd);
+  if (!(ars > 0) && !(usd > 0)) return '';
+  const extraArs = ars > 0 && Number(precioBase?.ars) > 0 ? ars - Number(precioBase.ars) : 0;
+  const extraUsd = usd > 0 && Number(precioBase?.usd) > 0 ? usd - Number(precioBase.usd) : 0;
+  const texto = `${extraArs > 0 ? '+$' + extraArs.toLocaleString('es-AR') + ' ARS' : ''}${extraArs > 0 && extraUsd > 0 ? ' / ' : ''}${extraUsd > 0 ? '+USD ' + extraUsd : ''}`;
+  return `
+    <label style="display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:8px 10px; background:var(--rosa-claro); border-radius:var(--radio); font-size:12px; color:var(--gris-texto); cursor:pointer;">
+      <input type="checkbox" id="${idCheck}" style="margin-top:2px;" />
+      <span>✨ <strong>Sumá Refine${texto ? ' (' + texto + ')' : ''}</strong>: evaluación profesional de tu libro (sinopsis, tropes, géneros, portada e informe de lectura de las primeras 10.000 palabras). Se activa solo cuando creás tu primera campaña con esta compra.</span>
+    </label>`;
 }
 
 /**
@@ -2639,8 +2695,9 @@ function _renderBloqueCampanasSueltas(precios, cuponCampanaGratis, masElegida) {
  * asumir siempre "individual".
  *
  * @param {'individual'|'pack_basic'|'pack_premium'} tipo
+ * @param {boolean} [conRefine] Si true, se cobra el precio combo e incluye Refine
  */
-async function comprarCampanaOPack(tipo) {
+async function comprarCampanaOPack(tipo, conRefine = false) {
   const moneda = confirm('¿Pagás desde Argentina?\n\nAceptar = Pesos argentinos (ARS, Mercado Pago)\nCancelar = Dólares (USD, PayPal)')
     ? 'ARS' : 'USD';
   const proveedor = moneda === 'ARS' ? 'mercadopago' : 'paypal';
@@ -2653,7 +2710,7 @@ async function comprarCampanaOPack(tipo) {
 
   try {
     const { data, error } = await supabaseClient.functions.invoke('crear-pago-campana-individual', {
-      body: { proveedor, tipo },
+      body: { proveedor, tipo, conRefine: conRefine === true },
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
 
@@ -2699,7 +2756,10 @@ async function renderOfertasLimiteCampana() {
     const [{ data: cfg }, masElegida] = await Promise.all([
       supabaseClient.from('configuracion').select('clave, valor').in('clave', [
         'CAMPANA_PRECIO_ARS', 'CAMPANA_PRECIO_USD', 'PACK_BASIC_PRECIO_ARS', 'PACK_BASIC_PRECIO_USD',
-        'PACK_PREMIUM_PRECIO_ARS', 'PACK_PREMIUM_PRECIO_USD'
+        'PACK_PREMIUM_PRECIO_ARS', 'PACK_PREMIUM_PRECIO_USD',
+        'REFINE_COMBO_INDIVIDUAL_ARS', 'REFINE_COMBO_INDIVIDUAL_USD',
+        'REFINE_COMBO_BASIC_ARS', 'REFINE_COMBO_BASIC_USD',
+        'REFINE_COMBO_PREMIUM_ARS', 'REFINE_COMBO_PREMIUM_USD'
       ]),
       _ofertaMasElegida()
     ]);
@@ -2722,6 +2782,11 @@ async function renderOfertasLimiteCampana() {
       const ahorro = Math.round((1 - x / base.usd) * 100);
       return `<span style="display:block; font-size:11px; color:var(--bordo); margin-top:2px;">≈ USD ${x.toFixed(2).replace('.', ',')} por campaña · ${ahorro}% menos que la individual</span>`;
     };
+    const comboModal = {
+      individual: { ars: v('REFINE_COMBO_INDIVIDUAL_ARS'), usd: v('REFINE_COMBO_INDIVIDUAL_USD') },
+      pack_basic: { ars: v('REFINE_COMBO_BASIC_ARS'), usd: v('REFINE_COMBO_BASIC_USD') },
+      pack_premium: { ars: v('REFINE_COMBO_PREMIUM_ARS'), usd: v('REFINE_COMBO_PREMIUM_USD') }
+    };
     const precio = (o) => `${o.ars > 0 ? '$' + o.ars.toLocaleString('es-AR') + ' ARS' : ''}${o.ars > 0 && o.usd > 0 ? ' / ' : ''}${o.usd > 0 ? 'USD ' + o.usd : ''}`;
 
     cont.innerHTML = `
@@ -2732,6 +2797,7 @@ async function renderOfertasLimiteCampana() {
               <p style="margin:0 0 3px; font-weight:700; color:var(--gris-texto); font-size:14px;">${o.nombre}${masElegida === o.tipo ? ' <span style="display:inline-block; vertical-align:middle; background:var(--bordo); color:var(--blanco); font-size:10px; font-weight:700; padding:2px 9px; border-radius:var(--radio-pill); margin-left:6px;">⭐ Más elegido</span>' : ''}</p>
               <p style="margin:0 0 4px; font-size:12px; color:var(--gris-suave);">${o.desc}</p>
               <p style="margin:0; font-size:13px; color:var(--gris-texto);">${precio(o)}${porCampana(o)}</p>
+              ${_htmlOfertaRefineCombo(o.tipo, { ars: o.ars, usd: o.usd }, comboModal[o.tipo], 'refine-combo-modal-' + o.tipo)}
             </div>
             <button type="button" class="btn-primario btn-sm" onclick="comprarDesdeModalCampana('${o.tipo}')">Comprar</button>
           </div>`).join('')}
@@ -2745,7 +2811,8 @@ async function renderOfertasLimiteCampana() {
 }
 
 async function comprarDesdeModalCampana(tipo) {
-  const ok = await comprarCampanaOPack(tipo);
+  const conRefine = document.getElementById('refine-combo-modal-' + tipo)?.checked === true;
+  const ok = await comprarCampanaOPack(tipo, conRefine);
   const msj = document.getElementById('nc-limite-plan-pago-msj');
   if (ok && msj) {
     msj.textContent = 'Se abrió el link de pago en otra pestaña. Cuando se acredite, tocá "Ya pagué, revisar de nuevo" para seguir con tu campaña.';
