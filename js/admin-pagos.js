@@ -25,7 +25,8 @@ const PAGOS_COSTOS_CATEGORIAS = {
   banner_feed: 'Banners del feed',
   banner_resenador: 'Banners del panel reseñador',
   vendedor: 'Comisiones de vendedores',
-  gasto_fijo: 'Gastos fijos mensuales'
+  gasto_fijo: 'Gastos fijos mensuales',
+  refine: 'Refine (diseñadores)'
 };
 
 const PAGOS_COTIZACION_DEFAULT = 1550;
