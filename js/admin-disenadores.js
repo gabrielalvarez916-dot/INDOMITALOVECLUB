@@ -5,8 +5,8 @@
 // Tarifas: banner feed USD 2 · banner reseñadores USD 1 (se fijan en la base al asignar).
 // ============================================================
 
-const DIS_TARIFAS = { banner: 2, banner_cuadrado: 1 };
-const DIS_NOMBRE_TIPO = { banner: 'Banner feed', banner_cuadrado: 'Banner reseñadores' };
+const DIS_TARIFAS = { banner: 2, banner_cuadrado: 1, informe_editorial: 4 };
+const DIS_NOMBRE_TIPO = { banner: 'Banner feed', banner_cuadrado: 'Banner reseñadores', informe_editorial: 'Informe editorial' };
 const DIS_PLANES = ['impulso', 'select', 'resistence', 'complete', 'refine'];
 const DIS_TZ = 'America/Argentina/Buenos_Aires';
 const DIS_PERIODOS = { semanal: 'Semanal', quincenal: 'Quincenal', mensual: 'Mensual' };
@@ -146,7 +146,7 @@ async function abrirDisenadorAdmin(id, scroll = true) {
   const yaAsignadas = new Map((rYaAsig.data.tareas || []).map(t => [String(t.tarea_id), t.disenador]));
   const excluidas = new Set((rExcl.data.tareas || []).map(t => String(t.tarea_id)));
 
-  // Pendientes asignables: banners NO entregados y que no se repiten (mismo autor + libro + tipo ya hecho/pagado). El informe Refine y la revisión de portada los hace la IA: no se asignan a diseñadores.
+  // Pendientes asignables: banners e informes editoriales de Refine NO entregados y que no se repiten (mismo autor + libro + tipo ya hecho/pagado). La revisión de portada la hace la IA: no se asigna a diseñadores.
   // La regla está en la base (admin_vis_tareas_disponibles) y es la misma que usa el sistema de Ingresos.
   const disponibles = (rTareas.data.tareas || []).filter(t =>
     DIS_TARIFAS[t.tipoAccion] !== undefined &&
@@ -194,8 +194,8 @@ async function abrirDisenadorAdmin(id, scroll = true) {
         </tr>`).join('')}</tbody></table></div>`}
 
     <div class="form-separador" style="margin-top:24px;">Asignar pedidos</div>
-    ${disponibles.length === 0 ? '<p class="form-info">No hay pedidos sin asignar (banners de Impulso, Select, Resistence, Complete y Refine).</p>' : `
-    <p class="form-info">Elegí los banners que le querés pasar a ${_disEsc(d ? d.nombre : 'este diseñador')}.</p>
+    ${disponibles.length === 0 ? '<p class="form-info">No hay pedidos sin asignar (banners de Impulso, Select, Resistence, Complete e informes editoriales de Refine).</p>' : `
+    <p class="form-info">Elegí los pedidos (banners e informes editoriales) que le querés pasar a ${_disEsc(d ? d.nombre : 'este diseñador')}.</p>
     <div class="vend-tabla-scroll"><table class="admin-tabla">
       <thead><tr><th></th><th>Fecha</th><th>Plan</th><th>Libro</th><th>Tipo</th><th>Paga</th><th>Estado</th><th></th></tr></thead>
       <tbody>${disponibles.map(t => `
