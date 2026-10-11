@@ -107,7 +107,11 @@ async function obtenerUrlLibro(idCampana, formato) {
     });
 
     if (error || !data?.url) {
-      mostrarErrorVisor((data && data.error) || 'No se pudo generar el link de lectura.');
+      let detalle = data && data.error;
+      if (!detalle && error?.context && typeof error.context.json === 'function') {
+        try { detalle = (await error.context.json())?.error; } catch (e) {}
+      }
+      mostrarErrorVisor(detalle || 'No se pudo generar el link de lectura.');
       return null;
     }
     return data.url;
@@ -610,7 +614,7 @@ async function inicializarPdf(fuente) {
   } catch (e) {
     console.error('Error PDF:', e);
     if (cargando) cargando.style.display = 'none';
-    mostrarErrorVisor('No se pudo cargar el PDF. Verificá que el archivo esté compartido en Drive como "Cualquiera con el link puede ver".');
+    mostrarErrorVisor('No se pudo cargar el PDF. Probá de nuevo en unos minutos.');
   }
 }
 
@@ -835,7 +839,6 @@ function crearModalVisor() {
         <div id="visor-error" style="display:none; text-align:center; padding:40px;">
           <p style="font-size:48px; margin-bottom:16px;">⚠️</p>
           <p id="visor-error-msg" style="font-family:var(--fuente-titulo); font-size:17px; color:var(--bordo); margin-bottom:12px;"></p>
-          <p style="font-size:13px; color:var(--gris-suave);">El archivo debe estar compartido como<br><strong>"Cualquiera con el link puede ver"</strong></p>
         </div>
         <div id="visor-popup-resaltar" style="display:none; position:absolute; z-index:20; background:var(--bordo,#8B1A2B); border-radius:10px; padding:8px; box-shadow:0 4px 12px rgba(0,0,0,.25); gap:6px; align-items:center;">
           <button data-color="amarillo" class="visor-swatch" style="background:#F5D547"></button>

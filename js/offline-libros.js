@@ -139,7 +139,12 @@ async function obtenerLibroConOffline(idCampana, formato, idPostulacion) {
       if (error || !data || data.revocado) {
         // Acceso ya no vigente (postulación rechazada/campaña cancelada): borramos lo que hubiera guardado.
         await eliminarLibroOffline(idCampana, formato);
-        return { error: (data && data.error) || 'No se pudo generar el link de lectura.' };
+        // En respuestas non-2xx supabase-js deja data=null: el motivo real viene en error.context
+        let detalle = data && data.error;
+        if (!detalle && error?.context && typeof error.context.json === 'function') {
+          try { detalle = (await error.context.json())?.error; } catch (e) {}
+        }
+        return { error: detalle || 'No se pudo generar el link de lectura.' };
       }
 
       const respuesta = await fetch(data.url);
