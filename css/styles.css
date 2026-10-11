@@ -7082,3 +7082,106 @@ img { max-width: 100%; display: block; }
 .admin-tabla td.pagos-neg { color: #C62828; }
 .admin-tabla tr.pagos-total td { font-weight: 700; background: var(--rosa-claro); }
 .pagos-nota { font-size: 12px; color: var(--gris-suave); margin: 14px 0 24px; line-height: 1.6; }
+
+/* ============================================================
+   bot-soporte (agregado al final de styles.css)
+   Asistente "Indira": chat de respuestas precargadas.
+   Usa las variables de :root. No modifica nada de lo existente.
+   ============================================================ */
+
+.bot-chat {
+  max-height: 60vh;
+  min-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scroll-behavior: smooth;
+}
+
+.bot-msg {
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radio-grande);
+  max-width: 92%;
+}
+
+.bot-msg-bot {
+  background: var(--crema-suave);
+  border: 1px solid var(--gris-borde);
+  margin-right: auto;
+  border-top-left-radius: 4px;
+}
+
+.bot-msg-usuario {
+  background: var(--rosa-claro);
+  margin-left: auto;
+  border-top-right-radius: 4px;
+}
+
+.bot-msg-autor {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bordo);
+  margin-bottom: 4px;
+}
+
+.bot-msg-cuerpo {
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: var(--gris-texto, #2A2A2A);
+}
+
+.bot-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+
+.bot-chip {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--blanco);
+  border: 1.5px solid var(--bordo);
+  border-radius: var(--radio-pill);
+  color: var(--bordo);
+  font-family: var(--fuente-texto);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transicion);
+}
+
+.bot-chip:hover {
+  background: var(--bordo);
+  color: var(--blanco);
+}
+
+.bot-chip-accion {
+  border-color: var(--gris-borde);
+  color: var(--gris-medio);
+  font-weight: 400;
+}
+
+.bot-chip-accion:hover {
+  background: var(--crema-suave);
+  color: var(--bordo);
+  border-color: var(--bordo);
+}
+
+.bot-chip-derivar {
+  background: var(--bordo);
+  color: var(--blanco);
+}
+
+.bot-chip-derivar:hover {
+  background: var(--bordo-oscuro);
+  border-color: var(--bordo-oscuro);
+}
+
+@media (max-width: 480px) {
+  .bot-chat { max-height: 58vh; }
+  .bot-msg { max-width: 96%; }
+}
