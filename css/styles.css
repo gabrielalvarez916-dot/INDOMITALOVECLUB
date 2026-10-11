@@ -7160,14 +7160,15 @@ img { max-width: 100%; display: block; }
 }
 
 .bot-chip-accion {
-  border-color: var(--gris-borde);
-  color: var(--gris-medio);
-  font-weight: 400;
+  background: var(--rosa-claro);
+  border-color: var(--bordo);
+  color: var(--bordo);
+  font-weight: 700;
 }
 
 .bot-chip-accion:hover {
-  background: var(--crema-suave);
-  color: var(--bordo);
+  background: var(--bordo);
+  color: var(--blanco);
   border-color: var(--bordo);
 }
 
