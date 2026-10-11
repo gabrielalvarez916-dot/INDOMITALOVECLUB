@@ -207,6 +207,17 @@ function _botEjecutarAccion(accion) {
   }
 
   if (accion === 'finalizar') {
+    // Despedida: se muestra el mensaje guardado en bot_config ('despedida')
+    // con los botones de la ubicación 'despedida' (Volver al inicio / Cerrar).
+    _botMensajes.push({ de: 'usuario', html: _botEscapar('Finalizar chat') });
+    _botMensajes.push({ de: 'bot', html: _botMarkdown(_botConfig('despedida') || '¡Gracias por escribirnos! 💋 ¡Hasta la próxima!') });
+    _botOpciones = _botBotonesFijos('despedida');
+    _botUltimoTema = null;
+    _botPintar();
+    return;
+  }
+
+  if (accion === 'cerrar') {
     cerrarModales();
     _botMensajes = [];
     _botOpciones = [];
