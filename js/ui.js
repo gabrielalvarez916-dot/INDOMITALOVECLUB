@@ -25,6 +25,13 @@ function _manejarRedirectImpulsarDesdeURL() {
 
   setTimeout(() => {
     mostrarSeccion('panel-autor');
+    // ?tab=plan (mail de promo Refine): abre directo la pestaña "Mi plan"
+    if (params.get('tab') === 'plan') {
+      setTimeout(() => {
+        const btnPlan = document.getElementById('tabbtn-plan');
+        if (btnPlan) btnPlan.click();
+      }, 500);
+    }
     const idImpulsarURL = params.get('impulsar');
     if (idImpulsarURL && typeof abrirModalImpulsarCampana === 'function') {
       // Espera a que cargarCampañasAutor() (disparada por mostrarSeccion)
