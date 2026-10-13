@@ -390,3 +390,210 @@ async function abrirReproductorAudio(idCampana, idPostulacion) {
   mostrarModal('modal-audiolibro');
   await acCargarCapitulo(indice, inicio.posicion_seg || 0, false);
 }
+
+// ────────────────────────────────────────────────────────────
+// AUTOR · bloque "🎧 Audiolibro" en Editar campaña
+// Permite agregar, reemplazar o quitar el audiolibro de una campaña ya
+// creada (por ejemplo, para autores que tienen el audiolibro hecho por fuera).
+// Usa ids con prefijo "ec-audio-" para no mezclarse con el bloque de Nueva campaña.
+// ────────────────────────────────────────────────────────────
+
+var _acEdit = { tieneAudio: false, origen: null, pedidos: [] };
+
+function acEditarBloqueHtml() {
+  return `
+<div class="form-grupo" id="ec-audio-bloque">
+  <label class="form-label">🎧 Audiolibro</label>
+  <p id="ec-audio-estado" class="form-hint" style="font-weight:600;">Cargando…</p>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="ec-audio-modo" value="mantener" checked onchange="acEditarCambioModo()" />
+      <span>Dejar como está</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="ec-audio-modo" value="indomita" id="ec-audio-radio-indomita" onchange="acEditarCambioModo()" />
+      <span>Usar el que hice en Indómita</span>
+    </label>
+    <div id="ec-audio-panel-indomita" style="display:none; margin:6px 0 8px 26px;">
+      <select id="ec-audio-pedido" class="form-input"></select>
+      <p class="form-hint">No se sube nada: se reutiliza el audio que ya tenemos guardado.</p>
+    </div>
+    <label class="radio-opcion">
+      <input type="radio" name="ec-audio-modo" value="propio" onchange="acEditarCambioModo()" />
+      <span id="ec-audio-txt-propio">Subir mi audiolibro</span>
+    </label>
+    <div id="ec-audio-panel-propio" style="display:none; margin:6px 0 8px 26px;">
+      <input type="file" id="ec-audio-archivos" class="form-input" accept=".mp3,audio/mpeg" multiple onchange="acEditarMostrarLista()" />
+      <p class="form-hint">Un mp3 por capítulo, hasta ${AC_MAX_CAP_MB} MB cada uno y ${AC_MAX_TOTAL_MB} MB en total. Se ordenan por nombre (01, 02, 03…). Si ya hay un audiolibro, este lo reemplaza por completo.</p>
+      <div id="ec-audio-lista" style="margin:6px 0;"></div>
+      <label class="radio-opcion" style="align-items:flex-start;">
+        <input type="checkbox" id="ec-audio-derechos" />
+        <span>Declaro que tengo los derechos de este audio.</span>
+      </label>
+    </div>
+    <label class="radio-opcion" id="ec-audio-opcion-quitar" style="display:none;">
+      <input type="radio" name="ec-audio-modo" value="quitar" onchange="acEditarCambioModo()" />
+      <span>Quitar el audiolibro de esta campaña</span>
+    </label>
+  </div>
+  <p class="form-hint">Los reseñadores aprobados lo escuchan dentro de la plataforma, sin descarga.</p>
+  <p id="ec-audio-progreso" class="form-hint" style="display:none; font-weight:600; color:var(--bordo);"></p>
+</div>`;
+}
+
+function acEditarModo() {
+  return document.querySelector('input[name="ec-audio-modo"]:checked')?.value || 'mantener';
+}
+
+function acEditarCambioModo() {
+  const modo = acEditarModo();
+  const indomita = document.getElementById('ec-audio-panel-indomita');
+  const propio = document.getElementById('ec-audio-panel-propio');
+  if (indomita) indomita.style.display = modo === 'indomita' ? 'block' : 'none';
+  if (propio) propio.style.display = modo === 'propio' ? 'block' : 'none';
+}
+
+async function acEditarInicializar(idCampana) {
+  _acEdit = { tieneAudio: false, origen: null, pedidos: [] };
+  const estado = document.getElementById('ec-audio-estado');
+  try {
+    const [resAudio, resCaps, resPedidos] = await Promise.all([
+      supabaseClient.from('campanas_audio').select('origen, id_pedido').eq('id_campana', idCampana).maybeSingle(),
+      supabaseClient.rpc('capitulos_audio_campana', { p_id_campana: idCampana }),
+      supabaseClient.from('audiolibro_pedidos').select('id, titulo, libro_id').eq('estado', 'listo').order('created_at', { ascending: false })
+    ]);
+    const audio = resAudio.data;
+    const caps = resCaps.data || [];
+    _acEdit.pedidos = resPedidos.data || [];
+    _acEdit.tieneAudio = !!audio;
+    _acEdit.origen = audio?.origen || null;
+
+    if (estado) {
+      if (audio && caps.length) {
+        const quien = audio.origen === 'indomita' ? 'hecho en Indómita' : 'subido por vos';
+        estado.textContent = `Esta campaña ya tiene audiolibro (${quien}, ${caps.length} ${caps.length === 1 ? 'capítulo' : 'capítulos'}).`;
+      } else {
+        estado.textContent = 'Esta campaña todavía no tiene audiolibro.';
+      }
+    }
+    if (audio) {
+      const quitar = document.getElementById('ec-audio-opcion-quitar');
+      if (quitar) quitar.style.display = '';
+      const txt = document.getElementById('ec-audio-txt-propio');
+      if (txt && caps.length) txt.textContent = 'Reemplazar por mi audiolibro';
+    }
+  } catch (e) {
+    console.error('Error cargando el audiolibro de la campaña:', e);
+    if (estado) estado.textContent = 'No pudimos revisar si la campaña ya tiene audiolibro.';
+  }
+
+  const sel = document.getElementById('ec-audio-pedido');
+  if (sel) {
+    sel.innerHTML = _acEdit.pedidos.length
+      ? '<option value="">Elegí el audiolibro…</option>' +
+        _acEdit.pedidos.map(p => `<option value="${p.id}">${String(p.titulo || 'Audiolibro').replace(/</g, '&lt;')}</option>`).join('')
+      : '<option value="">Todavía no tenés audiolibros listos</option>';
+  }
+  const radioIndomita = document.getElementById('ec-audio-radio-indomita');
+  if (radioIndomita) radioIndomita.disabled = _acEdit.pedidos.length === 0;
+}
+
+function _acArchivosOrdenadosDe(idInput) {
+  const files = Array.from(document.getElementById(idInput)?.files || []);
+  return files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+}
+
+function acEditarMostrarLista() {
+  const lista = document.getElementById('ec-audio-lista');
+  if (!lista) return;
+  lista.innerHTML = _acArchivosOrdenadosDe('ec-audio-archivos').map((f, i) =>
+    `<div style="font-size:13px;">${i + 1}. ${f.name.replace(/</g, '&lt;')} <span style="color:var(--gris-suave);">(${(f.size / 1048576).toFixed(1)} MB)</span></div>`
+  ).join('');
+}
+
+/** Devuelve un mensaje de error o null. Se llama ANTES de guardar los cambios de la campaña. */
+function acEditarValidar() {
+  const modo = acEditarModo();
+  if (modo === 'mantener' || modo === 'quitar') return null;
+
+  if (modo === 'indomita') {
+    return document.getElementById('ec-audio-pedido')?.value ? null : 'Elegí cuál de tus audiolibros querés sumar a la campaña.';
+  }
+
+  const files = _acArchivosOrdenadosDe('ec-audio-archivos');
+  if (!files.length) return 'Subí al menos un capítulo en mp3 o elegí “Dejar como está”.';
+  if (files.length > AC_MAX_CAPITULOS) return `El audiolibro puede tener hasta ${AC_MAX_CAPITULOS} capítulos.`;
+  if (!document.getElementById('ec-audio-derechos')?.checked) return 'Tenés que declarar que tenés los derechos de este audio.';
+  let total = 0;
+  for (const f of files) {
+    const esMp3 = f.type === 'audio/mpeg' || /\.mp3$/i.test(f.name);
+    if (!esMp3) return `“${f.name}” no es un mp3. Subí los capítulos en formato mp3 (uno por capítulo).`;
+    if (f.size > AC_MAX_CAP_MB * 1048576) return `“${f.name}” pesa más de ${AC_MAX_CAP_MB} MB. Comprimilo o dividilo en capítulos más cortos.`;
+    total += f.size;
+  }
+  if (total > AC_MAX_TOTAL_MB * 1048576) return `El audiolibro completo puede pesar hasta ${AC_MAX_TOTAL_MB} MB.`;
+  return null;
+}
+
+/**
+ * Aplica el cambio de audiolibro elegido en Editar campaña.
+ * @returns {Promise<{ok:boolean, cambio:boolean, aviso?:string}>}
+ */
+async function acEditarAplicar(idCampana) {
+  const modo = acEditarModo();
+  if (modo === 'mantener') return { ok: true, cambio: false };
+
+  const progreso = document.getElementById('ec-audio-progreso');
+  const mostrar = (t) => { if (progreso) { progreso.style.display = 'block'; progreso.textContent = t; } };
+
+  try {
+    if (modo === 'quitar') {
+      mostrar('Quitando el audiolibro…');
+      await _acInvocar('quitar', { id_campana: idCampana });
+      return { ok: true, cambio: true };
+    }
+
+    if (modo === 'indomita') {
+      // Si había audio propio, primero se borra (libera los archivos en R2).
+      if (_acEdit.origen === 'propio') await _acInvocar('quitar', { id_campana: idCampana });
+      const { error } = await supabaseClient.rpc('configurar_audio_campana', {
+        p_id_campana: idCampana,
+        p_origen: 'indomita',
+        p_id_pedido: document.getElementById('ec-audio-pedido').value
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true, cambio: true };
+    }
+
+    // modo === 'propio': reemplaza lo anterior por completo
+    if (_acEdit.tieneAudio) await _acInvocar('quitar', { id_campana: idCampana });
+    const { error: errCfg } = await supabaseClient.rpc('configurar_audio_campana', {
+      p_id_campana: idCampana, p_origen: 'propio', p_derechos: true
+    });
+    if (errCfg) throw new Error(errCfg.message);
+
+    const files = _acArchivosOrdenadosDe('ec-audio-archivos');
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const numero = i + 1;
+      const etiqueta = `capítulo ${numero} de ${files.length}`;
+      mostrar(`Preparando ${etiqueta}…`);
+      const duracion = await _acLeerDuracion(f);
+      const pre = await _acInvocar('presignar_subida', { id_campana: idCampana, numero, tamano_bytes: f.size });
+      await _acSubirConProgreso(pre.url, f, pre.content_type, (pct) => mostrar(`Subiendo ${etiqueta}: ${pct}%`));
+      mostrar(`Verificando ${etiqueta}…`);
+      await _acInvocar('confirmar_subida', {
+        id_campana: idCampana, numero, duracion_seg: duracion,
+        titulo: f.name.replace(/\.mp3$/i, '').slice(0, 120)
+      });
+    }
+    return { ok: true, cambio: true };
+  } catch (e) {
+    console.error('Error actualizando el audiolibro de la campaña:', e);
+    if (modo === 'propio') { try { await _acInvocar('quitar', { id_campana: idCampana }); } catch (_) {} }
+    return {
+      ok: false, cambio: true,
+      aviso: `Los demás cambios se guardaron, pero el audiolibro no se pudo actualizar (${e.message}). La campaña puede haber quedado sin audio: volvé a editarla para cargarlo de nuevo.`
+    };
+  }
+}

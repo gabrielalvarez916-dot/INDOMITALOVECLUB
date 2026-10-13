@@ -3504,6 +3504,7 @@ async function abrirEditarCampana(idCampana) {
   <input type="file" id="ec-archivo-pdf" class="form-input" accept=".pdf,application/pdf" />
   <p class="form-hint">Dejá vacío para no reemplazar el PDF actual.</p>
 </div>
+      ${typeof acEditarBloqueHtml === 'function' ? acEditarBloqueHtml() : ''}
       <div id="ec-error" class="mensaje-error" style="display:none;"></div>
       <div id="ec-ok" class="mensaje-ok" style="display:none;"></div>
       <div class="modal-footer">
@@ -3520,10 +3521,18 @@ async function abrirEditarCampana(idCampana) {
       : (campana.idSubgenero ? [campana.idSubgenero] : []),
     tropes: campana.tropesCatalogo || []
   });
+
+  if (typeof acEditarInicializar === 'function') acEditarInicializar(idCampana);
 }
 
 async function guardarEditarCampana(idCampana) {
   ocultarMensajes('ec-error', 'ec-ok');
+
+  const errorAudioEdicion = typeof acEditarValidar === 'function' ? acEditarValidar() : null;
+  if (errorAudioEdicion) {
+    mostrarMensajeError('ec-error', errorAudioEdicion);
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
@@ -3651,11 +3660,18 @@ async function guardarEditarCampana(idCampana) {
     return;
   }
 
-  mostrarMensajeOk('ec-ok', '¡Campaña actualizada correctamente!');
+  // Audiolibro (agregar / reemplazar / quitar): si falla, el resto de los cambios ya quedó guardado.
+  let avisoAudio = '';
+  if (typeof acEditarAplicar === 'function') {
+    const resAudio = await acEditarAplicar(idCampana);
+    if (!resAudio.ok) avisoAudio = ' ' + resAudio.aviso;
+  }
+
+  mostrarMensajeOk('ec-ok', '¡Campaña actualizada correctamente!' + avisoAudio);
   setTimeout(async () => {
     cerrarModales();
     await cargarCampañasAutor(user.id);
-  }, 1500);
+  }, avisoAudio ? 6000 : 1500);
 }
 async function abrirEditarLibro(idLibro) {
   const libro = _librosAutor.find(l => l.id === idLibro);
