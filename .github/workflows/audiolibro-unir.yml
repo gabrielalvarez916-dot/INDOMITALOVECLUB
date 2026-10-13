@@ -20,6 +20,8 @@ jobs:
           node-version: 20
       - name: Preparar ffmpeg
         run: which ffmpeg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - name: Preparar zip
+        run: which zip >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq zip)
       - name: Instalar dependencias
         run: cd scripts && npm install --no-audit --no-fund aws4fetch@1.0.20
       - name: Unir capítulos listos

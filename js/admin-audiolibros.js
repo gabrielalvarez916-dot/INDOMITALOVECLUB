@@ -150,6 +150,8 @@ function _audTarjetaPedido(p) {
         ${puedeAprobar ? `<button class="btn-primario btn-sm" onclick="audAprobar('${p.id}')">▶ Aprobar y generar audio</button>` : ''}
         ${!['listo', 'cancelado'].includes(p.estado) && !trozos.some(t => t.estado === 'listo') ? `<button class="btn-secundario btn-sm" onclick="audCancelar('${p.id}')">Cancelar pedido</button>` : ''}
         ${errores ? `<button class="btn-secundario btn-sm" onclick="audReintentarErrores('${p.id}')">↻ Reintentar los ${errores} con error</button>` : ''}
+        ${p.estado === 'listo' && !p.mail_enviado_at ? `<button class="btn-primario btn-sm" onclick="audEntregar('${p.id}')" ${p.entregar_solicitado ? 'disabled' : ''}>${p.entregar_solicitado ? '📧 Entrega en camino…' : '📧 Entregar al autor'}</button>` : ''}
+        ${p.estado === 'listo' && p.mail_enviado_at ? `<span style="font-size:12px; color:#1a7f37; align-self:center;">✔ Entregado al autor el ${new Date(p.mail_enviado_at).toLocaleDateString('es-AR')}</span>` : ''}
       </div>
 
       ${puedePreparar ? _audDiccionario(p, candidatas) : ''}
@@ -246,6 +248,14 @@ async function audDescargar(tipo, id, nombre) {
 // ────────────────────────────────────────────────────────────
 // ACCIONES
 // ────────────────────────────────────────────────────────────
+async function audEntregar(idPedido) {
+  if (!confirm('¿Entregar al autor?\n\nSe arma el zip con todos los capítulos y se le manda el mail con el botón de descarga. Tarda unos minutos.')) return;
+  const { error } = await supabaseClient.from('audiolibro_pedidos').update({ entregar_solicitado: true }).eq('id', idPedido);
+  if (error) { mostrarToast(error.message, 'error'); return; }
+  mostrarToast('Listo: en unos minutos se arma el zip y se envía el mail al autor.', 'ok');
+  await cargarAudiolibrosAdmin(true);
+}
+
 async function audPreparar(idPedido) {
   mostrarToast('Preparando manuscrito…', 'info');
   const { data, error } = await supabaseClient.functions.invoke('preparar-audiolibro', { body: { id_pedido: idPedido } });

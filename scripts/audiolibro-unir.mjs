@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createHmac } from "node:crypto";
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, R2_ENDPOINT, R2_AUDIO_ACCESS_KEY_ID, R2_AUDIO_SECRET_ACCESS_KEY, R2_AUDIO_BUCKET } = process.env;
 const faltan = Object.entries({ SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, R2_ENDPOINT, R2_AUDIO_ACCESS_KEY_ID, R2_AUDIO_SECRET_ACCESS_KEY, R2_AUDIO_BUCKET })
@@ -93,4 +94,77 @@ for (const pedido of pedidos) {
     console.log(`Pedido ${pedido.id} listo: todos los capítulos están unidos.`);
   }
 }
+
+// ── Entrega al autor: zip con todos los capítulos + mail por Resend ─────────────
+// Se entrega cuando el pedido está "listo" y todavía no se mandó el mail, y además:
+//   - audiolibro_config.entrega_automatica = "si", o
+//   - vos apretaste "Entregar al autor" en el panel (entregar_solicitado = true).
+// El mail lo manda la función enviar-mail (plantilla "audiolibro_listo"); el botón del mail
+// apunta a descargar-audiolibro, con un link firmado que no vence.
+async function secretoInterno(clave) {
+  const r = await sb(`secretos_internos?clave=eq.${clave}&select=valor`);
+  return r?.[0]?.valor || null;
+}
+const nombreSeguro = (t) => String(t || "capitulo").replace(/[\\/:*?"<>|\r\n]/g, "").replace(/\s+/g, " ").trim().slice(0, 80) || "capitulo";
+
+async function entregar(pedido) {
+  const caps = await sb(`audiolibro_capitulos?id_pedido=eq.${pedido.id}&select=numero,titulo,audio_path&order=numero.asc`);
+  if (!caps.length || caps.some((c) => !c.audio_path)) throw new Error("faltan capítulos con audio");
+
+  let zipKey = pedido.zip_path;
+  if (!zipKey) {
+    const dir = mkdtempSync(join(tmpdir(), "zip-"));
+    const zipFile = join(tmpdir(), `${pedido.id}.zip`);
+    try {
+      const nombres = [];
+      for (const c of caps) {
+        const nombre = `${String(c.numero).padStart(2, "0")} - ${nombreSeguro(c.titulo)}.mp3`;
+        writeFileSync(join(dir, nombre), await bajar(c.audio_path));
+        nombres.push(nombre);
+      }
+      execFileSync("zip", ["-0", "-q", zipFile, ...nombres], { cwd: dir });
+      zipKey = `pedidos/${pedido.id}/entrega/audiolibro.zip`;
+      const res = await r2.fetch(`${R2_ENDPOINT}/${R2_AUDIO_BUCKET}/${zipKey}`, { method: "PUT", headers: { "Content-Type": "application/zip" }, body: readFileSync(zipFile) });
+      if (!res.ok) throw new Error(`R2 PUT ${zipKey}: ${res.status} ${(await res.text()).slice(0, 200)}`);
+      await patch("audiolibro_pedidos", `id=eq.${pedido.id}`, { zip_path: zipKey });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(zipFile, { force: true });
+    }
+  }
+
+  const mailSecret = await secretoInterno("mail_interno_secret");
+  const linkSecret = await secretoInterno("descarga_link_secret");
+  if (!mailSecret || !linkSecret) throw new Error("faltan secretos internos (mail_interno_secret / descarga_link_secret)");
+  const autores = await sb(`usuarios?id=eq.${pedido.id_autor}&select=email,alias`);
+  const autor = autores?.[0];
+  if (!autor?.email) throw new Error("el autor no tiene email");
+
+  const firma = createHmac("sha256", linkSecret).update(`audiolibro:${pedido.id}`).digest("hex");
+  const linkDescarga = `${SUPABASE_URL}/functions/v1/descargar-audiolibro?pedido=${pedido.id}&firma=${firma}`;
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/enviar-mail`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-internal-secret": mailSecret },
+    body: JSON.stringify({ tipo: "audiolibro_listo", destinatario: autor.email, idReferencia: pedido.id, datos: { titulo: pedido.titulo, aliasAutor: autor.alias || "", linkDescarga } }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || j.ok === false) throw new Error(`enviar-mail: ${j.error || res.status}`);
+
+  await patch("audiolibro_pedidos", `id=eq.${pedido.id}`, { mail_enviado_at: new Date().toISOString(), entregar_solicitado: false });
+  console.log(`Pedido ${pedido.id} entregado: zip ${zipKey} y mail enviado.`);
+}
+
+const cfgEntrega = await sb("audiolibro_config?clave=eq.entrega_automatica&select=valor");
+const entregaAuto = (cfgEntrega?.[0]?.valor || "no").trim().toLowerCase() === "si";
+const porEntregar = await sb("audiolibro_pedidos?estado=eq.listo&mail_enviado_at=is.null&select=id,titulo,id_autor,zip_path,entregar_solicitado&order=created_at.asc");
+for (const pedido of porEntregar) {
+  if (!entregaAuto && !pedido.entregar_solicitado) continue;
+  try { await entregar(pedido); }
+  catch (e) {
+    huboError = true;
+    console.error(`ERROR entregando pedido ${pedido.id}: ${e.message}`);
+    await patch("audiolibro_pedidos", `id=eq.${pedido.id}`, { notas: `Error al entregar: ${e.message}`.slice(0, 500) }).catch(() => {});
+  }
+}
+
 if (huboError) process.exit(1);

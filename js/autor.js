@@ -473,6 +473,7 @@ function construirCardCampañaAutor(c) {
           <button class="btn-secundario btn-sm btn-full" onclick="verPostulacionesCampana('${c.id}', '${c.nombreLibro}')">Ver postulaciones</button>
           ${conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full" onclick="verSeguimientoLectura('${c.id}', '${c.nombreLibro}')">👀 Seguimiento de reseñadores</button>`, 'seguimiento')}
           ${conAyudaBotonAutor(`<button class="btn-secundario btn-sm btn-full" onclick="verReseñasCampana('${c.id}', '${c.nombreLibro}')">Ver reseñas</button>`, 'resenas')}
+          <button class="btn-secundario btn-sm btn-full" onclick="abrirModalAudiolibro('${c.id}')">🎧 Crear audiolibro</button>
           ${conAyudaBotonAutor(botonImpulsarCampanaHtml(c), 'impulsar')}
           <button class="btn-secundario btn-sm btn-full" onclick="compartirCampana('${c.id}', '${c.nombreLibro}')">📤 Compartir</button>
           <button class="btn-secundario btn-sm btn-full" onclick="abrirEditarCampana('${c.id}')">✏️ Editar campaña</button>

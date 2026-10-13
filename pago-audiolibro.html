@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tu audiolibro — Indómita Love Club</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --bordo:#8B1A2B; --bordo-oscuro:#5C0F1A; --rosa-claro:#FAE8EC; --crema-suave:#FAF7F4; --gris-texto:#2A2A2A; --gris-medio:#666; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Lato',sans-serif; background:linear-gradient(160deg,var(--crema-suave),var(--rosa-claro)); color:var(--gris-texto); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .tarjeta { background:#fff; border-radius:18px; box-shadow:0 8px 40px rgba(139,26,43,.15); max-width:480px; width:100%; padding:40px 32px; text-align:center; }
+  .icono { font-size:48px; margin-bottom:16px; }
+  h1 { font-family:'Playfair Display',Georgia,serif; color:var(--bordo-oscuro); font-size:24px; margin-bottom:12px; }
+  p { color:var(--gris-medio); line-height:1.6; margin-bottom:24px; }
+  .btn { display:inline-block; background:var(--bordo); color:#fff; text-decoration:none; padding:12px 28px; border-radius:10px; font-weight:700; }
+  .vista { display:none; }
+  .spinner { width:36px; height:36px; border:4px solid #eee; border-top-color:var(--bordo); border-radius:50%; animation:g 1s linear infinite; margin:0 auto 20px; }
+  @keyframes g { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="tarjeta">
+  <div id="v-cargando" class="vista" style="display:block;"><div class="spinner"></div><h1>Confirmando tu pago…</h1><p>Esto tarda unos segundos.</p></div>
+  <div id="v-ok" class="vista"><div class="icono">🎧</div><h1>¡Pago recibido!</h1><p>Tu pedido ya está en marcha. Cuando tu audiolibro esté listo te llega un mail con el botón de descarga.</p><a class="btn" href="/app?ir=panel-autor&amp;audiolibros=1">Ver mis audiolibros</a></div>
+  <div id="v-pendiente" class="vista"><div class="icono">⏳</div><h1>Estamos esperando la confirmación</h1><p>Tu pago todavía no se acreditó. No hace falta que hagas nada: cuando se confirme, el pedido arranca solo. Si en un rato no lo ves en "Mis audiolibros", escribinos por soporte.</p><a class="btn" href="/app?ir=panel-autor&amp;audiolibros=1">Ver mis audiolibros</a></div>
+  <div id="v-cancelado" class="vista"><div class="icono">↩️</div><h1>No se completó el pago</h1><p>No te cobramos nada. Tu manuscrito y tus correcciones quedaron guardados: podés volver a "Mis audiolibros" y pagar cuando quieras.</p><a class="btn" href="/app?ir=panel-autor&amp;audiolibros=1">Volver a mis audiolibros</a></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+  const vistas = ['v-cargando','v-ok','v-pendiente','v-cancelado'];
+  function mostrar(id) { vistas.forEach(v => document.getElementById(v).style.display = (v === id ? 'block' : 'none')); }
+
+  (async function () {
+    const q = new URLSearchParams(window.location.search);
+    const idPedido = q.get('id');
+    const tokenPaypal = q.get('token');          // PayPal agrega ?token=<order_id>
+    if (q.get('cancelado') === '1') { mostrar('v-cancelado'); return; }
+
+    // PayPal: la orden queda "aprobada" pero hay que capturarla para que cobre.
+    if (tokenPaypal) {
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/webhook-audiolibro`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: tokenPaypal })
+        });
+      } catch (e) { console.error('Captura PayPal:', e); }
+    }
+
+    // Se espera a que el pedido figure como pagado (Mercado Pago avisa por webhook).
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session || !idPedido) { mostrar('v-ok'); return; }
+    for (let i = 0; i < 10; i++) {
+      const { data } = await supabaseClient.from('audiolibro_pedidos').select('estado').eq('id', idPedido).maybeSingle();
+      if (data && !['pendiente_pago', 'en_revision', 'borrador'].includes(data.estado)) { mostrar('v-ok'); return; }
+      await new Promise(r => setTimeout(r, 2500));
+    }
+    mostrar('v-pendiente');
+  })();
+</script>
+</body>
+</html>
