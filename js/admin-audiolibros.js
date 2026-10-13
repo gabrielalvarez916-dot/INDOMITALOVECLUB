@@ -20,6 +20,7 @@ const AUD_COLOR = {
 let _audPedidos = [];
 let _audAbiertos = new Set();   // pedidos y capítulos desplegados ("p:<id>" / "c:<id>")
 let _audTimer = null;
+let _audSaldo = null;        // { usados, limite, restantes, reinicia_unix, plan } o { error }
 
 function _audEsc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -54,6 +55,37 @@ async function cargarAudiolibrosAdmin(silencioso) {
   _audPedidos = data || [];
   _audDibujar();
   _audProgramarRefresco();
+  audCargarSaldo();
+}
+
+// Saldo de créditos de ElevenLabs (caracteres usados / límite del plan)
+async function audCargarSaldo() {
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('audiolibro-saldo', { body: {} });
+    _audSaldo = (error || !data || data.error) ? { error: (data && data.error) || (error && error.message) || 'No se pudo consultar' } : data;
+  } catch (e) {
+    _audSaldo = { error: String(e && e.message || e) };
+  }
+  const caja = document.getElementById('aud-saldo-caja');
+  if (caja) caja.innerHTML = _audHtmlSaldo();
+}
+
+function _audHtmlSaldo() {
+  const s = _audSaldo;
+  if (!s) return '<span style="font-size:12px; color:#888;">Consultando créditos de ElevenLabs…</span>';
+  if (s.error) return `<span style="font-size:12px; color:#c62828;">No pude consultar los créditos de ElevenLabs: ${_audEsc(s.error)}</span>`;
+  const pctUsado = s.limite ? Math.min(100, Math.round((s.usados / s.limite) * 100)) : 0;
+  const pctQueda = 100 - pctUsado;
+  const color = pctQueda <= 10 ? '#c62828' : pctQueda <= 25 ? '#b26a00' : '#1a7f37';
+  const fmt = n => Number(n).toLocaleString('es-AR');
+  const reinicia = s.reinicia_unix ? new Date(s.reinicia_unix * 1000).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) : null;
+  return `
+    <div style="font-size:13px; margin-bottom:5px;">
+      <strong style="color:${color};">Te quedan ${fmt(s.restantes)} créditos</strong>
+      <span style="color:#666;"> de ${fmt(s.limite)} (usaste ${fmt(s.usados)})${s.plan ? ' · plan ' + _audEsc(s.plan) : ''}${reinicia ? ' · se renuevan el ' + reinicia : ''}</span>
+    </div>
+    <div style="height:6px; background:#eee; border-radius:3px;"><div style="height:6px; width:${pctUsado}%; background:${color}; border-radius:3px;"></div></div>
+    <div style="font-size:11px; color:#888; margin-top:4px;">1 crédito = 1 carácter de texto. Un libro de 80.000 palabras gasta unos 480.000.</div>`;
 }
 
 function _audProgramarRefresco() {
@@ -68,6 +100,7 @@ function _audDibujar() {
   if (!cont) return;
   const abiertosScroll = window.scrollY;
   cont.innerHTML = `
+    <div id="aud-saldo-caja" style="border:1px solid #e3d9e8; border-radius:12px; padding:10px 14px; margin-bottom:12px; background:#faf6fc;">${_audHtmlSaldo()}</div>
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
       <button class="btn-secundario btn-sm" onclick="cargarAudiolibrosAdmin()">↻ Actualizar</button>
       <span style="font-size:12px; color:#888;">${_audPedidos.length} pedido(s). Se actualiza solo mientras algo se está generando.</span>
