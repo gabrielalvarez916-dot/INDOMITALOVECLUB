@@ -498,6 +498,7 @@ async function normalizarCampana(c, ranking, archivo, tropesCatalogo, idsSubgene
     matchDestacado: match?.destacado,
     linkEpub: archivo?.link_epub || null,
     linkPdf: archivo?.link_pdf || null,
+    tieneAudiolibro: !!archivo?.tiene_audiolibro,
     tieneArchivo: !!(archivo?.link_epub || archivo?.link_pdf),
     rankingLibro: ranking ? {
       esTop5: ranking.es_top5,
@@ -721,6 +722,7 @@ ${requisitosHtml}
           ${c.modalidadLectura === 'descarga'
             ? '<p class="campana-aclaracion">⬇️ <strong>Aclaración:</strong> Se lee con descarga</p>'
             : '<p class="campana-aclaracion">📖 <strong>Aclaración:</strong> Se lee en visor (sin descarga)</p>'}
+          ${c.tieneAudiolibro ? '<p class="campana-aclaracion">🎧 <strong>Audiolibro disponible</strong></p>' : ''}
           <div class="campana-dato">
             <span class="campana-dato-label">${icoSilla}Cupos</span>
             <span class="campana-dato-valor">${c.cuposDisponibles > 0 ? c.cuposDisponibles : '—'}</span>

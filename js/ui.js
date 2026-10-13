@@ -437,6 +437,7 @@ function mostrarModal(idModal) {
     if (typeof inicializarModalNuevaCampana === 'function') {
       inicializarModalNuevaCampana();
     }
+    if (typeof acInicializarBloque === 'function') acInicializarBloque();
   }
 }  // ← ESTA LLAVE CIERRA mostrarModal
 
@@ -445,6 +446,7 @@ function mostrarModal(idModal) {
  * Se llama desde el botón ✕ de cada modal y desde el overlay.
  */
 function cerrarModales() {
+  if (typeof acDetenerAudio === 'function') acDetenerAudio(); // corta el audiolibro y guarda dónde quedó
   const overlay = document.getElementById('modal-overlay');
   if (overlay) overlay.classList.remove('activo');
 

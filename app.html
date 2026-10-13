@@ -1163,6 +1163,42 @@
     <p id="nc-pdf-hint-renovacion" class="form-hint" style="display:none;">Se reutiliza el PDF ya cargado. Subí uno nuevo solo si querés reemplazarlo.</p>
   </div>
 </div>
+<div class="form-grupo" id="nc-audio-bloque">
+  <label class="form-label">🎧 Audiolibro (opcional)</label>
+  <div id="nc-audio-sugerencia" style="display:none; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--crema); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+    <span id="nc-audio-sugerencia-texto" style="font-size:13px;"></span>
+    <button type="button" class="btn-secundario btn-sm" onclick="acAceptarSugerencia()">Sí, sumarlo</button>
+  </div>
+  <div class="radio-grupo">
+    <label class="radio-opcion">
+      <input type="radio" name="nc-audio-modo" value="ninguno" checked onchange="acCambioModo()" />
+      <span>No incluir audiolibro</span>
+    </label>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-audio-modo" value="indomita" onchange="acCambioModo()" />
+      <span>Usar el que hice en Indómita</span>
+    </label>
+    <div id="nc-audio-panel-indomita" style="display:none; margin:6px 0 8px 26px;">
+      <select id="nc-audio-pedido" class="form-input"></select>
+      <p class="form-hint">No se sube nada: se reutiliza el audio que ya tenemos guardado.</p>
+    </div>
+    <label class="radio-opcion">
+      <input type="radio" name="nc-audio-modo" value="propio" onchange="acCambioModo()" />
+      <span>Ya tengo mi audiolibro</span>
+    </label>
+    <div id="nc-audio-panel-propio" style="display:none; margin:6px 0 8px 26px;">
+      <input type="file" id="nc-audio-archivos" class="form-input" accept=".mp3,audio/mpeg" multiple onchange="acMostrarLista()" />
+      <p class="form-hint">Un mp3 por capítulo, hasta 120 MB cada uno y 400 MB en total. Se ordenan por nombre (01, 02, 03…).</p>
+      <div id="nc-audio-lista" style="margin:6px 0;"></div>
+      <label class="radio-opcion" style="align-items:flex-start;">
+        <input type="checkbox" id="nc-audio-derechos" />
+        <span>Declaro que tengo los derechos de este audio.</span>
+      </label>
+    </div>
+  </div>
+  <p class="form-hint">Los reseñadores aprobados lo escuchan dentro de la plataforma, sin descarga.</p>
+  <p id="nc-audio-progreso" class="form-hint" style="display:none; font-weight:600; color:var(--bordo);"></p>
+</div>
         <div class="form-grupo">
           <label class="form-label" data-ayuda="nc_amazon">Link Amazon (opcional)</label>
           <input type="url" id="nc-link-amazon" class="form-input" placeholder="https://amazon.com/..." />
@@ -2460,6 +2496,7 @@
 <script src="js/buscador-perfiles.js"></script>
 <script src="js/autor.js?v=7"></script>
 <script src="js/audiolibro-autor.js?v=1"></script>
+<script src="js/audiolibro-campana.js?v=1"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
 <script src="js/ayudas.js?v=11"></script>
 <script src="js/resenador.js?v=5"></script>

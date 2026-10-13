@@ -15,7 +15,7 @@ async function obtenerPostulacionesReseñador() {
     .select(`
       id, estado, fecha_postulacion, fecha_respuesta, fecha_limite_entrega, fecha_abandono, motivo_abandono,
       campanas ( id, nombre_libro, nombre_autor, link_portada, id_usuario_autor, estado, fecha_limite, modalidad_lectura, plataformas_resena,
-        campanas_archivos ( link_epub, link_pdf ) )
+        campanas_archivos ( link_epub, link_pdf, tiene_audiolibro ) )
     `)
     .eq('id_usuario_resenador', user.id);
 
@@ -57,6 +57,7 @@ return (data || [])
         fechaLimite: p.campanas.fecha_limite,
        linkEpub: p.campanas.campanas_archivos?.link_epub || '',
         linkPdf: p.campanas.campanas_archivos?.link_pdf || '',
+        tieneAudiolibro: !!p.campanas.campanas_archivos?.tiene_audiolibro,
         modalidadLectura: p.campanas.modalidad_lectura || 'visor',
         plataformasResena: p.campanas.plataformas_resena || []
       } : null
@@ -324,12 +325,13 @@ function construirCardPostulacionReseñador(p) {
     ? `<img src="${c.linkPortada}" alt="${c.nombreLibro}" class="lista-item-portada" onerror="this.style.display='none'" />`
     : '';
 
-  const linksLibro = !campañaCancelada && p.estado === 'aprobada' && (c.linkEpub || c.linkPdf) ? `
+  const linksLibro = !campañaCancelada && p.estado === 'aprobada' && (c.linkEpub || c.linkPdf || c.tieneAudiolibro) ? `
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
       ${c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="abrirVisorEpub('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">📖 Leer EPUB</button>` : ''}
       ${c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">📄 Leer PDF</button>`   : ''}
       ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-sm" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
       ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-sm" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
+      ${c.tieneAudiolibro ? `<button class="btn-secundario btn-sm" onclick="abrirReproductorAudio('${c.id}', '${p.idPostulacion}')">🎧 Escuchar audiolibro</button>` : ''}
     </div>
   ` : '';
 
@@ -459,6 +461,7 @@ function construirCardArcActivo(p) {
   ${c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="abrirVisorPdf('${c.id}', '${c.nombreLibro}', '${p.idPostulacion}')">Leer PDF</button>`   : ''}
   ${c.modalidadLectura === 'descarga' && c.linkEpub ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'epub')">⬇️ Descargar EPUB</button>` : ''}
   ${c.modalidadLectura === 'descarga' && c.linkPdf  ? `<button class="btn-secundario btn-full" onclick="descargarLibro('${c.id}', '${c.nombreLibro}', 'pdf')">⬇️ Descargar PDF</button>` : ''}
+  ${c.tieneAudiolibro ? `<button class="btn-secundario btn-full" onclick="abrirReproductorAudio('${c.id}', '${p.idPostulacion}')">🎧 Escuchar audiolibro</button>` : ''}
   <div class="arc-avance-fila">
     <button class="btn-secundario btn-full" onclick="abrirModalAnunciarAvance('${p.idPostulacion}', '${c.nombreLibro}')">📣 Anunciar avances</button>
     ${ayudaAvancesBtnHtml()}

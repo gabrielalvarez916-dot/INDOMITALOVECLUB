@@ -2215,6 +2215,13 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     return;
   }
 
+  const errorAudio = typeof acValidarAntesDeCrear === 'function' ? acValidarAntesDeCrear() : null;
+  if (errorAudio) {
+    toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
+    mostrarMensajeError('nc-error', errorAudio);
+    return;
+  }
+
   const seleccionTropes = obtenerSeleccionTropes('nc');
 
   if (!seleccionTropes.id_genero) {
@@ -2327,8 +2334,16 @@ const archivoEpub = document.getElementById('nc-archivo-epub')?.files?.[0];
     return;
   }
 
+  // Audiolibro (extra opcional): si falla, la campaña igual queda publicada.
+  let avisoAudio = '';
+  if (typeof acAplicarACampana === 'function' && acModo() !== 'ninguno') {
+    toggleBoton('btn-crear-campana', false, 'Subiendo audiolibro...');
+    const resAudio = await acAplicarACampana(campanaCreada.id);
+    if (!resAudio.ok) avisoAudio = ' ' + resAudio.aviso;
+  }
+
   toggleBoton('btn-crear-campana', true, '', 'Crear campaña');
-  mostrarMensajeOk('nc-ok', esRenovacion ? '¡Campaña renovada exitosamente!' : '¡Campaña creada exitosamente!');
+  mostrarMensajeOk('nc-ok', (esRenovacion ? '¡Campaña renovada exitosamente!' : '¡Campaña creada exitosamente!') + avisoAudio);
   document.getElementById('form-nueva-campana')?.reset();
   _resetModoRenovacionCampana();
 
