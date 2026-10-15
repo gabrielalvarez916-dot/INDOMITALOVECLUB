@@ -3470,7 +3470,7 @@ async function abrirEditarCampana(idCampana) {
     <form id="form-editar-campana">
       <div class="form-grupo">
         <label class="form-label">Nombre del libro</label>
-        <input type="text" class="form-input" value="${campana.nombreLibro}" disabled />
+        <input type="text" id="ec-nombre-libro" class="form-input" value="${campana.nombreLibro}" disabled />
       </div>
       <div class="form-grupo">
         <label class="form-label">Autor</label>
@@ -3490,18 +3490,21 @@ async function abrirEditarCampana(idCampana) {
       </div>
       <div class="form-grupo">
         <label class="form-label">Portada</label>
-        ${campana.linkPortada ? `<img src="${campana.linkPortada}" alt="Portada actual" style="max-width:120px; display:block; margin-bottom:8px; border-radius:6px;" />` : ''}
+        <div id="ec-portada-preview" data-src-original="${campana.linkPortada || ''}">${campana.linkPortada ? `<img class="prev-portada-miniatura" src="${campana.linkPortada}" alt="Portada actual" />` : ''}</div>
+        <p class="form-hint prev-portada-hint">🔍 Hacé clic en la portada para verla en grande</p>
         <input type="file" id="ec-link-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
         <p class="form-hint">Dejá vacío para no cambiar la portada actual.</p>
       </div>
       <div class="form-grupo">
   <label class="form-label">Archivo EPUB</label>
   <input type="file" id="ec-archivo-epub" class="form-input" accept=".epub,application/epub+zip" />
+  <button type="button" id="ec-btn-prev-epub" class="btn-secundario btn-sm btn-previsualizar" onclick="prevArchivoEditar('epub')" hidden></button>
   <p class="form-hint">Dejá vacío para no reemplazar el EPUB actual.</p>
 </div>
 <div class="form-grupo">
   <label class="form-label">Archivo PDF</label>
   <input type="file" id="ec-archivo-pdf" class="form-input" accept=".pdf,application/pdf" />
+  <button type="button" id="ec-btn-prev-pdf" class="btn-secundario btn-sm btn-previsualizar" onclick="prevArchivoEditar('pdf')" hidden></button>
   <p class="form-hint">Dejá vacío para no reemplazar el PDF actual.</p>
 </div>
       ${typeof acEditarBloqueHtml === 'function' ? acEditarBloqueHtml() : ''}
@@ -3523,6 +3526,7 @@ async function abrirEditarCampana(idCampana) {
   });
 
   if (typeof acEditarInicializar === 'function') acEditarInicializar(idCampana);
+  if (typeof prevInicializarEditar === 'function') prevInicializarEditar(idCampana);
 }
 
 async function guardarEditarCampana(idCampana) {

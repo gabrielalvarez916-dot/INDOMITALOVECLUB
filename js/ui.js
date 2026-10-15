@@ -446,6 +446,8 @@ function mostrarModal(idModal) {
  * Se llama desde el botón ✕ de cada modal y desde el overlay.
  */
 function cerrarModales() {
+  // Si hay una previsualización abierta (archivo o portada), se cierra solo ella y el formulario de atrás queda como estaba.
+  if (typeof cerrarPrevisualizacionSiHay === 'function' && cerrarPrevisualizacionSiHay()) return;
   if (typeof acDetenerAudio === 'function') acDetenerAudio(); // corta el audiolibro y guarda dónde quedó
   const overlay = document.getElementById('modal-overlay');
   if (overlay) overlay.classList.remove('activo');

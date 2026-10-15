@@ -28,6 +28,7 @@ var _visorIdCampana = null;
 var _visorFormatoActual = null;
 var _resaltandoActivo = false;
 var _visorResaltados = []; // resaltados guardados de esta campaña/formato
+var _visorModoPrevisualizacion = false; // autor viendo su propio archivo (Nueva/Editar campaña): sin resaltados ni progreso (ver previsualizacion.js)
 
 // FONDO DE LECTURA (tapa lo que quede atrás del modal cuando no está en
 // pantalla completa — hasta ahora el overlay compartido de todos los

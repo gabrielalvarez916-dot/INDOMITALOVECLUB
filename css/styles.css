@@ -1504,6 +1504,26 @@ img { max-width: 100%; display: block; }
   z-index: 320;
 }
 
+/* ── Previsualización de portada y archivos (autor) ──────────────────── */
+.prev-portada-miniatura { max-width: 120px; display: block; margin: 8px 0; border-radius: 6px; cursor: zoom-in; }
+.prev-portada-hint { margin-top: 0; }
+#nc-portada-preview:empty + .prev-portada-hint,
+#ec-portada-preview:empty + .prev-portada-hint { display: none; }
+.btn-previsualizar { margin-top: 6px; }
+.btn-previsualizar[hidden] { display: none; }
+
+#modal-portada-preview { max-width: 420px; background: var(--crema-suave); }
+.prev-portada-body { display: flex; flex-direction: column; align-items: center; padding: 24px 24px 32px; }
+.prev-portada-libro { position: relative; width: 240px; aspect-ratio: 2 / 3; border-radius: 4px; overflow: hidden; background: var(--crema-oscura); box-shadow: 4px 8px 14px rgba(0, 0, 0, 0.3); }
+.prev-portada-libro img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.prev-portada-lomo { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: rgba(0, 0, 0, 0.16); pointer-events: none; }
+.prev-portada-titulo { margin: 22px 0 0; font-family: var(--fuente-titulo); font-size: 18px; text-align: center; }
+.prev-portada-seccion { margin: 32px 0 0; font-size: 13px; font-weight: 700; color: var(--gris-medio, var(--gris-suave)); }
+.prev-portada-minis { display: flex; align-items: flex-end; gap: 16px; margin-top: 12px; }
+.prev-portada-mini { width: 100px; height: 150px; object-fit: cover; border-radius: 6px; }
+.prev-portada-mini-chico { width: 56px; height: 84px; object-fit: cover; border-radius: 4px; }
+.prev-portada-ayuda { margin-top: 16px; font-size: 12px; line-height: 1.5; text-align: center; color: var(--gris-suave); }
+
 /* ── Confirmación propia (reemplaza confirm() nativo del navegador) ──── */
 .confirmacion-overlay {
   position: fixed;

@@ -1148,6 +1148,7 @@
         <div class="form-grupo">
           <label class="form-label" data-ayuda="nc_portada">Portada *</label>
           <div id="nc-portada-preview"></div>
+          <p class="form-hint prev-portada-hint">🔍 Hacé clic en la portada para verla en grande</p>
           <input type="file" id="nc-link-portada" class="form-input" accept="image/jpeg,image/png,image/webp" />
         </div>
         <p class="form-separador">📁 Archivos</p>
@@ -1155,11 +1156,13 @@
   <div class="form-grupo">
     <label class="form-label" id="nc-epub-label" data-ayuda="nc_epub">Archivo EPUB *</label>
     <input type="file" id="nc-archivo-epub" class="form-input" accept=".epub,application/epub+zip" required />
+    <button type="button" id="nc-btn-prev-epub" class="btn-secundario btn-sm btn-previsualizar" onclick="prevArchivoNueva('epub')" hidden>👁 Previsualizar EPUB</button>
     <p id="nc-epub-hint-renovacion" class="form-hint" style="display:none;">Se reutiliza el EPUB ya cargado. Subí uno nuevo solo si querés reemplazarlo.</p>
   </div>
   <div class="form-grupo">
     <label class="form-label" id="nc-pdf-label" data-ayuda="nc_pdf">Archivo PDF *</label>
     <input type="file" id="nc-archivo-pdf" class="form-input" accept=".pdf,application/pdf" required />
+    <button type="button" id="nc-btn-prev-pdf" class="btn-secundario btn-sm btn-previsualizar" onclick="prevArchivoNueva('pdf')" hidden>👁 Previsualizar PDF</button>
     <p id="nc-pdf-hint-renovacion" class="form-hint" style="display:none;">Se reutiliza el PDF ya cargado. Subí uno nuevo solo si querés reemplazarlo.</p>
   </div>
 </div>
@@ -2483,7 +2486,7 @@
 <script src="js/config.js?v=2"></script>
 <script src="js/tropes.js"></script>
 <script src="js/wizard-onboarding.js"></script>
-<script src="js/ui.js?v=12"></script>
+<script src="js/ui.js?v=13"></script>
 <script src="js/calendario.js"></script>
 <script src="js/admin-impersonar.js"></script>
 <script src="js/auth.js?v=3"></script>
@@ -2494,7 +2497,7 @@
 <script src="js/resenador-premium.js?v=1"></script>
 <script src="js/feed.js?v=9"></script>
 <script src="js/buscador-perfiles.js"></script>
-<script src="js/autor.js?v=8"></script>
+<script src="js/autor.js?v=9"></script>
 <script src="js/audiolibro-autor.js?v=1"></script>
 <script src="js/audiolibro-campana.js?v=2"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
@@ -2507,7 +2510,8 @@
 <script src="js/perfil.js?v=2"></script>
 <script src="js/verificacion-seguidores.js"></script>
 <script src="js/offline-libros.js"></script>
-<script src="js/visor.js"></script>
+<script src="js/visor.js?v=1"></script>
+<script src="js/previsualizacion.js?v=1"></script>
 <script>
   // Service Worker del visor offline: si el navegador no lo soporta, no pasa nada, se ignora solo.
   if ('serviceWorker' in navigator) {
