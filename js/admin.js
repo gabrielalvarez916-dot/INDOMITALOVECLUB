@@ -1668,293 +1668,311 @@ async function marcarTareaImpulsoAdmin(idTarea, nuevoEstado) {
 // ESTADÍSTICAS
 // ────────────────────────────────────────────────────────────
 
+let _statsDiasAdmin = 30;
+
+function _stEsc(t) {
+  const d = document.createElement('div');
+  d.textContent = t == null ? '' : String(t);
+  return d.innerHTML;
+}
+function _stNum(n) { return n == null ? '—' : Number(n).toLocaleString('es-AR'); }
+function _stPct(a, b) { return b > 0 ? Math.round((a / b) * 1000) / 10 : null; }
+function _stTiempo(h) {
+  if (h == null) return '—';
+  return h >= 48 ? `${Math.round(h / 24)} días` : `${h} hs`;
+}
+const _ST_ROJO = 'var(--error, #C0392B)';
+const _ST_VERDE = 'var(--ok, #27AE60)';
+const _ST_NOTA = 'font-size:11px; color:#888; margin:2px 0 0; line-height:1.4;';
+
+function _stCard(label, valor, nota, color) {
+  return `
+    <div class="stat-card">
+      <p class="stat-label">${label}</p>
+      <span class="stat-numero" style="${color ? `color:${color};` : ''}">${valor}</span>
+      ${nota ? `<p style="${_ST_NOTA}">${nota}</p>` : ''}
+    </div>`;
+}
+
+// Variación vs. período anterior. mejorSiSube=false invierte el color (p. ej. tiempos).
+function _stDelta(actual, previo, mejorSiSube = true) {
+  if (actual == null || previo == null || previo === 0) return '';
+  const dif = actual - previo;
+  if (dif === 0) return `<span style="color:#888;">igual que el período anterior</span>`;
+  const sube = dif > 0;
+  const bueno = sube === mejorSiSube;
+  const pct = Math.round(Math.abs(dif / previo) * 100);
+  return `<span style="color:${bueno ? _ST_VERDE : _ST_ROJO};">${sube ? '▲' : '▼'} ${pct}% vs. período anterior (${_stNum(previo)})</span>`;
+}
+
+function _stBarras(filas) {
+  // filas: [{label, n, base, nota}] → barra con % sobre base
+  return filas.map(f => {
+    const p = f.base > 0 ? Math.min(100, (f.n / f.base) * 100) : 0;
+    return `
+      <div style="margin:0 0 10px;">
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:3px;">
+          <span>${f.label}</span>
+          <span><strong>${_stNum(f.n)}</strong> <span style="color:#888;">${f.nota || (f.base > 0 ? `(${Math.round(p)}%)` : '')}</span></span>
+        </div>
+        <div style="background:#f0ebe6; border-radius:6px; height:8px; overflow:hidden;">
+          <div style="width:${p}%; height:100%; background:var(--bordo, #8B1A2B);"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function _stEmbudo(titulo, intro, pasos) {
+  const base = pasos[0].n;
+  const filas = pasos.map((p, i) => ({
+    label: p.label,
+    n: p.n,
+    base,
+    nota: i === 0
+      ? ''
+      : `(${_stPct(p.n, base) ?? 0}% del total${i > 1 ? ` · ${_stPct(p.n, pasos[i - 1].n) ?? 0}% del paso anterior` : ''})`
+  }));
+  return `
+    <div class="stat-card" style="align-items:stretch; text-align:left;">
+      <p class="stat-label" style="text-align:left;">${titulo}</p>
+      <p style="${_ST_NOTA} margin-bottom:10px;">${intro}</p>
+      ${_stBarras(filas)}
+    </div>`;
+}
+
+function cambiarDiasEstadisticasAdmin(valor) {
+  _statsDiasAdmin = parseInt(valor, 10) || 30;
+  cargarEstadisticasAdmin();
+}
+
 async function cargarEstadisticasAdmin() {
   const contenedor = document.getElementById('admin-estadisticas-contenedor');
   if (!contenedor) return;
 
   contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  const { data: resultado, error } = await supabaseClient.rpc('admin_estadisticas');
+  const { data: r, error } = await supabaseClient.rpc('admin_estadisticas_v2', { p_dias: _statsDiasAdmin });
 
-  if (error || !resultado || resultado.error) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || 'Error al cargar las estadísticas.'}</p>`;
+  if (error || !r || r.error) {
+    contenedor.innerHTML = `<p class="mensaje-error">${_stEsc(r?.error || error?.message || 'Error al cargar las estadísticas.')}</p>`;
     return;
   }
 
-  const { usuarios, campañas, reseñas } = resultado;
-  const ratioPorCampaña = resultado.ratioPorCampaña || [];
+  const d = r.dias;
+  const pa = r.para_actuar;
+  const co = r.comunidad;
+  const ca = r.campanas;
+  const cu = r.cumplimiento.ventana;
+  const cuH = r.cumplimiento.historico;
+  const re = r.resenas;
+  const er = r['embudoReseñador'];
+  const ea = r['embudoAutor'];
+  const ret = r.retencion;
+  const tiposLabel = { gratis: 'gratis', suscripcion: 'suscripción', credito_pack: 'pack de créditos', pago_individual: 'pago individual', sin_dato: 'sin dato' };
+
+  // ── PARA ACTUAR ──
+  const filasAutores = (pa.autoresConPendientes || []).map(a => `
+    <tr>
+      <td><strong>${_stEsc(a.nombre)}</strong><br><span style="font-size:11px; color:#888;">${_stEsc(a.email)}</span></td>
+      <td>${a.pendientes}</td>
+      <td style="color:${_ST_ROJO}; font-weight:600;">${a.pend_72h}</td>
+      <td>${_stTiempo(a.mas_antigua_horas)}</td>
+      <td><a href="mailto:${_stEsc(a.email)}" style="font-size:12px;">Escribir</a></td>
+    </tr>`).join('');
+
+  const filasSinPost = (pa.campanasSinPostulacionesLista || []).map(c => `
+    <tr>
+      <td>${_stEsc(c.nombre_libro)}</td>
+      <td style="font-size:12px;">${_stEsc(c.nombre_autor)}</td>
+      <td>${c.dias} días</td>
+    </tr>`).join('');
+
+  // ── PREMIUM ──
+  const filasPremium = (r.premium || []).map(p => `
+    <tr>
+      <td>${_stEsc(p.mes)}</td>
+      <td>${_stNum(p.ofrecidos)}</td>
+      <td><strong>${p.pagaron}</strong> <span style="color:#888;">(${_stPct(p.pagaron, p.ofrecidos) ?? 0}%)</span></td>
+      <td>${p.rechazaron} <span style="color:#888;">(${_stPct(p.rechazaron, p.ofrecidos) ?? 0}%)</span></td>
+      <td>${p.pendientes}</td>
+    </tr>`).join('');
+
+  // ── PLATAFORMAS ──
+  const pl = re.plataformas || {};
+  const filasPlat = [
+    ['Instagram', pl.instagram], ['Goodreads', pl.goodreads], ['TikTok', pl.tiktok],
+    ['Amazon', pl.amazon], ['Blog', pl.blog], ['YouTube', pl.youtube], ['StoryGraph', pl.storygraph]
+  ].map(([label, n]) => ({ label, n: n || 0, base: pl.total || 0 }));
+
+  const tiposTxt = Object.entries(ca.creadasEnVentanaPorTipo || {})
+    .map(([k, n]) => `${n} ${tiposLabel[k] || k}`).join(' · ');
 
   contenedor.innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-card">
-        <p class="stat-label">Autores</p>
-        <p class="stat-valor">${usuarios.totalAutores}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Total de autores registrados en la plataforma.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Reseñadores</p>
-        <p class="stat-valor">${usuarios.totalReseñadores}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Total de reseñadores registrados en la plataforma.</p>
-      </div>
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+      <label style="font-size:12px; color:#888;">Período de análisis</label>
+      <select class="input-buscar" style="max-width:190px;" onchange="cambiarDiasEstadisticasAdmin(this.value)">
+        ${[7, 30, 60, 90].map(n => `<option value="${n}" ${n === d ? 'selected' : ''}>Últimos ${n} días</option>`).join('')}
+      </select>
+      <span style="font-size:11px; color:#888;">Desde ${_stEsc(r.desde)}. Lo de "Para actuar" y "Campañas activas" es del momento actual.</span>
     </div>
 
-    <div class="form-separador">Actividad</div>
-    <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
-      <div>
-        <label style="display:block; font-size:11px; color:#888; margin-bottom:4px;">Desde</label>
-        <input type="date" id="admin-actividad-desde" class="input-buscar" style="max-width:170px;" />
-      </div>
-      <div>
-        <label style="display:block; font-size:11px; color:#888; margin-bottom:4px;">Hasta</label>
-        <input type="date" id="admin-actividad-hasta" class="input-buscar" style="max-width:170px;" />
-      </div>
-      <button class="btn-secundario btn-sm" onclick="actualizarActividadAdmin()">Actualizar</button>
-      <span style="font-size:11px; color:#888;">Por defecto: últimos 45 días.</span>
+    <div class="form-separador">Para actuar hoy</div>
+    <div class="stats-grid">
+      ${_stCard('Postulaciones +72 hs sin responder', _stNum(pa.postulacionesPendientes72h),
+        `De ${_stNum(pa.postulacionesPendientes)} pendientes en campañas activas. La más vieja espera hace ${_stTiempo(pa.pendienteMasAntiguaHoras)}. Los reseñadores esperando es lo que más frena la plataforma.`,
+        pa.postulacionesPendientes72h > 0 ? _ST_ROJO : _ST_VERDE)}
+      ${_stCard('Reseñas que vencen en 72 hs', _stNum(pa.resenasPorVencer72h),
+        'Aprobadas, sin reseña entregada y con deadline en los próximos 3 días. Son las candidatas a incumplir si no se las empuja.',
+        pa.resenasPorVencer72h > 0 ? '#d68910' : _ST_VERDE)}
+      ${_stCard('Campañas sin postulaciones (+7 días)', _stNum(pa.campanasSinPostulaciones7d),
+        'Campañas activas con más de una semana y ninguna postulación. Revisar sinopsis, portada o género.',
+        pa.campanasSinPostulaciones7d > 0 ? '#d68910' : _ST_VERDE)}
     </div>
-    <div id="admin-actividad-cards" class="stats-grid"></div>
+
+    ${filasAutores ? `
+      <p style="font-size:13px; font-weight:700; margin:4px 0 8px;">Autores con postulaciones sin responder (+72 hs)</p>
+      <div style="overflow-x:auto; margin-bottom:24px;">
+        <table class="admin-tabla">
+          <thead><tr><th>Autor</th><th>Pendientes</th><th>+72 hs</th><th>La más vieja</th><th></th></tr></thead>
+          <tbody>${filasAutores}</tbody>
+        </table>
+      </div>` : ''}
+
+    ${filasSinPost ? `
+      <p style="font-size:13px; font-weight:700; margin:4px 0 8px;">Campañas activas sin ninguna postulación</p>
+      <div style="overflow-x:auto; margin-bottom:24px;">
+        <table class="admin-tabla">
+          <thead><tr><th>Libro</th><th>Autor</th><th>Publicada hace</th></tr></thead>
+          <tbody>${filasSinPost}</tbody>
+        </table>
+      </div>` : ''}
+
+    <div class="form-separador">Comunidad · últimos ${d} días</div>
+    <div class="stats-grid">
+      ${_stCard('Autores activos', _stNum(co.autoresActivos),
+        `De ${_stNum(co.autoresTotales)} autores con cuenta activa (${_stPct(co.autoresActivos, co.autoresTotales) ?? 0}%). Activo = creó campaña, respondió postulaciones, cargó o editó un libro o pidió un impulso.`)}
+      ${_stCard('Reseñadores activos', _stNum(co.resenadoresActivos),
+        `De ${_stNum(co.resenadoresTotales)} reseñadores con cuenta activa (${_stPct(co.resenadoresActivos, co.resenadoresTotales) ?? 0}%). Activo = se postuló, entregó una reseña o marcó un favorito.`)}
+      ${_stCard('Autores que volvieron', `${_stPct(ret.autores.volvieron, ret.autores.base) ?? '—'}%`,
+        `De ${_stNum(ret.autores.base)} autores con campaña en ${_stEsc(ret.autores.mes_base)}, ${_stNum(ret.autores.volvieron)} publicaron otra en ${_stEsc(ret.autores.mes_vuelta)}.`)}
+      ${_stCard('Reseñadores que volvieron', `${_stPct(ret.reseñadores.volvieron, ret.reseñadores.base) ?? '—'}%`,
+        `De ${_stNum(ret.reseñadores.base)} que se postularon en ${_stEsc(ret.reseñadores.mes_base)}, ${_stNum(ret.reseñadores.volvieron)} lo hicieron de nuevo en ${_stEsc(ret.reseñadores.mes_vuelta)}.`)}
+    </div>
+
+    <div class="form-separador">Dónde se pierde la gente (registrados en los últimos ${d} días)</div>
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));">
+      ${_stEmbudo('Reseñadores nuevos', 'Cuántos llegan a cada paso. Si cae mucho entre "aprobados" y "entregaron", el problema es la entrega.', [
+        { label: 'Se registraron', n: er.registrados },
+        { label: 'Se postularon a una campaña', n: er.se_postularon },
+        { label: 'Fueron aprobados', n: er.aprobados },
+        { label: 'Entregaron una reseña', n: er.entregaron }
+      ])}
+      ${_stEmbudo('Autores nuevos', 'Cuántos llegan a cada paso. "Compraron" = impulso, créditos o campaña paga.', [
+        { label: 'Se registraron', n: ea.registrados },
+        { label: 'Cargaron un libro', n: ea.con_libro },
+        { label: 'Crearon una campaña', n: ea.con_campana },
+        { label: 'Compraron algo', n: ea.con_compra }
+      ])}
+    </div>
 
     <div class="form-separador">Campañas</div>
     <div class="stats-grid">
-      <div class="stat-card">
-        <p class="stat-label">Total</p>
-        <p class="stat-valor">${campañas.total}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Todas las campañas creadas históricamente.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Activas</p>
-        <p class="stat-valor">${campañas.activas}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Campañas abiertas actualmente.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Finalizadas</p>
-        <p class="stat-valor">${campañas.finalizadas}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Campañas que llegaron a su fin de forma normal.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Canceladas</p>
-        <p class="stat-valor">${campañas.canceladas}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Campañas dadas de baja manualmente por vos o por el autor.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Activas con cupo completo</p>
-        <p class="stat-valor">${campañas.activasCupoCompleto}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las campañas activas, cuántas ya no tienen cupos disponibles.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Activas con cupo disponible</p>
-        <p class="stat-valor">${campañas.activasCupoIncompleto}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las campañas activas, cuántas todavía tienen cupos libres.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">% histórico que llenó cupo</p>
-        <p class="stat-valor">${campañas.pctHistoricoLlenoCupo ?? '—'}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De todas las campañas creadas alguna vez, qué % llegó a agotar sus cupos (sin importar su estado actual).</p>
-      </div>
+      ${_stCard('Activas ahora', _stNum(ca.activas), `${_stNum(ca.activasCupoCompleto)} con cupo completo · ${_stNum(ca.activasCupoDisponible)} con cupo disponible.`)}
+      ${_stCard('Creadas gratis vs. pagas', `${_stNum(ca.creadasGratis)} / ${_stNum(ca.creadasPagas)}`,
+        `Últimos ${d} días (sin canceladas). ${_stEsc(tiposTxt) || 'Sin datos.'}`)}
+      ${_stCard('Llegan a llenar cupo', `${ca.pctHistoricoLlenoCupo ?? '—'}%`, 'De todas las campañas no canceladas, qué % agotó sus cupos.')}
+      ${_stCard('Mediana hasta agotar cupos', ca.medianaDiasAgotarCupos != null ? `${ca.medianaDiasAgotarCupos} días` : '—', `Entre la creación y el último cupo (n=${_stNum(ca.muestraCupos)}).`)}
     </div>
 
-    <div class="form-separador">Reseñas</div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <p class="stat-label">Total entregadas</p>
-        <p class="stat-valor">${reseñas.totalEntregadas}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Todas las reseñas cargadas históricamente en la plataforma.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Últimos 30 días</p>
-        <p class="stat-valor">${reseñas.ultimos30Dias}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñas entregadas en la última ventana móvil de 30 días (no "este mes calendario").</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Conversión</p>
-        <p class="stat-valor">${reseñas.conversion}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De todo lo que alguna vez se aprobó (histórico), qué % terminó en una reseña entregada.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Completion total</p>
-        <p class="stat-valor">${reseñas.completionTotal}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas (excluye abandonos avisados y campañas canceladas por el autor), qué % se entregó (tarde o en término).</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Completion a tiempo</p>
-        <p class="stat-valor">${reseñas.completionATiempo}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las mismas asignaciones vencidas, qué % se entregó antes del deadline.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Tasa de abandono</p>
-        <p class="stat-valor">${reseñas.tasaAbandono}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De las asignaciones vencidas (sin contar abandonos avisados ni campañas canceladas por el autor), qué % nunca se entregó. Es incumplimiento real.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Abandono avisado</p>
-        <p class="stat-valor">${reseñas.abandonoAvisado} <span style="font-size:14px; color:#888;">(${reseñas.abandonoAvisadoPct}%)</span></p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñadoras que cancelaron formalmente su postulación avisando, en vez de simplemente no entregar. No cuenta como incumplimiento.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Tiempo promedio de entrega</p>
-        <p class="stat-valor">${reseñas.tiempoPromedioEntregaDias ?? '—'} días</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Promedio de días entre la aprobación de la postulación y la entrega efectiva de la reseña.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Asignaciones vencidas</p>
-        <p class="stat-valor">${reseñas.asignacionesVencidas}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Asignaciones con deadline vencido, aprobadas y de campañas no canceladas (es la base real sobre la que se calculan completion y abandono).</p>
-      </div>
-    </div>
-    
-    <div class="form-separador">Retención</div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <p class="stat-label">Autores con 2+ campañas</p>
-        <p class="stat-valor">${resultado.retencion.autoresConDosMasCampañas ?? '—'}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De los autores que publicaron alguna vez, qué % publicó más de una campaña (histórico).</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Reseñadores con 2+ campañas</p>
-        <p class="stat-valor">${resultado.retencion.reseñadoresConDosMasCampañas ?? '—'}%</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">De los reseñadores que participaron alguna vez, qué % lo hizo en más de una campaña (histórico).</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Tiempo de aprobación</p>
-        <p class="stat-valor">${resultado.retencion.tiempoAprobacionPromedioHoras ?? '—'} hs</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">Promedio de horas entre que un reseñador se postula y el autor responde. Mediana: ${resultado.retencion.tiempoAprobacionMedianaHoras ?? '—'} hs.</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Tiempo hasta agotar cupos</p>
-        <p class="stat-valor">${resultado.retencion.tiempoCompletarCuposPromedioDias ?? '—'}${resultado.retencion.tiempoCompletarCuposPromedioDias != null ? ' días' : ''}</p>
-        <p style="font-size:11px; color:#888; margin:2px 0 0;">
-          ${resultado.retencion.tiempoCompletarCuposMuestra > 0
-            ? `Promedio de días entre la creación de la campaña y que se agotan los cupos. Mediana: ${resultado.retencion.tiempoCompletarCuposMedianaDias} días (n=${resultado.retencion.tiempoCompletarCuposMuestra}).`
-            : 'Todavía ninguna campaña agotó sus cupos antes del vencimiento — sin datos suficientes.'}
-        </p>
-      </div>
-    </div>
-
-    <div class="form-separador">Ratio de incumplimiento por campaña</div>
+    <div class="form-separador">Cumplimiento de reseñas · últimos ${d} días</div>
     <p style="font-size:12px; color:#888; margin:0 0 12px;">
-      Por cada campaña: de las postulaciones aprobadas que ya tienen un desenlace conocido (se entregó la reseña, en cualquier momento, o venció el plazo sin entregarla), qué % nunca entregó (incumplidas / (entregadas + incumplidas)). Las que todavía están en curso y sin vencer no suman ni restan. Ordenado de mayor a menor ratio, para detectar primero las campañas que más están sufriendo incumplimientos. Ratio en rojo a partir de 60%.
+      Sobre ${_stNum(cu.base)} asignaciones cerradas (vencidas o abandonadas con aviso). Los tres porcentajes suman 100.
+      Histórico: ${cuH.pct_entregadas ?? '—'}% entregaron · ${cuH.pct_incumplidas ?? '—'}% no entregaron · ${cuH.pct_avisadas ?? '—'}% avisaron.
     </p>
-    ${ratioPorCampaña.length === 0
-      ? `<div class="estado-vacio"><p class="estado-vacio-texto">Todavía no hay campañas con postulaciones aprobadas.</p></div>`
-      : `
+    <div class="stats-grid">
+      ${_stCard('Entregaron', `${cu.pct_entregadas ?? '—'}%`, `${_stNum(cu.entregadas)} reseñas. ${cu.pct_a_tiempo ?? '—'}% fueron a tiempo.`, _ST_VERDE)}
+      ${_stCard('No entregaron', `${cu.pct_incumplidas ?? '—'}%`, `${_stNum(cu.incumplidas)} asignaciones vencidas sin reseña y sin aviso. Es el incumplimiento real.`, _ST_ROJO)}
+      ${_stCard('Avisaron que no podían', `${cu.pct_avisadas ?? '—'}%`, `${_stNum(cu.avisadas)} cancelaron su postulación avisando. Libera el cupo a tiempo.`)}
+    </div>
+
+    <div class="form-separador">Reseñas y calidad · últimos ${d} días</div>
+    <div class="stats-grid">
+      ${_stCard('Reseñas entregadas', _stNum(re.entregadas), _stDelta(re.entregadas, re.entregadasPeriodoAnterior, true))}
+      ${_stCard('Puntuación de los autores', re.puntuacionAutor != null ? `${re.puntuacionAutor} / 5` : '—',
+        `Cómo califican los autores las reseñas recibidas. ${_stDelta(re.puntuacionAutor, re.puntuacionAutorAnterior, true)}`)}
+      ${_stCard('Tiempo de entrega', re.diasPromedioEntrega != null ? `${re.diasPromedioEntrega} días` : '—', 'Promedio entre la aprobación y la entrega de la reseña.')}
+      ${_stCard('Respuesta del autor', _stTiempo(re.aprobacionMedianaHoras),
+        `Mediana entre postulación y respuesta. El promedio es ${_stTiempo(re.aprobacionPromedioHoras)}: unos pocos autores tardan mucho y suben el promedio.`)}
+    </div>
+
+    <div class="stat-card" style="align-items:stretch; text-align:left; margin-bottom:28px;">
+      <p class="stat-label" style="text-align:left;">Dónde se publican las reseñas</p>
+      <p style="${_ST_NOTA} margin-bottom:10px;">Sobre ${_stNum(pl.total)} reseñas de los últimos ${d} días. Una reseña puede estar en varias plataformas.</p>
+      ${_stBarras(filasPlat)}
+    </div>
+
+    <div class="form-separador">Reseñador premium</div>
+    <p style="font-size:12px; color:#888; margin:0 0 12px;">Oferta mensual a reseñadores: cuántos la reciben, la pagan o la rechazan. Los montos están en Ingresos.</p>
+    ${filasPremium ? `
+      <div style="overflow-x:auto; margin-bottom:24px;">
         <table class="admin-tabla">
-          <thead>
-            <tr>
-              <th>Libro</th>
-              <th>Autor</th>
-              <th>Aprobadas</th>
-              <th>Vencidas</th>
-              <th>Entregadas</th>
-              <th>Incumplidas</th>
-              <th>Ratio incumplimiento</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${ratioPorCampaña.map(c => construirFilaRatioCampañaAdmin(c)).join('')}
-          </tbody>
+          <thead><tr><th>Mes</th><th>Ofrecidos</th><th>Pagaron</th><th>Rechazaron</th><th>Pendientes</th></tr></thead>
+          <tbody>${filasPremium}</tbody>
         </table>
-      `
-    }
-  `;
+      </div>` : `<div class="estado-vacio"><p class="estado-vacio-texto">Sin ofertas premium este mes ni el anterior.</p></div>`}
 
-  // Rango por defecto: últimos 45 días (hoy incluido). Se precargan los inputs
-  // y se dispara la carga de la sección "Actividad" con ese rango.
-  const hoy = new Date();
-  const hace45 = new Date();
-  hace45.setDate(hoy.getDate() - 45);
-  const formatoFecha = (d) => d.toISOString().slice(0, 10);
-
-  const inputDesde = document.getElementById('admin-actividad-desde');
-  const inputHasta = document.getElementById('admin-actividad-hasta');
-  if (inputDesde) inputDesde.value = formatoFecha(hace45);
-  if (inputHasta) inputHasta.value = formatoFecha(hoy);
-
-  cargarActividadAdmin(formatoFecha(hace45), formatoFecha(hoy));
-}
-
-/**
- * Carga las 3 tarjetas de "Actividad" (autores sin actividad, reseñadores sin
- * actividad, usuarios nuevos) para el rango de fechas indicado, llamando a la
- * función admin_estadisticas_actividad(p_fecha_desde, p_fecha_hasta) en Supabase.
- *
- * @param {string} fechaDesde — 'YYYY-MM-DD'
- * @param {string} fechaHasta — 'YYYY-MM-DD'
- */
-async function cargarActividadAdmin(fechaDesde, fechaHasta) {
-  const contenedor = document.getElementById('admin-actividad-cards');
-  if (!contenedor) return;
-
-  contenedor.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
-
-  const { data: resultado, error } = await supabaseClient.rpc('admin_estadisticas_actividad', {
-    p_fecha_desde: fechaDesde || null,
-    p_fecha_hasta: fechaHasta || null
-  });
-
-  if (error || !resultado || resultado.error) {
-    contenedor.innerHTML = `<p class="mensaje-error">${resultado?.error || error?.message || 'Error al cargar la actividad.'}</p>`;
-    return;
-  }
-
-  const rangoTexto = `${resultado.rangoDesde} al ${resultado.rangoHasta}`;
-
-  contenedor.innerHTML = `
-    <div class="stat-card">
-      <p class="stat-label">Autores sin actividad</p>
-      <p class="stat-valor">${resultado.autoresSinActividad}</p>
-      <p style="font-size:11px; color:#888; margin:2px 0 0;">Autores activos sin crear campaña, responder postulaciones, editar libros ni pedir impulsos entre ${rangoTexto}.</p>
-    </div>
-    <div class="stat-card">
-      <p class="stat-label">Reseñadores sin actividad</p>
-      <p class="stat-valor">${resultado.reseñadoresSinActividad}</p>
-      <p style="font-size:11px; color:#888; margin:2px 0 0;">Reseñadores activos sin postularse, entregar reseñas ni marcar favoritos entre ${rangoTexto}.</p>
-    </div>
-    <div class="stat-card">
-      <p class="stat-label">Usuarios nuevos</p>
-      <p class="stat-valor">${resultado.usuariosNuevos}</p>
-      <p style="font-size:11px; color:#888; margin:2px 0 0;">Usuarios (cualquier rol) registrados entre ${rangoTexto}.</p>
+    <div class="form-separador">Campañas con más incumplimiento</div>
+    <div id="admin-ratio-campanas">
+      <button class="btn-secundario btn-sm" onclick="cargarRatioCampanasAdmin()">Ver las 15 peores campañas</button>
     </div>
   `;
 }
 
 /**
- * Handler del botón "Actualizar" de la sección Actividad: toma las fechas
- * elegidas en los inputs y recarga las 3 tarjetas con ese rango.
+ * Carga bajo demanda las campañas con peor ratio de incumplimiento
+ * (usa admin_estadisticas, que es la que calcula el ratio por campaña).
+ * Solo campañas con 3 o más asignaciones vencidas, para no mostrar ruido (1 de 1 = 100%).
  */
-function actualizarActividadAdmin() {
-  const desde = document.getElementById('admin-actividad-desde')?.value;
-  const hasta = document.getElementById('admin-actividad-hasta')?.value;
+async function cargarRatioCampanasAdmin() {
+  const cont = document.getElementById('admin-ratio-campanas');
+  if (!cont) return;
+  cont.innerHTML = '<div class="cargando-container"><div class="spinner"></div></div>';
 
-  if (!desde || !hasta) {
-    mostrarToast('Elegí las dos fechas (desde y hasta).', 'error');
-    return;
-  }
-  if (desde > hasta) {
-    mostrarToast('La fecha "desde" no puede ser posterior a "hasta".', 'error');
+  const { data: res, error } = await supabaseClient.rpc('admin_estadisticas');
+  if (error || !res || res.error) {
+    cont.innerHTML = `<p class="mensaje-error">${_stEsc(res?.error || error?.message || 'Error al cargar.')}</p>`;
     return;
   }
 
-  cargarActividadAdmin(desde, hasta);
+  const lista = (res.ratioPorCampaña || []).filter(c => c.vencidas >= 3).slice(0, 15);
+  if (lista.length === 0) {
+    cont.innerHTML = '<div class="estado-vacio"><p class="estado-vacio-texto">No hay campañas con 3 o más asignaciones vencidas.</p></div>';
+    return;
+  }
+
+  cont.innerHTML = `
+    <p style="font-size:12px; color:#888; margin:0 0 12px;">
+      Incumplidas sobre (entregadas + incumplidas), solo campañas con 3 o más asignaciones vencidas. En rojo desde 60%.
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="admin-tabla">
+        <thead><tr><th>Libro</th><th>Autor</th><th>Estado</th><th>Vencidas</th><th>Entregadas</th><th>Incumplidas</th><th>Ratio</th></tr></thead>
+        <tbody>${lista.map(c => construirFilaRatioCampañaAdmin(c)).join('')}</tbody>
+      </table>
+    </div>`;
 }
 
-/**
- * Construye la fila de una campaña para la tabla de ratio de entrega.
- *
- * @param {Object} c — { nombre_libro, nombre_autor, aprobadas, vencidas, entregadas, incumplidas, ratio }
- *   ratio = % de incumplimiento = incumplidas / (entregadas + incumplidas). Se resalta en rojo a partir de 60%.
- * @returns {string} HTML de la fila
- */
 function construirFilaRatioCampañaAdmin(c) {
   return `
     <tr>
-      <td>${c.nombre_libro}</td>
-      <td style="font-size:12px;">${c.nombre_autor}</td>
-      <td>${c.aprobadas}</td>
-      <td style="${c.vencidas > 0 ? 'color:#c0392b;' : ''}">${c.vencidas}</td>
+      <td>${_stEsc(c.nombre_libro)}</td>
+      <td style="font-size:12px;">${_stEsc(c.nombre_autor)}</td>
+      <td style="font-size:12px;">${_stEsc(c.estado_campana)}</td>
+      <td>${c.vencidas}</td>
       <td>${c.entregadas}</td>
       <td style="${c.incumplidas > 0 ? 'color:#c0392b;' : ''}">${c.incumplidas}</td>
       <td style="${c.ratio >= 60 ? 'color:#c0392b; font-weight:600;' : ''}">${c.ratio}%</td>
-    </tr>
-  `;
+    </tr>`;
 }
 
 
