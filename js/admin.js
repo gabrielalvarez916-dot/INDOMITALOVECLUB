@@ -1740,6 +1740,43 @@ function _stEmbudo(titulo, intro, pasos) {
     </div>`;
 }
 
+function _stHace(iso) {
+  if (!iso) return 'nunca';
+  const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
+  if (h < 1) return 'hace minutos';
+  if (h < 48) return `hace ${h} hs`;
+  return `hace ${Math.floor(h / 24)} días`;
+}
+
+// Reenvía el aviso automático (mail + push + campanita) a un autor puntual.
+// Respeta la regla del sistema: no se repite antes de 47 hs desde el último aviso.
+async function avisarAutorPostulacionesAdmin(idAutor, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+  const { data, error } = await supabaseClient.rpc('admin_avisar_autor_postulaciones', { p_id_autor: idAutor });
+  if (error || !data) {
+    mostrarToast(error?.message || 'No se pudo enviar el aviso.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Avisar ahora'; }
+    return;
+  }
+  if (data.enviado) {
+    mostrarToast(`Aviso enviado (${data.postulaciones} postulación/es).`, 'ok');
+    if (btn) btn.textContent = 'Avisado ✓';
+  } else {
+    mostrarToast('No se envió: ya se le avisó hace menos de 47 hs o sus postulaciones tienen menos de 2 días.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Avisar ahora'; }
+  }
+}
+
+async function copiarMailAutorAdmin(btn) {
+  const email = btn?.dataset?.email || '';
+  try {
+    await navigator.clipboard.writeText(email);
+    mostrarToast(`Mail copiado: ${email}`, 'ok');
+  } catch (e) {
+    window.prompt('Copiá el mail:', email);
+  }
+}
+
 function cambiarDiasEstadisticasAdmin(valor) {
   _statsDiasAdmin = parseInt(valor, 10) || 30;
   cargarEstadisticasAdmin();
@@ -1771,14 +1808,25 @@ async function cargarEstadisticasAdmin() {
   const tiposLabel = { gratis: 'gratis', suscripcion: 'suscripción', credito_pack: 'pack de créditos', pago_individual: 'pago individual', sin_dato: 'sin dato' };
 
   // ── PARA ACTUAR ──
-  const filasAutores = (pa.autoresConPendientes || []).map(a => `
+  const filasAutores = (pa.autoresConPendientes || []).map(a => {
+    const horasAviso = a.ultimo_aviso ? (Date.now() - new Date(a.ultimo_aviso).getTime()) / 3600000 : null;
+    const reciente = horasAviso !== null && horasAviso < 47;
+    return `
     <tr>
       <td><strong>${_stEsc(a.nombre)}</strong><br><span style="font-size:11px; color:#888;">${_stEsc(a.email)}</span></td>
       <td>${a.pendientes}</td>
       <td style="color:${_ST_ROJO}; font-weight:600;">${a.pend_72h}</td>
       <td>${_stTiempo(a.mas_antigua_horas)}</td>
-      <td><a href="mailto:${_stEsc(a.email)}" style="font-size:12px;">Escribir</a></td>
-    </tr>`).join('');
+      <td style="font-size:12px;">${a.total_avisos > 0
+        ? `${a.total_avisos} avisos<br><span style="color:#888;">último ${_stHace(a.ultimo_aviso)}</span>`
+        : '<span style="color:#888;">sin avisos</span>'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-secundario btn-sm" ${reciente ? 'disabled title="Ya se le avisó hace menos de 47 hs"' : ''}
+                onclick="avisarAutorPostulacionesAdmin('${a.id_autor}', this)">${reciente ? 'Avisado' : 'Avisar ahora'}</button>
+        <button class="btn-secundario btn-sm" data-email="${_stEsc(a.email)}" onclick="copiarMailAutorAdmin(this)">Copiar mail</button>
+      </td>
+    </tr>`;
+  }).join('');
 
   const filasSinPost = (pa.campanasSinPostulacionesLista || []).map(c => `
     <tr>
@@ -1832,10 +1880,11 @@ async function cargarEstadisticasAdmin() {
     </div>
 
     ${filasAutores ? `
-      <p style="font-size:13px; font-weight:700; margin:4px 0 8px;">Autores con postulaciones que pueden aprobar y no respondieron (+72 hs)</p>
+      <p style="font-size:13px; font-weight:700; margin:4px 0 4px;">Autores con postulaciones que pueden aprobar y no respondieron (+72 hs)</p>
+      <p style="font-size:12px; color:#888; margin:0 0 8px;">El sistema ya les manda un aviso automático (mail, push y campanita) todos los días a las 10:00 si tienen postulaciones aprobables de más de 2 días. "Avisar ahora" reenvía ese mismo aviso, solo si pasaron 47 hs desde el último. Los que ya recibieron muchos avisos y siguen sin responder necesitan otro contacto: usá "Copiar mail".</p>
       <div style="overflow-x:auto; margin-bottom:24px;">
         <table class="admin-tabla">
-          <thead><tr><th>Autor</th><th>Pendientes</th><th>+72 hs</th><th>La más vieja</th><th></th></tr></thead>
+          <thead><tr><th>Autor</th><th>Pendientes</th><th>+72 hs</th><th>La más vieja</th><th>Avisos del sistema</th><th></th></tr></thead>
           <tbody>${filasAutores}</tbody>
         </table>
       </div>` : ''}
