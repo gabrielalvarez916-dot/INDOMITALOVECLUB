@@ -1818,9 +1818,11 @@ async function cargarEstadisticasAdmin() {
 
     <div class="form-separador">Para actuar hoy</div>
     <div class="stats-grid">
-      ${_stCard('Postulaciones +72 hs sin responder', _stNum(pa.postulacionesPendientes72h),
-        `De ${_stNum(pa.postulacionesPendientes)} pendientes en campañas activas. La más vieja espera hace ${_stTiempo(pa.pendienteMasAntiguaHoras)}. Los reseñadores esperando es lo que más frena la plataforma.`,
+      ${_stCard('Sin responder hace +72 hs', _stNum(pa.postulacionesPendientes72h),
+        `De ${_stNum(pa.postulacionesAprobables)} postulaciones que el autor puede aprobar hoy. La más vieja espera hace ${_stTiempo(pa.pendienteMasAntiguaHoras)}. Solo cuenta las que no están trabadas por cupos o por el límite del reseñador.`,
         pa.postulacionesPendientes72h > 0 ? _ST_ROJO : _ST_VERDE)}
+      ${_stCard('Pendientes trabadas', _stNum((pa.postulacionesSinCupo || 0) + (pa.postulacionesLimiteResenador || 0)),
+        `El autor no puede aprobarlas: ${_stNum(pa.postulacionesLimiteResenador)} son de reseñadores que ya tienen el máximo de reseñas activas (se destraban cuando entreguen) y ${_stNum(pa.postulacionesSinCupo)} son de campañas sin cupos (conviene cerrarlas para no dejar esperando al reseñador). Total pendientes: ${_stNum(pa.postulacionesPendientes)}.`)}
       ${_stCard('Reseñas que vencen en 72 hs', _stNum(pa.resenasPorVencer72h),
         'Aprobadas, sin reseña entregada y con deadline en los próximos 3 días. Son las candidatas a incumplir si no se las empuja.',
         pa.resenasPorVencer72h > 0 ? '#d68910' : _ST_VERDE)}
@@ -1830,7 +1832,7 @@ async function cargarEstadisticasAdmin() {
     </div>
 
     ${filasAutores ? `
-      <p style="font-size:13px; font-weight:700; margin:4px 0 8px;">Autores con postulaciones sin responder (+72 hs)</p>
+      <p style="font-size:13px; font-weight:700; margin:4px 0 8px;">Autores con postulaciones que pueden aprobar y no respondieron (+72 hs)</p>
       <div style="overflow-x:auto; margin-bottom:24px;">
         <table class="admin-tabla">
           <thead><tr><th>Autor</th><th>Pendientes</th><th>+72 hs</th><th>La más vieja</th><th></th></tr></thead>
