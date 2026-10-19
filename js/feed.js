@@ -86,6 +86,7 @@ function mezclarArray(arr) {
 // pagasPrimero: solo en el feed de reseñadores confiables. Las campañas pagas
 // con cupo van arriba de todo; el resto queda como siempre.
 let _feedPagasArriba = false;
+let _feedPagasDisponible = false; // el dato "campaña paga" solo se trae para reseñadores: sin él no se ofrecen los filtros Pagas/Gratis
 function ordenarFeed(campañas, pagasPrimero = false) {
   const conCupo = campañas.filter(c => c.cuposDisponibles > 0);
   const sinCupo = mezclarArray(campañas.filter(c => c.cuposDisponibles <= 0));
@@ -309,6 +310,7 @@ async function cargarFeed() {
   // reseñadores las ven con brillo rosita.
   let idsPagas = new Set();
   _feedPagasArriba = false;
+  _feedPagasDisponible = usuario?.rol === 'reseñador';
   if (usuario?.rol === 'reseñador' && idsCampanas.length > 0) {
     const [{ data: pagasRows, error: errorPagas }, { data: estadoResenador }] = await Promise.all([
       supabaseClient.rpc('obtener_campanas_pagas', { p_ids: idsCampanas }),
@@ -560,6 +562,15 @@ function filtrarFeed() {
 
   if (idGeneroFiltro === 'novedad') {
     campañasFiltradas = campañasFiltradas.filter(c => c.esNovedad);
+  } else if (idGeneroFiltro === 'pagas') {
+    // Campañas pagas: por campaña individual, crédito de pack o suscripción
+    campañasFiltradas = campañasFiltradas.filter(c => c.esPaga);
+  } else if (idGeneroFiltro === 'gratis') {
+    // Campañas gratis: todas las que no son pagas
+    campañasFiltradas = campañasFiltradas.filter(c => !c.esPaga);
+  } else if (idGeneroFiltro === 'audiolibro') {
+    // Campañas con audiolibro cargado
+    campañasFiltradas = campañasFiltradas.filter(c => c.tieneAudiolibro);
   } else if (idGeneroFiltro === 'ranking') {
     // "Los más leídos": solo libros con posición en el ranking del mes
     // actual (c.rankingLibro.posicion), ordenados 1, 2, 3... N. Los que
@@ -620,11 +631,17 @@ function actualizarContadoresFiltroGenero() {
   const totalNovedades = _campañasTodas.filter(c => c.esNovedad).length;
   const totalRanking = [..._campañasTodas, ..._campanasRankingCerradas]
     .filter(c => c.rankingLibro?.posicion).length;
+  const totalPagas = _campañasTodas.filter(c => c.esPaga).length;
+  const totalGratis = _campañasTodas.filter(c => !c.esPaga).length;
+  const totalAudiolibro = _campañasTodas.filter(c => c.tieneAudiolibro).length;
 
   select.innerHTML = `
     <option value="">Filtrar por</option>
     <option value="novedad">✨ Novedades (${totalNovedades})</option>
     <option value="ranking">🏆 Los más leídos (${totalRanking})</option>
+    ${_feedPagasDisponible ? `<option value="pagas">💎 Campañas pagas (${totalPagas})</option>
+    <option value="gratis">🆓 Campañas gratis (${totalGratis})</option>` : ''}
+    <option value="audiolibro">🎧 Campañas con audiolibro (${totalAudiolibro})</option>
     ${_generosCatalogoFiltro.map(g => {
       const total = _campañasTodas.filter(c => c.idGenero === g.id).length;
       return `<option value="${g.id}">${g.nombre} (${total})</option>`;
