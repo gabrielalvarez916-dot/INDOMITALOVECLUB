@@ -1787,7 +1787,7 @@ img { max-width: 100%; display: block; }
 }
 .encuesta-no-tiene.activo { background: var(--bordo); border-color: var(--bordo); color: var(--blanco); }
 
-.encuesta-slider { position: relative; margin: 22px 0 8px; padding: 0 2px; transition: opacity .2s; }
+.encuesta-slider { position: relative; margin: 22px 0 30px; padding: 0 2px; transition: opacity .2s; }
 .encuesta-slider.desactivado { opacity: .35; }
 .encuesta-puntos {
   position: absolute;
@@ -1807,6 +1807,22 @@ img { max-width: 100%; display: block; }
   background: var(--crema-oscura);
   transform: translate(-50%, -50%);
 }
+/* Números 1–5 bajo cada punto de la escala */
+.encuesta-puntos i::after {
+  content: attr(data-n);
+  position: absolute;
+  top: 18px; left: 0;
+  transform: translateX(-50%);
+  min-width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gris-medio);
+  transition: var(--transicion);
+}
+.encuesta-puntos i.sel::after { background: var(--bordo); color: var(--blanco); }
+.encuesta-slider.desactivado .encuesta-puntos i.sel::after { background: transparent; color: var(--gris-medio); }
 .encuesta-slider input[type="range"] {
   -webkit-appearance: none;
   appearance: none;

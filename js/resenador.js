@@ -611,7 +611,7 @@ function _renderEncuestaResena() {
       </div>
       ${q.nota ? `<p class="encuesta-nota">${q.nota}</p>` : ''}
       <div class="encuesta-slider sin-responder">
-        <div class="encuesta-puntos" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="encuesta-puntos" aria-hidden="true"><i data-n="1"></i><i data-n="2"></i><i data-n="3"></i><i data-n="4"></i><i data-n="5"></i></div>
         <input type="range" min="1" max="5" step="1" value="3" aria-label="${q.pregunta}" />
       </div>
       <div class="encuesta-extremos"><span>${q.bajo}</span><span>${q.alto}</span></div>
@@ -633,6 +633,17 @@ function _encuestaMarcarRespondida(el) {
   el.dataset.estado = 'valor';
   el.classList.remove('falta');
   el.querySelector('.encuesta-slider').classList.remove('sin-responder');
+  _encuestaResaltarNumero(el);
+}
+
+/** Resalta en la escala el número que el usuario está eligiendo (o ninguno si no respondió). */
+function _encuestaResaltarNumero(el) {
+  const val = el.dataset.estado === 'valor'
+    ? el.querySelector('input[type="range"]').value
+    : null;
+  el.querySelectorAll('.encuesta-puntos i').forEach(i => {
+    i.classList.toggle('sel', i.dataset.n === val);
+  });
 }
 
 function _encuestaToggleNoTiene(el) {
@@ -646,12 +657,14 @@ function _encuestaToggleNoTiene(el) {
     el.classList.remove('falta');
     slider.classList.add('desactivado');
     input.disabled = true;
+    _encuestaResaltarNumero(el);
   } else {
     el.dataset.estado = 'sin';
     slider.classList.remove('desactivado');
     slider.classList.add('sin-responder');
     input.disabled = false;
     input.value = 3;
+    _encuestaResaltarNumero(el);
   }
   btn.setAttribute('aria-pressed', activar ? 'true' : 'false');
   btn.classList.toggle('activo', activar);
