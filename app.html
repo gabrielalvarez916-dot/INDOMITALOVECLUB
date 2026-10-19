@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=15" />
+  <link rel="stylesheet" href="css/styles.css?v=16" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
@@ -1793,46 +1793,27 @@
     <div class="modal-body">
       <input type="hidden" id="calificar-id-resena" />
       <p class="form-info" id="calificar-nombre-resenador"></p>
-      <p class="form-info">Marcá SI o NO para cada afirmación.</p>
+      <p class="form-info">Respondé todas las preguntas. La nota final es el promedio exacto de tus respuestas.</p>
       <div class="calificar-afirmaciones" id="calificar-afirmaciones">
         <div class="calificar-afirmacion-fila" data-pregunta="1">
           <span class="calificar-afirmacion-texto">Fue entregada antes de la fecha límite</span>
           <div class="calificar-si-no">
-            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(1, true, this)">SI</button>
+            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(1, true, this)">SÍ</button>
             <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(1, false, this)">NO</button>
           </div>
         </div>
         <div class="calificar-afirmacion-fila" data-pregunta="2">
           <span class="calificar-afirmacion-texto">Respetó el formato elegido por el autor (Amazon, Instagram, etc)</span>
           <div class="calificar-si-no">
-            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(2, true, this)">SI</button>
+            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(2, true, this)">SÍ</button>
             <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(2, false, this)">NO</button>
           </div>
         </div>
-        <div class="calificar-afirmacion-fila" data-pregunta="3">
-          <span class="calificar-afirmacion-texto">Evidencia lectura completa de la obra</span>
-          <div class="calificar-si-no">
-            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(3, true, this)">SI</button>
-            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(3, false, this)">NO</button>
-          </div>
-        </div>
-        <div class="calificar-afirmacion-fila" data-pregunta="4">
-          <span class="calificar-afirmacion-texto">Presenta una opinión propia argumentada</span>
-          <div class="calificar-si-no">
-            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(4, true, this)">SI</button>
-            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(4, false, this)">NO</button>
-          </div>
-        </div>
-        <div class="calificar-afirmacion-fila" data-pregunta="5">
-          <span class="calificar-afirmacion-texto">Mantiene un tono respetuoso</span>
-          <div class="calificar-si-no">
-            <button type="button" class="btn-si-no" data-valor="si" onclick="responderAfirmacion(5, true, this)">SI</button>
-            <button type="button" class="btn-si-no" data-valor="no" onclick="responderAfirmacion(5, false, this)">NO</button>
-          </div>
-        </div>
       </div>
-      <p class="estrellas-label" id="estrellas-label">0 de 5 respondidas</p>
-      <!-- Nota: esta etiqueta solo muestra progreso ("X de 5 respondidas"), nunca la conversión a estrellas. Ver autor.js:responderAfirmacion -->
+      <!-- Preguntas con escala 1 a 5 (se dibujan desde autor.js: CALIFICACION_AUTOR_ESCALA) -->
+      <div id="calificar-escala"></div>
+      <p class="estrellas-label" id="estrellas-label">0 de 7 respondidas</p>
+      <!-- Nota: esta etiqueta solo muestra progreso ("X de 7 respondidas"). El promedio con estrellas aparece recién al confirmar. Ver autor.js:enviarCalificacion -->
 
       <input type="hidden" id="calificar-puntuacion" value="" />
       <div id="calificar-error" class="mensaje-error" style="display:none;"></div>
@@ -2510,13 +2491,13 @@
 <script src="js/resenador-premium.js?v=1"></script>
 <script src="js/feed.js?v=10"></script>
 <script src="js/buscador-perfiles.js"></script>
-<script src="js/autor.js?v=10"></script>
+<script src="js/autor.js?v=11"></script>
 <script src="js/audiolibro-autor.js?v=1"></script>
 <script src="js/audiolibro-campana.js?v=2"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=13"></script>
+<script src="js/ayudas.js?v=14"></script>
 <script src="js/estrellas.js?v=2"></script>
-<script src="js/resenador.js?v=9"></script>
+<script src="js/resenador.js?v=10"></script>
 <script src="js/admin.js?v=7"></script>
 <script src="js/vendedor.js?v=4"></script>
 <script src="js/admin-vendedores.js?v=4"></script>

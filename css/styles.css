@@ -5450,6 +5450,8 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radio-chico, 8px);
 }
 
+.calificar-afirmacion-fila.falta { outline: 1.5px solid var(--error); background: rgba(192, 57, 43, 0.05); }
+
 .calificar-afirmacion-texto {
   font-size: 13px;
   color: var(--bordo);

@@ -1282,7 +1282,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
   const { data, error } = await supabaseClient
     .from('resenas')
     .select(`
-      id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios, puntuacion_autor, puntuacion_libro, puntuacion_exacta,
+      id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios, puntuacion_autor, puntuacion_autor_exacta, puntuacion_libro, puntuacion_exacta,
       mensaje_agradecimiento, fecha_agradecimiento,
       moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
       rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
@@ -1314,6 +1314,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     linkBlog: r.link_blog,
     comentarios: r.comentarios,
     puntuacion: r.puntuacion_autor,
+    puntuacionAutorExacta: r.puntuacion_autor_exacta,
     puntuacionLibro: r.puntuacion_libro,
     puntuacionExacta: r.puntuacion_exacta,
     mensajeAgradecimiento: r.mensaje_agradecimiento,
@@ -1602,7 +1603,7 @@ function construirCardResenaCarpeta(r, linkPortada) {
     : `<div class="resena-carpeta-tab-avatar-fallback">${iniciales}</div>`;
 
   const ratingHtml = r.puntuacion
-    ? `<div class="resena-carpeta-estrellas" id="resena-rating-${r.idReseña}">${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)}</div>`
+    ? `<div class="resena-carpeta-estrellas" id="resena-rating-${r.idReseña}">${calificacionIndividualHtml(r.puntuacionAutorExacta, r.puntuacion, { tamano: '1em' })}</div>`
     : `<div id="resena-rating-${r.idReseña}">
         <button type="button" class="btn-secundario btn-sm btn-full" onclick="abrirModalCalificar('${r.idReseña}', '${(r.reseñador?.alias || 'este reseñador').replace(/'/g, "\\'")}')">Calificar reseña</button>
       </div>`;
@@ -1681,8 +1682,36 @@ function abrirResenaInternaAutor(idResena) {
 }
 
 /**
- * Abre el modal de calificación por afirmaciones SI/NO para una reseña.
- * Cada SI suma una estrella (0 a 5).
+ * Preguntas de la calificación del autor al reseñador.
+ *
+ * - SÍ/NO (fijas en app.html, data-pregunta 1 y 2): SÍ vale 5 y NO vale 1.
+ * - Escala de 1 a 5 (se dibujan desde acá): cada extremo tiene su frase.
+ *
+ * La nota final es el promedio EXACTO de las 7 respuestas (sin redondear).
+ * Las claves son las que se guardan en resenas.encuesta_autor (jsonb).
+ */
+const CALIFICACION_AUTOR_SINO = { 1: 'plazo', 2: 'formato' };
+
+const CALIFICACION_AUTOR_ESCALA = [
+  { clave: 'lectura',       pregunta: '¿Evidencia haber leído la obra completa?',
+    bajo: 'No hay señales de que haya leído el libro',          alto: 'Se nota que leyó la obra completa y con atención' },
+  { clave: 'opinion',       pregunta: '¿Presenta una opinión propia argumentada?',
+    bajo: 'Opina sin fundamentos o repite lo que dicen otros',  alto: 'Su opinión es propia, clara y está muy bien argumentada' },
+  { clave: 'tono',          pregunta: '¿Mantiene un tono respetuoso?',
+    bajo: 'El tono es agresivo o irrespetuoso',                 alto: 'El tono es siempre respetuoso, incluso en las críticas' },
+  { clave: 'creatividad',   pregunta: '¿Qué tan creativa es la reseña?',
+    bajo: 'Es genérica, podría ser de cualquier libro',         alto: 'Es original y se destaca por su creatividad' },
+  { clave: 'significativo', pregunta: '¿Remarcó algo significativo para vos como autor?',
+    bajo: 'No destacó nada que me aporte',                      alto: 'Remarcó algo muy valioso para mí como autor' }
+];
+
+const CALIFICACION_AUTOR_TOTAL = Object.keys(CALIFICACION_AUTOR_SINO).length + CALIFICACION_AUTOR_ESCALA.length;
+
+/** Respuestas actuales del modal: { clave: 1-5 } */
+let _respuestasCalificacion = {};
+
+/**
+ * Abre el modal de calificación de una reseña (2 preguntas SÍ/NO + 5 de escala 1 a 5).
  */
 function abrirModalCalificar(idResena, alias) {
   document.getElementById('calificar-id-resena').value = idResena;
@@ -1692,54 +1721,115 @@ function abrirModalCalificar(idResena, alias) {
   // Reset de respuestas
   _respuestasCalificacion = {};
   document.querySelectorAll('#calificar-afirmaciones .btn-si-no').forEach(b => b.classList.remove('activo'));
-  const label = document.getElementById('estrellas-label');
-  if (label) label.textContent = '0 de 5 respondidas';
+  _renderCalificacionEscala();
+  _actualizarProgresoCalificacion();
   document.getElementById('calificar-puntuacion').value = '';
   ocultarMensajes('calificar-error', 'calificar-ok');
 
   mostrarModal('modal-calificar-resena');
 }
 
-let _respuestasCalificacion = {};
+/** Dibuja las preguntas de escala en blanco (sin perilla ni número elegido). */
+function _renderCalificacionEscala() {
+  const cont = document.getElementById('calificar-escala');
+  if (!cont) return;
+
+  cont.innerHTML = CALIFICACION_AUTOR_ESCALA.map(q => `
+    <div class="encuesta-pregunta" data-clave="${q.clave}" data-estado="sin">
+      <div class="encuesta-pregunta-cab">
+        <p class="encuesta-pregunta-texto">${q.pregunta}</p>
+      </div>
+      <div class="encuesta-slider sin-responder">
+        <div class="encuesta-puntos" aria-hidden="true"><i data-n="1"></i><i data-n="2"></i><i data-n="3"></i><i data-n="4"></i><i data-n="5"></i></div>
+        <input type="range" min="1" max="5" step="1" value="3" aria-label="${q.pregunta}" />
+      </div>
+      <div class="encuesta-extremos"><span>${q.bajo}</span><span>${q.alto}</span></div>
+    </div>`).join('');
+
+  cont.querySelectorAll('.encuesta-pregunta').forEach(el => {
+    const input = el.querySelector('input[type="range"]');
+    const marcar = () => _calificacionMarcarEscala(el);
+    input.addEventListener('input', marcar);
+    input.addEventListener('pointerup', marcar);
+    input.addEventListener('keydown', e => { if (e.key.startsWith('Arrow')) marcar(); });
+  });
+}
+
+/** Registra la respuesta de una pregunta de escala y resalta el número elegido. */
+function _calificacionMarcarEscala(el) {
+  const valor = parseInt(el.querySelector('input[type="range"]').value, 10);
+  _respuestasCalificacion[el.dataset.clave] = valor;
+
+  el.dataset.estado = 'valor';
+  el.classList.remove('falta');
+  el.querySelector('.encuesta-slider').classList.remove('sin-responder');
+  el.querySelectorAll('.encuesta-puntos i').forEach(i => {
+    i.classList.toggle('sel', i.dataset.n === String(valor));
+  });
+
+  _actualizarProgresoCalificacion();
+}
 
 /**
- * Registra la respuesta SI/NO de una afirmación y recalcula la puntuación.
- * @param {number} pregunta — número de afirmación (1 a 5)
- * @param {boolean} valor — true = SI, false = NO
+ * Registra la respuesta SÍ/NO de una afirmación (SÍ = 5, NO = 1).
+ * @param {number} pregunta — 1 (plazo) o 2 (formato)
+ * @param {boolean} valor — true = SÍ, false = NO
  */
 function responderAfirmacion(pregunta, valor, boton) {
-  _respuestasCalificacion[pregunta] = valor;
+  _respuestasCalificacion[CALIFICACION_AUTOR_SINO[pregunta]] = valor ? 5 : 1;
 
   const fila = boton.closest('.calificar-afirmacion-fila');
+  fila.classList.remove('falta');
   fila.querySelectorAll('.btn-si-no').forEach(b => b.classList.remove('activo'));
   boton.classList.add('activo');
 
-  const respondidas = Object.keys(_respuestasCalificacion).length;
-  const puntuacion  = Object.values(_respuestasCalificacion).filter(v => v === true).length;
+  _actualizarProgresoCalificacion();
+}
 
-  // La puntuación se calcula y se guarda igual que siempre (cada SI = 1 estrella),
-  // pero no se muestra esa conversión acá: solo el progreso de respuestas.
-  document.getElementById('calificar-puntuacion').value = puntuacion;
+/** Muestra solo el progreso ("X de 7 respondidas"); el promedio aparece recién al confirmar. */
+function _actualizarProgresoCalificacion() {
   const label = document.getElementById('estrellas-label');
   if (label) {
-    label.textContent = `${respondidas} de 5 respondidas`;
+    label.textContent = `${Object.keys(_respuestasCalificacion).length} de ${CALIFICACION_AUTOR_TOTAL} respondidas`;
   }
 }
 
-async function enviarCalificacion() {
-  const idResena  = document.getElementById('calificar-id-resena')?.value;
-  const respondidas = Object.keys(_respuestasCalificacion).length;
+/**
+ * Promedio EXACTO (sin redondear) de las respuestas y su versión entera.
+ * entera = promedio redondeado a 1–5: es lo que siguen usando los puntos,
+ * las notificaciones y el botón Agradecer (puntuacion_autor).
+ */
+function _calcularCalificacionAutor() {
+  const valores = Object.values(_respuestasCalificacion);
+  const suma = valores.reduce((s, n) => s + n, 0);
+  const exacta = valores.length ? suma / valores.length : null;
+  const entera = exacta === null ? null : Math.min(5, Math.max(1, Math.round(exacta)));
+  return { exacta, entera, completa: valores.length === CALIFICACION_AUTOR_TOTAL };
+}
 
-  if (respondidas < 5) {
-    mostrarMensajeError('calificar-error', 'Respondé las 5 afirmaciones antes de confirmar.');
+async function enviarCalificacion() {
+  const idResena = document.getElementById('calificar-id-resena')?.value;
+  const { exacta, entera, completa } = _calcularCalificacionAutor();
+
+  if (!completa) {
+    document.querySelectorAll('#calificar-escala .encuesta-pregunta').forEach(el => {
+      el.classList.toggle('falta', !(el.dataset.clave in _respuestasCalificacion));
+    });
+    document.querySelectorAll('#calificar-afirmaciones .calificar-afirmacion-fila').forEach(fila => {
+      fila.classList.toggle('falta', !(CALIFICACION_AUTOR_SINO[fila.dataset.pregunta] in _respuestasCalificacion));
+    });
+    mostrarMensajeError('calificar-error', `Respondé las ${CALIFICACION_AUTOR_TOTAL} preguntas antes de confirmar.`);
     return;
   }
 
-  const puntuacion = Object.values(_respuestasCalificacion).filter(v => v === true).length;
-
   const { error } = await supabaseClient
     .from('resenas')
-    .update({ puntuacion_autor: puntuacion, fecha_puntuacion: new Date().toISOString() })
+    .update({
+      puntuacion_autor: entera,
+      puntuacion_autor_exacta: exacta,
+      encuesta_autor: { ..._respuestasCalificacion },
+      fecha_puntuacion: new Date().toISOString()
+    })
     .eq('id', idResena);
 
   if (error) {
@@ -1749,12 +1839,15 @@ async function enviarCalificacion() {
 
   const contenedor = document.getElementById(`resena-rating-${idResena}`);
   if (contenedor) {
-    contenedor.outerHTML = `<div class="resena-carpeta-estrellas" id="resena-rating-${idResena}">${'★'.repeat(puntuacion)}${'☆'.repeat(5 - puntuacion)}</div>`;
+    contenedor.outerHTML = `<div class="resena-carpeta-estrellas" id="resena-rating-${idResena}">${calificacionIndividualHtml(exacta, entera, { tamano: '1em' })}</div>`;
   }
   const r = (_reseñasCampanaActual || []).find(x => x.idReseña === idResena);
-  if (r) r.puntuacion = puntuacion;
+  if (r) {
+    r.puntuacion = entera;
+    r.puntuacionAutorExacta = exacta;
+  }
 
-  if (puntuacion >= 4) {
+  if (entera >= 4) {
     const contenedorAgradecer = document.getElementById(`resena-agradecer-${idResena}`);
     const alias = r?.reseñador?.alias || 'este reseñador';
     if (contenedorAgradecer) {
@@ -1771,7 +1864,7 @@ async function enviarCalificacion() {
     }
   }
 
-  mostrarMensajeOk('calificar-ok', '¡Reseña calificada!');
+  mostrarMensajeOk('calificar-ok', `¡Reseña calificada! Nota: ${formatearPromedio(exacta)}`);
   setTimeout(() => cerrarModales(), 1500);
 }
 

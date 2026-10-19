@@ -552,7 +552,7 @@ const AYUDAS_BOTONES_AUTOR = {
     titulo: '¿Qué veo en Ver reseñas?',
     largo:
       '<p>Una carpeta por cada reseña que te entregaron. Con <strong>Ver reseña completa</strong> ves sus estrellas, moods, frases favoritas, comentarios y los links donde la publicó.</p>' +
-      '<p><strong>Calificar reseña:</strong> respondés unas afirmaciones de SÍ/NO sobre su trabajo y cada SÍ suma una estrella. Esa calificación cuenta para su ranking.</p>' +
+      '<p><strong>Calificar reseña:</strong> respondés 7 preguntas sobre su trabajo: 2 de SÍ/NO (entrega en tiempo y formato elegido, el SÍ vale 5 y el NO vale 1) y 5 en una escala de 1 a 5 (lectura completa, opinión argumentada, tono respetuoso, creatividad y si remarcó algo significativo para vos). La nota final es el promedio exacto, con decimales, y se muestra en estrellas. Esa calificación cuenta para su ranking.</p>' +
       '<p><strong>💌 Agradecer:</strong> aparece en las reseñas que calificaste con 4 o 5 estrellas, para mandarle un mensaje de agradecimiento.</p>'
   },
   impulsar: {

@@ -1024,7 +1024,7 @@ if (!user) return;
 
 const { data: reseñas, error } = await supabaseClient
   .from('resenas')
-  .select(`id, fecha_entrega, puntuacion_autor, puntuacion_libro, puntuacion_exacta, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios,
+  .select(`id, fecha_entrega, puntuacion_autor, puntuacion_autor_exacta, puntuacion_libro, puntuacion_exacta, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios,
     moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
     rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
     mensaje_agradecimiento, fecha_agradecimiento,
@@ -1047,6 +1047,7 @@ _historialReseñador = (reseñas || []).map(r => ({
   idReseña: r.id,
   fechaEntrega: r.fecha_entrega,
   puntuacion: r.puntuacion_autor,
+  puntuacionAutorExacta: r.puntuacion_autor_exacta,
   puntuacionLibro: r.puntuacion_libro,
   puntuacionExacta: r.puntuacion_exacta,
   completion: null,
@@ -1137,7 +1138,7 @@ function construirCardHistorialReseña(r) {
   const c = r.campaña;
 
   const estrellas = r.puntuacion
-    ? `<p style="font-size:13px; color:var(--bordo);">${'★'.repeat(r.puntuacion)}${'☆'.repeat(5 - r.puntuacion)} (${r.puntuacion}/5)</p>`
+    ? `<p style="font-size:13px; color:var(--bordo);">${calificacionIndividualHtml(r.puntuacionAutorExacta, r.puntuacion, { tamano: '1.2em' })}${r.puntuacionAutorExacta == null ? ` (${r.puntuacion}/5)` : ''}</p>`
     : `<p style="font-size:12px; color:var(--gris-suave);">Sin calificar todavía</p>`;
 
   const completionHtml = r.completion != null ? `
