@@ -53,6 +53,13 @@
   <script>
     (async function chequearSesion() {
       try {
+        // Links compartidos de campaña (/?campana=ID): van siempre a la app,
+        // con o sin sesión, para que se abra el detalle de la campaña y no
+        // la portada. Cubre también los links que ya se compartieron antes.
+        if (new URLSearchParams(window.location.search).has('campana')) {
+          window.location.replace('/app' + window.location.search + window.location.hash);
+          return;
+        }
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
           const destino = '/app' + window.location.search + window.location.hash;

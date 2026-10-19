@@ -3327,7 +3327,7 @@ function construirItemRankingTop(l, posicion) {
  * @param {string} nombreLibro
  */
 async function compartirCampana(idCampana, nombreLibro) {
-  const url = `${CONFIG.FRONTEND_URL}/?campana=${idCampana}`;
+  const url = `${CONFIG.FRONTEND_URL}/app?campana=${idCampana}`;
   const texto = `¡Postulate para reseñar "${nombreLibro}"! 📖✨`;
 
  // Si el dispositivo soporta compartir nativo (celular)
