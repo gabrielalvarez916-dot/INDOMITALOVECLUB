@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=12" />
+  <link rel="stylesheet" href="css/styles.css?v=13" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
@@ -1337,24 +1337,49 @@
     </div>
   </div>
 
-<!-- Modal: cargar reseña (2 pasos: Reseña interna + Reseña pública) -->
+<!-- Modal: cargar reseña (3 pasos: Encuesta + Reseña interna + Reseña pública) -->
   <div id="modal-cargar-resena" class="modal modal-grande">
     <div class="modal-header">
       <h3 class="modal-titulo" id="resena-modal-titulo">Entregar reseña</h3>
       <button class="modal-cerrar" onclick="cerrarModales()">✕</button>
     </div>
     <div class="modal-body">
-      <p class="resena-paso-indicador" id="resena-paso-indicador">Paso 1/2</p>
+      <p class="resena-paso-indicador" id="resena-paso-indicador">Paso 1/3</p>
       <div class="ayuda-encabezado">
-        <p class="ayuda-encabezado-titulo" id="resena-encabezado-titulo">Tu reseña interna</p>
+        <p class="ayuda-encabezado-titulo" id="resena-encabezado-titulo">Tu encuesta</p>
         <p class="ayuda-encabezado-texto" id="resena-encabezado-texto">Contale a la plataforma qué te pareció el libro. Esto lo ve el autor dentro de Indómita, todavía no se publica en ningún lado. Te lleva un par de minutos. 💛</p>
       </div>
 
       <form id="form-cargar-resena" onsubmit="enviarResena(event)">
         <input type="hidden" id="resena-id-campana" />
 
-        <!-- ══════════ PASO 1/2 — RESEÑA INTERNA ══════════ -->
-        <div id="resena-paso1">
+        <!-- ══════════ PASO 1/3 — ENCUESTA ══════════ -->
+        <div id="resena-paso-encuesta">
+          <div class="resena-paso1-cabecera">
+            <img id="enc-portada" src="" alt="" class="resena-paso1-portada" onerror="this.style.display='none'" />
+            <div>
+              <p class="resena-paso1-titulo" id="enc-titulo"></p>
+              <p class="resena-paso1-autor" id="enc-autor"></p>
+            </div>
+          </div>
+
+          <div id="encuesta-preguntas"></div>
+
+          <div id="encuesta-resultado" class="encuesta-resultado" style="display:none;">
+            <p class="encuesta-resultado-titulo">Tu calificación del libro</p>
+            <div id="encuesta-resultado-estrellas"></div>
+          </div>
+
+          <div id="encuesta-error" class="mensaje-error" style="display:none;"></div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+            <button type="button" class="btn-primario" id="encuesta-btn-principal" onclick="encuestaAvanzar()">Ver mi calificación</button>
+          </div>
+        </div>
+
+        <!-- ══════════ PASO 2/3 — RESEÑA INTERNA ══════════ -->
+        <div id="resena-paso1" style="display:none;">
 
           <div class="resena-paso1-cabecera">
             <img id="paso1-portada" src="" alt="" class="resena-paso1-portada" onerror="this.style.display='none'" />
@@ -1368,19 +1393,6 @@
             <span>📅 Postulado: <strong id="paso1-fecha-postulacion">—</strong></span>
             <span class="resena-fechas-flecha">→</span>
             <span>Entregado: <strong id="paso1-fecha-entrega">—</strong></span>
-          </div>
-
-          <div class="form-grupo">
-            <label class="form-label" data-ayuda="estrellas">¿Cuántas estrellas le das al libro? *</label>
-            <div class="estrellas-container" id="resena-estrellas-container">
-              <button type="button" class="estrella" data-valor="1" onclick="seleccionarEstrellaLibro(1)">★</button>
-              <button type="button" class="estrella" data-valor="2" onclick="seleccionarEstrellaLibro(2)">★</button>
-              <button type="button" class="estrella" data-valor="3" onclick="seleccionarEstrellaLibro(3)">★</button>
-              <button type="button" class="estrella" data-valor="4" onclick="seleccionarEstrellaLibro(4)">★</button>
-              <button type="button" class="estrella" data-valor="5" onclick="seleccionarEstrellaLibro(5)">★</button>
-            </div>
-            <p class="estrellas-label" id="resena-estrellas-label">Sin calificar</p>
-            <input type="hidden" id="resena-puntuacion-libro" value="" />
           </div>
 
           <div class="form-grupo">
@@ -1525,12 +1537,12 @@
           <div id="paso1-error" class="mensaje-error" style="display:none;"></div>
 
           <div class="modal-footer">
-            <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+            <button type="button" class="btn-secundario" onclick="volverAPasoEncuesta()">← Atrás</button>
             <button type="button" class="btn-primario" onclick="irAPasoResena2()">Siguiente →</button>
           </div>
         </div>
 
-        <!-- ══════════ PASO 2/2 — RESEÑA PÚBLICA ══════════ -->
+        <!-- ══════════ PASO 3/3 — RESEÑA PÚBLICA ══════════ -->
         <div id="resena-paso2" style="display:none;">
           <p class="form-info" id="resena-aviso-plataformas">Cargá al menos un link de reseña. Podés agregar todos los que tengas.</p>
           <p class="form-info"><span class="form-label" data-ayuda="linkGeneral" style="display:inline;">¿Qué link tengo que pegar?</span></p>
@@ -2501,8 +2513,9 @@
 <script src="js/audiolibro-autor.js?v=1"></script>
 <script src="js/audiolibro-campana.js?v=2"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=11"></script>
-<script src="js/resenador.js?v=6"></script>
+<script src="js/ayudas.js?v=12"></script>
+<script src="js/estrellas.js?v=1"></script>
+<script src="js/resenador.js?v=7"></script>
 <script src="js/admin.js?v=7"></script>
 <script src="js/vendedor.js?v=4"></script>
 <script src="js/admin-vendedores.js?v=4"></script>

@@ -507,10 +507,13 @@ function abrirCargarResena(idCampaña) {
   document.getElementById('paso1-fecha-postulacion').textContent = item.fechaPostulacion ? formatearFechaAmigable(item.fechaPostulacion) : '—';
   document.getElementById('paso1-fecha-entrega').textContent = formatearFechaAmigable(new Date().toISOString());
 
-  // Reset estrellas
-  document.getElementById('resena-puntuacion-libro').value = '';
-  document.getElementById('resena-estrellas-label').textContent = 'Sin calificar';
-  document.querySelectorAll('#resena-estrellas-container .estrella').forEach(e => e.classList.remove('activa'));
+  // Encuesta (paso 1): portada/título y preguntas en blanco
+  const encPortada = document.getElementById('enc-portada');
+  encPortada.style.display = '';
+  encPortada.src = item.campaña.linkPortada || '';
+  document.getElementById('enc-titulo').textContent = item.campaña.nombreLibro || '';
+  document.getElementById('enc-autor').textContent = 'por ' + (item.campaña.nombreAutor || '');
+  _renderEncuestaResena();
 
   // Reset moods
   document.querySelectorAll('input[name="resena-mood"]').forEach(cb => {
@@ -554,17 +557,184 @@ function seleccionarRatingDecorativo(categoria, valor) {
 }
 
 /**
- * Muestra el Paso 1 o el Paso 2 del modal de reseña y actualiza el indicador.
+ * Muestra uno de los 3 pasos del modal de reseña y actualiza el indicador.
+ * 1 = Encuesta, 2 = Reseña interna, 3 = Reseña pública (links).
  */
 function _mostrarPasoResena(numero) {
-  document.getElementById('resena-paso1').style.display = numero === 1 ? '' : 'none';
-  document.getElementById('resena-paso2').style.display = numero === 2 ? '' : 'none';
-  document.getElementById('resena-paso-indicador').textContent = `Paso ${numero}/2`;
+  document.getElementById('resena-paso-encuesta').style.display = numero === 1 ? '' : 'none';
+  document.getElementById('resena-paso1').style.display = numero === 2 ? '' : 'none';
+  document.getElementById('resena-paso2').style.display = numero === 3 ? '' : 'none';
+  document.getElementById('resena-paso-indicador').textContent = `Paso ${numero}/3`;
   if (typeof actualizarEncabezadoResena === 'function') actualizarEncabezadoResena(numero);
 }
 
+// ────────────────────────────────────────────────────────────
+// ENCUESTA (paso 1)
+// ────────────────────────────────────────────────────────────
+
 /**
- * Valida el Paso 1 (frase favorita obligatoria) y avanza al Paso 2.
+ * Preguntas de la encuesta. Cada una va de 1 (mal) a 5 (excelente) o "No tiene"
+ * (no cuenta para el promedio, como si la pregunta no existiera).
+ * La clave es la que se guarda en resenas.encuesta (jsonb).
+ */
+const ENCUESTA_RESENA = [
+  { clave: 'claridad',     pregunta: '¿Cómo evaluarías la claridad de la escritura?', nota: '',
+    bajo: 'La escritura dificulta mucho la comprensión', alto: 'Es muy clara, precisa y fluida' },
+  { clave: 'consistencia', pregunta: '¿Qué tan consistente es el libro?', nota: 'Evaluá contradicciones, errores, cabos sueltos, etc.',
+    bajo: 'Presenta numerosas inconsistencias importantes', alto: 'Mantiene una gran coherencia de principio a fin' },
+  { clave: 'personajes',   pregunta: '¿Cómo están desarrollados los personajes?', nota: '',
+    bajo: 'Son planos, poco definidos o difíciles de comprender', alto: 'Son complejos, creíbles y su evolución está muy bien construida' },
+  { clave: 'historia',     pregunta: '¿Cómo se desarrolla la historia?', nota: '',
+    bajo: 'La trama es confusa o carece de desarrollo', alto: 'La trama está cuidadosamente construida' },
+  { clave: 'ritmo',        pregunta: '¿Cómo se administra el ritmo de la historia?', nota: '',
+    bajo: 'El ritmo dificulta mucho avanzar en la lectura', alto: 'El ritmo está muy bien logrado y cada parte tiene el espacio necesario' },
+  { clave: 'emociones',    pregunta: '¿Cómo se desarrollan los vínculos y las emociones?', nota: '',
+    bajo: 'Los vínculos y las emociones resultan poco creíbles', alto: 'El desarrollo emocional es profundo y consistente' },
+  { clave: 'resolucion',   pregunta: '¿Qué tan bien se resuelve la novela?', nota: '',
+    bajo: 'El final contradice o deja sin resolver los aspectos importantes', alto: 'El desenlace es sólido, satisfactorio y está bien planteado' },
+  { clave: 'dialogos',     pregunta: '¿Cómo están desarrollados los diálogos?', nota: '',
+    bajo: 'Son poco creíbles, redundantes o no suman', alto: 'Son consistentes, creíbles y ayudan a mejorar la historia' }
+];
+
+/** Dibuja las preguntas en blanco (ninguna respondida, sin números ni estrellas a la vista). */
+function _renderEncuestaResena() {
+  const cont = document.getElementById('encuesta-preguntas');
+  if (!cont) return;
+
+  cont.innerHTML = ENCUESTA_RESENA.map(q => `
+    <div class="encuesta-pregunta" data-clave="${q.clave}" data-estado="sin">
+      <div class="encuesta-pregunta-cab">
+        <p class="encuesta-pregunta-texto">${q.pregunta}</p>
+        <button type="button" class="encuesta-no-tiene" aria-pressed="false">No tiene</button>
+      </div>
+      ${q.nota ? `<p class="encuesta-nota">${q.nota}</p>` : ''}
+      <div class="encuesta-slider sin-responder">
+        <div class="encuesta-puntos" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <input type="range" min="1" max="5" step="1" value="3" aria-label="${q.pregunta}" />
+      </div>
+      <div class="encuesta-extremos"><span>${q.bajo}</span><span>${q.alto}</span></div>
+    </div>`).join('');
+
+  cont.querySelectorAll('.encuesta-pregunta').forEach(el => {
+    const input = el.querySelector('input[type="range"]');
+    const marcar = () => _encuestaMarcarRespondida(el);
+    input.addEventListener('input', marcar);
+    input.addEventListener('pointerup', marcar);
+    input.addEventListener('keydown', e => { if (e.key.startsWith('Arrow')) marcar(); });
+    el.querySelector('.encuesta-no-tiene').addEventListener('click', () => _encuestaToggleNoTiene(el));
+  });
+
+  _encuestaOcultarResultado();
+  ocultarMensajes('encuesta-error');
+}
+
+function _encuestaMarcarRespondida(el) {
+  el.dataset.estado = 'valor';
+  el.classList.remove('falta');
+  el.querySelector('.encuesta-slider').classList.remove('sin-responder');
+  _encuestaOcultarResultado();
+}
+
+function _encuestaToggleNoTiene(el) {
+  const btn = el.querySelector('.encuesta-no-tiene');
+  const slider = el.querySelector('.encuesta-slider');
+  const input = el.querySelector('input[type="range"]');
+  const activar = el.dataset.estado !== 'no';
+
+  if (activar) {
+    el.dataset.estado = 'no';
+    el.classList.remove('falta');
+    slider.classList.add('desactivado');
+    input.disabled = true;
+  } else {
+    el.dataset.estado = 'sin';
+    slider.classList.remove('desactivado');
+    slider.classList.add('sin-responder');
+    input.disabled = false;
+    input.value = 3;
+  }
+  btn.setAttribute('aria-pressed', activar ? 'true' : 'false');
+  btn.classList.toggle('activo', activar);
+  _encuestaOcultarResultado();
+}
+
+function _encuestaOcultarResultado() {
+  const res = document.getElementById('encuesta-resultado');
+  if (res) res.style.display = 'none';
+  const btn = document.getElementById('encuesta-btn-principal');
+  if (btn) btn.textContent = 'Ver mi calificación';
+}
+
+/**
+ * Lee el estado de la encuesta.
+ * respuestas: { clave: 1-5 | null }  (null = "No tiene")
+ * exacta: promedio SIN redondear de las respondidas (los "No tiene" no cuentan)
+ * completa: todas respondidas o marcadas "No tiene" y al menos una con valor
+ */
+function _encuestaCalcular() {
+  const respuestas = {};
+  const sinResponder = [];
+  let suma = 0, cantidad = 0;
+
+  document.querySelectorAll('#encuesta-preguntas .encuesta-pregunta').forEach(el => {
+    const clave = el.dataset.clave;
+    if (el.dataset.estado === 'valor') {
+      const n = parseInt(el.querySelector('input[type="range"]').value, 10);
+      respuestas[clave] = n;
+      suma += n; cantidad++;
+    } else if (el.dataset.estado === 'no') {
+      respuestas[clave] = null;
+    } else {
+      sinResponder.push(el);
+    }
+  });
+
+  return {
+    respuestas,
+    sinResponder,
+    cantidad,
+    exacta: cantidad > 0 ? suma / cantidad : null,
+    completa: sinResponder.length === 0 && cantidad > 0
+  };
+}
+
+/** Botón principal del paso 1: primero muestra el resultado, después avanza. */
+function encuestaAvanzar() {
+  ocultarMensajes('encuesta-error');
+  const res = document.getElementById('encuesta-resultado');
+
+  if (res.style.display !== 'none') {
+    _mostrarPasoResena(2);
+    return;
+  }
+
+  const e = _encuestaCalcular();
+  if (e.sinResponder.length > 0) {
+    e.sinResponder.forEach(el => el.classList.add('falta'));
+    e.sinResponder[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    mostrarMensajeError('encuesta-error',
+      e.sinResponder.length === 1
+        ? 'Te falta una pregunta. Respondela o marcá "No tiene".'
+        : `Te faltan ${e.sinResponder.length} preguntas. Respondelas o marcá "No tiene".`);
+    return;
+  }
+  if (e.cantidad === 0) {
+    mostrarMensajeError('encuesta-error', 'Tenés que responder al menos una pregunta para calificar el libro.');
+    return;
+  }
+
+  document.getElementById('encuesta-resultado-estrellas').innerHTML = estrellasProporcionales(e.exacta, { tamano: '2.6rem' });
+  res.style.display = '';
+  document.getElementById('encuesta-btn-principal').textContent = 'Siguiente →';
+  res.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function volverAPasoEncuesta() {
+  _mostrarPasoResena(1);
+}
+
+/**
+ * Valida la reseña interna (frase favorita obligatoria) y avanza a los links.
  */
 function irAPasoResena2() {
   ocultarMensajes('paso1-error');
@@ -573,11 +743,11 @@ function irAPasoResena2() {
     mostrarMensajeError('paso1-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinFrase : 'La primera frase favorita es obligatoria.'));
     return;
   }
-  _mostrarPasoResena(2);
+  _mostrarPasoResena(3);
 }
 
 function volverAPasoResena1() {
-  _mostrarPasoResena(1);
+  _mostrarPasoResena(2);
 }
 
 /**
@@ -672,7 +842,7 @@ async function enviarResena(event) {
   const frase1 = document.getElementById('resena-frase-1')?.value?.trim();
   if (!frase1) {
     mostrarMensajeError('resena-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinFrase : 'La primera frase favorita es obligatoria.'));
-    _mostrarPasoResena(1);
+    _mostrarPasoResena(2);
     return;
   }
 
@@ -687,7 +857,6 @@ async function enviarResena(event) {
     linkYouTube:      document.getElementById('resena-youtube')?.value?.trim(),
     linkBlog:         document.getElementById('resena-blog')?.value?.trim(),
     comentarios:      document.getElementById('resena-comentarios')?.value?.trim(),
-    puntuacionLibro:  document.getElementById('resena-puntuacion-libro')?.value || '',
     frase1,
     frase2: document.getElementById('resena-frase-2')?.value?.trim(),
     frase3: document.getElementById('resena-frase-3')?.value?.trim(),
@@ -716,21 +885,25 @@ async function enviarResena(event) {
   if (!hayAlMenosUnLink) {
     const listaPedida = plataformasPedidas.length > 0 ? plataformasPedidas.join(' o ') : 'Instagram, TikTok, Amazon, Goodreads, StoryGraph, YouTube o Blog';
     mostrarMensajeError('resena-error', `Necesitás cargar al menos un link de reseña (${listaPedida}) para poder entregar.`);
-    _mostrarPasoResena(2);
+    _mostrarPasoResena(3);
     return;
   }
 
-  if (!datos.puntuacionLibro) {
-    mostrarMensajeError('resena-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinEstrellas : 'Tenés que calificar el libro con estrellas antes de entregar la reseña.'));
+  const encuesta = _encuestaCalcular();
+  if (!encuesta.completa) {
+    mostrarMensajeError('resena-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinEstrellas : 'Tenés que completar la encuesta antes de entregar la reseña.'));
     _mostrarPasoResena(1);
     return;
   }
+  datos.encuesta = encuesta.respuestas;
+  datos.puntuacionExacta = encuesta.exacta;
+  datos.puntuacionLibro = Math.round(encuesta.exacta);
 
   for (const [plataforma, link] of Object.entries(linksCargados)) {
     const errorDominio = _validarDominioLinkResena(link, plataforma);
     if (errorDominio) {
       mostrarMensajeError('resena-error', errorDominio);
-      _mostrarPasoResena(2);
+      _mostrarPasoResena(3);
       return;
     }
   }
@@ -780,7 +953,9 @@ async function _finalizarEnvioResena(idCampaña, datos, moods) {
     link_youtube: datos.linkYouTube || '',
     link_blog: datos.linkBlog || '',
     comentarios: datos.comentarios || '',
-    puntuacion_libro: datos.puntuacionLibro ? parseInt(datos.puntuacionLibro) : null,
+    puntuacion_libro: datos.puntuacionLibro,
+    puntuacion_exacta: datos.puntuacionExacta,
+    encuesta: datos.encuesta,
     moods: moods.length ? moods : null,
     frase_favorita_1: datos.frase1,
     frase_favorita_2: datos.frase2 || null,
@@ -1229,16 +1404,6 @@ const { mes, destacados, top5, top20, ligas, lista_completa } = data;
   `;
 }
 
-function seleccionarEstrellaLibro(valor) {
-  document.getElementById('resena-puntuacion-libro').value = valor;
-
-  const labels = ['', 'No me gustó', 'Estuvo bien', 'Me gustó', 'Muy bueno', '¡Excelente!'];
-  document.getElementById('resena-estrellas-label').textContent = labels[valor] || '';
-
-  document.querySelectorAll('#resena-estrellas-container .estrella').forEach(btn => {
-    btn.classList.toggle('activa', parseInt(btn.dataset.valor) <= valor);
-  });
-}
 async function cargarRankingLibros(mesAño) {
   const contenedor = document.getElementById('ranking-libros-contenedor');
   if (!contenedor) return;

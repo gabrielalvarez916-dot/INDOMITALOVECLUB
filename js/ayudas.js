@@ -12,6 +12,10 @@
 const AYUDAS_RESENA = {
 
   /* ── Encabezados de cada paso ── */
+  encabezadoEncuesta: {
+    titulo: 'Tu encuesta',
+    texto: 'Respondé unas preguntas rápidas sobre el libro, del 1 (mal) al 5 (excelente). Si algo no aplica (por ejemplo, un libro de no ficción sin personajes), marcá "No tiene" y esa pregunta no cuenta. Al final ves tu calificación. 💛'
+  },
   encabezado1: {
     titulo: 'Tu reseña interna',
     texto: 'Contale a la plataforma qué te pareció el libro. Esto lo ve el autor dentro de Indómita, todavía no se publica en ningún lado. Te lleva un par de minutos. 💛'
@@ -179,7 +183,7 @@ const ERRORES_CAMPANA = {
 /* ── Mensajes de error del flujo ── */
 const ERRORES_RESENA = {
   sinFrase: 'Falta tu frase favorita. Es obligatoria: copiá una del libro que te haya marcado.',
-  sinEstrellas: 'Falta calificar el libro con estrellas. Es obligatorio para poder entregar la reseña.'
+  sinEstrellas: 'Falta completar la encuesta del libro. Es obligatoria para poder entregar la reseña.'
 };
 
 /* ════════════════════════════════════════════════════════════
@@ -726,7 +730,7 @@ function cerrarPanelesAyuda(contenedor) {
 
 /** Cambia el encabezado explicativo según el paso (1 o 2). */
 function actualizarEncabezadoResena(numero) {
-  const def = numero === 1 ? AYUDAS_RESENA.encabezado1 : AYUDAS_RESENA.encabezado2;
+  const def = numero === 1 ? AYUDAS_RESENA.encabezadoEncuesta : (numero === 2 ? AYUDAS_RESENA.encabezado1 : AYUDAS_RESENA.encabezado2);
   const t = document.getElementById('resena-encabezado-titulo');
   const x = document.getElementById('resena-encabezado-texto');
   if (t) t.textContent = def.titulo;
