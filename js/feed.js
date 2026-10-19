@@ -717,7 +717,7 @@ ${requisitosHtml}
           <div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0;">
             ${c.rankingLibro.esTop5  ? `<span class="badge badge-top5">🏆 Top 5</span>` : ''}
             ${c.rankingLibro.esTop20 && !c.rankingLibro.esTop5 ? `<span class="badge badge-top20">⭐ Top 20</span>` : ''}
-            <span style="font-size:11px; color:var(--gris-suave);">⭐ ${c.rankingLibro.promedio?.toFixed(1) ?? '—'} · ${c.rankingLibro.totalReseñas} reseña${c.rankingLibro.totalReseñas !== 1 ? 's' : ''}</span>
+            <span style="font-size:11px; color:var(--gris-suave);">⭐ ${formatearPromedio(c.rankingLibro.promedio)} · ${c.rankingLibro.totalReseñas} reseña${c.rankingLibro.totalReseñas !== 1 ? 's' : ''}</span>
           </div>` : ''}
           ${c.modalidadLectura === 'descarga'
             ? '<p class="campana-aclaracion">⬇️ <strong>Aclaración:</strong> Se lee con descarga</p>'
@@ -832,7 +832,7 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
 
   const conValoracion = data.filter(r => r.puntuacionLibro != null);
   const total = conValoracion.length;
-  const promedio = total > 0 ? conValoracion.reduce((s, r) => s + r.puntuacionLibro, 0) / total : 0;
+  const promedio = total > 0 ? conValoracion.reduce((s, r) => s + Number(r.puntuacionExacta ?? r.puntuacionLibro), 0) / total : 0;
 
   const conteos = {};
   conValoracion.forEach(r => { conteos[r.puntuacionLibro] = (conteos[r.puntuacionLibro] || 0) + 1; });
@@ -866,7 +866,7 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
       <p class="resenas-obtenidas-titulo">Reseñas obtenidas</p>
 
       <div class="resenas-obtenidas-resumen">
-        <span class="resenas-obtenidas-promedio">⭐ ${promedio.toFixed(1)}</span>
+        <span class="resenas-obtenidas-promedio">⭐ ${formatearPromedio(promedio)}</span>
         <span class="resenas-obtenidas-total">${total} valoraci${total === 1 ? 'ón' : 'ones'}</span>
       </div>
 
@@ -907,7 +907,7 @@ async function _construirBloqueReseñasLibro(campanaRaw) {
               <div class="resenas-obtenidas-item-header" ${r.usuarioId ? `onclick="abrirPerfilPublico('${r.usuarioId}', 'reseñador')" style="cursor:pointer;"` : ''}>
                 <img class="resenas-obtenidas-item-avatar" src="${r.avatarUrl || '/api/drive?id=14wvL8QFWA6KWyQ8A5LvR_fYetudgHKsK'}" alt="" onerror="this.style.visibility='hidden'" />
                 <span class="resenas-obtenidas-item-alias">${_esc(r.alias || 'Reseñador@')}${badgeSeguidoresVerificados(r.seguidoresVerificados)}</span>
-                <span class="resenas-obtenidas-item-estrellas">${'★'.repeat(r.puntuacionLibro || 0)}${'☆'.repeat(5 - (r.puntuacionLibro || 0))}</span>
+                <span class="resenas-obtenidas-item-estrellas">${calificacionIndividualHtml(r.puntuacionExacta, r.puntuacionLibro)}</span>
               </div>
               <p class="resenas-obtenidas-item-comentario">${_esc(r.comentarios)}</p>
               <div class="me-tienta-fila">${MeTienta.boton('resena', r.idResena, r.meTienta)}</div>

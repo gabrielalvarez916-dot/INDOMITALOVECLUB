@@ -513,6 +513,8 @@ function abrirCargarResena(idCampaña) {
   encPortada.src = item.campaña.linkPortada || '';
   document.getElementById('enc-titulo').textContent = item.campaña.nombreLibro || '';
   document.getElementById('enc-autor').textContent = 'por ' + (item.campaña.nombreAutor || '');
+  _encuestaFinal = null; // la encuesta se congela al avanzar; acá arranca de cero
+  document.getElementById('resena-calificacion-valor').innerHTML = '';
   _renderEncuestaResena();
 
   // Reset moods
@@ -624,7 +626,6 @@ function _renderEncuestaResena() {
     el.querySelector('.encuesta-no-tiene').addEventListener('click', () => _encuestaToggleNoTiene(el));
   });
 
-  _encuestaOcultarResultado();
   ocultarMensajes('encuesta-error');
 }
 
@@ -632,7 +633,6 @@ function _encuestaMarcarRespondida(el) {
   el.dataset.estado = 'valor';
   el.classList.remove('falta');
   el.querySelector('.encuesta-slider').classList.remove('sin-responder');
-  _encuestaOcultarResultado();
 }
 
 function _encuestaToggleNoTiene(el) {
@@ -655,14 +655,6 @@ function _encuestaToggleNoTiene(el) {
   }
   btn.setAttribute('aria-pressed', activar ? 'true' : 'false');
   btn.classList.toggle('activo', activar);
-  _encuestaOcultarResultado();
-}
-
-function _encuestaOcultarResultado() {
-  const res = document.getElementById('encuesta-resultado');
-  if (res) res.style.display = 'none';
-  const btn = document.getElementById('encuesta-btn-principal');
-  if (btn) btn.textContent = 'Ver mi calificación';
 }
 
 /**
@@ -698,15 +690,15 @@ function _encuestaCalcular() {
   };
 }
 
-/** Botón principal del paso 1: primero muestra el resultado, después avanza. */
+/**
+ * Respuestas congeladas de la encuesta. Se fijan al avanzar al paso 2 y de ahí
+ * en más no hay forma de volver ni de cambiarlas.
+ */
+let _encuestaFinal = null;
+
+/** Botón del paso 1: valida, pide confirmación (no hay vuelta atrás) y avanza. */
 function encuestaAvanzar() {
   ocultarMensajes('encuesta-error');
-  const res = document.getElementById('encuesta-resultado');
-
-  if (res.style.display !== 'none') {
-    _mostrarPasoResena(2);
-    return;
-  }
 
   const e = _encuestaCalcular();
   if (e.sinResponder.length > 0) {
@@ -723,14 +715,18 @@ function encuestaAvanzar() {
     return;
   }
 
-  document.getElementById('encuesta-resultado-estrellas').innerHTML = estrellasProporcionales(e.exacta, { tamano: '2.6rem' });
-  res.style.display = '';
-  document.getElementById('encuesta-btn-principal').textContent = 'Siguiente →';
-  res.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
+  const continuar = () => {
+    _encuestaFinal = { respuestas: e.respuestas, exacta: e.exacta };
+    document.getElementById('resena-calificacion-valor').innerHTML =
+      calificacionIndividualHtml(e.exacta, null, { tamano: '1.9rem' });
+    _mostrarPasoResena(2);
+  };
 
-function volverAPasoEncuesta() {
-  _mostrarPasoResena(1);
+  mostrarConfirmacion(
+    'Una vez que sigas, no vas a poder volver ni cambiar tus respuestas.<br><br>¿Querés continuar?',
+    continuar,
+    { titulo: 'Antes de seguir', textoConfirmar: 'Continuar', textoCancelar: 'Revisar respuestas' }
+  );
 }
 
 /**
@@ -889,8 +885,8 @@ async function enviarResena(event) {
     return;
   }
 
-  const encuesta = _encuestaCalcular();
-  if (!encuesta.completa) {
+  const encuesta = _encuestaFinal;
+  if (!encuesta) {
     mostrarMensajeError('resena-error', (typeof ERRORES_RESENA !== 'undefined' ? ERRORES_RESENA.sinEstrellas : 'Tenés que completar la encuesta antes de entregar la reseña.'));
     _mostrarPasoResena(1);
     return;
@@ -1015,7 +1011,7 @@ if (!user) return;
 
 const { data: reseñas, error } = await supabaseClient
   .from('resenas')
-  .select(`id, fecha_entrega, puntuacion_autor, puntuacion_libro, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios,
+  .select(`id, fecha_entrega, puntuacion_autor, puntuacion_libro, puntuacion_exacta, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios,
     moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
     rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
     mensaje_agradecimiento, fecha_agradecimiento,
@@ -1039,6 +1035,7 @@ _historialReseñador = (reseñas || []).map(r => ({
   fechaEntrega: r.fecha_entrega,
   puntuacion: r.puntuacion_autor,
   puntuacionLibro: r.puntuacion_libro,
+  puntuacionExacta: r.puntuacion_exacta,
   completion: null,
   linkInstagram: r.link_instagram,
   linkTikTok: r.link_tiktok,
@@ -1186,6 +1183,7 @@ function abrirResenaInternaHistorial(idReseña) {
     nombreLibro: c?.nombreLibro,
     nombreAutor: c?.nombreAutor,
     puntuacionLibro: r.puntuacionLibro,
+    puntuacionExacta: r.puntuacionExacta,
     fechaEntrega: r.fechaEntrega,
     moods: r.moods,
     frases: [r.frase1, r.frase2, r.frase3],
@@ -1450,7 +1448,7 @@ async function cargarRankingLibros(mesAño) {
                   ${l.linkPortada
                     ? `<img src="${l.linkPortada}" alt="${l.nombreLibro}" class="ranking-podio-portada ${esOro ? 'ranking-podio-portada--oro' : ''}" onerror="this.style.display='none'" />`
                     : `<div class="ranking-podio-portada ${esOro ? 'ranking-podio-portada--oro' : ''}" style="display:flex; align-items:center; justify-content:center; font-size:22px;">📖</div>`}
-                  <p class="ranking-podio-puntos">★ ${l.promedio?.toFixed(1) ?? '—'}</p>
+                  <p class="ranking-podio-puntos">★ ${formatearPromedio(l.promedio)}</p>
                   <div class="ranking-podio-bloque ranking-podio-${altura}">
                     <span class="ranking-podio-bloque-numero">${l.posicion}</span>
                   </div>
@@ -1505,7 +1503,7 @@ function construirSliderCardConNumero(libro) {
         : `<div style="width:100px; height:140px; background:var(--rosa-claro); border-radius:var(--radio); display:flex; align-items:center; justify-content:center; font-size:32px;">📖</div>`}
       <p class="ranking-slider-card-titulo">${libro.nombreLibro}</p>
       <p class="ranking-slider-card-autor">por ${libro.nombreAutor}</p>
-      <p style="font-size:11px; color:var(--bordo); font-weight:700;">★ ${libro.promedio?.toFixed(1) ?? '—'}</p>
+      <p style="font-size:11px; color:var(--bordo); font-weight:700;">★ ${formatearPromedio(libro.promedio)}</p>
     </div>
   `;
 }
@@ -1513,7 +1511,7 @@ function construirSliderCardConNumero(libro) {
 function construirSliderCard(libro, categoria) {
   const metrica = categoria === 'masLeido'
     ? `${libro.totalReseñas} reseñas`
-    : `★ ${libro.promedio?.toFixed(1)}`;
+    : `★ ${formatearPromedio(libro.promedio)}`;
 
   return `
     <div class="ranking-slider-card">
@@ -1538,7 +1536,7 @@ function construirTopItem(libro) {
         <p class="ranking-top-item-titulo">${libro.nombreLibro}</p>
         <p class="ranking-top-item-autor">por ${libro.nombreAutor}</p>
       </div>
-      <p class="ranking-top-item-puntaje">★ ${libro.promedio?.toFixed(1)}</p>
+      <p class="ranking-top-item-puntaje">★ ${formatearPromedio(libro.promedio)}</p>
     </div>
   `;
 }

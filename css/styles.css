@@ -1844,14 +1844,17 @@ img { max-width: 100%; display: block; }
 .encuesta-extremos span { flex: 1; }
 .encuesta-extremos span:last-child { text-align: right; }
 
-.encuesta-resultado {
-  text-align: center;
+.nota-num { font-weight: 700; color: var(--bordo); margin-left: 0.45em; font-size: 0.9em; letter-spacing: 0; }
+
+.calificacion-bloqueada {
   background: var(--rosa-claro);
-  border-radius: var(--radio-grande);
-  padding: 18px 12px 20px;
-  margin: 18px 0 6px;
+  border-radius: var(--radio);
+  padding: 12px 14px 10px;
+  text-align: center;
 }
-.encuesta-resultado-titulo { font-family: var(--fuente-titulo); color: var(--bordo); font-size: 17px; margin: 0 0 10px; }
+.calificacion-bloqueada-valor { font-size: 1.9rem; margin: 6px 0 4px; }
+.calificacion-bloqueada-valor .nota-num { font-size: 0.75em; }
+.calificacion-bloqueada-nota { font-size: 12px; color: var(--gris-suave); margin: 0; }
 
 /* ── Biblioteca ───────────────────────────────────────────── */
 .biblioteca-lista {

@@ -274,11 +274,11 @@ async function cargarEstadisticasAutor(idUsuario) {
 
     const { data: resenas } = await supabaseClient
       .from('resenas')
-      .select('puntuacion_libro')
+      .select('puntuacion_libro, puntuacion_exacta')
       .in('id_campana', idsCampanas);
 
     reseñasRecibidas = resenas?.length || 0;
-    const puntuaciones = (resenas || []).map(r => r.puntuacion_libro).filter(p => p != null);
+    const puntuaciones = (resenas || []).map(r => r.puntuacion_exacta ?? r.puntuacion_libro).filter(p => p != null).map(Number);
     promedioCalificaciones = puntuaciones.length > 0
       ? puntuaciones.reduce((a, b) => a + b, 0) / puntuaciones.length
       : null;
@@ -290,7 +290,7 @@ async function cargarEstadisticasAutor(idUsuario) {
     { icono: '📣', valor: s.campañasActivas ?? 0, label: 'Campañas activas', variante: 'bordo' },
     { icono: '⭐', valor: s.reseñasRecibidas ?? 0, label: 'Reseñas recibidas', variante: 'dorado' },
     { icono: '👥', valor: s.reseñadoresAprobados ?? 0, label: 'Reseñadores aprobados', variante: 'rosa' },
-    { icono: '📊', valor: s.promedioCalificaciones ? s.promedioCalificaciones.toFixed(1) : '—', label: 'Promedio de calificaciones', variante: 'crema' }
+    { icono: '📊', valor: s.promedioCalificaciones ? formatearPromedio(s.promedioCalificaciones) : '—', label: 'Promedio de calificaciones', variante: 'crema' }
   ];
 
   contenedor.innerHTML = stats.map(s => `
@@ -1282,7 +1282,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
   const { data, error } = await supabaseClient
     .from('resenas')
     .select(`
-      id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios, puntuacion_autor, puntuacion_libro,
+      id, fecha_entrega, link_instagram, link_tiktok, link_amazon, link_goodreads, link_storygraph, link_youtube, link_blog, comentarios, puntuacion_autor, puntuacion_libro, puntuacion_exacta,
       mensaje_agradecimiento, fecha_agradecimiento,
       moods, frase_favorita_1, frase_favorita_2, frase_favorita_3,
       rating_romance, rating_spice, rating_drama, rating_estilo, rating_tension, rating_ritmo, rating_worldbuilding,
@@ -1315,6 +1315,7 @@ async function verReseñasCampana(idCampana, nombreLibro) {
     comentarios: r.comentarios,
     puntuacion: r.puntuacion_autor,
     puntuacionLibro: r.puntuacion_libro,
+    puntuacionExacta: r.puntuacion_exacta,
     mensajeAgradecimiento: r.mensaje_agradecimiento,
     fechaAgradecimiento: r.fecha_agradecimiento,
     moods: r.moods || [],
@@ -1651,6 +1652,7 @@ function abrirResenaInternaAutor(idResena) {
     nombreLibro: r.nombreLibro,
     nombreAutor: r.nombreAutor,
     puntuacionLibro: r.puntuacionLibro,
+    puntuacionExacta: r.puntuacionExacta,
     fechaEntrega: r.fechaEntrega,
     moods: r.moods,
     frases: [r.frase1, r.frase2, r.frase3],
@@ -3314,7 +3316,7 @@ function construirItemRankingTop(l, posicion) {
         <p class="ranking-top-item-titulo">${l.nombreLibro}</p>
         <p class="ranking-top-item-autor">${l.nombreAutor}</p>
       </div>
-      <span class="ranking-top-item-puntaje">⭐ ${l.promedioPuntuacion?.toFixed(1) ?? '—'}</span>
+      <span class="ranking-top-item-puntaje">⭐ ${formatearPromedio(l.promedioPuntuacion)}</span>
     </div>
   `;
 }
@@ -3895,7 +3897,7 @@ async function cargarRankingLibros() {
         ${libros.map((l, i) => `
           <tr>
             <td><strong>${_esc(l.nombreLibro)}</strong></td>
-            <td>⭐ ${l.promedioPuntuacion ? l.promedioPuntuacion.toFixed(2) : '—'}</td>
+            <td>⭐ ${l.promedioPuntuacion ? formatearPromedio(l.promedioPuntuacion) : '—'}</td>
             <td>${l.cantidadPuntuaciones || 0}</td>
             <td>
               ${l.selloCampaña 

@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=13" />
+  <link rel="stylesheet" href="css/styles.css?v=14" />
   <script>
     // Referidos: si entró con ?ref=CODIGO lo guardamos para asociarlo cuando se registre.
     try {
@@ -1365,16 +1365,11 @@
 
           <div id="encuesta-preguntas"></div>
 
-          <div id="encuesta-resultado" class="encuesta-resultado" style="display:none;">
-            <p class="encuesta-resultado-titulo">Tu calificación del libro</p>
-            <div id="encuesta-resultado-estrellas"></div>
-          </div>
-
           <div id="encuesta-error" class="mensaje-error" style="display:none;"></div>
 
           <div class="modal-footer">
             <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
-            <button type="button" class="btn-primario" id="encuesta-btn-principal" onclick="encuestaAvanzar()">Ver mi calificación</button>
+            <button type="button" class="btn-primario" id="encuesta-btn-principal" onclick="encuestaAvanzar()">Siguiente →</button>
           </div>
         </div>
 
@@ -1393,6 +1388,12 @@
             <span>📅 Postulado: <strong id="paso1-fecha-postulacion">—</strong></span>
             <span class="resena-fechas-flecha">→</span>
             <span>Entregado: <strong id="paso1-fecha-entrega">—</strong></span>
+          </div>
+
+          <div class="form-grupo calificacion-bloqueada" id="resena-calificacion-bloque">
+            <label class="form-label" data-ayuda="estrellas">Tu calificación del libro</label>
+            <div class="calificacion-bloqueada-valor" id="resena-calificacion-valor"></div>
+            <p class="calificacion-bloqueada-nota">Sale de tu encuesta. No se puede modificar.</p>
           </div>
 
           <div class="form-grupo">
@@ -1537,7 +1538,7 @@
           <div id="paso1-error" class="mensaje-error" style="display:none;"></div>
 
           <div class="modal-footer">
-            <button type="button" class="btn-secundario" onclick="volverAPasoEncuesta()">← Atrás</button>
+            <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
             <button type="button" class="btn-primario" onclick="irAPasoResena2()">Siguiente →</button>
           </div>
         </div>
@@ -2507,15 +2508,15 @@
 <script src="EVENTOS/eventos-juegos.js"></script>
 <script src="js/notificaciones.js"></script>
 <script src="js/resenador-premium.js?v=1"></script>
-<script src="js/feed.js?v=9"></script>
+<script src="js/feed.js?v=10"></script>
 <script src="js/buscador-perfiles.js"></script>
-<script src="js/autor.js?v=9"></script>
+<script src="js/autor.js?v=10"></script>
 <script src="js/audiolibro-autor.js?v=1"></script>
 <script src="js/audiolibro-campana.js?v=2"></script>
 <script src="js/colaboraciones-fisicas.js"></script>
-<script src="js/ayudas.js?v=12"></script>
-<script src="js/estrellas.js?v=1"></script>
-<script src="js/resenador.js?v=7"></script>
+<script src="js/ayudas.js?v=13"></script>
+<script src="js/estrellas.js?v=2"></script>
+<script src="js/resenador.js?v=8"></script>
 <script src="js/admin.js?v=7"></script>
 <script src="js/vendedor.js?v=4"></script>
 <script src="js/admin-vendedores.js?v=4"></script>
@@ -2545,12 +2546,12 @@
 <script src="js/eventos-admin.js"></script>
 <script src="js/admin-disenadores.js?v=5"></script>
 <script src="js/admin-audiolibros.js?v=2"></script>
-<script src="js/perfil-publico.js?v=2"></script>
+<script src="js/perfil-publico.js?v=3"></script>
 <script src="js/flechazos.js"></script>
 <script src="js/me-tienta.js?v=2"></script>
 <script src="js/chat.js?v=2"></script>
 <script src="js/admin-chats.js?v=1"></script>
-<script src="js/muro.js?v=2"></script>
+<script src="js/muro.js?v=3"></script>
 <script src="js/tutorial.js"></script>
 </body>
 </html>

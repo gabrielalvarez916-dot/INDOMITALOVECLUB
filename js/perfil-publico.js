@@ -407,7 +407,7 @@ function _renderCardLibroAutor(libro) {
     : '';
 
   const puntuacionHtml = libro.puntuacionPromedio !== null && libro.puntuacionPromedio !== undefined
-    ? `<p class="pp-libro-puntuacion">⭐ ${libro.puntuacionPromedio.toFixed(1)}</p>`
+    ? `<p class="pp-libro-puntuacion">⭐ ${formatearPromedio(libro.puntuacionPromedio)}</p>`
     : '';
 
   return `
@@ -1134,7 +1134,7 @@ function _renderCardLibroGoodreads(libro) {
     ? (libro.linkPortada.startsWith('/') ? 'https://indomitaloveclub.vercel.app' + libro.linkPortada : libro.linkPortada)
     : '';
 
-  const estrellas = '★'.repeat(libro.puntuacionLibro || 0) + '☆'.repeat(5 - (libro.puntuacionLibro || 0));
+  const estrellas = calificacionIndividualHtml(libro.puntuacionExacta, libro.puntuacionLibro);
 
   return `
     <div class="pp-libro-goodreads-card">
@@ -1495,10 +1495,8 @@ function _pintarResenaInterna(datos) {
   document.getElementById('ri-titulo').textContent = datos.nombreLibro || '';
   document.getElementById('ri-autor').textContent = 'por ' + (datos.nombreAutor || '');
 
-  const puntuacion = datos.puntuacionLibro || 0;
-  document.getElementById('ri-estrellas').textContent = puntuacion
-    ? '★'.repeat(puntuacion) + '☆'.repeat(5 - puntuacion)
-    : 'Sin calificar';
+  document.getElementById('ri-estrellas').innerHTML =
+    calificacionIndividualHtml(datos.puntuacionExacta, datos.puntuacionLibro) || 'Sin calificar';
 
   document.getElementById('ri-fecha-postulacion').textContent = datos.fechaPostulacion ? formatearFechaAmigable(datos.fechaPostulacion) : '—';
   document.getElementById('ri-fecha-entrega').textContent = datos.fechaEntrega ? formatearFechaAmigable(datos.fechaEntrega) : '—';
@@ -1596,6 +1594,7 @@ function abrirResenaInterna(idResena) {
     nombreLibro: r.nombreLibro,
     nombreAutor: r.nombreAutor,
     puntuacionLibro: r.puntuacionLibro,
+    puntuacionExacta: r.puntuacionExacta,
     fechaPostulacion: r.fechaPostulacion,
     fechaEntrega: r.fechaEntrega,
     moods: r.moods,

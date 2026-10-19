@@ -14,7 +14,7 @@ const AYUDAS_RESENA = {
   /* ── Encabezados de cada paso ── */
   encabezadoEncuesta: {
     titulo: 'Tu encuesta',
-    texto: 'Respondé unas preguntas rápidas sobre el libro, del 1 (mal) al 5 (excelente). Si algo no aplica (por ejemplo, un libro de no ficción sin personajes), marcá "No tiene" y esa pregunta no cuenta. Al final ves tu calificación. 💛'
+    texto: 'Respondé unas preguntas rápidas sobre el libro, del 1 (mal) al 5 (excelente). Si algo no aplica (por ejemplo, un libro de no ficción sin personajes), marcá "No tiene" y esa pregunta no cuenta. Tu calificación se calcula con tus respuestas y la ves en el siguiente paso. Ojo: una vez que avanzás, ya no podés cambiarlas. 💛'
   },
   encabezado1: {
     titulo: 'Tu reseña interna',
@@ -27,9 +27,9 @@ const AYUDAS_RESENA = {
 
   /* ── Paso 1 ── */
   estrellas: {
-    corto: 'Tu nota general del libro. Es obligatoria y suma a la puntuación del libro.',
-    titulo: '¿Cómo califico?',
-    largo: '1 ★ No me gustó · 2 ★ Me costó · 3 ★ Estuvo bien · 4 ★ Me gustó mucho · 5 ★ Me encantó.<br><br>Tu nota se suma a la puntuación general del libro, así que calificá con sinceridad: a los autores les sirve más una opinión honesta que un 5 automático.'
+    corto: 'Es el promedio de tu encuesta. No se puede modificar.',
+    titulo: '¿Cómo se calcula?',
+    largo: 'Es el promedio de las preguntas que respondiste en la encuesta; las que marcaste como "No tiene" no cuentan. Se suma a la puntuación general del libro y no se puede cambiar una vez que avanzaste.'
   },
   moods: {
     corto: 'Elegí cómo se sintió leerlo. Podés marcar varios.',

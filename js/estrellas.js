@@ -18,3 +18,26 @@ function estrellasProporcionales(valor, opciones) {
     `<span class="estrellas-prop-relleno" aria-hidden="true" style="width:${ancho.toFixed(4)}em">★★★★★</span>` +
     `</span>`;
 }
+
+/**
+ * Promedio/calificación con 2 decimales y coma: 4,14. null/NaN -> "—".
+ */
+function formatearPromedio(valor) {
+  const n = Number(valor);
+  if (valor === null || valor === undefined || valor === '' || isNaN(n)) return '—';
+  return n.toFixed(2).replace('.', ',');
+}
+
+/**
+ * Calificación de UNA reseña.
+ * - Reseñas nuevas (con puntuacion_exacta): estrellas proporcionales + número "4,14".
+ * - Reseñas anteriores (solo entero): se muestran como siempre, ★★★★☆.
+ */
+function calificacionIndividualHtml(exacta, entera, opciones) {
+  if (exacta !== null && exacta !== undefined && !isNaN(Number(exacta))) {
+    return estrellasProporcionales(exacta, opciones) +
+      `<span class="nota-num">${formatearPromedio(exacta)}</span>`;
+  }
+  const n = Math.max(0, Math.min(5, parseInt(entera, 10) || 0));
+  return n ? '★'.repeat(n) + '☆'.repeat(5 - n) : '';
+}

@@ -31,6 +31,14 @@ const Muro = (() => {
     return '★'.repeat(n) + '☆'.repeat(5 - n);
   }
 
+  // Si el evento trae la calificación exacta (reseñas nuevas) se muestra con decimales; si no, como siempre
+  function _calif(d) {
+    if (d.estrellasExactas !== null && d.estrellasExactas !== undefined && typeof calificacionIndividualHtml === 'function') {
+      return calificacionIndividualHtml(d.estrellasExactas, d.estrellas);
+    }
+    return _estrellas(d.estrellas);
+  }
+
   function _hace(fechaIso) {
     const seg = Math.max(0, Math.floor((Date.now() - new Date(fechaIso).getTime()) / 1000));
     if (seg < 60) return 'recién';
@@ -67,12 +75,12 @@ const Muro = (() => {
       case 'libro_recibio_calificacion':
         return {
           icono: '💬',
-          html: `El libro ${titulo} de ${a} recibió <span class="muro-estrellas">${_estrellas(d.estrellas)}</span> de <strong>${_esc(d.aliasResenador || 'una reseñadora')}</strong>`
+          html: `El libro ${titulo} de ${a} recibió <span class="muro-estrellas">${_calif(d)}</span> de <strong>${_esc(d.aliasResenador || 'una reseñadora')}</strong>`
         };
       case 'resena_entregada':
         return { icono: '📝', html: `${a} entregó la reseña de ${titulo}` };
       case 'libro_calificado':
-        return { icono: '⭐', html: `${a} calificó ${titulo} con <span class="muro-estrellas">${_estrellas(d.estrellas)}</span>` };
+        return { icono: '⭐', html: `${a} calificó ${titulo} con <span class="muro-estrellas">${_calif(d)}</span>` };
       default:
         return null;
     }
