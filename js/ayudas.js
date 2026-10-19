@@ -442,8 +442,7 @@ const AYUDAS_PANEL = {
       '<p><strong>Suma:</strong></p><ul>' +
       '<li>Reseña entregada <strong>a tiempo</strong>: <strong>+100</strong></li>' +
       '<li>Reseña entregada <strong>tarde</strong>: <strong>+40</strong></li>' +
-      '<li>Cada <strong>"SÍ"</strong> que te marque el autor al calificarte (entregada a tiempo, respetó el formato elegido, evidencia lectura completa, opinión propia argumentada, tono respetuoso): <strong>+10</strong> cada uno, hasta <strong>+50</strong>.</li>' +
-      '<li>Las <strong>estrellas que te pone el autor</strong>: de <strong>−40</strong> (1★) a <strong>+40</strong> (5★). Con 3★ no suma ni resta.</li>' +
+      '<li>La <strong>nota que te pone el autor</strong>: es el promedio exacto de sus 7 respuestas y va de <strong>−40</strong> (nota 1) a <strong>+40</strong> (nota 5). Con nota 3 no suma ni resta. Por ejemplo, un 4,43 suma <strong>+28,6</strong>. El total del mes se redondea recién al final.</li>' +
       '<li>Eventos y juegos (secretos encontrados, retos): hasta <strong>+50</strong> por los secretos, más los puntos de cada reto.</li></ul>' +
       '<p><strong>Resta:</strong></p><ul>' +
       '<li>No entregar una reseña (incumplida): <strong>−100</strong></li>' +
@@ -453,7 +452,7 @@ const AYUDAS_PANEL = {
       '<li>Cuenta el <strong>mes en que se cierra</strong> cada campaña (cuando entregás, abandonás o se vence).</li>' +
       '<li><strong>Completion:</strong> el porcentaje de reseñas entregadas sobre las que vencían ese mes. Con 100% ganás una insignia del mes.</li>' +
       '<li><strong>Ligas</strong> según los puntos del mes: Bronce (1 o más), Plata (150), Oro (450), Diamante (900). Los <strong>5 primeros</strong> forman el podio y hasta el puesto 20 entran al Top 20.</li>' +
-      '<li><strong>Desempate:</strong> gana quien tenga más reseñas a tiempo y, si siguen empatados, más "SÍ" del autor.</li>' +
+      '<li><strong>Desempate:</strong> gana quien tenga más reseñas a tiempo y, si siguen empatados, la mejor nota promedio del autor.</li>' +
       '<li>Con <strong>Reseñadores Premium</strong>, tu primera reseña del mes vale el doble (200 a tiempo, 80 tarde).</li></ul>'
   }
 };
