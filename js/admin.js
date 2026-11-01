@@ -192,7 +192,10 @@ async function cargarCampañasAdmin(email) {
   }
 
   contenedor.innerHTML = `
-    <table class="admin-tabla">
+    <div style="margin-bottom:16px;">
+      <input type="text" id="admin-buscar-campana" class="input-buscar" placeholder="Buscar por nombre del libro o autor..." oninput="filtrarCampañasAdmin()" style="max-width:400px;" />
+    </div>
+    <table class="admin-tabla" id="tabla-campanas">
       <thead>
         <tr>
           <th>Libro</th>
@@ -208,6 +211,41 @@ async function cargarCampañasAdmin(email) {
       </tbody>
     </table>
   `;
+
+  // Guarda las campañas para filtrar
+  window._campañasAdmin = campañas;
+}
+
+/**
+ * Normaliza un texto para comparar: minúsculas y sin tildes.
+ *
+ * @param {string} texto
+ * @returns {string}
+ */
+function normalizarTextoBusquedaAdmin(texto) {
+  return String(texto || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+/**
+ * Filtra la tabla de campañas por nombre del libro o email del autor.
+ */
+function filtrarCampañasAdmin() {
+  const texto = normalizarTextoBusquedaAdmin(document.getElementById('admin-buscar-campana')?.value);
+  const campañas = (window._campañasAdmin || []).filter(c =>
+    normalizarTextoBusquedaAdmin(c.nombreLibro).includes(texto) ||
+    normalizarTextoBusquedaAdmin(c.emailAutor).includes(texto)
+  );
+
+  const tbody = document.querySelector('#tabla-campanas tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = campañas.length > 0
+    ? campañas.map(c => construirFilaCampañaAdmin(c)).join('')
+    : '<tr><td colspan="6" style="text-align:center; padding:16px;">No se encontraron campañas.</td></tr>';
 }
 
 /**
