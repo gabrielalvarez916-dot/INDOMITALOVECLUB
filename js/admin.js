@@ -173,7 +173,7 @@ async function cargarCampañasAdmin() {
   }
 
   contenedor.innerHTML = `
-    <input type="text" id="admin-buscar-campana" class="input-buscar" placeholder="Buscar por mail o autor..." oninput="filtrarCampañasAdmin()" style="max-width:400px;" />
+    <input type="text" id="admin-buscar-campana" class="input-buscar" placeholder="Buscar por libro, mail o autor..." oninput="filtrarCampañasAdmin()" style="max-width:400px;" />
     <table class="admin-tabla" id="tabla-campanas">
       <thead>
         <tr>
@@ -195,11 +195,12 @@ async function cargarCampañasAdmin() {
 }
 
 /**
- * Filtra la tabla de campañas por mail o nombre del autor.
+ * Filtra la tabla de campañas por nombre del libro, mail o nombre del autor.
  */
 function filtrarCampañasAdmin() {
   const texto = (document.getElementById('admin-buscar-campana')?.value || '').toLowerCase();
   const campañas = (window._campañasAdmin || []).filter(c =>
+    (c.nombreLibro || '').toLowerCase().includes(texto) ||
     (c.emailAutor || '').toLowerCase().includes(texto) ||
     (c.nombreAutor || '').toLowerCase().includes(texto)
   );
