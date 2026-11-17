@@ -132,6 +132,7 @@ function mostrarSeccion(nombre) {
     'admin-chats',
     'mensajes',
     'panel-vendedor',
+    'panel-soporte',
     'biblioteca-resenador',
     'biblioteca-autor',
     'evento'
@@ -192,6 +193,9 @@ function mostrarSeccion(nombre) {
     case 'admin-panel':
       if (typeof cargarUsuariosAdmin === 'function') cargarUsuariosAdmin();
       if (typeof cargarCampañasAdmin === 'function') cargarCampañasAdmin();
+      break;
+    case 'panel-soporte':
+      if (typeof cargarPanelSoporte === 'function') cargarPanelSoporte();
       break;
     case 'admin-planes':
       if (typeof cargarSuscripcionesAdmin === 'function') cargarSuscripcionesAdmin();
@@ -280,7 +284,7 @@ function mostrarHeaderLogueado(usuario) {
 
   // Muestra botón Mi perfil (el admin no tiene perfil, así que no se le muestra)
   const navPerfil = document.getElementById('nav-perfil');
-  if (navPerfil) navPerfil.style.display = (usuario.rol === 'admin' || usuario.rol === 'vendedor') ? 'none' : 'inline-block';
+  if (navPerfil) navPerfil.style.display = (usuario.rol === 'admin' || usuario.rol === 'vendedor' || usuario.rol === 'soporte') ? 'none' : 'inline-block';
 
    // Muestra botón FAQ solo si es autor
   const navFaqAutor = document.getElementById('nav-faq-autor');

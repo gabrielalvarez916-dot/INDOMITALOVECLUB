@@ -249,7 +249,7 @@ async function completarLogin(usuario) {
   _tokenGooglePendiente = null;
   _emailGooglePendiente = null;
 
-  if (usuario.rol !== 'admin' && !(await perfilEstaCompleto(usuario))) {
+  if (usuario.rol !== 'admin' && usuario.rol !== 'soporte' && !(await perfilEstaCompleto(usuario))) {
     if (typeof mostrarGatePerfilObligatorio === 'function') {
       mostrarGatePerfilObligatorio(usuario, () => _continuarOnboarding(usuario));
     }
@@ -280,7 +280,7 @@ async function completarLogin(usuario) {
 // ────────────────────────────────────────────────────────────
 
 function _continuarOnboarding(usuario) {
-  if (!usuario || usuario.rol === 'admin' || usuario.rol === 'vendedor') return;
+  if (!usuario || usuario.rol === 'admin' || usuario.rol === 'vendedor' || usuario.rol === 'soporte') return;
   _pasoTutorialOnboarding(usuario);
 }
 
@@ -349,7 +349,7 @@ async function verificarSesionActiva() {
     _EventosState.promesaInit = inicializarEventos();
   }
 
-  if (perfil.rol !== 'admin' && !(await perfilEstaCompleto(perfil))) {
+  if (perfil.rol !== 'admin' && perfil.rol !== 'soporte' && !(await perfilEstaCompleto(perfil))) {
     if (typeof mostrarGatePerfilObligatorio === 'function') {
       mostrarGatePerfilObligatorio(perfil, () => _continuarOnboarding(perfil));
     }
@@ -605,6 +605,9 @@ function redirigirSegunRol(usuario) {
       break;
     case 'vendedor':
       mostrarSeccion('panel-vendedor');
+      break;
+    case 'soporte':
+      mostrarSeccion('panel-soporte');
       break;
     default:
       mostrarSeccion('feed');
