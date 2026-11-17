@@ -519,23 +519,37 @@ async function enviarLoginVendedor() {
     sesion = data.session;
   }
 
-  // Activa la cuenta como vendedor (solo si el admin ya habilitó ese mail)
+  // Activa la cuenta como vendedor o como soporte (solo si el admin ya habilitó ese mail)
+  let rolEsperado = 'vendedor';
   const { error: errAct } = await supabaseClient.rpc('vendedor_activar_cuenta', {
     p_nombre: nombre || null, p_apellido: apellido || null
   });
   if (errAct) {
-    await supabaseClient.auth.signOut();
-    _errorVendedor(/habilitado/i.test(errAct.message)
-      ? 'Este mail no está habilitado como vendedor. Pedile a Indómita que lo habilite.'
-      : 'No se pudo activar tu cuenta: ' + errAct.message);
-    return;
+    if (/habilitado/i.test(errAct.message)) {
+      const { error: errSop } = await supabaseClient.rpc('soporte_activar_cuenta', {
+        p_nombre: nombre || null, p_apellido: apellido || null
+      });
+      if (!errSop) {
+        rolEsperado = 'soporte';
+      } else {
+        await supabaseClient.auth.signOut();
+        _errorVendedor(/habilitado/i.test(errSop.message)
+          ? 'Este mail no está habilitado. Pedile a Indómita que lo habilite.'
+          : 'No se pudo activar tu cuenta: ' + errSop.message);
+        return;
+      }
+    } else {
+      await supabaseClient.auth.signOut();
+      _errorVendedor('No se pudo activar tu cuenta: ' + errAct.message);
+      return;
+    }
   }
 
   const { data: perfil, error: errPerfil } = await supabaseClient
     .from('usuarios').select('*').eq('id', sesion.user.id).maybeSingle();
-  if (errPerfil || !perfil || perfil.rol !== 'vendedor') {
+  if (errPerfil || !perfil || perfil.rol !== rolEsperado) {
     await supabaseClient.auth.signOut();
-    _errorVendedor('No se pudo cargar tu perfil de vendedor.');
+    _errorVendedor('No se pudo cargar tu perfil.');
     return;
   }
 
