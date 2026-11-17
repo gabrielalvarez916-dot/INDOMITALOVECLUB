@@ -499,6 +499,14 @@ async function enviarLoginVendedor() {
       options: { data: { nombre, apellido }, emailRedirectTo: window.location.origin + window.location.pathname }
     });
     if (error) { _errorVendedor('No se pudo crear la cuenta: ' + error.message); return; }
+    // Supabase no manda ningún mail si el mail ya tiene cuenta (devuelve un usuario sin identidades).
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      _toggleElemento('login-cargando', false);
+      _toggleElemento('login-vendedor', true);
+      _errorVendedor('Ese mail ya tiene una cuenta, por eso no te mandamos otro mail. Volvé a "Ingresar" con tu contraseña, o usá "Olvidé mi contraseña".');
+      alternarCrearCuentaVendedor();
+      return;
+    }
     sesion = data?.session || null;
     if (!sesion) {
       _toggleElemento('login-cargando', false);
