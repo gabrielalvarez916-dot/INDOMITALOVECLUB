@@ -136,7 +136,7 @@ async function _spAbrirTicket(id) {
   det.innerHTML = `
     <button class="btn-secundario btn-sm" onclick="_spCargarTickets()">← Volver</button>
     <h3 style="margin:12px 0 4px;">${_spEsc(r.asunto || '(sin asunto)')}</h3>
-    <div style="font-size:13px;opacity:.8;">${_spEsc(r.alias || '')} · ${_spEsc(r.email)} · ${_spEsc(r.rol || '')} · estado: <strong>${_spEsc(r.estado)}</strong>
+    <div style="font-size:13px;opacity:.8;">${_spEsc(r.alias || '')} · ${_spEsc(r.email)} · ${_spEsc(r.rol || '')} · estado: <strong>${_spEsc(r.estado)}</strong> · <span style="opacity:.5">panel v5</span>
       · <a href="#" onclick="_spVerPersona('${_spEsc(r.email)}');return false;">Ver ficha</a></div>
     ${hilo}
     <textarea id="sp-respuesta-texto" rows="6" style="width:100%;margin-top:8px;" placeholder="Escribí la respuesta (se envía por mail desde Soporte Indómita)…"></textarea>
