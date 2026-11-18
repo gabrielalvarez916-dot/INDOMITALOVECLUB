@@ -127,7 +127,7 @@ async function _spAbrirTicket(id) {
     ? `<div><a href="#" onclick="event.preventDefault(); _spVerAdjunto('${_spEsc(r.idTicket)}','${_spEsc(key)}')">📎 ${_spEsc(nombre || 'Ver adjunto')}</a></div>`
     : (nombre ? `<div style="font-size:12px;opacity:.7;">📎 ${_spEsc(nombre)} (enviado por mail)</div>` : '');
   const original = r.adjuntoKey ? `<div style="margin:8px 0;padding:10px;border-radius:8px;background:#fff7e6;"><div style="font-size:12px;opacity:.7;">Adjunto del mensaje original</div>${linkAdj(r.adjuntoKey, r.adjuntoNombre)}</div>` : '';
-  const hilo = original + (msgs.length ? msgs : [{ autor: 'usuario', cuerpo: r.mensaje, fecha: r.fecha }]).map(m => `
+  const hilo = original + [{ autor: 'usuario', cuerpo: r.mensaje, fecha: r.fecha }].concat(msgs).map(m => `
     <div style="margin:8px 0;padding:10px;border-radius:8px;background:${m.autor === 'usuario' ? '#f4f0fa' : '#e9f7ef'};">
       <div style="font-size:12px;opacity:.7;">${m.autor === 'usuario' ? _spEsc(r.email) : 'Soporte'} · ${_spFecha(m.fecha)}</div>
       <div style="white-space:pre-wrap;">${_spEsc(m.cuerpo)}</div>
