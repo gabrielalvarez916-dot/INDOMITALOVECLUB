@@ -82,9 +82,10 @@ function _spPintarTickets() {
   document.getElementById('sp-tickets').innerHTML = `
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
       <select id="sp-filtro-estado" onchange="_spCargarTickets()">
-        <option value="pendiente">Pendientes</option>
-        <option value="respondido">Respondidos</option>
-        <option value="cerrado">Cerrados</option>
+        <option value="">Todos (pendientes primero)</option>
+        <option value="pendiente">Solo pendientes</option>
+        <option value="respondido">Solo respondidos</option>
+        <option value="cerrado">Solo cerrados</option>
       </select>
       <button class="btn-secundario btn-sm" onclick="_spCargarTickets()">Actualizar</button>
     </div>
@@ -100,7 +101,7 @@ async function _spCargarTickets() {
   lista.style.display = 'block';
   lista.innerHTML = '<p>Cargando…</p>';
   const estado = document.getElementById('sp-filtro-estado').value;
-  const r = await _spRpc('soporte_listar_tickets', { p_estado: estado, p_limite: 50 });
+  const r = await _spRpc('soporte_listar_tickets', { p_estado: estado || null, p_limite: 100 });
   if (!r) { lista.innerHTML = '<p>No se pudo cargar.</p>'; return; }
   _SP.tickets = r.tickets || [];
   if (!_SP.tickets.length) { lista.innerHTML = '<p>No hay tickets en este estado. 🎉</p>'; return; }
@@ -108,7 +109,7 @@ async function _spCargarTickets() {
     <div class="card" style="padding:12px;margin-bottom:8px;cursor:pointer;" onclick="_spAbrirTicket('${_spEsc(t.idTicket)}')">
       <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
         <strong>${_spEsc(t.asunto || '(sin asunto)')}</strong>
-        <span style="font-size:12px;opacity:.7;">${_spFecha(t.fecha)}</span>
+        <span style="font-size:12px;opacity:.7;">${_spEsc(t.estado)} · ${_spFecha(t.fecha)}</span>
       </div>
       <div style="font-size:13px;opacity:.8;">${_spEsc(t.email)} · ${_spEsc(t.rol || '')}${t.categoria ? ' · ' + _spEsc(t.categoria) : ''}</div>
     </div>`).join('');
