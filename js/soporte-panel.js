@@ -123,10 +123,15 @@ async function _spAbrirTicket(id) {
   const det = document.getElementById('sp-ticket-detalle');
   det.style.display = 'block';
   const msgs = (r.mensajes || []);
-  const hilo = (msgs.length ? msgs : [{ autor: 'usuario', cuerpo: r.mensaje, fecha: r.fecha }]).map(m => `
+  const linkAdj = (key, nombre) => key
+    ? `<div><a href="#" onclick="event.preventDefault(); _spVerAdjunto('${_spEsc(r.idTicket)}','${_spEsc(key)}')">📎 ${_spEsc(nombre || 'Ver adjunto')}</a></div>`
+    : (nombre ? `<div style="font-size:12px;opacity:.7;">📎 ${_spEsc(nombre)} (enviado por mail)</div>` : '');
+  const original = r.adjuntoKey ? `<div style="margin:8px 0;padding:10px;border-radius:8px;background:#fff7e6;"><div style="font-size:12px;opacity:.7;">Adjunto del mensaje original</div>${linkAdj(r.adjuntoKey, r.adjuntoNombre)}</div>` : '';
+  const hilo = original + (msgs.length ? msgs : [{ autor: 'usuario', cuerpo: r.mensaje, fecha: r.fecha }]).map(m => `
     <div style="margin:8px 0;padding:10px;border-radius:8px;background:${m.autor === 'usuario' ? '#f4f0fa' : '#e9f7ef'};">
-      <div style="font-size:12px;opacity:.7;">${m.autor === 'usuario' ? _spEsc(r.email) : 'Soporte'} · ${_spFecha(m.fecha)}${m.adjunto ? ' · 📎 ' + _spEsc(m.adjunto) : ''}</div>
+      <div style="font-size:12px;opacity:.7;">${m.autor === 'usuario' ? _spEsc(r.email) : 'Soporte'} · ${_spFecha(m.fecha)}</div>
       <div style="white-space:pre-wrap;">${_spEsc(m.cuerpo)}</div>
+      ${linkAdj(m.adjuntoKey, m.adjunto)}
     </div>`).join('');
   det.innerHTML = `
     <button class="btn-secundario btn-sm" onclick="_spCargarTickets()">← Volver</button>
@@ -377,4 +382,18 @@ function _spCopiarRespuesta(id) {
   const n = (_SP.respuestas || []).find(x => String(x.id) === String(id));
   if (!n) return;
   navigator.clipboard.writeText(n.contenido).then(() => mostrarToast('Copiada.', 'ok'));
+}
+
+async function _spVerAdjunto(idTicket, key) {
+  const token = await _spToken();
+  if (!token) { mostrarToast('No se pudo autenticar la sesión.', 'error'); return; }
+  const { data, error } = await supabaseClient.functions.invoke('obtener-adjunto-soporte', {
+    body: { id_ticket: idTicket, key },
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (error || data?.error || !data?.url) {
+    mostrarToast(data?.error || error?.message || 'No se pudo abrir el adjunto.', 'error');
+    return;
+  }
+  window.open(data.url, '_blank');
 }
