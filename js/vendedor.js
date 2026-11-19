@@ -227,6 +227,8 @@ async function _vendGuardarResultado(idCliente) {
 
   _vendMarcarPendiente(idCliente, false);
   cerrarModales();
+  // Reordena la lista para que el contactado baje (respeta la búsqueda actual).
+  _vendFiltrarClientes(document.getElementById('vend-buscador-clientes')?.value || '');
   mostrarToast('Resultado guardado.', 'ok');
   _vendRefrescarGestion();
 }
@@ -421,7 +423,9 @@ function _vendHtmlClientes(clientes) {
 }
 
 function _vendHtmlListadoClientes(clientes, buscando) {
-  const activos = clientes.filter(c => c.estado === 'activo');
+  // No contactados arriba, contactados abajo (se mantiene el orden original dentro de cada grupo).
+  const activos = clientes.filter(c => c.estado === 'activo')
+    .sort((a, b) => (a.contactado ? 1 : 0) - (b.contactado ? 1 : 0));
   const inactivos = clientes.filter(c => c.estado !== 'activo');
 
   const fila = (c) => `
